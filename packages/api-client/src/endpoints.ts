@@ -5,12 +5,22 @@ import type {
   AccountRoleReview,
   AdminAccountRole,
   AdminAccountRoleQuery,
+  AdminBoard,
   AdminOverview,
   AdminUser,
   AdminUserDetail,
   AdminUserQuery,
   ApiResponse,
   AppLimits,
+  Board,
+  BoardDetail,
+  BoardInput,
+  BoardKindDefinition,
+  BoardPhoto,
+  BoardPhotoLocation,
+  BoardReview,
+  BoardSearch,
+  BoardStatus,
   DocumentInput,
   DocumentSummary,
   DocumentType,
@@ -43,6 +53,13 @@ export function createEndpoints(alova: GreyboardsAlova) {
   return {
     /** Upload sizes and other limits to check before sending anything. Works signed out. */
     limits: () => alova.Get<ApiResponse<AppLimits>>('/limits', { cacheFor: null }),
+
+    /** The kinds of board, for filters and forms. Works signed out. */
+    boardKinds: () => alova.Get<ApiResponse<BoardKindDefinition[]>>('/board-kinds'),
+    /** Listed boards inside the map's bounds, or near a point with the nearest first. Works signed out. */
+    boards: (params: BoardSearch = {}) => alova.Get<PaginatedResponse<Board>>('/boards', { params, cacheFor: null }),
+    /** A board and its photos. Unlisted boards show only to their owner, tagger and reviewers. */
+    board: (id: ID) => alova.Get<ApiResponse<BoardDetail>>(`/boards/${id}`, { cacheFor: null }),
 
     /** What each marketplace role is for. Works signed out. */
     accountRoles: () => alova.Get<ApiResponse<AccountRoleDefinition[]>>('/account-roles'),
@@ -94,6 +111,28 @@ export function createEndpoints(alova: GreyboardsAlova) {
       takeRole: (kind: AccountRoleKind) => alova.Post<ApiResponse<AccountRole>>('/account/roles', { kind }),
       dropRole: (kind: AccountRoleKind) => alova.Delete<ApiResponse<{ kind: AccountRoleKind }>>(`/account/roles/${kind}`),
 
+      /** Boards the account owns or tagged. */
+      boards: (params: PageQuery & { status?: BoardStatus } = {}) =>
+        alova.Get<PaginatedResponse<Board>>('/account/boards', { params, cacheFor: null }),
+      /** Tag a board, as its owner or as the scout who found it. It waits for review. */
+      tagBoard: (data: BoardInput & { as: 'owner' | 'scout' }) => alova.Post<ApiResponse<BoardDetail>>('/account/boards', data),
+      /** Moving or resizing a listed board sends it back for review. */
+      updateBoard: (id: ID, data: Partial<BoardInput>) => alova.Put<ApiResponse<BoardDetail>>(`/account/boards/${id}`, data),
+      removeBoard: (id: ID) => alova.Delete<ApiResponse<{ id: ID }>>(`/account/boards/${id}`),
+      /** `file` is a File/Blob on web, or an RN `{ uri, name, type }` object. */
+      addBoardPhoto: (id: ID, file: Blob | { uri: string; name: string; type: string }, where: BoardPhotoLocation = {}) => {
+        const form = new FormData()
+        const name = (file as { name?: string }).name
+
+        if (name) form.append('photo', file as Blob, name)
+        else form.append('photo', file as Blob)
+
+        for (const [key, value] of Object.entries(where)) if (value !== undefined && value !== null) form.append(key, String(value))
+
+        return alova.Post<ApiResponse<BoardPhoto>>(`/account/boards/${id}/photos`, form)
+      },
+      removeBoardPhoto: (id: ID, photo: ID) => alova.Delete<ApiResponse<{ id: ID }>>(`/account/boards/${id}/photos/${photo}`),
+
       sessions: () => alova.Get<ApiResponse<Session[]>>('/account/sessions', { cacheFor: null }),
       revokeSession: (id: ID) => alova.Delete<ApiResponse<Session>>(`/account/sessions/${id}`),
       revokeOtherSessions: () => alova.Delete<ApiResponse<{ revoked: number }>>('/account/sessions'),
@@ -120,6 +159,12 @@ export function createEndpoints(alova: GreyboardsAlova) {
       accountRoles: (params: AdminAccountRoleQuery = {}) => alova.Get<PaginatedResponse<AdminAccountRole>>('/admin/account-roles', { params, cacheFor: null }),
       reviewAccountRole: (id: ID, data: AccountRoleReview) => alova.Put<ApiResponse<AdminAccountRole>>(`/admin/account-roles/${id}`, data),
       /** Every role, with the permissions there are to choose from. */
+      /** Boards waiting for review, or those with another status. */
+      boards: (params: PageQuery & { status?: BoardStatus } = {}) =>
+        alova.Get<PaginatedResponse<AdminBoard>>('/admin/boards', { params, cacheFor: null }),
+      board: (id: ID) => alova.Get<ApiResponse<AdminBoard>>(`/admin/boards/${id}`, { cacheFor: null }),
+      reviewBoard: (id: ID, data: BoardReview) => alova.Put<ApiResponse<AdminBoard>>(`/admin/boards/${id}`, data),
+
       roles: () => alova.Get<ApiResponse<Role[]> & { permissions: PermissionDefinition[] }>('/admin/roles', { cacheFor: null }),
       createRole: (data: RoleInput) => alova.Post<ApiResponse<Role>>('/admin/roles', data),
       updateRole: (id: ID, data: Partial<RoleInput>) => alova.Put<ApiResponse<Role>>(`/admin/roles/${id}`, data),

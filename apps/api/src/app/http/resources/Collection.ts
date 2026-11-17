@@ -7,17 +7,22 @@ import { ResourceCollection } from 'resora'
  */
 export class Collection extends ResourceCollection {
   data(ctx?: unknown) {
+    const items = this.items()
+    const Item = this.collects
+
+    return Item ? items.map((item) => new Item(item).data(ctx)) : items
+  }
+
+  /** The records on this page. */
+  protected items(): any[] {
     const source = this.resource as any
-    const items: any[] = Array.isArray(source)
+
+    return Array.isArray(source)
       ? source
       : typeof source?.all === 'function'
         ? source.all()
         : typeof source?.data?.all === 'function'
           ? source.data.all()
           : (source?.data ?? [])
-
-    const Item = this.collects
-
-    return Item ? items.map((item) => new Item(item).data(ctx)) : items
   }
 }

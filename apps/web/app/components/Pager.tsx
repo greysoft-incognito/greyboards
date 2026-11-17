@@ -2,7 +2,7 @@ import { Link, useSearchParams } from "react-router";
 import type { PaginationMeta } from "@greyboards/types";
 import { buttonClass } from "~/components/ui";
 
-/** Previous and next links for a paginated admin list, keeping the other filters in the address. */
+/** Previous and next links for a paginated list, keeping the other filters in the address. */
 export function Pager({ meta, noun }: { meta: PaginationMeta; noun: string }) {
 	const [params] = useSearchParams();
 	const pageLink = (page: number) => {

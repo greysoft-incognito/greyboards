@@ -1,4 +1,6 @@
 export { AccountRole } from './AccountRole'
+export { Board } from './Board'
+export { BoardPhoto } from './BoardPhoto'
 export { Document } from './Document'
 export { PasswordReset } from './PasswordReset'
 export { PersonalAccessToken } from './PersonalAccessToken'
