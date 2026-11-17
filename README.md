@@ -13,6 +13,7 @@ A pnpm workspace:
 | --- | --- |
 | `apps/api` | REST API on Arkstack (Express), Postgres with PostGIS |
 | `apps/web` | Web app on React Router (SSR on Cloudflare Workers) and Tailwind 4, with Lucide icons |
+| `apps/mobile` | Android and iOS app on Expo Router, with Lucide icons |
 | `packages/types` | Shared TypeScript types for the API's responses |
 | `packages/api-client` | Typed client for the API, built on alova |
 
@@ -39,6 +40,7 @@ pnpm ark migrate
 pnpm ark seed
 pnpm dev:api   # http://localhost:3000
 pnpm dev:web   # http://localhost:5173
+pnpm dev:mobile  # Expo; set EXPO_PUBLIC_API_URL in apps/mobile/.env
 ```
 
 Make yourself an admin with `pnpm ark users:role you@example.com admin`.
