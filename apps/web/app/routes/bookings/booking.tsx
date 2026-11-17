@@ -6,6 +6,7 @@ import { BoardCover, formatRate } from "~/components/boards/BoardBits";
 import { ArtworkPanel } from "~/components/bookings/ArtworkPanel";
 import { ProofPanel } from "~/components/proofs/ProofPanel";
 import { MessagesPanel } from "~/components/bookings/MessagesPanel";
+import { ReviewPanel } from "~/components/reviews/ReviewBits";
 import { SharesPanel } from "~/components/bookings/SharesPanel";
 import { BookingStatusBadge, formatDays, formatMoney } from "~/components/bookings/BookingBits";
 import { Alert, Button, Input, Spinner } from "~/components/ui";
@@ -36,6 +37,12 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 			const { data: payment } = await api.checkout(params.id);
 
 			throw redirect(payment.checkoutUrl ?? `/bookings/${params.id}`);
+		}
+
+		if (intent === "review") {
+			await api.review(params.id, { rating: Number(form.get("rating")), body: String(form.get("body") ?? "") || null });
+
+			return { error: null, message: "Thanks for your review." };
 		}
 
 		if (intent === "message") {
@@ -169,6 +176,7 @@ export default function BookingPage({ loaderData, actionData }: Route.ComponentP
 					{booking.cancellation?.allowed && <CancelPaid booking={booking} />}
 					{canRefund && booking.status === "paid" && <StaffRefund booking={booking} />}
 					{!!booking.refunds?.length && <Refunds booking={booking} />}
+					{booking.reviews && <ReviewPanel reviews={booking.reviews} />}
 				</section>
 
 				<section className="space-y-4">

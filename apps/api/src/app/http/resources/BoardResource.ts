@@ -1,5 +1,6 @@
 import type { Board } from '@app/models/Board'
 import type { BoardPhoto } from '@app/models/BoardPhoto'
+import { Reviews } from '@app/services/Reviews'
 import { Resource } from 'resora'
 
 /** A board as anyone may see it. The owner's contact and review notes stay private. */
@@ -41,6 +42,7 @@ export class BoardResource extends Resource {
       status: board.status,
       distanceM: distance === undefined || distance === null ? null : Math.round(Number(distance)),
       coverUrl: cover ? await cover.url() : null,
+      rating: await Reviews.summary(board.ratingSum ?? 0, board.ratingCount ?? 0),
       createdAt: board.createdAt,
     }
   }

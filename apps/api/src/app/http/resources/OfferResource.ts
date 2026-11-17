@@ -1,6 +1,7 @@
 import type { Board } from '@app/models/Board'
 import type { Offer } from '@app/models/Offer'
 import { User } from '@app/models/User'
+import { Reviews } from '@app/services/Reviews'
 import { Resource } from 'resora'
 import { BoardResource } from './BoardResource'
 
@@ -46,7 +47,7 @@ export class OfferResource extends Resource {
       expiresAt: offer.expiresAt,
       bookingId: offer.bookingId,
       face: face ? { id: face.id, label: face.label } : null,
-      advertiser: advertiser ? { id: advertiser.id, name: advertiser.name } : null,
+      advertiser: advertiser ? { id: advertiser.id, name: advertiser.name, rating: await Reviews.summary(advertiser.advertiserRatingSum ?? 0, advertiser.advertiserRatingCount ?? 0) } : null,
       board: board ? await new BoardResource(board).data() : null,
       can: {
         accept: yourTurn,

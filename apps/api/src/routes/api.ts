@@ -7,6 +7,7 @@ import BoardController from 'src/app/http/controllers/BoardController'
 import AuctionController from 'src/app/http/controllers/AuctionController'
 import ShareController from 'src/app/http/controllers/ShareController'
 import MessageController from 'src/app/http/controllers/MessageController'
+import ReviewController from 'src/app/http/controllers/ReviewController'
 import OfferController from 'src/app/http/controllers/OfferController'
 import BookingController from 'src/app/http/controllers/BookingController'
 import PaymentController from 'src/app/http/controllers/PaymentController'
@@ -154,6 +155,10 @@ Router.post('/bookings/:booking/shares/cover', [ShareController, 'cover'], [auth
 // Messages about a booking, kept with it. Managed owners get them by SMS.
 Router.get('/bookings/:booking/messages', [MessageController, 'index'], [auth, limiter(240, 60)])
 Router.post('/bookings/:booking/messages', [MessageController, 'store'], [auth, limiter(30, 60)])
+
+// Reviews after a campaign: advertisers rate boards, and the board's side rates advertisers.
+Router.get('/boards/:board/reviews', [ReviewController, 'index'], [limiter(120, 60)])
+Router.post('/bookings/:booking/review', [ReviewController, 'store'], [auth, limiter(20, 60)])
 
 // Proof the ad is up: geotagged photos from the billposter, checked by the advertiser, release the money.
 Router.post('/bookings/:booking/proofs', [ProofController, 'store'], [auth, limiter(30, 60)])

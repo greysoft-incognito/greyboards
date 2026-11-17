@@ -3,6 +3,7 @@ import { Form, Link, useNavigation } from "react-router";
 import { CalendarDays, Check, Gavel, HandCoins, Timer, Undo2, X } from "lucide-react";
 import type { Auction, AuctionStatus, BoardDetail, Offer, OfferStatus } from "@greyboards/types";
 import { BoardCover } from "~/components/boards/BoardBits";
+import { RatingLine } from "~/components/reviews/ReviewBits";
 import { formatDays, formatMoney } from "~/components/bookings/BookingBits";
 import { Alert, Button, buttonClass, Field, Input, Select, Spinner } from "~/components/ui";
 
@@ -257,7 +258,12 @@ export function OfferRow({ offer, onBoards }: { offer: Offer; onBoards: boolean 
 						{formatDays(offer)}
 						{offer.face ? ` · ${offer.face.label}` : ""}
 					</p>
-					{onBoards && offer.advertiser && <p className="text-sm text-ink-700">From {offer.advertiser.name}</p>}
+					{onBoards && offer.advertiser && (
+						<p className="flex flex-wrap items-center gap-2 text-sm text-ink-700">
+							From {offer.advertiser.name}
+							<RatingLine rating={offer.advertiser.rating} />
+						</p>
+					)}
 					{offer.note && <p className="text-sm text-ink-500">“{offer.note}”</p>}
 				</div>
 				<div className="flex flex-col items-end justify-center gap-0.5 pr-2 text-right">

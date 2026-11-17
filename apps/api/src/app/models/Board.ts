@@ -109,6 +109,9 @@ export class Board extends Model {
   declare currency: string
   declare ratePeriod: BoardRatePeriod
   declare printsOwn: boolean
+  /** Running totals of advertisers' ratings, for the average. */
+  declare ratingSum: number
+  declare ratingCount: number
   declare printFeeMinor: string | number | null
   declare status: BoardStatus
   declare reviewNote: string | null
@@ -167,6 +170,8 @@ export class Board extends Model {
     rateMinor: 'rate_minor',
     ratePeriod: 'rate_period',
     printsOwn: 'prints_own',
+    ratingSum: 'rating_sum',
+    ratingCount: 'rating_count',
     printFeeMinor: 'print_fee_minor',
     reviewNote: 'review_note',
     duplicateOfId: 'duplicate_of_id',

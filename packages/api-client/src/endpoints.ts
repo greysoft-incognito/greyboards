@@ -1,4 +1,7 @@
 import type {
+  PublishedReview,
+  RatingSummary,
+  ReviewInput,
   BookingMessage,
   ShareInvite,
   Auction,
@@ -117,6 +120,10 @@ export function createEndpoints(alova: GreyboardsAlova) {
     /** Start paying for held dates. Send the payer to `checkoutUrl`. */
     checkout: (id: ID) => alova.Post<ApiResponse<Payment>>(`/bookings/${id}/checkout`),
     cancelBooking: (id: ID) => alova.Post<ApiResponse<Booking>>(`/bookings/${id}/cancel`),
+    /** A board's reviews, newest first, with its average under `summary`. */
+    boardReviews: (id: ID, params: PageQuery = {}) => alova.Get<PaginatedResponse<PublishedReview> & { summary: RatingSummary }>(`/boards/${id}/reviews`, { params, cacheFor: null }),
+    /** Write or change the viewer's review of a booking. */
+    review: (id: ID, data: ReviewInput) => alova.Post<ApiResponse<{ id: ID; rating: number; body: string | null }>>(`/bookings/${id}/review`, data),
     /** A page of a booking's messages, newest first. Reading marks them read. */
     messages: (id: ID, params: PageQuery = {}) => alova.Get<PaginatedResponse<BookingMessage>>(`/bookings/${id}/messages`, { params, cacheFor: null }),
     /** Send a message, a photo, or both. `photo` is a File/Blob on web, or an RN `{ uri, name, type }` object. */

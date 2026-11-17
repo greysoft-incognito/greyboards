@@ -1,6 +1,7 @@
 import type { PageQuery } from './api'
 import type { Board, BoardRate } from './boards'
 import type { ID } from './models'
+import type { BookingReviews } from './reviews'
 
 /**
  * `held` while the advertiser pays, `paid` once the money waits in escrow, `live` once
@@ -61,6 +62,8 @@ export interface Booking {
   shares?: BookingShare[] | null
   /** On the booking's own page: how many messages, and how many the viewer hasn't read. */
   messages?: MessageCounts
+  /** On the booking's own page: the viewer's review and whether they can write it. */
+  reviews?: BookingReviews
 }
 
 export interface MessageCounts {

@@ -5,6 +5,7 @@ import type { BoardAgreement, BoardDetail, BoardPhoto, OwnerProfile } from "@gre
 import { BoardCover, BoardStatusBadge, formatHeading, formatRate, formatSize, mapLink } from "~/components/boards/BoardBits";
 import { AuctionCard, AuctionsManager, toMinor } from "~/components/bids/BidBits";
 import { BookPanel } from "~/components/bookings/BookPanel";
+import { BoardReviews, RatingLine } from "~/components/reviews/ReviewBits";
 import { BlockedDays, RateCard } from "~/components/boards/RateCard";
 import { SpotMap } from "~/components/map/SpotMap";
 import { Alert, Button, buttonClass, Spinner } from "~/components/ui";
@@ -30,8 +31,9 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
 	);
 	const canBook = user.accountRoles.some((role) => role.kind === "advertiser" && role.status === "active");
 	const { data: auctions } = board.status === "listed" || manages ? await api.boardAuctions(board.id).catch(() => ({ data: [] })) : { data: [] };
+	const reviews = board.rating.count ? await api.boardReviews(board.id, { per_page: 5 }).catch(() => null) : null;
 
-	return { board, manages, taken, canBook, auctions, today: new Date().toISOString().slice(0, 10), styleUrl: mapStyleUrl(context) };
+	return { board, manages, taken, canBook, auctions, reviews: reviews?.data ?? [], today: new Date().toISOString().slice(0, 10), styleUrl: mapStyleUrl(context) };
 }
 
 export async function action({ request, context, params }: Route.ActionArgs) {
@@ -165,7 +167,7 @@ const REVIEW_NOTES: Record<BoardDetail["status"], string> = {
 export default function BoardPage({ loaderData, actionData }: Route.ComponentProps) {
 	useToastMessage(actionData);
 
-	const { board, manages, taken, canBook, auctions, today, styleUrl } = loaderData;
+	const { board, manages, taken, canBook, auctions, reviews, today, styleUrl } = loaderData;
 	const errorFor = (intent: string, id = "") => (actionData?.intent === intent && (actionData.id ?? "") === id ? actionData.error : null);
 	const [params] = useSearchParams();
 	const [shown, setShown] = useState<BoardPhoto | null>(board.photos[0] ?? null);
@@ -232,6 +234,7 @@ export default function BoardPage({ loaderData, actionData }: Route.ComponentPro
 							</span>
 						</a>
 						{rate && <p className="font-display text-2xl font-extrabold text-ink-900 tabular-nums">{rate}</p>}
+						<RatingLine rating={board.rating} />
 						<ul className="grid gap-2 text-sm text-ink-700 sm:grid-cols-2">
 							{facts.map((fact) => (
 								<li key={fact.label} className="flex items-center gap-2">
@@ -245,6 +248,8 @@ export default function BoardPage({ loaderData, actionData }: Route.ComponentPro
 
 					{!manages && board.status === "listed" && <BookPanel board={board} taken={taken} canBook={canBook} error={errorFor("book") ?? errorFor("offer")} />}
 					{!manages && auctions.map((auction) => <AuctionCard key={auction.id} auction={auction} canBid={canBook} error={errorFor("bid", auction.id)} />)}
+
+					<BoardReviews reviews={reviews} summary={board.rating} />
 
 					<div className="panel space-y-2 p-2">
 						<SpotMap styleUrl={styleUrl} latitude={board.latitude} longitude={board.longitude} className="aspect-[16/10]" />

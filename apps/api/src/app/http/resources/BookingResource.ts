@@ -8,6 +8,8 @@ import { Day } from '@app/support/Day'
 import { Refund } from '@app/models/Refund'
 import { Refunds } from '@app/services/Refunds'
 import { Messages } from '@app/services/Messages'
+import { Review } from '@app/models/Review'
+import { Reviews } from '@app/services/Reviews'
 import { Shares } from '@app/services/Shares'
 import { Resource } from 'resora'
 import { BoardResource } from './BoardResource'
@@ -67,6 +69,7 @@ export class BookingResource extends Resource {
       cancellation: BookingPolicy.owns(viewer, booking) && booking.status === 'paid' ? await Refunds.quote(booking) : null,
       shares: booking.shared ? await BookingResource.shares(booking, viewer) : null,
       messages: await Messages.counts(booking, viewer),
+      reviews: await BookingResource.reviews(booking, viewer),
       refunds: (await Refund.query().where({ bookingId: booking.id }).oldest('createdAt').limit(10).get()).all().map((refund) => ({
         amountMinor: Number(refund.amountMinor),
         currency: refund.currency,
@@ -99,6 +102,24 @@ export class BookingResource extends Resource {
       inviteUrl: organiser && share.status === 'open' ? `${base}/shares/${share.token}` : null,
       paidAt: share.paidAt,
     }))
+  }
+
+  /**
+   * The booking's reviews: the one the viewer writes, if any, and whether they can still
+   * write or change it. The advertiser's rating shows to the board's side.
+   */
+  private static async reviews(booking: Booking, viewer: User) {
+    const subject = await Reviews.subjectFor(booking, viewer)
+    const reviews = (await Review.query().where({ bookingId: booking.id }).limit(2).get()).all()
+    const mine = reviews.find((review) => review.subject === subject)
+    const advertiser = subject === 'advertiser' ? await User.query().find(booking.advertiserId) : null
+
+    return {
+      subject,
+      canWrite: !!subject && (await Reviews.open(booking)),
+      mine: mine ? { rating: mine.rating, body: mine.body, updatedAt: mine.updatedAt } : null,
+      advertiserRating: advertiser ? await Reviews.summary(advertiser.advertiserRatingSum ?? 0, advertiser.advertiserRatingCount ?? 0) : null,
+    }
   }
 
   async data() {

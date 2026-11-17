@@ -32,6 +32,9 @@ export class User extends BaseUser {
   declare emailVerifiedAt: Date | null
   declare avatarPath: string | null
   declare avatarDisk: string | null
+  /** Running totals of the ratings boards' sides gave this account as an advertiser. */
+  declare advertiserRatingSum: number
+  declare advertiserRatingCount: number
   /** The slug of the user's admin role. Marketplace roles live in `accountRoles`. */
   declare role: string
   declare suspendedAt: Date | null
@@ -44,6 +47,8 @@ export class User extends BaseUser {
     emailVerifiedAt: 'email_verified_at',
     avatarPath: 'avatar_path',
     avatarDisk: 'avatar_disk',
+    advertiserRatingSum: 'advertiser_rating_sum',
+    advertiserRatingCount: 'advertiser_rating_count',
     suspendedAt: 'suspended_at',
   }
 
