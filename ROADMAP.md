@@ -13,11 +13,11 @@ What's built and what's left, following the phases in [docs/proposal.md](docs/pr
 - [x] Artwork approval and the billposter print job marketplace (#9)
 - [x] Proof of posting that releases escrow, with the commission ledger (#10)
 - [x] Tagging boards from the phone (#11)
-- [ ] Compass heading when tagging a board
-- [ ] Owners (or their scouts) printing and putting up the ad themselves
-- [ ] Missed print deadlines: the job goes back with a higher fee, repeat misses suspend the billposter, and the scout is warned when nobody has taken a job close to go-live
-- [ ] Bank details and real payouts to owners, scouts and billposters
-- [ ] Refunds and cancellations of paid bookings
+- [x] Compass heading when tagging a board
+- [x] Owners (or their scouts) printing and putting up the ad themselves
+- [x] Missed print deadlines: the job goes back with a higher fee, repeat misses suspend the billposter, and the scout is warned when nobody has taken a job close to go-live
+- [x] Bank details and real payouts to owners, scouts and billposters
+- [x] Refunds and cancellations of paid bookings
 - [x] Rate cards per board face, and owners blocking dates
 - [x] ID and bank checks for scouts and billposters, and duplicate board detection
 - [x] Billposter jobs and proof photos in the mobile app
