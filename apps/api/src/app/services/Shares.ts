@@ -3,14 +3,19 @@ import { randomBytes } from 'node:crypto'
 import { Booking } from '@app/models/Booking'
 import { BookingShare } from '@app/models/BookingShare'
 import { Payment } from '@app/models/Payment'
-import type { User } from '@app/models/User'
+import type { UploadedFile, User } from '@app/models/User'
+import { Board } from '@app/models/Board'
+import { MergedArtwork } from '@app/support/MergedArtwork'
+import { Settings } from '@app/support/Settings'
+import { StoredImage } from '@app/support/StoredImage'
 import { Refunds } from './Refunds'
 
 /**
- * Shared (co-op) bookings. The organiser holds the dates for everyone and invites the others
- * by link; each pays their own share into escrow. The booking is paid once every share is,
- * and the organiser may cover shares nobody paid. If the hold runs out first, everyone who
- * paid gets their money back.
+ * Shared (co-op) bookings: several advertisers pay for one board over the same days, and the
+ * print merges each one's design. The organiser holds the dates for everyone and invites the
+ * others by link; each pays their own share into escrow and sends their own design. The
+ * booking is paid once every share is, and the organiser may cover shares nobody paid. If the
+ * hold runs out first, everyone who paid gets their money back.
  */
 export class Shares {
   /** Split a new held booking into `count` equal shares. The organiser takes the first, with any odd amount. */
@@ -108,6 +113,45 @@ export class Shares {
     if (await booking.confirmPaid()) return
 
     await Shares.refundAll(booking, 'Paid after the hold ran out and the days were taken')
+  }
+
+  /**
+   * Someone who paid a share sends their design. Once everyone who paid has, the designs are
+   * merged into the booking's print artwork for whoever looks after the board to check. A new
+   * design before approval merges them again.
+   */
+  static async sendDesign(booking: Booking, share: BookingShare, user: User, file: UploadedFile): Promise<boolean> {
+    abortIf(!booking.shared || share.bookingId !== booking.id, 'That share isn’t part of this booking.', 404)
+    abortIf(share.userId !== user.id, 'Only whoever holds a share sends its design.', 403)
+    abortIf(booking.status !== Booking.PAID || share.status !== 'paid', 'Send your design once the booking is paid.', 422)
+    abortIf(booking.artworkStatus === 'approved', 'The merged artwork is already approved and on its way to print.', 422)
+
+    const saved = await StoredImage.save(`bookings/${booking.id}/designs`, file)
+
+    await StoredImage.remove(share.designDisk, share.designPath)
+    await share.update({ designPath: saved.path, designDisk: saved.disk, designWidth: saved.width, designHeight: saved.height, designSentAt: new Date() })
+
+    return Shares.mergeIfReady(booking)
+  }
+
+  /** Merge the designs into the print once every paid share has one. Returns whether it did. */
+  static async mergeIfReady(booking: Booking): Promise<boolean> {
+    const shares = (await BookingShare.query().where({ bookingId: booking.id, status: 'paid' }).oldest('position').limit(50).get()).all()
+
+    if (!shares.length || shares.some((share) => !share.designPath || !share.designDisk)) return false
+
+    const board = await Board.query().findOrFail(booking.boardId)
+    const layout = (await Settings.get('shares.merge_layout')) === 'rows' ? 'rows' : 'columns'
+    const merged = await MergedArtwork.make(
+      `bookings/${booking.id}/artwork`,
+      shares.map((share) => ({ disk: share.designDisk!, path: share.designPath! })),
+      Number(board.widthM) / Number(board.heightM),
+      layout,
+    )
+
+    await booking.useArtwork(merged)
+
+    return true
   }
 
   /** Send back every share paid on a shared booking that lapsed or was let go of. Runs on the schedule. */

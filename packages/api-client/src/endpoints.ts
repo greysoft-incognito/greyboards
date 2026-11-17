@@ -146,6 +146,8 @@ export function createEndpoints(alova: GreyboardsAlova) {
     claimShare: (token: string) => alova.Post<ApiResponse<Booking>>(`/shares/${token}/claim`),
     /** The organiser takes every unpaid share, to pay the rest themselves. */
     coverShares: (id: ID) => alova.Post<ApiResponse<Booking>>(`/bookings/${id}/shares/cover`),
+    /** Send the design for a share you hold. Once everyone has, they're merged into the print. */
+    sendShareDesign: (id: ID, shareId: ID, file: Blob | { uri: string; name: string; type: string }) => alova.Post<ApiResponse<Booking>>(`/bookings/${id}/shares/${shareId}/design`, upload('design', file)),
     /** A board's auctions: the running ones, and recent ones for whoever looks after it. */
     boardAuctions: (id: ID) => alova.Get<ApiResponse<Auction[]>>(`/boards/${id}/auctions`, { cacheFor: null }),
     auction: (id: ID) => alova.Get<ApiResponse<Auction>>(`/auctions/${id}`, { cacheFor: null }),
