@@ -102,40 +102,34 @@ jobs:
             printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
             chmod 600 ~/.ssh/deploy_key
             printf '  IdentityFile ~/.ssh/deploy_key\n  IdentitiesOnly yes\n' >> ~/.ssh/config
-          elif [ -n "$SSHPASS" ]; then
-            sudo apt-get install -y -qq sshpass > /dev/null
-          else
+          elif [ -z "$SSHPASS" ]; then
             echo "Set the SSH_PASSWORD or SSH_KEY secret." >&2
             exit 1
           fi
+
+          # Answers ssh's password prompt from SSHPASS, so password logins need no extra tools.
+          printf '#!/bin/sh\nprintf "%%s\\n" "$SSHPASS"\n' > ~/.local/bin/ssh-askpass
 
           # `remote` runs a command on the server with whichever credential is set.
           cat > ~/.local/bin/remote <<'EOF'
           #!/usr/bin/env bash
           if [ -n "$SSHPASS" ] && [ ! -f ~/.ssh/deploy_key ]; then
-            exec sshpass -e ssh -o PreferredAuthentications=password,keyboard-interactive api "$@"
+            export SSH_ASKPASS="$HOME/.local/bin/ssh-askpass" SSH_ASKPASS_REQUIRE=force
+            exec ssh -o PreferredAuthentications=password,keyboard-interactive api "$@"
           fi
           exec ssh api "$@"
           EOF
-          chmod +x ~/.local/bin/remote
+          chmod +x ~/.local/bin/remote ~/.local/bin/ssh-askpass
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
-      - name: Prepare the server
+      - name: Upload settings
         if: github.event_name != 'workflow_dispatch' || inputs.action == 'deploy'
         env:
           API_DOTENV: ${{ secrets.API_DOTENV }}
-          APP_PORT: ${{ vars.API_PORT || '3100' }}
-          API_DOMAIN: ${{ vars.API_DOMAIN }}
-          API_URL: ${{ vars.API_URL }}
-          FRONTEND_URL: ${{ vars.FRONTEND_URL }}
         run: |
           if [ -n "$API_DOTENV" ]; then
             printf '%s\n' "$API_DOTENV" | remote "mkdir -p '$DEPLOY_PATH/shared' && umask 077 && cat > '$DEPLOY_PATH/shared/.env'"
           fi
-
-          remote "$(printf 'DEPLOY_PATH=%q APP_PORT=%q API_DOMAIN=%q API_URL=%q FRONTEND_URL=%q bash -ls' \
-            "$DEPLOY_PATH" "$APP_PORT" "$API_DOMAIN" "$API_URL" "$FRONTEND_URL")" \
-            < .github/scripts/setup-api-server.sh
 
       - name: Upload release
         if: github.event_name != 'workflow_dispatch' || inputs.action == 'deploy'
