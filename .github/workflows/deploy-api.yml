@@ -69,17 +69,17 @@ jobs:
     runs-on: ubuntu-latest
     environment: api-production
     env:
-      SSHPASS: ${{ secrets.API_SSH_PASSWORD }}
+      SSHPASS: ${{ secrets.SSH_PASSWORD }}
     steps:
       - uses: actions/checkout@v7
 
       - name: Set up SSH
         env:
-          SSH_KEY: ${{ secrets.API_SSH_KEY }}
-          SSH_HOST: ${{ secrets.API_SSH_HOST }}
-          SSH_USER: ${{ secrets.API_SSH_USER }}
-          SSH_PORT: ${{ secrets.API_SSH_PORT || '22' }}
-          KNOWN_HOSTS: ${{ secrets.API_SSH_KNOWN_HOSTS }}
+          SSH_KEY: ${{ secrets.SSH_KEY }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USERNAME }}
+          SSH_PORT: ${{ secrets.SSH_PORT || '22' }}
+          KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
         run: |
           mkdir -p ~/.ssh ~/.local/bin
           chmod 700 ~/.ssh
@@ -105,7 +105,7 @@ jobs:
           elif [ -n "$SSHPASS" ]; then
             sudo apt-get install -y -qq sshpass > /dev/null
           else
-            echo "Set the API_SSH_KEY or API_SSH_PASSWORD secret." >&2
+            echo "Set the SSH_PASSWORD or SSH_KEY secret." >&2
             exit 1
           fi
 

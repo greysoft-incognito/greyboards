@@ -58,11 +58,11 @@ Settings → Secrets and variables → Actions. Secrets can also live on the `ap
 
 | Name | Required | Value |
 | --- | --- | --- |
-| `API_SSH_HOST` | yes | Server hostname or IP |
-| `API_SSH_USER` | yes | SSH user |
-| `API_SSH_KEY` or `API_SSH_PASSWORD` | one of them | Private key (preferred), or the user's password |
-| `API_SSH_PORT` | no | SSH port, default 22 |
-| `API_SSH_KNOWN_HOSTS` | recommended | Output of `ssh-keyscan -p <port> <host>`. Without it the workflow trusts whatever key the host presents. |
+| `SSH_HOST` | yes | Server hostname or IP |
+| `SSH_USERNAME` | yes | SSH user |
+| `SSH_PASSWORD` or `SSH_KEY` | one of them | The user's password, or a private key (used first when both are set) |
+| `SSH_PORT` | no | SSH port, default 22 |
+| `SSH_KNOWN_HOSTS` | recommended | Output of `ssh-keyscan -p <port> <host>`. Without it the workflow trusts whatever key the host presents. |
 | `API_DOTENV` | no | A full `.env` for the API, replacing `shared/.env` on every deploy |
 
 **Variables**
