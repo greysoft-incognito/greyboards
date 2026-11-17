@@ -1,4 +1,6 @@
-import { Board, type BoardDetails, type BoardStatus } from '@app/models/Board'
+import { Board, type BoardDetails, type BoardOwnerChoice, type BoardStatus } from '@app/models/Board'
+import { BoardAgreement } from '@app/models/BoardAgreement'
+import { BoardAgreementResource } from '@app/http/resources/BoardAgreementResource'
 import { BoardCollection } from '@app/http/resources/BoardCollection'
 import { BoardPhotoResource } from '@app/http/resources/BoardPhotoResource'
 import { BoardPolicy } from '@app/policies/BoardPolicy'
@@ -7,7 +9,7 @@ import { GenericResource } from 'resora'
 import { ManagedBoardResource } from '@app/http/resources/ManagedBoardResource'
 import { RequestException, perPage } from '@arkstack/common'
 import { Settings } from '@app/support/Settings'
-import { imageFile } from '@app/support/rules'
+import { UUID, imageFile } from '@app/support/rules'
 import { regex } from 'kanun'
 
 const PHONE = regex(/^\+?[0-9 ()-]{7,20}$/)
@@ -34,9 +36,14 @@ const rules = (creating: boolean) => {
     rateMinor: 'nullable|integer|min:0',
     currency: 'nullable|alpha|min:3|max:3',
     ratePeriod: `nullable|in:${Board.PERIODS.join(',')}`,
-    ownerName: 'nullable|string|max:120',
-    ownerPhone: ['nullable', 'string', PHONE],
   }
+}
+
+/** Who owns a board being tagged: a suggested profile, or a new owner. */
+const ownerRules = {
+  ownerProfileId: ['nullable', UUID],
+  ownerName: 'nullable|string|max:120',
+  ownerPhone: ['nullable', 'string', PHONE],
 }
 
 const NUMBERS = ['widthM', 'heightM', 'faces', 'latitude', 'longitude', 'accuracyM', 'rateMinor'] as const
@@ -73,12 +80,13 @@ export default class AccountBoardController extends BaseController {
 
   /** Tag a board. `as` says whether the user owns it or scouted it. */
   async create() {
-    const data = await this.validate({ ...rules(true), as: 'required|in:owner,scout' })
+    const data = await this.validate({ ...rules(true), ...ownerRules, as: 'required|in:owner,scout' })
     const asOwner = data.as === 'owner'
 
     if (!(await this.user.actsAs(data.as))) throw new RequestException(`You need an active ${data.as} role to tag boards as ${data.as}.`, 403)
 
-    const board = await Board.tag(this.user, details(data, this.body) as BoardDetails, asOwner)
+    const owner: BoardOwnerChoice = { ownerProfileId: data.ownerProfileId, ownerName: data.ownerName, ownerPhone: data.ownerPhone }
+    const board = await Board.tag(this.user, details(data, this.body) as BoardDetails, owner, asOwner)
 
     return new ManagedBoardResource(board)
       .additional({ status: 'success', message: 'Board tagged. We’ll check it before it goes on the map.', code: 201 })
@@ -141,11 +149,22 @@ export default class AccountBoardController extends BaseController {
     return new GenericResource({ id: photo.id }).additional({ status: 'success', message: 'Photo removed', code: 200 })
   }
 
+  /** Text the owner of a scouted board a link to sign, or send the waiting one again. */
+  async sendAgreement() {
+    const board = await this.managed()
+    const agreement = await BoardAgreement.offer(board, this.user)
+
+    return new BoardAgreementResource(agreement)
+      .additional({ status: 'success', message: `Sent to ${agreement.ownerName ?? 'the owner'} by SMS.`, code: 201 })
+      .response()
+      .setStatusCode(201)
+  }
+
   /** The board in the route, when the signed-in user looks after it. */
   private async managed(): Promise<Board> {
     const board = await Board.query().findOrFail(String(this.params.board))
 
-    if (!BoardPolicy.manages(this.user, board)) throw new RequestException('Board not found.', 404)
+    if (!(await BoardPolicy.manages(this.user, board))) throw new RequestException('Board not found.', 404)
 
     return board
   }

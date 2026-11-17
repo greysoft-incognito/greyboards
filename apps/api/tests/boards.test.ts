@@ -58,7 +58,7 @@ describe('Boards', () => {
 
     expect(res.status).toBe(201)
     expect(res.body.data).toMatchObject({ status: 'pending', kind: 'billboard', country: 'NG', rate: { amountMinor: 85_000_000, currency: 'NGN', period: 'month' } })
-    expect(res.body.data.ownerName).toBe('Boards owner')
+    expect(res.body.data.owner).toMatchObject({ name: 'Boards owner', claimed: true })
     expect((await api('get', `/boards/${res.body.data.id}`, undefined, null)).status).toBe(404)
   })
 
@@ -70,10 +70,13 @@ describe('Boards', () => {
   })
 
   it('lists a board once a reviewer checks it, and finds it on the map and nearby', async () => {
-    const tagged = await api('post', '/account/boards', { ...lekki(run + 0.01), ownerName: 'Mr Adeyemi', ownerPhone: '+234 803 000 0000', as: 'scout' }, 'scout')
+    const tagged = await api('post', '/account/boards', { ...lekki(run + 0.01), ownerName: 'Mr Adeyemi', ownerPhone: `+234 803 ${String(Date.now()).slice(-7)}`, as: 'scout' }, 'scout')
     const id = tagged.body.data.id
 
-    expect((await api('get', '/admin/boards', undefined, 'reviewer')).body.data.map((board: { id: string }) => board.id)).toContain(id)
+    const queue = await api('get', '/admin/boards', undefined, 'reviewer')
+
+    expect(queue.body.data.every((board: { status: string }) => board.status === 'pending')).toBe(true)
+    expect((await api('get', `/admin/boards/${id}`, undefined, 'reviewer')).body.data).toMatchObject({ id, status: 'pending', tagger: { name: 'Boards scout' } })
     expect((await api('get', '/admin/boards', undefined, 'scout')).status).toBe(403)
 
     const listed = await api('put', `/admin/boards/${id}`, { status: 'listed' }, 'reviewer')
@@ -96,8 +99,8 @@ describe('Boards', () => {
     const shown = await api('get', `/boards/${id}`, undefined, null)
 
     expect(shown.body.data).toMatchObject({ id, status: 'listed' })
-    expect(shown.body.data.ownerPhone).toBeUndefined()
-    expect((await api('get', `/boards/${id}`, undefined, 'scout')).body.data.ownerPhone).toBe('+234 803 000 0000')
+    expect(shown.body.data.owner).toBeUndefined()
+    expect((await api('get', `/boards/${id}`, undefined, 'scout')).body.data.owner).toMatchObject({ name: 'Mr Adeyemi', claimed: false })
   })
 
   it('sends a listed board back for review when it moves', async () => {

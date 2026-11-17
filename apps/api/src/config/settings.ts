@@ -59,6 +59,25 @@ export default () => {
         ],
       },
       {
+        id: 'agreements',
+        title: 'Owner agreements',
+        description: 'What owners agree to when a scout signs their board.',
+        icon: 'handshake',
+        fields: [
+          {
+            name: 'owner_share_percent',
+            key: 'agreements.owner_share_percent',
+            env: 'OWNER_SHARE_PERCENT',
+            type: 'number',
+            label: 'Owner share',
+            help: 'The owner’s part of each booking on a board a scout runs for them. Signed agreements keep the share they were signed with.',
+            unit: '%',
+            min: 1,
+            max: 100,
+          },
+        ],
+      },
+      {
         id: 'security',
         title: 'Sign-in',
         description: 'Wrong guesses allowed before a pause.',

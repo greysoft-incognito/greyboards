@@ -1,6 +1,8 @@
 export { AccountRole } from './AccountRole'
 export { Board } from './Board'
+export { BoardAgreement } from './BoardAgreement'
 export { BoardPhoto } from './BoardPhoto'
+export { OwnerProfile } from './OwnerProfile'
 export { Document } from './Document'
 export { PasswordReset } from './PasswordReset'
 export { PersonalAccessToken } from './PersonalAccessToken'

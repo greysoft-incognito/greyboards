@@ -1,8 +1,10 @@
 import AccountController from 'src/app/http/controllers/AccountController'
 import AccountRoleController from 'src/app/http/controllers/AccountRoleController'
 import AccountBoardController from 'src/app/http/controllers/AccountBoardController'
+import AgreementController from 'src/app/http/controllers/AgreementController'
 import AuthController from 'src/app/http/controllers/AuthController'
 import BoardController from 'src/app/http/controllers/BoardController'
+import OwnerProfileController from 'src/app/http/controllers/OwnerProfileController'
 import SessionController from 'src/app/http/controllers/SessionController'
 import TwoFactorController from 'src/app/http/controllers/TwoFactorController'
 import LimitsController from 'src/app/http/controllers/LimitsController'
@@ -64,6 +66,21 @@ Router.put('/account/boards/:board', [AccountBoardController, 'update'], [auth])
 Router.delete('/account/boards/:board', [AccountBoardController, 'destroy'], [auth])
 Router.post('/account/boards/:board/photos', [AccountBoardController, 'addPhoto'], [auth, limiter(60, 60)])
 Router.delete('/account/boards/:board/photos/:photo', [AccountBoardController, 'removePhoto'], [auth])
+Router.post('/account/boards/:board/agreement', [AccountBoardController, 'sendAgreement'], [auth, limiter(10, 60)])
+
+// Owner profiles: suggestions while tagging, the ones an account manages, and claiming one by phone
+Router.get('/owner-profiles', [OwnerProfileController, 'suggest'], [auth, Authorize.actingAs('owner', 'scout'), limiter(120, 60)])
+Router.get('/account/owner-profiles', [OwnerProfileController, 'index'], [auth])
+Router.post('/account/owner-profiles', [OwnerProfileController, 'create'], [auth, Authorize.actingAs('owner'), limiter(20, 60)])
+Router.put('/account/owner-profiles/:profile', [OwnerProfileController, 'update'], [auth])
+Router.post('/account/owner-profiles/claim', [OwnerProfileController, 'startClaim'], [auth, limiter(5, 60)])
+Router.post('/account/owner-profiles/claim/verify', [OwnerProfileController, 'finishClaim'], [auth, limiter(10, 60)])
+
+// Owners sign by SMS from a link, without an account
+Router.get('/agreements/:token', [AgreementController, 'show'], [limiter(60, 60)])
+Router.post('/agreements/:token/code', [AgreementController, 'sendCode'], [limiter(5, 60)])
+Router.post('/agreements/:token/sign', [AgreementController, 'sign'], [limiter(10, 60)])
+Router.post('/agreements/:token/decline', [AgreementController, 'decline'], [limiter(10, 60)])
 
 // Signed-in devices
 Router.get('/account/sessions', [SessionController, 'index'], [auth])
