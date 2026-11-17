@@ -34,6 +34,8 @@ export interface Board {
   heightM: number
   faces: number
   facing: string | null
+  /** Compass direction the board's face points, 0 to 359 from true north. */
+  headingDeg: number | null
   lit: boolean
   address: string | null
   city: string | null
@@ -156,6 +158,7 @@ export interface BoardInput {
   heightM: number
   faces?: number | null
   facing?: string | null
+  headingDeg?: number | null
   lit?: boolean
   address?: string | null
   city?: string | null

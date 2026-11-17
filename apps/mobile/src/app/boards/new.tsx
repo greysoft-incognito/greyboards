@@ -5,6 +5,7 @@ import * as ImagePicker from 'expo-image-picker'
 import { router } from 'expo-router'
 import { Binoculars, Camera, LocateFixed, MapPin, Presentation, X } from 'lucide-react-native'
 import type { BoardKind, BoardKindDefinition, BoardOwnerChoice, BoardRatePeriod } from '@greyboards/types'
+import { HeadingPicker } from '@/components/boards/HeadingPicker'
 import { OwnerPicker } from '@/components/boards/OwnerPicker'
 import { taggingRoles } from '@/components/boards/BoardBits'
 import { Section, SettingsPage } from '@/components/settings/SettingsPage'
@@ -46,6 +47,7 @@ export default function TagBoard() {
   const [kinds, setKinds] = useState<BoardKindDefinition[]>([])
   const [shots, setShots] = useState<Shot[]>([])
   const [owner, setOwner] = useState<BoardOwnerChoice>({})
+  const [heading, setHeading] = useState<number | null>(null)
   const [form, setForm] = useState({ name: '', kind: 'billboard' as BoardKind, widthM: '', heightM: '', faces: '1', lit: '0', facing: '', address: '', city: '', rate: '', ratePeriod: 'month' as BoardRatePeriod })
   const errors = save.problem.fields
   const set = (key: keyof typeof form) => (value: string) => setForm((current) => ({ ...current, [key]: value }))
@@ -101,6 +103,7 @@ export default function TagBoard() {
           faces: Number(form.faces),
           lit: form.lit === '1',
           facing: form.facing.trim() || null,
+          headingDeg: heading,
           address: form.address.trim() || null,
           city: form.city.trim() || null,
           country: 'NG',
@@ -220,6 +223,9 @@ export default function TagBoard() {
             </Field>
           </View>
         </View>
+        <Field label="Direction it faces" error={errors.headingDeg}>
+          <HeadingPicker value={heading} onChange={setHeading} />
+        </Field>
         <Field label="Facing" error={errors.facing} hint="Which traffic sees it.">
           <Input value={form.facing} onChangeText={set('facing')} maxLength={60} placeholder="Traffic to Ajah" />
         </Field>

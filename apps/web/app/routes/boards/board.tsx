@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Form, Link, redirect, useNavigation, useSearchParams, useSubmit } from "react-router";
 import { ArrowLeft, BadgeCheck, Camera, Compass, ExternalLink, FileSignature, Layers, Lightbulb, Map as MapIcon, MapPin, Pencil, Phone, Ruler, Send, Trash2, User, X } from "lucide-react";
 import type { BoardAgreement, BoardDetail, BoardPhoto, OwnerProfile } from "@greyboards/types";
-import { BoardCover, BoardStatusBadge, formatRate, formatSize, mapLink } from "~/components/boards/BoardBits";
+import { BoardCover, BoardStatusBadge, formatHeading, formatRate, formatSize, mapLink } from "~/components/boards/BoardBits";
 import { BookPanel } from "~/components/bookings/BookPanel";
 import { SpotMap } from "~/components/map/SpotMap";
 import { Alert, Button, buttonClass, Spinner } from "~/components/ui";
@@ -106,7 +106,7 @@ export default function BoardPage({ loaderData, actionData }: Route.ComponentPro
 	const facts = [
 		{ icon: Ruler, label: `${board.kindLabel}, ${formatSize(board)}` },
 		{ icon: Layers, label: board.faces === 1 ? "One face" : `${board.faces} faces` },
-		board.facing ? { icon: Compass, label: board.facing } : null,
+		board.facing || board.headingDeg !== null ? { icon: Compass, label: [board.headingDeg !== null ? formatHeading(board.headingDeg) : null, board.facing].filter(Boolean).join(", ") } : null,
 		{ icon: Lightbulb, label: board.lit ? "Lit at night" : "Not lit" },
 	].filter((fact) => fact !== null);
 

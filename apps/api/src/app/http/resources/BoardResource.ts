@@ -29,6 +29,7 @@ export class BoardResource extends Resource {
       heightM: board.heightM,
       faces: board.faces,
       facing: board.facing,
+      headingDeg: board.headingDeg,
       lit: board.lit,
       address: board.address,
       city: board.city,

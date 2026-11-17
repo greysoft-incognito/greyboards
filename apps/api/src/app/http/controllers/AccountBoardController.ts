@@ -26,6 +26,7 @@ const rules = (creating: boolean) => {
     heightM: `${need}|numeric|min:0.5|max:100`,
     faces: 'nullable|integer|min:1|max:4',
     facing: 'nullable|string|max:60',
+    headingDeg: 'nullable|integer|min:0|max:359',
     lit: 'nullable|boolean',
     address: 'nullable|string|max:191',
     city: 'nullable|string|max:80',
@@ -48,7 +49,7 @@ const ownerRules = {
   ownerPhone: ['nullable', 'string', PHONE],
 }
 
-const NUMBERS = ['widthM', 'heightM', 'faces', 'latitude', 'longitude', 'accuracyM', 'rateMinor', 'printFeeMinor'] as const
+const NUMBERS = ['widthM', 'heightM', 'faces', 'latitude', 'longitude', 'accuracyM', 'headingDeg', 'rateMinor', 'printFeeMinor'] as const
 
 /** Only the fields that were sent, with numbers as numbers, so a missing field keeps what the board has. */
 const details = (data: Record<string, any>, sent: Record<string, unknown>): Partial<BoardDetails> => {

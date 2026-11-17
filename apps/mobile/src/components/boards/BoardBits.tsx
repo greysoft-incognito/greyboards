@@ -105,3 +105,10 @@ const styles = StyleSheet.create({
   meta: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   flex: { flex: 1 },
 })
+
+const POINTS = ['north', 'north-east', 'east', 'south-east', 'south', 'south-west', 'west', 'north-west']
+
+/** "Faces north-east" for a compass heading in degrees. */
+export function formatHeading(degrees: number) {
+  return `Faces ${POINTS[Math.round(degrees / 45) % 8]}`
+}

@@ -35,6 +35,8 @@ export interface BoardDetails {
   heightM: number
   faces?: number
   facing?: string | null
+  /** Compass direction the board's face points, 0 to 359 from true north. */
+  headingDeg?: number | null
   lit?: boolean
   address?: string | null
   city?: string | null
@@ -92,6 +94,7 @@ export class Board extends Model {
   declare heightM: number
   declare faces: number
   declare facing: string | null
+  declare headingDeg: number | null
   declare lit: boolean
   declare address: string | null
   declare city: string | null
@@ -152,6 +155,7 @@ export class Board extends Model {
     widthM: 'width_m',
     heightM: 'height_m',
     accuracyM: 'accuracy_m',
+    headingDeg: 'heading_deg',
     rateMinor: 'rate_minor',
     ratePeriod: 'rate_period',
     printsOwn: 'prints_own',
