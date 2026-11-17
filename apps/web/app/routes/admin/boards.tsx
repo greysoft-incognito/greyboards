@@ -1,5 +1,5 @@
 import { Form, Link, useNavigation, useSearchParams } from "react-router";
-import { Check, EyeOff, MapPin, Phone, X } from "lucide-react";
+import { BadgeCheck, Check, EyeOff, FileSignature, MapPin, Phone, X } from "lucide-react";
 import type { AdminBoard, BoardReview, BoardStatus } from "@greyboards/types";
 import { AdminHeader } from "~/components/admin/AdminHeader";
 import { Avatar } from "~/components/Avatar";
@@ -19,6 +19,8 @@ const STATUSES: { value: BoardStatus; label: string }[] = [
 	{ value: "rejected", label: "Not approved" },
 	{ value: "unlisted", label: "Off the map" },
 ];
+
+const AGREEMENT_LABELS = { sent: "Owner hasn't signed yet", signed: "Owner signed", declined: "Owner declined", cancelled: "Agreement replaced", expired: "Owner's link ran out" } as const;
 
 /** Photos taken farther than this from the board are flagged. */
 const FAR_M = 150;
@@ -151,19 +153,30 @@ function BoardRow({ board }: { board: AdminBoard }) {
 						<span className="flex items-center gap-2">
 							<Avatar user={board.tagger} size="sm" />
 							<span>
-								{board.ownerId === board.tagger.id ? "Owner " : "Scout "}
+								{board.owner?.userId === board.tagger.id ? "Owner " : "Scout "}
 								<Link prefetch="intent" to={`/admin/users/${board.tagger.id}`} className="font-semibold hover:text-brand-700 hover:underline">
 									{board.tagger.name}
 								</Link>
 							</span>
 						</span>
 					)}
-					{board.ownerPhone && (
-						<a href={`tel:${board.ownerPhone}`} className="flex items-center gap-1.5 hover:text-brand-700">
+					{board.owner && (
+						<span className="flex items-center gap-1.5">
 							<Phone className="h-4 w-4 text-ink-500" aria-hidden />
-							{board.ownerName ? `${board.ownerName}, ` : ""}
-							{board.ownerPhone}
-						</a>
+							{board.owner.name}
+							{board.owner.claimed && <BadgeCheck className="h-4 w-4 text-brand-600" aria-label="On Greyboards" />}
+							{board.owner.phone && (
+								<a href={`tel:${board.owner.phone}`} className="tabular-nums hover:text-brand-700">
+									{board.owner.phone}
+								</a>
+							)}
+						</span>
+					)}
+					{board.agreement && (
+						<span className="flex items-center gap-1.5">
+							<FileSignature className="h-4 w-4 text-ink-500" aria-hidden />
+							{AGREEMENT_LABELS[board.agreement.status]}
+						</span>
 					)}
 				</div>
 				<Form method="post" preventScrollReset action={`?${params}`} className="flex flex-wrap items-center gap-2 pt-1">

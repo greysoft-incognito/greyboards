@@ -1,4 +1,4 @@
-import type { BoardInput, BoardPhotoLocation } from "@greyboards/types";
+import type { BoardInput, BoardOwnerChoice, BoardPhotoLocation } from "@greyboards/types";
 
 const text = (form: FormData, key: string) => {
 	const value = form.get(key);
@@ -33,7 +33,6 @@ export function boardInput(form: FormData): BoardInput {
 		accuracyM: number(form, "accuracyM"),
 		rateMinor: rate === null ? null : Math.round(rate * 100),
 		ratePeriod: (text(form, "ratePeriod") ?? "month") as BoardInput["ratePeriod"],
-		...(form.has("ownerName") ? { ownerName: text(form, "ownerName"), ownerPhone: text(form, "ownerPhone") } : {}),
 	};
 }
 
@@ -51,4 +50,9 @@ export function postedPhoto(form: FormData, key = "photo") {
 	const file = form.get(key);
 
 	return file instanceof File && file.size > 0 ? file : null;
+}
+
+/** Who owns the board a BoardForm tagged: a picked profile, or a new owner's name and phone. */
+export function boardOwner(form: FormData): BoardOwnerChoice {
+	return { ownerProfileId: text(form, "ownerProfileId"), ownerName: text(form, "ownerName"), ownerPhone: text(form, "ownerPhone") };
 }

@@ -2,7 +2,9 @@ import { Model } from '@arkstack/database'
 import { Storage } from '@arkstack/filesystem'
 import { abortIf } from '@arkstack/common'
 import { raw, type QueryBuilder } from 'arkormx'
+import { BoardAgreement } from './BoardAgreement'
 import { BoardPhoto, type BoardPhotoInput } from './BoardPhoto'
+import { OwnerProfile } from './OwnerProfile'
 import { User, type UploadedFile } from './User'
 
 export type BoardKind = 'billboard' | 'unipole' | 'gantry' | 'wall' | 'digital' | 'street_pole' | 'bus_shelter'
@@ -43,6 +45,11 @@ export interface BoardDetails {
   rateMinor?: number | null
   currency?: string
   ratePeriod?: BoardRatePeriod
+}
+
+/** Who owns a board being tagged: a profile picked from the suggestions, or a new owner's name and phone. */
+export interface BoardOwnerChoice {
+  ownerProfileId?: string | null
   ownerName?: string | null
   ownerPhone?: string | null
 }
@@ -73,9 +80,7 @@ export class Board extends Model {
   declare ratePeriod: BoardRatePeriod
   declare status: BoardStatus
   declare reviewNote: string | null
-  declare ownerName: string | null
-  declare ownerPhone: string | null
-  declare ownerId: string | null
+  declare ownerProfileId: string | null
   declare taggedById: string | null
   declare reviewedById: string | null
   declare reviewedAt: Date | null
@@ -121,9 +126,7 @@ export class Board extends Model {
     rateMinor: 'rate_minor',
     ratePeriod: 'rate_period',
     reviewNote: 'review_note',
-    ownerName: 'owner_name',
-    ownerPhone: 'owner_phone',
-    ownerId: 'owner_id',
+    ownerProfileId: 'owner_profile_id',
     taggedById: 'tagged_by_id',
     reviewedById: 'reviewed_by_id',
     reviewedAt: 'reviewed_at',
@@ -140,20 +143,35 @@ export class Board extends Model {
   }
 
   /**
-   * Record a board `user` found. An owner tagging their own board owns it at once; a scout
-   * notes who owns it so we can reach them. Either way it waits for review.
+   * Record a board `user` found, and wait for review. An owner tags it under one of the
+   * profiles they manage (their own by default). A scout picks the owner from the
+   * suggestions or gives a new owner's name and phone, which makes a profile for them.
    */
-  static async tag(user: User, details: BoardDetails, asOwner: boolean): Promise<Board> {
-    abortIf(!asOwner && !details.ownerPhone, 'Add the board owner’s phone number so we can reach them.', 422)
+  static async tag(user: User, details: BoardDetails, owner: BoardOwnerChoice, asOwner: boolean): Promise<Board> {
+    const profile = await Board.ownerFor(user, owner, asOwner)
 
     return Board.query().create({
       ...Board.clean(details),
       status: Board.PENDING,
       taggedById: user.id,
-      ownerId: asOwner ? user.id : null,
-      ownerName: asOwner ? user.name : (details.ownerName?.trim() ?? null),
-      ownerPhone: details.ownerPhone?.trim() || null,
+      ownerProfileId: profile.id,
     })
+  }
+
+  private static async ownerFor(user: User, owner: BoardOwnerChoice, asOwner: boolean): Promise<OwnerProfile> {
+    if (asOwner) return owner.ownerProfileId ? OwnerProfile.managedBy(user, owner.ownerProfileId) : OwnerProfile.personal(user)
+
+    if (owner.ownerProfileId) {
+      const profile = await OwnerProfile.query().find(owner.ownerProfileId)
+
+      abortIf(!profile, 'That owner profile no longer exists. Pick the owner again.', 422)
+
+      return profile!
+    }
+
+    abortIf(!owner.ownerPhone?.trim(), 'Add the board owner’s phone number so we can reach them.', 422)
+
+    return OwnerProfile.findOrCreate(user, owner.ownerName ?? '', owner.ownerPhone!)
   }
 
   /** Trimmed details with empty text stored as null. */
@@ -172,8 +190,8 @@ export class Board extends Model {
     return cleaned as Partial<BoardDetails>
   }
 
-  owner() {
-    return this.belongsTo(User, 'ownerId')
+  ownerProfile() {
+    return this.belongsTo(OwnerProfile, 'ownerProfileId')
   }
 
   tagger() {
@@ -186,6 +204,18 @@ export class Board extends Model {
 
   photos() {
     return this.hasMany(BoardPhoto, 'boardId')
+  }
+
+  /** Agreements sent to the owner of a scouted board, newest last. */
+  agreements() {
+    return this.hasMany(BoardAgreement, 'boardId')
+  }
+
+  /** The agreement that counts: the signed one, else the latest sent. */
+  async agreement(): Promise<BoardAgreement | null> {
+    const signed = await this.agreements().where({ status: BoardAgreement.SIGNED }).first()
+
+    return signed ?? (await this.agreements().latest('createdAt').first())
   }
 
   scopeListed(query: QueryBuilder<Board>): QueryBuilder<Board> {
@@ -202,7 +232,9 @@ export class Board extends Model {
 
   /** Boards `user` owns or tagged. */
   scopeManagedBy(query: QueryBuilder<Board>, user: User): QueryBuilder<Board> {
-    return query.where((match: QueryBuilder<Board>) => match.where({ ownerId: user.id }).orWhere({ taggedById: user.id }))
+    return query.where((match: QueryBuilder<Board>) =>
+      match.where({ taggedById: user.id }).orWhereRaw('owner_profile_id in (select id from owner_profiles where user_id = ?)', [user.id]),
+    )
   }
 
   /** Boards inside `box`. A box that crosses the date line wraps around it. */
@@ -249,7 +281,9 @@ export class Board extends Model {
   /** Record a reviewer's decision. Pending is not a decision. */
   async review(reviewer: User, status: BoardStatus, note?: string | null): Promise<void> {
     abortIf(status === Board.PENDING, 'Pick listed, rejected or unlisted.', 422)
-    abortIf(reviewer.id === this.taggedById || reviewer.id === this.ownerId, 'You cannot review a board you tagged or own.', 422)
+    const profile = await this.ownerProfile().first()
+
+    abortIf(reviewer.id === this.taggedById || profile?.isManagedBy(reviewer), 'You cannot review a board you tagged or own.', 422)
 
     await this.update({ status, reviewNote: note?.trim() || null, reviewedById: reviewer.id, reviewedAt: new Date() })
   }

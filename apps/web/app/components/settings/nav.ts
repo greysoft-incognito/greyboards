@@ -6,6 +6,7 @@ export const SETTINGS_GROUPS = [
 			{ to: "/settings/profile", label: "Profile", hint: "Your name and photo" },
 			{ to: "/settings/email", label: "Email", hint: "Your address and confirming it" },
 			{ to: "/settings/roles", label: "How you use Greyboards", hint: "Advertise, own boards, scout or post bills" },
+			{ to: "/settings/owners", label: "Board owners", hint: "Owners you manage, and claiming boards listed under your number" },
 		],
 	},
 	{

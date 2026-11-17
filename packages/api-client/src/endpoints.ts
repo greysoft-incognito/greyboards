@@ -6,6 +6,7 @@ import type {
   AdminAccountRole,
   AdminAccountRoleQuery,
   AdminBoard,
+  AgreementOffer,
   AdminOverview,
   AdminUser,
   AdminUserDetail,
@@ -13,9 +14,11 @@ import type {
   ApiResponse,
   AppLimits,
   Board,
+  BoardAgreement,
   BoardDetail,
   BoardInput,
   BoardKindDefinition,
+  BoardOwnerChoice,
   BoardPhoto,
   BoardPhotoLocation,
   BoardReview,
@@ -25,6 +28,8 @@ import type {
   DocumentSummary,
   DocumentType,
   ID,
+  OwnerProfile,
+  OwnerSuggestion,
   PageQuery,
   PaginatedResponse,
   PermissionDefinition,
@@ -60,6 +65,17 @@ export function createEndpoints(alova: GreyboardsAlova) {
     boards: (params: BoardSearch = {}) => alova.Get<PaginatedResponse<Board>>('/boards', { params, cacheFor: null }),
     /** A board and its photos. Unlisted boards show only to their owner, tagger and reviewers. */
     board: (id: ID) => alova.Get<ApiResponse<BoardDetail>>(`/boards/${id}`, { cacheFor: null }),
+
+    /** Owners matching a typed name or number, for tagging a board. Needs an owner or scout role. */
+    ownerSuggestions: (search: string) => alova.Get<ApiResponse<OwnerSuggestion[]>>('/owner-profiles', { params: { search }, cacheFor: null }),
+
+    /** An owner reads and signs their agreement from the link in their SMS, without an account. */
+    agreements: {
+      show: (token: string) => alova.Get<ApiResponse<AgreementOffer>>(`/agreements/${token}`, { cacheFor: null }),
+      sendCode: (token: string) => alova.Post<ApiResponse<{ sent: true }>>(`/agreements/${token}/code`),
+      sign: (token: string, data: { name: string; code: string }) => alova.Post<ApiResponse<AgreementOffer>>(`/agreements/${token}/sign`, data),
+      decline: (token: string) => alova.Post<ApiResponse<AgreementOffer>>(`/agreements/${token}/decline`),
+    },
 
     /** What each marketplace role is for. Works signed out. */
     accountRoles: () => alova.Get<ApiResponse<AccountRoleDefinition[]>>('/account-roles'),
@@ -115,7 +131,7 @@ export function createEndpoints(alova: GreyboardsAlova) {
       boards: (params: PageQuery & { status?: BoardStatus } = {}) =>
         alova.Get<PaginatedResponse<Board>>('/account/boards', { params, cacheFor: null }),
       /** Tag a board, as its owner or as the scout who found it. It waits for review. */
-      tagBoard: (data: BoardInput & { as: 'owner' | 'scout' }) => alova.Post<ApiResponse<BoardDetail>>('/account/boards', data),
+      tagBoard: (data: BoardInput & BoardOwnerChoice & { as: 'owner' | 'scout' }) => alova.Post<ApiResponse<BoardDetail>>('/account/boards', data),
       /** Moving or resizing a listed board sends it back for review. */
       updateBoard: (id: ID, data: Partial<BoardInput>) => alova.Put<ApiResponse<BoardDetail>>(`/account/boards/${id}`, data),
       removeBoard: (id: ID) => alova.Delete<ApiResponse<{ id: ID }>>(`/account/boards/${id}`),
@@ -132,6 +148,17 @@ export function createEndpoints(alova: GreyboardsAlova) {
         return alova.Post<ApiResponse<BoardPhoto>>(`/account/boards/${id}/photos`, form)
       },
       removeBoardPhoto: (id: ID, photo: ID) => alova.Delete<ApiResponse<{ id: ID }>>(`/account/boards/${id}/photos/${photo}`),
+      /** Text the owner of a scouted board a link to sign, or send the waiting one again. */
+      sendAgreement: (id: ID) => alova.Post<ApiResponse<BoardAgreement>>(`/account/boards/${id}/agreement`),
+
+      /** The owner profiles the account manages. */
+      ownerProfiles: (params: PageQuery = {}) => alova.Get<PaginatedResponse<OwnerProfile>>('/account/owner-profiles', { params, cacheFor: null }),
+      /** Add an owner the account manages, such as an agency's client. */
+      createOwnerProfile: (data: { name: string }) => alova.Post<ApiResponse<OwnerProfile>>('/account/owner-profiles', data),
+      updateOwnerProfile: (id: ID, data: { name: string }) => alova.Put<ApiResponse<OwnerProfile>>(`/account/owner-profiles/${id}`, data),
+      /** Text a code to the number on an unclaimed owner profile. */
+      claimOwnerProfile: (data: { phone: string }) => alova.Post<ApiResponse<{ sent: true }>>('/account/owner-profiles/claim', data),
+      verifyOwnerClaim: (data: { phone: string; code: string }) => alova.Post<ApiResponse<OwnerProfile>>('/account/owner-profiles/claim/verify', data),
 
       sessions: () => alova.Get<ApiResponse<Session[]>>('/account/sessions', { cacheFor: null }),
       revokeSession: (id: ID) => alova.Delete<ApiResponse<Session>>(`/account/sessions/${id}`),
