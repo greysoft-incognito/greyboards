@@ -4,6 +4,8 @@ import AccountBoardController from 'src/app/http/controllers/AccountBoardControl
 import AgreementController from 'src/app/http/controllers/AgreementController'
 import AuthController from 'src/app/http/controllers/AuthController'
 import BoardController from 'src/app/http/controllers/BoardController'
+import BookingController from 'src/app/http/controllers/BookingController'
+import PaymentController from 'src/app/http/controllers/PaymentController'
 import OwnerProfileController from 'src/app/http/controllers/OwnerProfileController'
 import SessionController from 'src/app/http/controllers/SessionController'
 import TwoFactorController from 'src/app/http/controllers/TwoFactorController'
@@ -11,6 +13,7 @@ import LimitsController from 'src/app/http/controllers/LimitsController'
 import DocumentController from 'src/app/http/controllers/DocumentController'
 import AdminAccountRoleController from 'src/app/http/controllers/admin/AccountRoleController'
 import AdminBoardController from 'src/app/http/controllers/admin/BoardController'
+import AdminBookingController from 'src/app/http/controllers/admin/BookingController'
 import AdminDocumentController from 'src/app/http/controllers/admin/DocumentController'
 import OverviewController from 'src/app/http/controllers/admin/OverviewController'
 import SettingsController from 'src/app/http/controllers/admin/SettingsController'
@@ -61,6 +64,7 @@ Router.get('/board-kinds', [BoardController, 'kinds'], [limiter(120, 60)])
 Router.get('/boards', [BoardController, 'index'], [limiter(240, 60)])
 Router.get('/boards/pins', [BoardController, 'pins'], [limiter(240, 60)])
 Router.get('/boards/:board', [BoardController, 'show'], [limiter(240, 60)])
+Router.get('/boards/:board/availability', [BookingController, 'availability'], [limiter(120, 60)])
 Router.get('/account/boards', [AccountBoardController, 'index'], [auth])
 Router.post('/account/boards', [AccountBoardController, 'create'], [auth, Authorize.actingAs('owner', 'scout'), limiter(30, 60)])
 Router.put('/account/boards/:board', [AccountBoardController, 'update'], [auth])
@@ -102,6 +106,19 @@ Router.get('/admin/users/:user', [UserController, 'show'], [auth, Authorize.to('
 Router.put('/admin/users/:user', [UserController, 'update'], [auth, Authorize.to('users.manage')])
 Router.get('/admin/account-roles', [AdminAccountRoleController, 'index'], [auth, Authorize.to('partners.review')])
 Router.put('/admin/account-roles/:role', [AdminAccountRoleController, 'update'], [auth, Authorize.to('partners.review')])
+// Booking boards. Dates are held while the advertiser pays; the money waits in escrow until the ad is up.
+Router.post('/boards/:board/bookings', [BookingController, 'create'], [auth, Authorize.actingAs('advertiser'), limiter(20, 60)])
+Router.get('/account/bookings', [BookingController, 'index'], [auth])
+Router.get('/account/board-bookings', [BookingController, 'onMyBoards'], [auth])
+Router.get('/bookings/:booking', [BookingController, 'show'], [auth])
+Router.post('/bookings/:booking/checkout', [BookingController, 'checkout'], [auth, limiter(10, 60)])
+Router.post('/bookings/:booking/cancel', [BookingController, 'cancel'], [auth])
+
+// Payments finish on the provider's checkout. The webhook checks each one with the provider.
+Router.post('/payments/:reference/verify', [PaymentController, 'verify'], [auth, limiter(30, 60)])
+Router.post('/payments/flutterwave/webhook', [PaymentController, 'flutterwave'], [limiter(120, 60)])
+
+Router.get('/admin/bookings', [AdminBookingController, 'index'], [auth, Authorize.to('bookings.view')])
 Router.get('/admin/boards', [AdminBoardController, 'index'], [auth, Authorize.to('boards.review')])
 Router.get('/admin/boards/:board', [AdminBoardController, 'show'], [auth, Authorize.to('boards.review')])
 Router.put('/admin/boards/:board', [AdminBoardController, 'update'], [auth, Authorize.to('boards.review')])

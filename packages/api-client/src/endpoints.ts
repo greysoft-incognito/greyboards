@@ -26,6 +26,10 @@ import type {
   BoardReview,
   BoardSearch,
   BoardStatus,
+  BookedDays,
+  Booking,
+  BookingInput,
+  BookingQuery,
   DocumentInput,
   DocumentSummary,
   DocumentType,
@@ -34,6 +38,7 @@ import type {
   OwnerSuggestion,
   PageQuery,
   PaginatedResponse,
+  Payment,
   PermissionDefinition,
   Role,
   RoleInput,
@@ -67,6 +72,16 @@ export function createEndpoints(alova: GreyboardsAlova) {
     boards: (params: BoardSearch = {}) => alova.Get<PaginatedResponse<Board>>('/boards', { params, cacheFor: null }),
     /** Every listed board in the map's view as a light pin, up to a few hundred. Works signed out. */
     boardPins: (params: BoardPinSearch) => alova.Get<BoardPinsResponse>('/boards/pins', { params, cacheFor: null }),
+    /** Days already booked on a board, for its calendar. */
+    boardAvailability: (id: ID, params: { from?: string; to?: string } = {}) => alova.Get<ApiResponse<BookedDays[]>>(`/boards/${id}/availability`, { params, cacheFor: null }),
+    /** Hold dates on a board while the advertiser pays. */
+    bookBoard: (id: ID, data: BookingInput) => alova.Post<ApiResponse<Booking>>(`/boards/${id}/bookings`, data),
+    booking: (id: ID) => alova.Get<ApiResponse<Booking>>(`/bookings/${id}`, { cacheFor: null }),
+    /** Start paying for held dates. Send the payer to `checkoutUrl`. */
+    checkout: (id: ID) => alova.Post<ApiResponse<Payment>>(`/bookings/${id}/checkout`),
+    cancelBooking: (id: ID) => alova.Post<ApiResponse<Booking>>(`/bookings/${id}/cancel`),
+    /** Check a payment when the payer comes back from the checkout. */
+    verifyPayment: (reference: string) => alova.Post<ApiResponse<Payment>>(`/payments/${encodeURIComponent(reference)}/verify`),
     /** A board and its photos. Unlisted boards show only to their owner, tagger and reviewers. */
     board: (id: ID) => alova.Get<ApiResponse<BoardDetail>>(`/boards/${id}`, { cacheFor: null }),
 
@@ -108,6 +123,10 @@ export function createEndpoints(alova: GreyboardsAlova) {
     },
 
     account: {
+      /** Bookings the account made. */
+      bookings: (params: BookingQuery = {}) => alova.Get<PaginatedResponse<Booking>>('/account/bookings', { params, cacheFor: null }),
+      /** Paid bookings on boards the account tagged or owns, with what each one pays out. */
+      boardBookings: (params: PageQuery = {}) => alova.Get<PaginatedResponse<Booking>>('/account/board-bookings', { params, cacheFor: null }),
       updateProfile: (data: { name: string; username?: string }) => alova.Put<ApiResponse<User>>('/account/profile', data),
       /** `file` is a File/Blob on web, or an RN `{ uri, name, type }` object. */
       updateAvatar: (file: Blob | { uri: string; name: string; type: string }) => {
@@ -180,6 +199,7 @@ export function createEndpoints(alova: GreyboardsAlova) {
 
     /** The admin dashboard. Each area needs a role that grants it (see `User.permissions`). */
     admin: {
+      bookings: (params: BookingQuery = {}) => alova.Get<PaginatedResponse<Booking>>('/admin/bookings', { params, cacheFor: null }),
       overview: () => alova.Get<ApiResponse<AdminOverview>>('/admin/overview', { cacheFor: null }),
       users: (params: AdminUserQuery = {}) => alova.Get<PaginatedResponse<AdminUser>>('/admin/users', { params, cacheFor: null }),
       /** One account with the marketplace roles it holds. */

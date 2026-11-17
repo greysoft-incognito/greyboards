@@ -17,6 +17,7 @@ export default defineConfig({
       NODE_ENV: 'test',
       VERBOSITY: '0',
       MAIL_TRANSPORT: 'file',
+      PAYMENT_DRIVER: 'fake',
     },
   },
 })

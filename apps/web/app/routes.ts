@@ -21,6 +21,9 @@ export default [
 		route("boards/owners", "routes/boards/owners.ts"),
 		route("boards/:id", "routes/boards/board.tsx"),
 		route("boards/:id/edit", "routes/boards/edit.tsx"),
+		route("bookings", "routes/bookings/index.tsx"),
+		route("bookings/:id", "routes/bookings/booking.tsx"),
+		route("checkout/complete", "routes/checkout-complete.tsx"),
 		route("settings", "routes/settings/layout.tsx", [
 			index("routes/settings/index.tsx"),
 			route("profile", "routes/settings/profile.tsx"),
@@ -42,6 +45,7 @@ export default [
 			route("users/:id", "routes/admin/user.tsx"),
 			route("applications", "routes/admin/applications.tsx"),
 			route("boards", "routes/admin/boards.tsx"),
+			route("bookings", "routes/admin/bookings.tsx"),
 			route("pages/:document?", "routes/admin/pages.tsx"),
 			route("roles/:role?", "routes/admin/roles.tsx"),
 			route("configuration/:group?", "routes/admin/configuration.tsx"),

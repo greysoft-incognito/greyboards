@@ -51,7 +51,9 @@ describe('Marketplace roles', () => {
   })
 
   it('lets reviewers approve, reject and suspend applications', async () => {
-    const pending = await api('get', '/admin/account-roles?kind=scout&status=pending', undefined, 'reviewer')
+    // The queue is oldest first, so a new application is on its last page.
+    const first = await api('get', '/admin/account-roles?kind=scout&status=pending&per_page=100', undefined, 'reviewer')
+    const pending = await api('get', `/admin/account-roles?kind=scout&status=pending&per_page=100&page=${first.body.meta.last_page}`, undefined, 'reviewer')
     const mine = (await api('get', '/account/roles')).body.data.find((role: { kind: string }) => role.kind === 'scout')
 
     expect(pending.body.data.map((role: { id: string }) => role.id)).toContain(mine.id)
