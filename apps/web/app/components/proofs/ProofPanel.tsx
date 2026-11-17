@@ -4,7 +4,7 @@ import { BadgeCheck, Camera, Check, Flag, MapPin, Send, X } from "lucide-react";
 import type { BookingProof } from "@greyboards/types";
 import { Button, Spinner, Textarea } from "~/components/ui";
 
-/** A moment such as "19 Nov, 4:30 PM", in Lagos time where the boards are. */
+/** A moment such as "19 Nov, 4:30 PM", in Nigerian time, where the boards are. */
 export function formatMoment(value: string) {
 	return new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit", hour12: true, timeZone: "Africa/Lagos" }).format(new Date(value));
 }

@@ -1,7 +1,7 @@
 import type { BoardKind, BoardPin, MapBounds } from "@greyboards/types";
 
-/** Where the map opens when the link says nowhere: central Lagos. */
-export const DEFAULT_VIEW: MapView = { latitude: 6.5244, longitude: 3.3792, zoom: 11 };
+/** Where the map opens when the link says nowhere: central Kaduna, where Greyboards goes live first. */
+export const DEFAULT_VIEW: MapView = { latitude: 10.5222, longitude: 7.4383, zoom: 12 };
 
 /** The map's centre and zoom, as kept in the page's address. */
 export interface MapView {

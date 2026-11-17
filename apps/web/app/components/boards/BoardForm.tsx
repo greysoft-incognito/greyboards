@@ -127,7 +127,7 @@ export function BoardForm({
 						<Input name="address" defaultValue={board?.address ?? ""} maxLength={191} placeholder="Admiralty Way, by the roundabout" />
 					</Field>
 					<Field label="City" error={fieldErrors.city}>
-						<Input name="city" defaultValue={board?.city ?? ""} maxLength={80} placeholder="Lagos" />
+						<Input name="city" defaultValue={board?.city ?? ""} maxLength={80} placeholder="Kaduna" />
 					</Field>
 				</div>
 				<input type="hidden" name="country" value={board?.country ?? "NG"} />
@@ -136,7 +136,7 @@ export function BoardForm({
 			<section className="panel space-y-5 p-5 sm:p-6">
 				<h2 className="font-display text-lg font-extrabold tracking-tight text-ink-900">The board</h2>
 				<Field label="Name" error={fieldErrors.name} hint="What advertisers see first. A landmark helps.">
-					<Input name="name" required defaultValue={board?.name ?? ""} maxLength={120} placeholder="Admiralty Way, facing Lekki Phase 1" />
+					<Input name="name" required defaultValue={board?.name ?? ""} maxLength={120} placeholder="Ahmadu Bello Way, facing Murtala Square" />
 				</Field>
 				<div className="grid gap-4 sm:grid-cols-3">
 					<Field label="Kind" error={fieldErrors.kind}>

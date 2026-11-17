@@ -105,7 +105,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 							</span>
 						</div>
 						<div className="p-5">
-							<p className="font-display text-lg font-extrabold tracking-tight text-ink-900">Lekki–Epe Expressway, Ikate</p>
+							<p className="font-display text-lg font-extrabold tracking-tight text-ink-900">Ahmadu Bello Way, Kaduna</p>
 							<p className="mt-1 text-sm text-ink-500">Static · 12 × 4 m · faces east · lit at night</p>
 							<div className="mt-4 flex items-center justify-between gap-3">
 								<div>
