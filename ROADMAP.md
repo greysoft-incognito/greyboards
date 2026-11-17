@@ -41,7 +41,7 @@ What's built and what's left, following the phases in [docs/proposal.md](docs/pr
 
 ## Open decisions
 
-- Mobile bundle id (`ng.greysoft.greyboards` is a placeholder) and the EAS project
+- The EAS project for mobile builds
 - Default owner share (70%) and the owner agreement wording
 - Scout pay on managed boards, what "sharing" means, the bid format and the launch city (proposal questions 1, 2, 3 and 5)
 

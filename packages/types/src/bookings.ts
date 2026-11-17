@@ -142,17 +142,23 @@ export interface BookingPrintJob {
 
 /**
  * `open` until a billposter reserves it, `reserved` for a few hours while they check the
- * date, `confirmed` once it is theirs, then `printed` and `posted`.
+ * date, `confirmed` once it is theirs, then `printed` and `posted`. `cancelled` when whoever
+ * looks after the board stepped in to do it themselves.
  */
 export type PrintJobStatus = 'open' | 'reserved' | 'confirmed' | 'printed' | 'posted' | 'cancelled'
 
 export interface PrintJob {
   id: ID
   status: PrintJobStatus
+  /** What the billposter earns, any rush bonus included. */
   feeMinor: number
+  /** Extra pay because the job went back close to go-live. */
+  bonusMinor: number
   currency: string
   /** The day the ad must be up: the booking's first day. */
   dueOn: string
+  /** The last day for the photo of the finished print. Missing it loses the job. */
+  printBy: string
   /** When the hold ends, for the billposter holding it. */
   reservedUntil: string | null
   /** Whether the viewing billposter holds this job. */

@@ -26,10 +26,13 @@ export class BookingPolicy {
     return !!board && (await BoardPolicy.manages(user, board))
   }
 
-  /** Who photographs the ad on the board: the billposter holding its print job, or whoever looks after a board with none. */
+  /**
+   * Who photographs the ad on the board: the billposter holding its print job, or whoever
+   * looks after the board when there's no job or nobody has taken it (they step in).
+   */
   static async postsProof(user: User, booking: Booking): Promise<boolean> {
     const job = await PrintJob.query().where({ bookingId: booking.id }).first()
 
-    return job ? job.isHeldBy(user) : BookingPolicy.managesBoard(user, booking)
+    return job && !job.isAvailable() && job.status !== PrintJob.CANCELLED ? job.isHeldBy(user) : BookingPolicy.managesBoard(user, booking)
   }
 }
