@@ -26,7 +26,7 @@ What's built and what's left, following the phases in [docs/proposal.md](docs/pr
 
 - [x] Bids and offers
 - [x] Shared (co-op) bookings
-- [ ] Messages about a booking
+- [x] Messages about a booking
 - [ ] Reviews
 - [ ] Disputes
 - [ ] Campaign reports

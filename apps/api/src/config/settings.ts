@@ -309,6 +309,32 @@ export default () => {
         ],
       },
       {
+        id: 'messages',
+        title: 'Messages',
+        description: 'Messages about a booking between the advertiser, the board’s side and the billposter.',
+        icon: 'messages-square',
+        fields: [
+          {
+            name: 'sms_owners',
+            key: 'messages.sms_owners',
+            env: 'MESSAGES_SMS_OWNERS',
+            type: 'boolean',
+            label: 'Text owners without an account',
+            help: 'Owners whose board a scout runs get each new message by SMS, so they can follow along without the app.',
+          },
+          {
+            name: 'max_length',
+            key: 'messages.max_length',
+            env: 'MESSAGES_MAX_LENGTH',
+            type: 'number',
+            label: 'Longest message',
+            unit: 'characters',
+            min: 100,
+            max: 10000,
+          },
+        ],
+      },
+      {
         id: 'proofs',
         title: 'Proof of posting',
         description: 'The photos that show an ad is up, and how long advertisers have to check them.',

@@ -7,6 +7,7 @@ import { CalendarClock, MapPin, Ruler } from 'lucide-react-native'
 import type { PrintJob } from '@greyboards/types'
 import { BoardCover, boardPlace, formatSize } from '@/components/boards/BoardBits'
 import { JobStatusBadge, formatDay, formatDistance, formatMoney } from '@/components/jobs/JobBits'
+import { MessagesSection } from '@/components/messages/MessagesSection'
 import { ProofSection } from '@/components/proofs/ProofSection'
 import { Section, SettingsPage } from '@/components/settings/SettingsPage'
 import { Button, Callout, Text } from '@/components/ui'
@@ -83,6 +84,8 @@ export default function JobScreen() {
             <Button title="Open full size" variant="ghost" onPress={() => Linking.openURL(job.artworkUrl!).catch(() => undefined)} />
           </Section>
         ) : null}
+
+        {job.mine && job.bookingId ? <MessagesSection bookingId={job.bookingId} /> : null}
 
         {job.printPhotoUrl ? (
           <Section title="Your print photo">

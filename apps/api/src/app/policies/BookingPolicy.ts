@@ -16,6 +16,15 @@ export class BookingPolicy {
     return user.can('bookings.view')
   }
 
+  /** Who reads and writes its messages: anyone who sees the booking, and the billposter on its print job. */
+  static async talks(user: User, booking: Booking): Promise<boolean> {
+    if (await BookingPolicy.view(user, booking)) return true
+
+    const job = await PrintJob.query().where({ bookingId: booking.id }).first()
+
+    return !!job && job.isHeldBy(user)
+  }
+
   /** Who pays: the advertiser, or on a shared booking, anyone holding a share. */
   static async pays(user: User, booking: Booking): Promise<boolean> {
     return BookingPolicy.owns(user, booking) || (booking.shared && (await Shares.holds(user, booking)))

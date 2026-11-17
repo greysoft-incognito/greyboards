@@ -2,6 +2,7 @@ import type { PrintJob } from '@app/models/PrintJob'
 import type { User } from '@app/models/User'
 import { Day } from '@app/support/Day'
 import { Settings } from '@app/support/Settings'
+import { Messages } from '@app/services/Messages'
 import { Resource } from 'resora'
 import { BoardResource } from './BoardResource'
 import { ProofSummary } from './ProofSummary'
@@ -44,6 +45,8 @@ export class PrintJobResource extends Resource {
       /** The booking and its proof of posting, which the billposter photographs once the ad is up. */
       bookingId: booking ? booking.id : null,
       proof: booking ? await new ProofSummary(booking).for(this.viewer!).data() : null,
+      /** Messages about the booking, for the billposter holding the job. */
+      messages: booking ? await Messages.counts(booking, this.viewer!) : null,
       createdAt: job.createdAt,
     }
   }
