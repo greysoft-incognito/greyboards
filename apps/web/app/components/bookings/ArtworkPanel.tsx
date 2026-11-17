@@ -18,7 +18,7 @@ const JOB_LABELS: Record<PrintJobStatus, string> = {
 	confirmed: "A billposter has the job",
 	printed: "Printed, going up next",
 	posted: "Up on the board",
-	cancelled: "Cancelled",
+	cancelled: "Done by whoever looks after the board",
 };
 
 /**

@@ -8,7 +8,7 @@
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "ng.greysoft.greyboards"
+      "bundleIdentifier": "com.greysoft.greyboards.app"
     },
     "android": {
       "adaptiveIcon": {
@@ -18,7 +18,7 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "ng.greysoft.greyboards"
+      "package": "com.greysoft.greyboards.app"
     },
     "web": {
       "favicon": "./assets/favicon.png",

@@ -32,11 +32,12 @@ export class Payouts {
   static async shares(booking: Booking): Promise<Share[]> {
     const job = booking.printFeeMinor > 0 ? await PrintJob.query().where({ bookingId: booking.id }).first() : null
     const printer = Payouts.printer(booking, job)
+    const bonus = booking.printedBy === 'billposter' && job ? Math.min(Number(job.bonusMinor ?? 0), booking.platformAmountMinor ?? 0) : 0
     const shares: Share[] = [
       { account: 'owner', kind: 'payout_due', amountMinor: booking.ownerAmountMinor ?? 0, userId: null, ownerProfileId: booking.ownerProfileId, memo: 'Owner’s share' },
       { account: 'scout', kind: 'payout_due', amountMinor: booking.scoutAmountMinor ?? 0, userId: booking.scoutId, ownerProfileId: null, memo: 'Scout’s cut of the commission' },
-      { ...printer, kind: 'payout_due', amountMinor: booking.printFeeMinor, memo: 'Printing and posting' },
-      { account: 'platform', kind: 'commission', amountMinor: booking.platformAmountMinor ?? 0, userId: null, ownerProfileId: null, memo: 'Greyboards’ commission' },
+      { ...printer, kind: 'payout_due', amountMinor: booking.printFeeMinor + bonus, memo: bonus ? 'Printing and posting, with a rush bonus' : 'Printing and posting' },
+      { account: 'platform', kind: 'commission', amountMinor: (booking.platformAmountMinor ?? 0) - bonus, userId: null, ownerProfileId: null, memo: 'Greyboards’ commission' },
     ]
 
     return shares.filter((share) => share.amountMinor > 0)

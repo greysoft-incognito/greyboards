@@ -119,6 +119,17 @@ export class AccountRole extends Model {
     if (user) await AccountMail.roleReviewed(user, this)?.catch(() => undefined)
   }
 
+  /** Suspend the role without a reviewer, such as after too many missed print jobs, and tell the account. */
+  async suspend(note: string): Promise<void> {
+    if (this.status === AccountRole.SUSPENDED) return
+
+    await this.update({ status: AccountRole.SUSPENDED, note, reviewedById: null, reviewedAt: new Date() })
+
+    const user = await this.user().first()
+
+    if (user) await AccountMail.roleReviewed(user, this)?.catch(() => undefined)
+  }
+
   /** Give the role up. A suspended role stays so it can't be taken again to clear the suspension. */
   async drop(): Promise<void> {
     abortIf(this.status === AccountRole.SUSPENDED, `Your ${this.label()} role is suspended, so it can't be removed.`, 422)

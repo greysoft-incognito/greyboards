@@ -34,6 +34,10 @@ export class PrintJob extends Model {
   declare printPhotoDisk: string | null
   declare printedAt: Date | null
   declare postedAt: Date | null
+  /** Extra pay added when the job went back close to go-live. */
+  declare bonusMinor: number
+  /** When whoever looks after the board was told nobody had taken the job. */
+  declare unclaimedAlertAt: Date | null
   declare createdAt: Date
   declare updatedAt: Date
   /** Metres from the search point, on jobs found with `near`. */
@@ -44,6 +48,7 @@ export class PrintJob extends Model {
   static readonly CONFIRMED: PrintJobStatus = 'confirmed'
   static readonly PRINTED: PrintJobStatus = 'printed'
   static readonly POSTED: PrintJobStatus = 'posted'
+  static readonly CANCELLED: PrintJobStatus = 'cancelled'
 
   /** Jobs one billposter can hold before confirming any. */
   static readonly MAX_RESERVED = 3
@@ -65,10 +70,13 @@ export class PrintJob extends Model {
     printPhotoDisk: 'print_photo_disk',
     printedAt: 'printed_at',
     postedAt: 'posted_at',
+    bonusMinor: 'bonus_minor',
+    unclaimedAlertAt: 'unclaimed_alert_at',
   }
 
   protected override casts = {
     feeMinor: 'number',
+    bonusMinor: 'number',
   } as never
 
   /** What printing and posting `board`'s face costs, in minor units: the owner's own price when they print, else the standard one. Digital boards need none. */
@@ -128,6 +136,16 @@ export class PrintJob extends Model {
 
   board() {
     return this.belongsTo(Board, 'boardId')
+  }
+
+  /** What the billposter earns: the fee plus any rush bonus. */
+  payMinor(): number {
+    return Number(this.feeMinor) + Number(this.bonusMinor ?? 0)
+  }
+
+  /** Whoever looks after the board does it themselves, so billposters no longer see the job. */
+  async stepIn(): Promise<void> {
+    await this.update({ status: PrintJob.CANCELLED, billposterId: null, reservedUntil: null })
   }
 
   isAvailable(): boolean {
