@@ -55,7 +55,7 @@ pnpm build
 
 ## Mobile builds (EAS)
 
-The Android app builds on [EAS](https://expo.dev/eas) from the **Deploy apps** workflow: a push to the `deploy` branch, or a manual run from the Actions tab. The bundle id is `com.greysoft.boards.app` on both iOS and Android.
+The Android app builds on [EAS](https://expo.dev/eas) from the **Deploy apps** workflow: a push to the `deploy` branch, or a manual run from the Actions tab. The bundle id is `com.greysoft.greyboards.app` on both iOS and Android.
 
 One-time setup, by someone with the Expo account that will own the app:
 
