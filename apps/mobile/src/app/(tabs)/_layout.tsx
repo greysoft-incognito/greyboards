@@ -1,6 +1,6 @@
 import type { ColorValue } from 'react-native'
 import { Tabs } from 'expo-router'
-import { CircleUserRound, LayoutDashboard, type LucideIcon, Presentation } from 'lucide-react-native'
+import { CircleUserRound, LayoutDashboard, type LucideIcon, Presentation, Printer } from 'lucide-react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { AppHeader } from '@/components/AppHeader'
 import { taggingRoles } from '@/components/boards/BoardBits'
@@ -15,7 +15,9 @@ const icon =
 /** The signed-in app: the dashboard, boards for owners and scouts, and the account, under the shared header and over the glass tab bar. */
 export default function TabsLayout() {
   const insets = useSafeAreaInsets()
-  const tags = taggingRoles(useUser().accountRoles).length > 0
+  const roles = useUser().accountRoles
+  const tags = taggingRoles(roles).length > 0
+  const posts = roles.some((role) => role.kind === 'billposter')
 
   return (
     <GlassTabs>
@@ -34,6 +36,7 @@ export default function TabsLayout() {
       >
         <Tabs.Screen name="index" options={{ title: 'Dashboard', tabBarIcon: icon(LayoutDashboard) }} />
         <Tabs.Screen name="boards" options={{ title: 'Boards', tabBarIcon: icon(Presentation), href: tags ? undefined : null }} />
+        <Tabs.Screen name="jobs" options={{ title: 'Jobs', tabBarIcon: icon(Printer), href: posts ? undefined : null }} />
         <Tabs.Screen name="account" options={{ title: 'Account', tabBarIcon: icon(CircleUserRound) }} />
       </Tabs>
     </GlassTabs>

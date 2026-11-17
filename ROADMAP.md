@@ -20,7 +20,7 @@ What's built and what's left, following the phases in [docs/proposal.md](docs/pr
 - [ ] Refunds and cancellations of paid bookings
 - [x] Rate cards per board face, and owners blocking dates
 - [x] ID and bank checks for scouts and billposters, and duplicate board detection
-- [ ] Billposter jobs and proof photos in the mobile app
+- [x] Billposter jobs and proof photos in the mobile app
 
 ## Phase 2: Market mechanics
 
