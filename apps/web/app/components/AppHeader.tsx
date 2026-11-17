@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Link, NavLink, useLocation } from "react-router";
-import { LayoutDashboard, type LucideIcon, Presentation } from "lucide-react";
+import { LayoutDashboard, type LucideIcon, Map as MapIcon, Presentation } from "lucide-react";
 import type { AccountRoleKind, User } from "@greyboards/types";
 import { Logo, buttonClass } from "~/components/ui";
 import { AccountMenu } from "~/components/AccountMenu";
@@ -11,6 +11,7 @@ const tab = ({ isActive }: { isActive: boolean }) =>
 /** The areas a signed-in account can open. An area with `roles` shows to accounts holding any of them. */
 const AREAS: { to: string; label: string; icon: LucideIcon; roles?: AccountRoleKind[] }[] = [
 	{ to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+	{ to: "/map", label: "Map", icon: MapIcon },
 	{ to: "/boards", label: "Boards", icon: Presentation, roles: ["owner", "scout"] },
 ];
 
@@ -50,7 +51,10 @@ export function AppHeader({ user }: { user: User | null }) {
 					<AccountMenu key={pathname} user={user} />
 				) : (
 					<div className="flex items-center gap-1 sm:gap-2">
-						<Link prefetch="intent" to="/about" className={buttonClass("ghost", "max-sm:hidden")}>
+						<Link prefetch="intent" to="/map" className={buttonClass("ghost", "max-sm:hidden")}>
+							Find a board
+						</Link>
+						<Link prefetch="intent" to="/about" className={buttonClass("ghost", "max-lg:hidden")}>
 							How it works
 						</Link>
 						<Link prefetch="intent" to={`/signin?next=${encodeURIComponent(pathname)}`} className={buttonClass("ghost")}>

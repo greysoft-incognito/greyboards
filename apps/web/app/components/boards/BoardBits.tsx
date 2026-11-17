@@ -88,7 +88,7 @@ export function BoardCard({ board, to }: { board: Board; to: string }) {
 	);
 }
 
-/** A link to the point on OpenStreetMap, until the board map arrives. */
+/** A link to the point on OpenStreetMap, for directions. */
 export function mapLink(latitude: number, longitude: number) {
 	return `https://www.openstreetmap.org/?mlat=${latitude}&mlon=${longitude}#map=18/${latitude}/${longitude}`;
 }
