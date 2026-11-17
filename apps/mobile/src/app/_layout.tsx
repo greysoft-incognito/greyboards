@@ -45,6 +45,7 @@ export default function RootLayout() {
             </Stack.Protected>
             <Stack.Protected guard={!!user}>
               <Stack.Screen name="settings" />
+              <Stack.Screen name="boards" />
             </Stack.Protected>
             <Stack.Screen name="pages/[slug]" />
             <Stack.Screen name="reset-password" />
