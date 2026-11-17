@@ -13,7 +13,7 @@ import { AvailabilityBlock } from './AvailabilityBlock'
 import { BoardFace } from './BoardFace'
 import { Settings } from '@app/support/Settings'
 import { Sms } from '@app/support/Sms'
-import { StoredImage } from '@app/support/StoredImage'
+import { StoredImage, type SavedImage } from '@app/support/StoredImage'
 import { Board, type BoardRatePeriod } from './Board'
 import { LedgerEntry } from './LedgerEntry'
 import { OwnerProfile } from './OwnerProfile'
@@ -503,7 +503,15 @@ export class Booking extends Model {
     abortIf(this.status !== Booking.PAID, 'Add artwork once the booking is paid.', 422)
     abortIf(this.artworkStatus === 'approved', 'The artwork is already approved and on its way to print.', 422)
 
-    const saved = await StoredImage.save(`bookings/${this.id}/artwork`, file)
+    abortIf(this.shared, 'Each advertiser on a shared booking sends their own design, and the print merges them.', 422)
+
+    await this.useArtwork(await StoredImage.save(`bookings/${this.id}/artwork`, file))
+  }
+
+  /** Put artwork up for the owner to check: the advertiser's, or a shared booking's merged designs. */
+  async useArtwork(saved: SavedImage): Promise<void> {
+    abortIf(this.status !== Booking.PAID, 'Add artwork once the booking is paid.', 422)
+    abortIf(this.artworkStatus === 'approved', 'The artwork is already approved and on its way to print.', 422)
 
     await StoredImage.remove(this.artworkDisk, this.artworkPath)
     await this.update({

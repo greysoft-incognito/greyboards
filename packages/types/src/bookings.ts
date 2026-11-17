@@ -79,6 +79,9 @@ export interface BookingShare {
   /** The link to send someone, for the organiser, while the share is open. */
   inviteUrl: string | null
   paidAt: string | null
+  /** The holder's own design. The print merges everyone's. */
+  designUrl: string | null
+  designSentAt: string | null
 }
 
 /** What an invite link to a shared booking offers. */
