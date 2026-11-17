@@ -1,8 +1,8 @@
 import { beforeAll, describe, expect, it } from 'vitest'
 
 import { app } from '../src/core/bootstrap'
-import { execFileSync } from 'node:child_process'
 import request from 'parasito'
+import { ark } from './support/ark'
 
 const tokens: Record<string, string> = {}
 
@@ -14,7 +14,6 @@ const api = (method: 'get' | 'post' | 'put' | 'delete', path: string, body?: Rec
   return body ? call.send(body) : call
 }
 
-const ark = (...args: string[]) => execFileSync('npx', ['ark', ...args], { cwd: process.cwd(), encoding: 'utf8' })
 
 /** 'YYYY-MM-DD', `days` from today. */
 const fromToday = (days: number) => new Date(Date.now() + days * 86_400_000).toISOString().slice(0, 10)

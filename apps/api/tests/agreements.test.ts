@@ -3,9 +3,9 @@ import { beforeAll, describe, expect, it } from 'vitest'
 import { app } from '../src/core/bootstrap'
 import { Sms } from '../src/app/support/Sms'
 import { lastCode, lastText } from './support/sms'
-import { execFileSync } from 'node:child_process'
 import request from 'parasito'
 import { passChecks } from './support/partner'
+import { ark } from './support/ark'
 
 const tokens: Record<string, string> = {}
 
@@ -21,7 +21,7 @@ const linkToken = (phone: string) => lastText(phone).match(/\/agreements\/([\w-]
 
 /** Lets the link go out again at once, as if the wait between texts had passed. */
 const skipWait = (id: string) => {
-  execFileSync('npx', ['ark', 'db', `update board_agreements set last_sent_at = now() - interval '2 minutes' where id = '${id}'`], { cwd: process.cwd(), encoding: 'utf8' })
+  ark('db', `update board_agreements set last_sent_at = now() - interval '2 minutes' where id = '${id}'`)
 }
 
 describe('Owner agreements', () => {
@@ -36,7 +36,7 @@ describe('Owner agreements', () => {
 
       tokens[who] = register.body.data.token
 
-      if (who === 'reviewer') execFileSync('npx', ['ark', 'users:role', email, 'reviewer'], { cwd: process.cwd(), encoding: 'utf8' })
+      if (who === 'reviewer') ark('users:role', email, 'reviewer')
     }
 
     const scoutRole = (await api('get', '/account/roles')).body.data[0]
