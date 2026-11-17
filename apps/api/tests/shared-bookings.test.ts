@@ -47,7 +47,7 @@ describe('Shared bookings', { timeout: 60_000 }, () => {
   let boardId = ''
 
   beforeAll(async () => {
-    for (const who of ['organiser', 'second', 'third', 'owner', 'admin']) {
+    for (const who of ['organiser', 'second', 'third', 'buyer', 'owner', 'admin']) {
       const email = `shares-${who}-${Date.now()}@greyboards.test`
       const register = await api('post', '/auth/register', { name: `Shares ${who}`, email, password: 'password123', roles: [who === 'owner' ? 'owner' : 'advertiser'] }, null)
 
@@ -154,5 +154,45 @@ describe('Shared bookings', { timeout: 60_000 }, () => {
     expect(lapsed.shares[1].status).toBe('refunded')
     expect(lapsed.refunds).toEqual([expect.objectContaining({ amountMinor: booking.shares[1].amountMinor })])
     expect((await api('post', `/shares/${invite}/claim`, undefined, 'second')).status).toBe(422)
+  })
+
+  it('lists shared bookings with shares left, for anyone to find and join', async () => {
+    const booking = (await api('post', `/boards/${boardId}/bookings`, { startsOn: fromToday(130), periods: 1, shares: 3 })).body.data
+    const listed = (await api('get', `/shares/open?boardId=${boardId}`, undefined, 'third')).body.data.find((entry: { id: string }) => entry.id === booking.id)
+
+    expect(listed).toMatchObject({ count: 3, openCount: 2, paidCount: 0, organiser: 'Shares organiser', takeoverOpen: false, joined: false, board: { id: boardId } })
+    expect(listed.shareAmountMinor).toBe(booking.shares[1].amountMinor)
+    expect((await api('post', `/bookings/${booking.id}/shares/join`, undefined, 'third')).body.data.shares[1]).toMatchObject({ status: 'claimed', mine: true })
+    expect((await api('post', `/bookings/${booking.id}/shares/join`, undefined, 'third')).status).toBe(422)
+    expect((await api('get', `/shares/open?boardId=${boardId}`, undefined, 'buyer')).body.data.find((entry: { id: string }) => entry.id === booking.id)).toMatchObject({ openCount: 1 })
+  })
+
+  it('keeps the board for the sharers while locked, then lets someone pay for all of it', async () => {
+    const booking = (await api('post', `/boards/${boardId}/bookings`, { startsOn: fromToday(200), periods: 1, shares: 2 })).body.data
+
+    await api('post', `/bookings/${booking.id}/shares/join`, undefined, 'second')
+
+    const share = await pay(booking.id, 'second')
+
+    expect((await api('post', `/bookings/${booking.id}/takeover`, undefined, 'buyer')).status).toBe(422)
+    expect((await api('get', `/bookings/${booking.id}`)).body.data.sharing).toMatchObject({ takeoverOpen: false })
+
+    ark('db', `update bookings set "createdAt" = now() - interval '25 hours' where id = '${booking.id}'`)
+
+    expect((await api('get', `/bookings/${booking.id}`)).body.data.sharing).toMatchObject({ takeoverOpen: true })
+    expect((await api('post', `/bookings/${booking.id}/takeover`, undefined, 'second')).status).toBe(422)
+
+    const started = await api('post', `/bookings/${booking.id}/takeover`, undefined, 'buyer')
+
+    expect(started.status).toBe(201)
+    expect(started.body.data.amountMinor).toBe(booking.amountMinor)
+    await api('post', `/payments/${started.body.data.reference}/verify`, undefined, 'buyer')
+
+    const taken = (await api('get', `/bookings/${booking.id}`, undefined, 'buyer')).body.data
+
+    expect(taken).toMatchObject({ status: 'paid', shared: false, amountMinor: booking.amountMinor })
+    expect((await api('get', `/bookings/${booking.id}`, undefined, 'second')).status).toBe(404)
+    expect(ark('db', `select sum(amount_minor) from ledger_entries where booking_id = '${booking.id}' and account = 'escrow'`)).toContain(String(booking.amountMinor))
+    expect(ark('db', `select count(*) from refunds where booking_id = '${booking.id}' and amount_minor = ${share.amountMinor}`)).toMatch(/\b1\b/)
   })
 })

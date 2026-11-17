@@ -27,6 +27,15 @@ export class Checkout {
     return this.charge(booking, user, amountMinor, due ? ', your share' : '', { shareIds: due ? due.shares.map((share) => share.id) : null })
   }
 
+  /** A pending payment for a whole shared board, once its lock ended. Whoever holds a share covers the rest instead. */
+  async startTakeover(booking: Booking, user: User): Promise<{ payment: Payment; url: string }> {
+    abortIf(!this.gateway.enabled(), 'Payments are not available right now.', 503)
+    abortIf(!(await Shares.takeoverOpen(booking)), 'This shared board can’t be taken whole right now.', 422)
+    abortIf(booking.advertiserId === user.id || (await Shares.holds(user, booking)), 'You’re sharing this board. Cover the unpaid shares instead.', 422)
+
+    return this.charge(booking, user, booking.amountMinor, ', the whole board', { takeover: true })
+  }
+
   /** A pending payment for a dispatcher's price to print and post a paid booking. */
   async startPrint(booking: Booking, offer: PrintOffer, user: User): Promise<{ payment: Payment; url: string }> {
     abortIf(!this.gateway.enabled(), 'Payments are not available right now.', 503)
@@ -34,7 +43,7 @@ export class Checkout {
     return this.charge(booking, user, offer.amountMinor, ', printing and posting', { printOfferId: offer.id })
   }
 
-  private async charge(booking: Booking, user: User, amountMinor: number, suffix: string, link: Pick<Payment, 'shareIds'> | Pick<Payment, 'printOfferId'>): Promise<{ payment: Payment; url: string }> {
+  private async charge(booking: Booking, user: User, amountMinor: number, suffix: string, link: Pick<Payment, 'shareIds'> | Pick<Payment, 'printOfferId'> | Pick<Payment, 'takeover'>): Promise<{ payment: Payment; url: string }> {
     const board = await booking.board().firstOrFail()
     const { startsOn, endsOn } = booking.days()
     const reference = `${config('payments.reference_prefix')}${randomBytes(10).toString('hex').toUpperCase()}`
@@ -93,6 +102,8 @@ export class Checkout {
       if (payment.printOfferId) return DispatchOffers.paid(payment)
 
       const booking = await Booking.query().findOrFail(payment.bookingId)
+
+      if (payment.takeover) return Shares.takeOver(booking, payment)
 
       await booking.markPaid(payment)
     })

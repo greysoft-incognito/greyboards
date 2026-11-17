@@ -71,6 +71,8 @@ export class BookingResource extends Resource {
       proof: await new ProofSummary(booking).for(viewer).data(),
       cancellation: BookingPolicy.owns(viewer, booking) && booking.status === 'paid' ? await Refunds.quote(booking) : null,
       shares: booking.shared ? await BookingResource.shares(booking, viewer) : null,
+      /** On a shared booking: when its lock for the sharers ends, and whether someone can now take the whole board. */
+      sharing: booking.shared ? { lockedUntil: await Shares.lockedUntil(booking), takeoverOpen: await Shares.takeoverOpen(booking) } : null,
       messages: await Messages.counts(booking, viewer),
       reviews: await BookingResource.reviews(booking, viewer),
       dispute: await BookingResource.dispute(booking, viewer),

@@ -5,6 +5,8 @@ import type { BoardAgreement, BoardDetail, BoardPhoto, OwnerProfile } from "@gre
 import { BoardCover, BoardStatusBadge, formatHeading, formatRate, formatSize, mapLink } from "~/components/boards/BoardBits";
 import { AuctionCard, AuctionsManager, toMinor } from "~/components/bids/BidBits";
 import { BookPanel } from "~/components/bookings/BookPanel";
+import { SharedBookingCard } from "~/components/bookings/SharedBookingCard";
+import { isSharedBookingIntent, sharedBookingAction } from "~/lib/shares.server";
 import { BoardReviews, RatingLine } from "~/components/reviews/ReviewBits";
 import { BlockedDays, RateCard } from "~/components/boards/RateCard";
 import { SpotMap } from "~/components/map/SpotMap";
@@ -32,8 +34,9 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
 	const canBook = user.accountRoles.some((role) => role.kind === "advertiser" && role.status === "active");
 	const { data: auctions } = board.status === "listed" || manages ? await api.boardAuctions(board.id).catch(() => ({ data: [] })) : { data: [] };
 	const reviews = board.rating.count ? await api.boardReviews(board.id, { per_page: 5 }).catch(() => null) : null;
+	const shared = board.status === "listed" && !manages ? await api.openShares({ boardId: board.id }).then(({ data }) => data, () => []) : [];
 
-	return { board, manages, taken, canBook, auctions, reviews: reviews?.data ?? [], today: new Date().toISOString().slice(0, 10), styleUrl: mapStyleUrl(context) };
+	return { board, manages, taken, canBook, auctions, shared, reviews: reviews?.data ?? [], today: new Date().toISOString().slice(0, 10), styleUrl: mapStyleUrl(context) };
 }
 
 export async function action({ request, context, params }: Route.ActionArgs) {
@@ -78,6 +81,8 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 
 			return { error: null, message: "Bidding closed. The dates are free to book again.", intent, id };
 		}
+
+		if (isSharedBookingIntent(intent)) await sharedBookingAction(api, intent, String(form.get("bookingId")));
 
 		if (intent === "book") {
 			const faceId = String(form.get("faceId") ?? "") || undefined;
@@ -167,7 +172,7 @@ const REVIEW_NOTES: Record<BoardDetail["status"], string> = {
 export default function BoardPage({ loaderData, actionData }: Route.ComponentProps) {
 	useToastMessage(actionData);
 
-	const { board, manages, taken, canBook, auctions, reviews, today, styleUrl } = loaderData;
+	const { board, manages, taken, canBook, auctions, shared, reviews, today, styleUrl } = loaderData;
 	const errorFor = (intent: string, id = "") => (actionData?.intent === intent && (actionData.id ?? "") === id ? actionData.error : null);
 	const [params] = useSearchParams();
 	const [shown, setShown] = useState<BoardPhoto | null>(board.photos[0] ?? null);
@@ -247,6 +252,9 @@ export default function BoardPage({ loaderData, actionData }: Route.ComponentPro
 					</div>
 
 					{!manages && board.status === "listed" && <BookPanel board={board} taken={taken} canBook={canBook} error={errorFor("book") ?? errorFor("offer")} />}
+					{shared.map((entry) => (
+						<SharedBookingCard key={entry.id} shared={entry} canJoin={canBook} />
+					))}
 					{!manages && auctions.map((auction) => <AuctionCard key={auction.id} auction={auction} canBid={canBook} error={errorFor("bid", auction.id)} />)}
 
 					<BoardReviews reviews={reviews} summary={board.rating} />

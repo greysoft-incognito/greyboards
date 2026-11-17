@@ -16,6 +16,10 @@ import { Refunds } from './Refunds'
  * others by link; each pays their own share into escrow and sends their own design. The
  * booking is paid once every share is, and the organiser may cover shares nobody paid. If the
  * hold runs out first, everyone who paid gets their money back.
+ *
+ * Shared bookings with shares left are listed for anyone to find and join. They stay locked
+ * for the sharers for `shares.lock_hours`; after that, while shares are unpaid, anyone may pay
+ * for the whole board and take it, and the sharers get their money back.
  */
 export class Shares {
   /** Split a new held booking into `count` equal shares. The organiser takes the first, with any odd amount. */
@@ -52,6 +56,76 @@ export class Shares {
   /** Whether `user` holds a share of the booking. */
   static holds(user: User, booking: Booking): Promise<boolean> {
     return BookingShare.query().where({ bookingId: booking.id, userId: user.id }).exists()
+  }
+
+  /** When the booking stops being locked for the people sharing it. */
+  static async lockedUntil(booking: Booking): Promise<Date> {
+    return new Date(new Date(booking.createdAt).getTime() + (await Settings.number('shares.lock_hours')) * 3_600_000)
+  }
+
+  /** Whether someone can pay for the whole board now: its lock ended and shares are still unpaid. */
+  static async takeoverOpen(booking: Booking): Promise<boolean> {
+    if (!booking.shared || !booking.isHeld() || !(await Settings.get('shares.takeover'))) return false
+    if ((await Shares.lockedUntil(booking)).getTime() > Date.now()) return false
+
+    return BookingShare.query().where({ bookingId: booking.id }).whereRaw("status <> 'paid'").exists()
+  }
+
+  /**
+   * Shared bookings anyone can join, soonest to lapse first: held, with a share nobody took.
+   * Narrowed to one board, or to boards within `radiusKm` of a point.
+   */
+  static async discoverable(filter: { boardId?: string; near?: { latitude: number; longitude: number; radiusKm: number } } = {}) {
+    abortIf(!(await Settings.get('shares.discoverable')), 'Shared bookings aren’t listed right now.', 404)
+
+    let query = Booking.query()
+      .where({ shared: true, status: Booking.HELD })
+      .whereRaw('hold_expires_at > now()')
+      .whereRaw("exists (select 1 from booking_shares where booking_shares.booking_id = bookings.id and booking_shares.status = 'open')")
+
+    if (filter.boardId) query = query.where({ boardId: filter.boardId })
+
+    if (filter.near) {
+      const { latitude, longitude, radiusKm } = filter.near
+
+      query = query.whereRaw('board_id in (select id from boards where ST_DWithin(location, ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography, ?))', [longitude, latitude, radiusKm * 1000])
+    }
+
+    return query.oldest('holdExpiresAt').limit(50).get()
+  }
+
+  /** Join a listed shared booking: take its first open share, to pay it. */
+  static async join(booking: Booking, user: User): Promise<void> {
+    abortIf(!booking.shared, 'This booking isn’t shared.', 404)
+    abortIf(!(await Settings.get('shares.discoverable')), 'Join a shared booking from its invite link.', 403)
+
+    const share = await BookingShare.query().where({ bookingId: booking.id, status: 'open' }).oldest('position').first()
+
+    abortIf(!share, 'Every share of this booking is taken.', 409)
+
+    await Shares.claim(share!, booking, user)
+  }
+
+  /**
+   * Someone paid for the whole board after its lock ended. The booking becomes theirs alone:
+   * everyone who paid a share gets their money back, and the payment goes into escrow. If the
+   * shares filled first or the hold ran out, their payment goes back instead.
+   */
+  static async takeOver(booking: Booking, payment: Payment): Promise<void> {
+    if (!(await Shares.takeoverOpen(booking)) || payment.amountMinor < booking.amountMinor) {
+      await Shares.giveBack(booking, payment, 'Paid to take a shared board that was no longer open to it', false)
+
+      return
+    }
+
+    await Shares.refundAll(booking, 'Someone took the whole board after the shared booking’s lock ended')
+    await BookingShare.query().where({ bookingId: booking.id }).whereIn('status', ['open', 'claimed']).updateFrom({ status: 'refunded' })
+    await booking.update({ advertiserId: payment.userId, shared: false })
+    await booking.record('escrow', 'payment_in', payment.amountMinor, payment.reference, 'The whole board, held until the artwork is up', payment.userId)
+
+    if (await booking.confirmPaid()) return
+
+    await Shares.giveBack(booking, payment, 'Paid after the hold ran out and the days were taken', true)
   }
 
   /** Take an open share from its invite link. One share per advertiser per booking. */

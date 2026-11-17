@@ -7,6 +7,9 @@ import { Settings } from '@app/support/Settings'
 import { RequestException } from '@arkstack/common'
 import { BaseController } from './BaseController'
 import { GenericResource } from 'resora'
+import { PaymentResource } from '@app/http/resources/PaymentResource'
+import { SharedBookingResource } from '@app/http/resources/SharedBookingResource'
+import { Checkout } from '@app/services/payments/Checkout'
 
 /** Shared bookings: joining one from its invite link, and the organiser covering the rest. */
 export default class ShareController extends BaseController {
@@ -60,5 +63,45 @@ export default class ShareController extends BaseController {
     const message = merged ? 'Design sent. Everyone’s designs are merged and with the board’s side to check.' : 'Design sent. The print is merged once everyone has sent theirs.'
 
     return new BookingResource(await Booking.query().findOrFail(booking.id)).withDetails(this.user).additional({ status: 'success', message, code: 200 })
+  }
+
+  /** Shared bookings anyone can join: on one board, near a point, or all, soonest to lapse first. */
+  async open() {
+    const query = await this.validateQuery({
+      boardId: 'nullable|string',
+      lat: 'nullable|numeric|min:-90|max:90',
+      lng: 'nullable|numeric|min:-180|max:180',
+      radiusKm: 'nullable|numeric|min:1|max:200',
+    })
+    const near = query.lat !== undefined && query.lat !== null && query.lng !== undefined && query.lng !== null ? { latitude: Number(query.lat), longitude: Number(query.lng), radiusKm: Number(query.radiusKm ?? 50) } : undefined
+    const bookings = await Shares.discoverable({ boardId: query.boardId ? String(query.boardId) : undefined, near })
+    const data = await Promise.all(bookings.all().map((booking) => new SharedBookingResource(booking).for(this.user).data()))
+
+    return new GenericResource(data).additional({ status: 'success', message: 'OK', code: 200 })
+  }
+
+  /** Join a listed shared booking: the first open share is yours to pay. */
+  async join() {
+    const booking = await this.listed()
+
+    await Shares.join(booking, this.user)
+
+    return new BookingResource(booking).withDetails(this.user).additional({ status: 'success', message: 'The share is yours. Pay it to book your part.', code: 200 })
+  }
+
+  /** Pay for the whole board once the lock ended; the sharers get their money back. */
+  async takeover() {
+    const booking = await this.listed()
+    const { payment, url } = await new Checkout().startTakeover(booking, this.user)
+
+    return new PaymentResource(payment).withCheckout(url).additional({ status: 'success', message: 'Payment started', code: 201 }).response().setStatusCode(201)
+  }
+
+  private async listed(): Promise<Booking> {
+    const booking = await Booking.query().find(String(this.params.booking))
+
+    if (!booking || !booking.shared) throw new RequestException('Shared booking not found.', 404)
+
+    return booking
   }
 }

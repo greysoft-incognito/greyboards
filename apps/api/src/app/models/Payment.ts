@@ -17,6 +17,8 @@ export class Payment extends Model {
   declare shareIds: string[] | null
   /** A payment for a dispatcher's price to print and post, after the rent was paid. */
   declare printOfferId: string | null
+  /** A payment for a whole shared board, taking it over from the people sharing it. */
+  declare takeover: boolean
   declare currency: string
   declare response: Record<string, unknown> | null
   declare paidAt: Date | null

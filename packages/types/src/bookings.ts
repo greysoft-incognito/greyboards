@@ -60,6 +60,8 @@ export interface Booking {
   refunds?: BookingRefund[]
   /** On a shared booking's own page: each share and who holds it. */
   shares?: BookingShare[] | null
+  /** On a shared booking: when its lock for the sharers ends, and whether someone can now take the whole board. */
+  sharing?: { lockedUntil: string; takeoverOpen: boolean } | null
   /** On the booking's own page: how many messages, and how many the viewer hasn't read. */
   messages?: MessageCounts
   /** On the booking's own page: the viewer's review and whether they can write it. */
@@ -454,4 +456,36 @@ export interface Payment {
 
 export interface BookingQuery extends PageQuery {
   status?: BookingStatus
+}
+
+/** A shared booking anyone can find and join, or take whole once its lock ends. */
+export interface SharedBooking {
+  id: ID
+  board: Board | null
+  startsOn: string
+  endsOn: string
+  currency: string
+  /** The whole board for the days. */
+  amountMinor: number
+  count: number
+  openCount: number
+  paidCount: number
+  /** What one open share costs. */
+  shareAmountMinor: number | null
+  organiser: string | null
+  /** When the dates are let go if shares are still unpaid. */
+  payBy: string | null
+  /** Until then the board is kept for the sharers. */
+  lockedUntil: string
+  /** Whether someone can pay for the whole board now. */
+  takeoverOpen: boolean
+  /** Whether the viewer is already sharing it. */
+  joined: boolean
+}
+
+export interface SharedBookingQuery {
+  boardId?: ID
+  lat?: number
+  lng?: number
+  radiusKm?: number
 }

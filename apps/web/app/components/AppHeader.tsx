@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Link, NavLink, useLocation } from "react-router";
-import { CalendarCheck, LayoutDashboard, type LucideIcon, Map as MapIcon, MapPinned, Presentation, Printer } from "lucide-react";
+import { CalendarCheck, LayoutDashboard, type LucideIcon, Map as MapIcon, MapPinned, Presentation, Printer, UsersRound } from "lucide-react";
 import type { AccountRoleKind, User } from "@greyboards/types";
 import { Logo, buttonClass } from "~/components/ui";
 import { AccountMenu } from "~/components/AccountMenu";
@@ -14,6 +14,7 @@ const AREAS: { to: string; label: string; icon: LucideIcon; roles?: AccountRoleK
 	{ to: "/map", label: "Map", icon: MapIcon },
 	{ to: "/boards", label: "Boards", icon: Presentation, roles: ["owner", "scout"] },
 	{ to: "/bookings", label: "Bookings", icon: CalendarCheck },
+	{ to: "/shares", label: "Shared", icon: UsersRound, roles: ["advertiser"] },
 	{ to: "/pipeline", label: "Pipeline", icon: MapPinned, roles: ["scout"] },
 	{ to: "/jobs", label: "Jobs", icon: Printer, roles: ["dispatch"] },
 ];
