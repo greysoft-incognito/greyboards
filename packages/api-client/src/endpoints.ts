@@ -13,6 +13,7 @@ import type {
   AgreementOffer,
   ApiResponse,
   AppLimits,
+  ArtworkReview,
   Board,
   BoardAgreement,
   BoardDetail,
@@ -39,6 +40,8 @@ import type {
   PageQuery,
   PaginatedResponse,
   Payment,
+  PrintJob,
+  PrintJobSearch,
   PermissionDefinition,
   Role,
   RoleInput,
@@ -61,6 +64,17 @@ import type { GreyboardsAlova } from './client'
  *
  * Routes match apps/api/src/routes/api.ts.
  */
+/** A form with one file, from a File/Blob on web or an RN `{ uri, name, type }` object. */
+function upload(field: string, file: Blob | { uri: string; name: string; type: string }): FormData {
+  const form = new FormData()
+  const name = (file as { name?: string }).name
+
+  if (name) form.append(field, file as Blob, name)
+  else form.append(field, file as Blob)
+
+  return form
+}
+
 export function createEndpoints(alova: GreyboardsAlova) {
   return {
     /** Upload sizes and other limits to check before sending anything. Works signed out. */
@@ -80,6 +94,24 @@ export function createEndpoints(alova: GreyboardsAlova) {
     /** Start paying for held dates. Send the payer to `checkoutUrl`. */
     checkout: (id: ID) => alova.Post<ApiResponse<Payment>>(`/bookings/${id}/checkout`),
     cancelBooking: (id: ID) => alova.Post<ApiResponse<Booking>>(`/bookings/${id}/cancel`),
+    /** The advertiser sends the artwork for a paid booking. */
+    uploadArtwork: (id: ID, file: Blob | { uri: string; name: string; type: string }) => alova.Post<ApiResponse<Booking>>(`/bookings/${id}/artwork`, upload('artwork', file)),
+    /** Whoever looks after the board approves the artwork, or sends it back with a note. */
+    reviewArtwork: (id: ID, data: ArtworkReview) => alova.Post<ApiResponse<Booking>>(`/bookings/${id}/artwork/review`, data),
+
+    /** Print jobs for billposters. Needs an active billposter role. */
+    printJobs: {
+      /** Jobs anyone can take near a point, nearest first. */
+      near: (params: PrintJobSearch) => alova.Get<ApiResponse<PrintJob[]>>('/print-jobs', { params, cacheFor: null }),
+      /** Jobs the billposter holds or took. */
+      mine: (params: PageQuery = {}) => alova.Get<PaginatedResponse<PrintJob>>('/account/print-jobs', { params, cacheFor: null }),
+      show: (id: ID) => alova.Get<ApiResponse<PrintJob>>(`/print-jobs/${id}`, { cacheFor: null }),
+      reserve: (id: ID) => alova.Post<ApiResponse<PrintJob>>(`/print-jobs/${id}/reserve`),
+      confirm: (id: ID) => alova.Post<ApiResponse<PrintJob>>(`/print-jobs/${id}/confirm`),
+      release: (id: ID) => alova.Post<ApiResponse<PrintJob>>(`/print-jobs/${id}/release`),
+      /** A photo of the finished print before it goes up. */
+      printPhoto: (id: ID, file: Blob | { uri: string; name: string; type: string }) => alova.Post<ApiResponse<PrintJob>>(`/print-jobs/${id}/print-photo`, upload('photo', file)),
+    },
     /** Check a payment when the payer comes back from the checkout. */
     verifyPayment: (reference: string) => alova.Post<ApiResponse<Payment>>(`/payments/${encodeURIComponent(reference)}/verify`),
     /** A board and its photos. Unlisted boards show only to their owner, tagger and reviewers. */
