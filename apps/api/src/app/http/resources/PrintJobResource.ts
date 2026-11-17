@@ -1,6 +1,7 @@
 import type { PrintJob } from '@app/models/PrintJob'
 import type { User } from '@app/models/User'
 import { Day } from '@app/support/Day'
+import { Settings } from '@app/support/Settings'
 import { Resource } from 'resora'
 import { BoardResource } from './BoardResource'
 import { ProofSummary } from './ProofSummary'
@@ -28,9 +29,11 @@ export class PrintJobResource extends Resource {
     return {
       id: job.id,
       status: job.displayStatus(),
-      feeMinor: job.feeMinor,
+      feeMinor: job.payMinor(),
+      bonusMinor: Number(job.bonusMinor ?? 0),
       currency: job.currency,
       dueOn: Day.of(job.dueOn),
+      printBy: Day.addDays(Day.of(job.dueOn), -(await Settings.number('printing.print_by_days'))),
       reservedUntil: held ? job.reservedUntil : null,
       mine: held,
       distanceM: distance === undefined || distance === null ? null : Math.round(Number(distance)),
