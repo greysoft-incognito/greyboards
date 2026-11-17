@@ -1,5 +1,8 @@
 import { GreyboardsApiError } from '@greyboards/api-client'
 
+/** An error whose message is already worded for the person, such as a missing permission. */
+export class PlainProblem extends Error {}
+
 /** What went wrong with a form submit: a message, plus the first error for each field. */
 export class FormProblem {
   private constructor(
@@ -19,6 +22,8 @@ export class FormProblem {
 
       return new FormProblem(error.message, fields)
     }
+
+    if (error instanceof PlainProblem) return new FormProblem(error.message, {})
 
     return new FormProblem("We couldn't reach Greyboards. Check your connection and try again.", {})
   }

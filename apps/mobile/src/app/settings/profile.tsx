@@ -8,6 +8,7 @@ import { api } from '@/lib/api'
 import { megabytes, useLimits } from '@/lib/limits'
 import { session, useUser } from '@/lib/session'
 import { uploadFile } from '@/lib/upload-file'
+import { PlainProblem } from '@/lib/forms'
 import { useAction } from '@/lib/use-action'
 
 export default function Profile() {
@@ -26,7 +27,7 @@ export default function Profile() {
 
       const asset = result.assets[0]
 
-      if (asset.fileSize && asset.fileSize > megabytes(maxAvatarMb)) throw new Error(`That photo is larger than ${maxAvatarMb} MB.`)
+      if (asset.fileSize && asset.fileSize > megabytes(maxAvatarMb)) throw new PlainProblem(`That photo is larger than ${maxAvatarMb} MB.`)
 
       const { data } = await api.account.updateAvatar(uploadFile(asset)).send()
 
