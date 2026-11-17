@@ -57,16 +57,15 @@ pnpm build
 
 The Android app builds on [EAS](https://expo.dev/eas) from the **Deploy apps** workflow: a push to the `deploy` branch, or a manual run from the Actions tab. The bundle id is `com.greysoft.greyboards.app` on both iOS and Android.
 
-One-time setup, by someone with the Expo account that will own the app:
+One-time setup, in GitHub → Settings → Secrets and variables → Actions:
 
-1. Create the project: in `apps/mobile`, run `npx eas-cli login`, then `npx eas-cli init`. Don't commit the `projectId` it writes to `app.json`; the workflow passes it in instead.
-2. Create an access token at expo.dev → Account settings → Access tokens.
-3. In GitHub → Settings → Secrets and variables → Actions, add:
-   - secret `EXPO_TOKEN`: the token
-   - variable `EAS_PROJECT_ID`: the project id from step 1
-   - variable `EAS_OWNER`: the Expo account or organisation name
-   - variable `API_URL`: the public API address, such as `https://api.example.com/api`
-   - variable `WEB_URL` (optional): the web app's https address, so email links open the app
-4. For Google Play, upload the first App Bundle by hand in the Play Console, then add the secret `GOOGLE_SERVICE_ACCOUNT_JSON` (a service account with release access) to the `play-store` environment.
+- secret `EXPO_TOKEN`: an access token from expo.dev → Account settings → Access tokens, made by the Expo account that will own the app
+- variable `EAS_OWNER`: that Expo account or organisation name
+- variable `API_URL`: the public API address, such as `https://api.example.com/api`
+- variable `WEB_URL` (optional): the web app's https address, so email links open the app
+
+The first run creates the EAS project for the app (or finds it, if the account already has one called `greyboards`) and prints its id. Save that id as the variable `EAS_PROJECT_ID` to skip the lookup on later runs.
+
+For Google Play, upload the first App Bundle by hand in the Play Console, then add the secret `GOOGLE_SERVICE_ACCOUNT_JSON` (a service account with release access) to the `play-store` environment.
 
 The workflow builds an installable APK with the `preview` profile, and, when asked, an App Bundle with the `production` profile that it submits to Google Play. iOS builds run with `npx eas-cli build --platform ios` once an Apple Developer account is linked to the Expo project.

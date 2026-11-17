@@ -9,7 +9,7 @@ inputs:
     description: eas (EAS servers) or runner (build on this GitHub runner)
     default: eas
   eas-project-id:
-    description: EAS project ID, when it differs from the one in app.json
+    description: EAS project ID. Left empty, the project is created, or found by the app's slug, with the token
     default: ''
   eas-owner:
     description: Expo account that owns the EAS project
@@ -94,11 +94,46 @@ runs:
         eas-version: latest
         token: ${{ inputs.expo-token }}
 
-    - name: Pass build settings to EAS
+    # Without EAS_PROJECT_ID, create the EAS project (or find the one this account already
+    # has for the app's slug) with the token, so nobody has to run `eas init` on their machine.
+    - name: Find or create the EAS project
+      id: project
       shell: bash
       working-directory: apps/mobile
       env:
         EAS_PROJECT_ID: ${{ inputs.eas-project-id }}
+        EAS_OWNER: ${{ inputs.eas-owner }}
+      run: |
+        if [ -n "$EAS_PROJECT_ID" ]; then
+          echo "id=$EAS_PROJECT_ID" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+
+        if [ -n "$EAS_OWNER" ]; then
+          jq --arg owner "$EAS_OWNER" '.expo.owner = $owner' app.json > app.tmp.json
+          mv app.tmp.json app.json
+        fi
+
+        # eas init can only write the id into a static app.json, so set app.config.ts aside while it runs.
+        mv app.config.ts "$RUNNER_TEMP/app.config.ts"
+        eas init --non-interactive --force
+        mv "$RUNNER_TEMP/app.config.ts" app.config.ts
+
+        id="$(jq -r '.expo.extra.eas.projectId // empty' app.json)"
+
+        if [ -z "$id" ]; then
+          echo "Couldn't create or find the EAS project. Check that EXPO_TOKEN belongs to the account in EAS_OWNER." >&2
+          exit 1
+        fi
+
+        echo "id=$id" >> "$GITHUB_OUTPUT"
+        echo "::notice title=EAS project::Using EAS project $id. Save it as the EAS_PROJECT_ID repository variable to skip this step next time."
+
+    - name: Pass build settings to EAS
+      shell: bash
+      working-directory: apps/mobile
+      env:
+        EAS_PROJECT_ID: ${{ steps.project.outputs.id }}
         EAS_OWNER: ${{ inputs.eas-owner }}
         API_URL: ${{ inputs.api-url }}
         WEB_URL: ${{ inputs.web-url }}
