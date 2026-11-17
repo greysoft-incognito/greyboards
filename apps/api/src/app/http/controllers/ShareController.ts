@@ -1,6 +1,10 @@
 import { BookingResource } from '@app/http/resources/BookingResource'
 import { Booking } from '@app/models/Booking'
 import { Shares } from '@app/services/Shares'
+import { BookingShare } from '@app/models/BookingShare'
+import { imageFile } from '@app/support/rules'
+import { Settings } from '@app/support/Settings'
+import { RequestException } from '@arkstack/common'
 import { BaseController } from './BaseController'
 import { GenericResource } from 'resora'
 
@@ -42,5 +46,19 @@ export default class ShareController extends BaseController {
     const message = covered ? `You now hold ${covered} more ${covered === 1 ? 'share' : 'shares'}. Pay them to book the dates.` : 'Every other share is already yours or paid.'
 
     return new BookingResource(booking).withDetails(this.user).additional({ status: 'success', message, code: 200 })
+  }
+
+  /** Whoever holds a paid share sends its design. Once all are in, they're merged into the print. */
+  async design() {
+    const booking = await Booking.query().findOrFail(String(this.params.booking))
+    const share = await BookingShare.query().where({ id: String(this.params.share), bookingId: booking.id }).first()
+
+    if (!share) throw new RequestException('Share not found.', 404)
+
+    const data = await this.validate({ design: imageFile((await Settings.number('uploads.max_image_mb')) * 1024) })
+    const merged = await Shares.sendDesign(booking, share, this.user, data.design)
+    const message = merged ? 'Design sent. Everyone’s designs are merged and with the board’s side to check.' : 'Design sent. The print is merged once everyone has sent theirs.'
+
+    return new BookingResource(await Booking.query().findOrFail(booking.id)).withDetails(this.user).additional({ status: 'success', message, code: 200 })
   }
 }
