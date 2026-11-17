@@ -99,7 +99,7 @@ export class BoardAgreement extends Model {
 
     const open = await board.agreements().where({ status: BoardAgreement.SENT }).latest('createdAt').first()
     const token = randomBytes(24).toString('base64url')
-    const expiresAt = new Date(Date.now() + Number(config('agreements.link_days', 14)) * 86_400_000)
+    const expiresAt = new Date(Date.now() + (await Settings.number('agreements.link_days')) * 86_400_000)
 
     if (open && open.ownerPhone === profile!.phone) {
       abortIf(open.sendCount >= BoardAgreement.MAX_SENDS, 'The link has been sent too many times. Call the owner instead.', 429)
