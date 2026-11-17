@@ -8,6 +8,7 @@ import AuctionController from 'src/app/http/controllers/AuctionController'
 import ShareController from 'src/app/http/controllers/ShareController'
 import MessageController from 'src/app/http/controllers/MessageController'
 import ReviewController from 'src/app/http/controllers/ReviewController'
+import DisputeController from 'src/app/http/controllers/DisputeController'
 import OfferController from 'src/app/http/controllers/OfferController'
 import BookingController from 'src/app/http/controllers/BookingController'
 import PaymentController from 'src/app/http/controllers/PaymentController'
@@ -27,6 +28,7 @@ import SettingsController from 'src/app/http/controllers/admin/SettingsControlle
 import RoleController from 'src/app/http/controllers/admin/RoleController'
 import UserController from 'src/app/http/controllers/admin/UserController'
 import AdminPayoutController from 'src/app/http/controllers/admin/PayoutController'
+import AdminDisputeController from 'src/app/http/controllers/admin/DisputeController'
 import PayoutController from 'src/app/http/controllers/PayoutController'
 import { Authorize } from 'src/app/http/middlewares/Authorize'
 import { Router } from '@arkstack/driver-express'
@@ -160,6 +162,9 @@ Router.post('/bookings/:booking/messages', [MessageController, 'store'], [auth, 
 Router.get('/boards/:board/reviews', [ReviewController, 'index'], [limiter(120, 60)])
 Router.post('/bookings/:booking/review', [ReviewController, 'store'], [auth, limiter(20, 60)])
 
+// Disputes: anyone on a booking raises one, staff decide it.
+Router.post('/bookings/:booking/disputes', [DisputeController, 'store'], [auth, limiter(10, 60)])
+
 // Proof the ad is up: geotagged photos from the billposter, checked by the advertiser, release the money.
 Router.post('/bookings/:booking/proofs', [ProofController, 'store'], [auth, limiter(30, 60)])
 Router.delete('/bookings/:booking/proofs/:proof', [ProofController, 'destroy'], [auth])
@@ -182,6 +187,8 @@ Router.post('/payments/flutterwave/webhook', [PaymentController, 'flutterwave'],
 
 Router.get('/admin/bookings', [AdminBookingController, 'index'], [auth, Authorize.to('bookings.view')])
 Router.post('/admin/bookings/:booking/refund', [AdminBookingController, 'refund'], [auth, Authorize.to('payouts.manage'), limiter(30, 60)])
+Router.get('/admin/disputes', [AdminDisputeController, 'index'], [auth, Authorize.to('disputes.resolve')])
+Router.post('/admin/disputes/:dispute/resolve', [AdminDisputeController, 'resolve'], [auth, Authorize.to('disputes.resolve'), limiter(30, 60)])
 Router.get('/admin/payouts', [AdminPayoutController, 'index'], [auth, Authorize.to('payouts.manage')])
 Router.post('/admin/payouts/:payout/retry', [AdminPayoutController, 'retry'], [auth, Authorize.to('payouts.manage'), limiter(30, 60)])
 

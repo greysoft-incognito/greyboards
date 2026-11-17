@@ -11,6 +11,9 @@ import { Messages } from '@app/services/Messages'
 import { Review } from '@app/models/Review'
 import { Reviews } from '@app/services/Reviews'
 import { Shares } from '@app/services/Shares'
+import { Disputes } from '@app/services/Disputes'
+import { Settings } from '@app/support/Settings'
+import { DisputeCollection } from './DisputeCollection'
 import { Resource } from 'resora'
 import { BoardResource } from './BoardResource'
 
@@ -70,6 +73,7 @@ export class BookingResource extends Resource {
       shares: booking.shared ? await BookingResource.shares(booking, viewer) : null,
       messages: await Messages.counts(booking, viewer),
       reviews: await BookingResource.reviews(booking, viewer),
+      dispute: await BookingResource.dispute(booking, viewer),
       refunds: (await Refund.query().where({ bookingId: booking.id }).oldest('createdAt').limit(10).get()).all().map((refund) => ({
         amountMinor: Number(refund.amountMinor),
         currency: refund.currency,
@@ -119,6 +123,19 @@ export class BookingResource extends Resource {
       canWrite: !!subject && (await Reviews.open(booking)),
       mine: mine ? { rating: mine.rating, body: mine.body, updatedAt: mine.updatedAt } : null,
       advertiserRating: advertiser ? await Reviews.summary(advertiser.advertiserRatingSum ?? 0, advertiser.advertiserRatingCount ?? 0) : null,
+    }
+  }
+
+  /** The booking's latest dispute, and whether the viewer can raise one now. */
+  private static async dispute(booking: Booking, viewer: User) {
+    const latest = await Disputes.latest(booking)
+    const side = await Disputes.sideOf(booking, viewer)
+    const closedReason = side ? await Disputes.closedReason(booking) : null
+
+    return {
+      latest: latest ? DisputeCollection.present(latest, await DisputeCollection.names([latest])) : null,
+      canOpen: !!side && !closedReason,
+      answerHours: await Settings.number('disputes.answer_hours'),
     }
   }
 

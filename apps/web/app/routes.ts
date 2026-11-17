@@ -52,6 +52,7 @@ export default [
 			route("boards", "routes/admin/boards.tsx"),
 			route("bookings", "routes/admin/bookings.tsx"),
 			route("payouts", "routes/admin/payouts.tsx"),
+			route("disputes", "routes/admin/disputes.tsx"),
 			route("pages/:document?", "routes/admin/pages.tsx"),
 			route("roles/:role?", "routes/admin/roles.tsx"),
 			route("configuration/:group?", "routes/admin/configuration.tsx"),
