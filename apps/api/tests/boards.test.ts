@@ -28,6 +28,7 @@ const lekki = (offset = 0) => ({
   latitude: 6.4474 + offset,
   longitude: 3.4724 + offset,
   accuracyM: 6,
+  headingDeg: 45,
   rateMinor: 85_000_000,
   ratePeriod: 'month',
   city: 'Lagos',
@@ -57,7 +58,7 @@ describe('Boards', () => {
     const res = await api('post', '/account/boards', { ...lekki(run), as: 'owner' })
 
     expect(res.status).toBe(201)
-    expect(res.body.data).toMatchObject({ status: 'pending', kind: 'billboard', country: 'NG', rate: { amountMinor: 85_000_000, currency: 'NGN', period: 'month' } })
+    expect(res.body.data).toMatchObject({ status: 'pending', kind: 'billboard', country: 'NG', headingDeg: 45, rate: { amountMinor: 85_000_000, currency: 'NGN', period: 'month' } })
     expect(res.body.data.owner).toMatchObject({ name: 'Boards owner', claimed: true })
     expect((await api('get', `/boards/${res.body.data.id}`, undefined, null)).status).toBe(404)
   })
@@ -67,6 +68,7 @@ describe('Boards', () => {
     expect((await api('post', '/account/boards', { ...lekki(run), as: 'owner' }, 'scout')).status).toBe(403)
     expect((await api('post', '/account/boards', { ...lekki(run), as: 'scout' }, 'scout')).status).toBe(422)
     expect((await api('post', '/account/boards', { ...lekki(run), latitude: 120, as: 'owner' })).status).toBe(422)
+    expect((await api('post', '/account/boards', { ...lekki(run), headingDeg: 360, as: 'owner' })).status).toBe(422)
   })
 
   it('lists a board once a reviewer checks it, and finds it on the map and nearby', async () => {

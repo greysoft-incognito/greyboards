@@ -92,3 +92,10 @@ export function BoardCard({ board, to }: { board: Board; to: string }) {
 export function mapLink(latitude: number, longitude: number) {
 	return `https://www.openstreetmap.org/?mlat=${latitude}&mlon=${longitude}#map=18/${latitude}/${longitude}`;
 }
+
+const POINTS = ["north", "north-east", "east", "south-east", "south", "south-west", "west", "north-west"];
+
+/** "Faces north-east" for a compass heading in degrees. */
+export function formatHeading(degrees: number) {
+	return `Faces ${POINTS[Math.round(degrees / 45) % 8]}`;
+}
