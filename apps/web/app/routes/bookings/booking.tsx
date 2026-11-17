@@ -4,10 +4,12 @@ import { ArrowLeft, BadgeCheck, CalendarDays, Camera, CreditCard, Image, Printer
 import type { Booking } from "@greyboards/types";
 import { BoardCover, formatRate } from "~/components/boards/BoardBits";
 import { ArtworkPanel } from "~/components/bookings/ArtworkPanel";
+import { ProofPanel } from "~/components/proofs/ProofPanel";
 import { BookingStatusBadge, formatDays, formatMoney } from "~/components/bookings/BookingBits";
 import { Alert, Button, Spinner } from "~/components/ui";
 import { formError } from "~/lib/api.server";
 import { postedPhoto } from "~/lib/boards.server";
+import { isProofIntent, proofAction } from "~/lib/proofs.server";
 import { requireUser } from "~/lib/session.server";
 import { toast, useToastMessage } from "~/lib/toast";
 import type { Route } from "./+types/booking";
@@ -54,6 +56,8 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 
 			return { error: null, message: intent === "approve" ? "Approved. It goes to a billposter next." : "Sent back with your note." };
 		}
+
+		if (isProofIntent(intent)) return await proofAction(api, params.id, intent, form);
 	} catch (error) {
 		if (error instanceof Response) throw error;
 
@@ -67,9 +71,9 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 const STEPS: { label: string; detail: string; icon: typeof CreditCard; done: (booking: Booking) => boolean }[] = [
 	{ label: "Paid", detail: "Your money waits in escrow.", icon: CreditCard, done: (booking) => ["paid", "live", "completed"].includes(booking.status) },
 	{ label: "Artwork approved", detail: "The owner checks your design fits the board.", icon: Image, done: (booking) => booking.artwork?.status === "approved" || isLive(booking) },
-	{ label: "Printed and posted", detail: "A billposter prints it and puts it up.", icon: Printer, done: (booking) => booking.printJob?.status === "posted" || isLive(booking) },
-	{ label: "Proof accepted", detail: "Geotagged photos show your ad on the board.", icon: Camera, done: isLive },
-	{ label: "Owner paid", detail: "Only then does the money leave escrow.", icon: Wallet, done: isLive },
+	{ label: "Printed and posted", detail: "A billposter prints it and puts it up.", icon: Printer, done: (booking) => booking.printJob?.status === "posted" || (!!booking.proof && booking.proof.status !== "none") || isLive(booking) },
+	{ label: "Proof accepted", detail: "Geotagged photos show your ad on the board.", icon: Camera, done: (booking) => booking.proof?.status === "accepted" || isLive(booking) },
+	{ label: "Everyone paid", detail: "Only then does the money leave escrow.", icon: Wallet, done: (booking) => !!booking.releasedAt },
 ];
 
 function isLive(booking: Booking) {
@@ -134,6 +138,7 @@ export default function BookingPage({ loaderData, actionData }: Route.ComponentP
 						{booking.split && <Split booking={booking} />}
 					</div>
 					{booking.artwork && ["paid", "live", "completed"].includes(booking.status) && <ArtworkPanel booking={booking} isAdvertiser={isAdvertiser} />}
+					{booking.proof && booking.artwork?.status === "approved" && <ProofPanel proof={booking.proof} />}
 				</section>
 
 				<section className="space-y-4">
@@ -204,7 +209,7 @@ function Split({ booking }: { booking: Booking }) {
 		<div className="border-t border-surface-200 pt-4">
 			<p className="flex items-center gap-2 text-sm font-semibold text-ink-900">
 				<ShieldCheck className="h-4 w-4 text-available" aria-hidden />
-				Paid out once the ad is up
+				{booking.releasedAt ? "Released from escrow" : "Paid out once the ad is up"}
 			</p>
 			<dl className="mt-2 space-y-1 text-sm">
 				{rows.map((row) => (

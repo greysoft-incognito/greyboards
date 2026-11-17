@@ -3,6 +3,7 @@ import { abortIf } from '@arkstack/common'
 import type { QueryBuilder } from 'arkormx'
 import { BoardPolicy } from '@app/policies/BoardPolicy'
 import { Commissions } from '@app/services/Commissions'
+import { Payouts } from '@app/services/Payouts'
 import { Day } from '@app/support/Day'
 import { Money } from '@app/support/Money'
 import { Settings } from '@app/support/Settings'
@@ -12,6 +13,7 @@ import { Board, type BoardRatePeriod } from './Board'
 import { LedgerEntry } from './LedgerEntry'
 import { OwnerProfile } from './OwnerProfile'
 import { Payment } from './Payment'
+import { PostingProof, type ProofLocation } from './PostingProof'
 import { PrintJob } from './PrintJob'
 import { User, type UploadedFile } from './User'
 
@@ -23,6 +25,12 @@ export type BookingStatus = 'held' | 'paid' | 'live' | 'completed' | 'cancelled'
 
 /** The advertiser's artwork: none yet, waiting for the owner's check, approved or sent back. */
 export type ArtworkStatus = 'none' | 'submitted' | 'approved' | 'rejected'
+
+/**
+ * Proof the ad is up: `none` until it's sent, `submitted` while the advertiser checks it,
+ * `accepted` once the money is released, `disputed` when the advertiser asked for better.
+ */
+export type ProofStatus = 'none' | 'submitted' | 'accepted' | 'disputed'
 
 /** A run of days a booking takes on a board. */
 export interface BookedDays {
@@ -63,6 +71,11 @@ export class Booking extends Model {
   declare artworkNote: string | null
   declare artworkReviewedById: string | null
   declare artworkReviewedAt: Date | null
+  declare proofStatus: ProofStatus
+  declare proofNote: string | null
+  declare proofSubmittedAt: Date | null
+  declare proofAcceptedAt: Date | null
+  declare releasedAt: Date | null
   declare paidAt: Date | null
   declare cancelledAt: Date | null
   declare createdAt: Date
@@ -110,6 +123,11 @@ export class Booking extends Model {
     artworkNote: 'artwork_note',
     artworkReviewedById: 'artwork_reviewed_by_id',
     artworkReviewedAt: 'artwork_reviewed_at',
+    proofStatus: 'proof_status',
+    proofNote: 'proof_note',
+    proofSubmittedAt: 'proof_submitted_at',
+    proofAcceptedAt: 'proof_accepted_at',
+    releasedAt: 'released_at',
     paidAt: 'paid_at',
     cancelledAt: 'cancelled_at',
   }
@@ -212,6 +230,31 @@ export class Booking extends Model {
     return failure?.code === '23P01' || failure?.cause?.code === '23P01' || String(failure?.message ?? '').includes('bookings_no_overlap')
   }
 
+  /**
+   * Accept every proof the advertiser left unchecked past the deadline, and pay it out.
+   * Runs on the schedule, a page at a time.
+   */
+  static async acceptOverdueProofs(): Promise<number> {
+    const hours = await Settings.number('proofs.accept_hours')
+    const due = await Booking.query()
+      .where({ proofStatus: 'submitted' })
+      .whereRaw('proof_submitted_at < now() - make_interval(hours => ?)', [hours])
+      .oldest('proofSubmittedAt')
+      .limit(100)
+      .get()
+
+    let accepted = 0
+
+    for (const booking of due.all()) if (await booking.acceptProof()) accepted++
+
+    return accepted
+  }
+
+  /** Bookings whose last day has passed are done. */
+  static async completeEnded(): Promise<void> {
+    await Booking.query().where({ status: Booking.LIVE }).whereRaw('ends_on < current_date').updateFrom({ status: Booking.COMPLETED })
+  }
+
   board() {
     return this.belongsTo(Board, 'boardId')
   }
@@ -222,6 +265,10 @@ export class Booking extends Model {
 
   payments() {
     return this.hasMany(Payment, 'bookingId')
+  }
+
+  proofs() {
+    return this.hasMany(PostingProof, 'bookingId')
   }
 
   ledgerEntries() {
@@ -335,9 +382,91 @@ export class Booking extends Model {
     return this.artworkPath && this.artworkDisk ? StoredImage.url(this.artworkDisk, this.artworkPath) : Promise.resolve(null)
   }
 
+  /** A geotagged photo of the ad on the board. It must be taken at the board. */
+  async addProof(user: User, file: UploadedFile, where: ProofLocation): Promise<PostingProof> {
+    abortIf(this.status !== Booking.PAID || this.artworkStatus !== 'approved', 'Add proof once the artwork is approved and the ad is up.', 422)
+    abortIf(this.proofStatus === 'submitted' || this.proofStatus === 'accepted', 'The proof is already with the advertiser.', 422)
+
+    const board = await this.board().firstOrFail()
+    const distanceM = PostingProof.distanceFrom(board, where)
+    const maxDistance = await Settings.number('proofs.max_distance_m')
+    const count = await PostingProof.query().where({ bookingId: this.id }).count()
+
+    abortIf(distanceM > maxDistance, `This photo was taken ${distanceM} m from the board. Take it within ${maxDistance} m so the advertiser can trust it.`, 422)
+    abortIf(count >= PostingProof.MAX_PER_BOOKING, `Keep it to ${PostingProof.MAX_PER_BOOKING} photos. Remove one first.`, 422)
+
+    return PostingProof.store(this, user, file, where, distanceM)
+  }
+
+  async removeProof(proof: PostingProof): Promise<void> {
+    abortIf(proof.bookingId !== this.id, 'That photo isn’t part of this booking.', 404)
+    abortIf(this.proofStatus === 'submitted' || this.proofStatus === 'accepted', 'The proof is already with the advertiser.', 422)
+
+    await proof.remove()
+  }
+
+  /** Send the photos to the advertiser to check. The print job, if any, is posted. */
+  async submitProof(): Promise<void> {
+    const needed = await Settings.number('proofs.min_photos')
+    const count = await PostingProof.query().where({ bookingId: this.id }).count()
+
+    abortIf(this.status !== Booking.PAID || !['none', 'disputed'].includes(this.proofStatus), 'There is no proof to send for this booking.', 422)
+    abortIf(count < needed, `Add at least ${needed} photos of the ad on the board.`, 422)
+
+    await this.update({ proofStatus: 'submitted', proofSubmittedAt: new Date() })
+    await PrintJob.query().where({ bookingId: this.id }).updateFrom({ status: PrintJob.POSTED, postedAt: new Date() })
+  }
+
+  /**
+   * The ad is up: the booking goes live and its money leaves escrow. Called by the
+   * advertiser, or for them once the time to check has passed. Returns false when someone
+   * else accepted it first.
+   */
+  async acceptProof(): Promise<boolean> {
+    const now = new Date()
+    const accepted = await Booking.query()
+      .where({ id: this.id, status: Booking.PAID, proofStatus: 'submitted' })
+      .updateFrom({ status: Booking.LIVE, proofStatus: 'accepted', proofAcceptedAt: now, releasedAt: now, proofNote: null })
+
+    if (!accepted) return false
+
+    Object.assign(this, { status: Booking.LIVE, proofStatus: 'accepted', proofAcceptedAt: now, releasedAt: now, proofNote: null })
+
+    await Payouts.release(this)
+    await this.tellOwnerPaid()
+
+    return true
+  }
+
+  /** The advertiser says what's wrong. New photos can be added and sent again. */
+  async disputeProof(note: string): Promise<void> {
+    abortIf(this.proofStatus !== 'submitted', 'There is no proof waiting for you to check.', 422)
+    abortIf(!note.trim(), 'Say what’s wrong so it can be put right.', 422)
+
+    await this.update({ proofStatus: 'disputed', proofNote: note.trim() })
+    await PrintJob.query().where({ bookingId: this.id, status: PrintJob.POSTED }).updateFrom({ status: PrintJob.PRINTED, postedAt: null })
+  }
+
+  /** When an unchecked proof counts as accepted. */
+  async proofDeadline(): Promise<Date | null> {
+    if (this.proofStatus !== 'submitted' || !this.proofSubmittedAt) return null
+
+    return new Date(this.proofSubmittedAt.getTime() + (await Settings.number('proofs.accept_hours')) * 3_600_000)
+  }
+
   /** Add a line to this booking's ledger. */
   private async record(account: LedgerEntry['account'], kind: string, amountMinor: number, reference: string | null, memo: string): Promise<void> {
     await LedgerEntry.query().create({ bookingId: this.id, account, kind, amountMinor, currency: this.currency, reference, memo, userId: this.advertiserId })
+  }
+
+  /** Text the owner that the ad is up and their share is on its way. */
+  private async tellOwnerPaid(): Promise<void> {
+    const profile = this.ownerProfileId ? await OwnerProfile.query().find(this.ownerProfileId) : null
+    const board = await this.board().first()
+
+    if (!profile?.phone || !board || !this.ownerAmountMinor) return
+
+    await Sms.send(profile.phone, `The ad on "${board.name}" is up and checked. ${Money.format(this.ownerAmountMinor, this.currency)} is now due to you. - Greyboards`).catch(() => undefined)
   }
 
   /** Text the owner that their board is booked and what they'll receive, signed in or not. */

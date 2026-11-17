@@ -67,9 +67,8 @@ export default class BookingController extends BaseController {
   async show() {
     const booking = await this.booking()
     const split = !BookingPolicy.owns(this.user, booking)
-    const reviewer = split && (await BookingPolicy.managesBoard(this.user, booking))
 
-    return new BookingResource(booking).withSplit(split).withDetails(reviewer).additional({ status: 'success', message: 'OK', code: 200 })
+    return new BookingResource(booking).withSplit(split).withDetails(this.user).additional({ status: 'success', message: 'OK', code: 200 })
   }
 
   /** The advertiser sends their artwork for the owner to check. */
@@ -82,7 +81,7 @@ export default class BookingController extends BaseController {
 
     await booking.submitArtwork(data.artwork)
 
-    return new BookingResource(booking).withDetails().additional({ status: 'success', message: 'Artwork sent for checking.', code: 200 })
+    return new BookingResource(booking).withDetails(this.user).additional({ status: 'success', message: 'Artwork sent for checking.', code: 200 })
   }
 
   /** Whoever looks after the board approves the artwork, or sends it back with a note. */
@@ -97,7 +96,7 @@ export default class BookingController extends BaseController {
 
     return new BookingResource(booking)
       .withSplit(true)
-      .withDetails(true)
+      .withDetails(this.user)
       .additional({ status: 'success', message: data.decision === 'approve' ? 'Artwork approved. It goes to print next.' : 'Artwork sent back.', code: 200 })
   }
 

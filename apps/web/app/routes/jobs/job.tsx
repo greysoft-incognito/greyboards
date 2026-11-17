@@ -5,9 +5,11 @@ import type { PrintJob } from "@greyboards/types";
 import { BoardCover, formatSize, mapLink } from "~/components/boards/BoardBits";
 import { formatDay, formatDays, formatMoney } from "~/components/bookings/BookingBits";
 import { JobStatusBadge, boardPlace, formatDistance } from "~/components/jobs/JobBits";
+import { ProofPanel } from "~/components/proofs/ProofPanel";
 import { Alert, Button, Spinner } from "~/components/ui";
 import { formError } from "~/lib/api.server";
 import { postedPhoto } from "~/lib/boards.server";
+import { isProofIntent, proofAction } from "~/lib/proofs.server";
 import { requireUser } from "~/lib/session.server";
 import { useToastMessage } from "~/lib/toast";
 import type { Route } from "./+types/job";
@@ -43,6 +45,14 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 			await api.printJobs.release(params.id);
 
 			return { error: null, message: "Job given back." };
+		}
+
+		if (isProofIntent(intent)) {
+			const { data: job } = await api.printJobs.show(params.id);
+
+			if (!job.bookingId) return { error: "This job isn't yours any more.", message: null };
+
+			return await proofAction(api, job.bookingId, intent, form);
 		}
 
 		if (intent === "print-photo") {
@@ -109,6 +119,8 @@ export default function JobPage({ loaderData, actionData }: Route.ComponentProps
 						{actionData?.error && <Alert>{actionData.error}</Alert>}
 						<NextStep job={job} />
 					</div>
+
+					{job.mine && job.proof && ["printed", "posted"].includes(job.status) && <ProofPanel proof={job.proof} />}
 
 					{job.mine && job.artworkUrl && (
 						<div className="panel space-y-3 p-5 sm:p-6">
@@ -200,7 +212,9 @@ function NextStep({ job }: { job: PrintJob }) {
 		);
 	}
 
-	if (job.status === "printed") return <p className="text-sm text-ink-700">Printed. Put it up by {formatDay(job.dueOn)}, then add your proof photos at the board.</p>;
+	if (job.status === "printed") return <p className="text-sm text-ink-700">Printed. Put it up by {formatDay(job.dueOn)}, then take the proof photos below while you're at the board.</p>;
+
+	if (job.status === "posted") return <p className="text-sm text-ink-700">Posted. You're paid once the advertiser accepts your photos.</p>;
 
 	return null;
 }

@@ -3,6 +3,7 @@ import type { User } from '@app/models/User'
 import { Day } from '@app/support/Day'
 import { Resource } from 'resora'
 import { BoardResource } from './BoardResource'
+import { ProofSummary } from './ProofSummary'
 
 /**
  * A print job as billposters see it: the board, its size, the pay and the date. The artwork
@@ -37,6 +38,9 @@ export class PrintJobResource extends Resource {
       artworkUrl: booking ? await booking.artworkUrl() : null,
       bookedDays: booking ? booking.days() : null,
       printPhotoUrl: held ? await job.printPhotoUrl() : null,
+      /** The booking and its proof of posting, which the billposter photographs once the ad is up. */
+      bookingId: booking ? booking.id : null,
+      proof: booking ? await new ProofSummary(booking).for(this.viewer!).data() : null,
       createdAt: job.createdAt,
     }
   }

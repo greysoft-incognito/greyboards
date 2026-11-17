@@ -15,4 +15,11 @@ import { Schedule } from '@arkstack/scheduler'
 Schedule.call(() => console.log('tick'))
   .everyFiveMinutes()
   .withoutOverlapping()
+
+// Pay out proofs the advertiser left unchecked past the deadline, and close bookings that ran their course.
+Schedule.command('bookings:settle')
+  .everyFifteenMinutes()
+  .withoutOverlapping()
+  .onOneServer()
+
 // Schedule.exec('backup.sh').dailyAt('01:30').onOneServer()
