@@ -273,7 +273,7 @@ export default () => {
       {
         id: 'shares',
         title: 'Shared bookings',
-        description: 'Advertisers splitting one booking’s cost, each paying their own share.',
+        description: 'Several advertisers paying for one board over the same days, each with their own design merged into the print.',
         icon: 'users-round',
         fields: [
           {
@@ -305,6 +305,18 @@ export default () => {
             unit: 'hours',
             min: 1,
             max: 336,
+          },
+          {
+            name: 'merge_layout',
+            key: 'shares.merge_layout',
+            env: 'SHARED_BOOKINGS_MERGE_LAYOUT',
+            type: 'select',
+            label: 'How designs are merged',
+            help: 'Each advertiser sends their own design. The print puts them together, each in an equal panel.',
+            options: [
+              { value: 'columns', label: 'Side by side' },
+              { value: 'rows', label: 'One above another' },
+            ],
           },
         ],
       },

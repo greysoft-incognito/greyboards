@@ -104,12 +104,12 @@ export function BookPanel({ board, taken, canBook, error }: { board: BoardDetail
 					</div>
 					{terms.shares.enabled && !offering && (
 						<label className="block text-sm font-semibold text-ink-700">
-							Split the cost
+							Share the board
 							<Select name="shares" value={shares} onChange={(event) => setShares(Number(event.target.value))} className="mt-1">
-								<option value={1}>No, just me</option>
+								<option value={1}>No, just my ad</option>
 								{Array.from({ length: terms.shares.max - 1 }, (_, index) => index + 2).map((count) => (
 									<option key={count} value={count}>
-										Between {count} advertisers
+										With {count} advertisers in all
 									</option>
 								))}
 							</Select>
@@ -162,7 +162,7 @@ export function BookPanel({ board, taken, canBook, error }: { board: BoardDetail
 						{offering
 							? "The owner can accept, decline or counter. If they accept, the dates are held for you to pay."
 							: splitting
-								? `You get an invite link for each share. Everyone has ${terms.shares.payHours} hours to pay theirs, and you can cover any left unpaid.`
+								? `Each advertiser pays their share and sends their own design; the print merges them all. You get an invite link for each share, everyone has ${terms.shares.payHours} hours to pay, and you can cover any left unpaid.`
 								: "We hold your payment until there's a photo of your ad on the board. Your dates are held for a few minutes while you pay."}
 					</p>
 				</Form>

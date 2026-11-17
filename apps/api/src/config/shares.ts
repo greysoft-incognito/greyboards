@@ -1,5 +1,6 @@
 /**
- * Shared (co-op) bookings, where several advertisers split one booking's cost. Admins change
+ * Shared (co-op) bookings, where several advertisers pay for one board over the same days and
+ * the print merges each advertiser's design. Admins change
  * these in the dashboard; these are the defaults.
  */
 export default () => {
@@ -19,5 +20,10 @@ export default () => {
      * organiser can cover it, or the booking lapses and everyone who paid gets their money back.
      */
     pay_hours: Number(env('SHARED_BOOKINGS_PAY_HOURS', 48)),
+
+    /**
+     * How the advertisers' designs are merged into one print: `columns` side by side, `rows` one above another.
+     */
+    merge_layout: String(env('SHARED_BOOKINGS_MERGE_LAYOUT', 'columns')),
   }
 }
