@@ -1,2 +1,4 @@
 # greyboards
-Greyboards is a billboard-as-a-service platform that allows people to own and display signs on billboards in any part of the world without ever having to visit.
+Greyboards (billboard-as-a-service) is a marketplace for outdoor advertising that works entirely online. Scouts find billboards in the field, sign their owners to an exclusive agreement and put the boards on a live map. Most owners never touch the app: the scout manages the board for them, and they get texts and bank transfers. Advertisers find a board anywhere in the world, book it or bid for it, upload their artwork, and get photo proof that it went up, without ever visiting the site. Greyboards holds the money until the proof arrives, takes a commission from the owner, and pays the scout who brought the board in.
+
+The promise to an advertiser is "book it, see it, pay only when it's up". Most of the features below exist to make that promise true for someone who will never stand in front of the board.
