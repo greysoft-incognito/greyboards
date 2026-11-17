@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Form, Link, useNavigation } from "react-router";
 import { CalendarCheck, CalendarX2, ShieldCheck } from "lucide-react";
 import type { BookedDays, BoardDetail } from "@greyboards/types";
-import { formatRate } from "~/components/boards/BoardBits";
+import { formatHeading, formatRate } from "~/components/boards/BoardBits";
 import { Alert, Button, buttonClass, Input, Select, Spinner } from "~/components/ui";
 import { formatDays, formatMoney } from "./BookingBits";
 
@@ -10,12 +10,24 @@ import { formatDays, formatMoney } from "./BookingBits";
  * Picks the first day and how many weeks or months to book, shows the total, and sends the
  * advertiser on to pay. Days other bookings take are listed so they can pick around them.
  */
-export function BookPanel({ board, taken, canBook, error }: { board: BoardDetail; taken: BookedDays[]; canBook: boolean; error?: string | null }) {
+export function BookPanel({ board, taken, canBook, error }: { board: BoardDetail; taken: Record<string, BookedDays[]>; canBook: boolean; error?: string | null }) {
 	const navigation = useNavigation();
 	const busy = navigation.formData?.get("intent") === "book";
-	const [periods, setPeriods] = useState(1);
+	const [faceId, setFaceId] = useState(board.rateCard[0]?.id ?? "");
+	const face = board.rateCard.find((candidate) => candidate.id === faceId) ?? board.rateCard[0];
+	const minPeriods = Math.min(face?.minPeriods ?? 1, board.booking.maxPeriods);
+	const [periods, setPeriods] = useState(minPeriods);
 	const terms = board.booking;
-	const rate = board.rate;
+	const rate = board.rate && face?.rateMinor !== null && face?.rateMinor !== undefined ? { ...board.rate, amountMinor: face.rateMinor } : board.rate;
+	const days = taken[face?.id ?? ""] ?? [];
+	const lengths = Array.from({ length: terms.maxPeriods - minPeriods + 1 }, (_, index) => minPeriods + index);
+
+	const pickFace = (id: string) => {
+		const next = board.rateCard.find((candidate) => candidate.id === id);
+
+		setFaceId(id);
+		setPeriods((current) => Math.max(current, Math.min(next?.minPeriods ?? 1, terms.maxPeriods)));
+	};
 
 	if (!terms.open || !rate) {
 		return (
@@ -38,6 +50,29 @@ export function BookPanel({ board, taken, canBook, error }: { board: BoardDetail
 			{canBook ? (
 				<Form method="post" className="space-y-4">
 					<input type="hidden" name="intent" value="book" />
+					{face && <input type="hidden" name="faceId" value={face.id} />}
+					{board.rateCard.length > 1 && (
+						<fieldset>
+							<legend className="text-sm font-semibold text-ink-700">Which face</legend>
+							<div className="mt-1 grid gap-2 sm:grid-cols-2">
+								{board.rateCard.map((option) => (
+									<button
+										key={option.id}
+										type="button"
+										onClick={() => pickFace(option.id)}
+										aria-pressed={option.id === face?.id}
+										className={`rounded-2xl border-[1.5px] px-3 py-2.5 text-left text-sm transition ${option.id === face?.id ? "border-brand-500 bg-brand-50 text-ink-900" : "border-surface-200 text-ink-700 hover:border-surface-300"}`}
+									>
+										<span className="block font-semibold">{option.label}</span>
+										<span className="block text-ink-500 tabular-nums">
+											{option.rateMinor !== null && board.rate ? formatRate({ ...board.rate, amountMinor: option.rateMinor }) : "No price yet"}
+											{option.headingDeg !== null ? ` · ${formatHeading(option.headingDeg)}` : ""}
+										</span>
+									</button>
+								))}
+							</div>
+						</fieldset>
+					)}
 					<div className="grid grid-cols-2 gap-3">
 						<label className="text-sm font-semibold text-ink-700">
 							First day
@@ -46,7 +81,7 @@ export function BookPanel({ board, taken, canBook, error }: { board: BoardDetail
 						<label className="text-sm font-semibold text-ink-700">
 							How long
 							<Select name="periods" value={periods} onChange={(event) => setPeriods(Number(event.target.value))} className="mt-1">
-								{Array.from({ length: terms.maxPeriods }, (_, index) => index + 1).map((count) => (
+								{lengths.map((count) => (
 									<option key={count} value={count}>
 										{count} {unit}
 										{count === 1 ? "" : "s"}
@@ -89,12 +124,14 @@ export function BookPanel({ board, taken, canBook, error }: { board: BoardDetail
 				</Link>
 			)}
 
-			{taken.length > 0 && (
+			{days.length > 0 && (
 				<div className="border-t border-surface-200 pt-4">
-					<p className="text-sm font-semibold text-ink-700">Already booked</p>
+					<p className="text-sm font-semibold text-ink-700">{board.rateCard.length > 1 && face ? `Not free on ${face.label}` : "Not free"}</p>
 					<ul className="mt-2 space-y-1 text-sm text-ink-500">
-						{taken.slice(0, 6).map((days) => (
-							<li key={days.startsOn}>{formatDays(days)}</li>
+						{days.slice(0, 6).map((run) => (
+							<li key={`${run.startsOn}-${run.blocked ? "kept" : "booked"}`}>
+								{formatDays(run)} · {run.blocked ? "kept by the owner" : "booked"}
+							</li>
 						))}
 					</ul>
 				</div>

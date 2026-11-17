@@ -4,6 +4,9 @@ import { BoardAgreementResource } from '@app/http/resources/BoardAgreementResour
 import { BoardCollection } from '@app/http/resources/BoardCollection'
 import { BoardPhotoResource } from '@app/http/resources/BoardPhotoResource'
 import { BoardPolicy } from '@app/policies/BoardPolicy'
+import { Availability } from '@app/services/Availability'
+import { AvailabilityBlock } from '@app/models/AvailabilityBlock'
+import { Day } from '@app/support/Day'
 import { BaseController } from './BaseController'
 import { GenericResource } from 'resora'
 import { ManagedBoardResource } from '@app/http/resources/ManagedBoardResource'
@@ -161,6 +164,63 @@ export default class AccountBoardController extends BaseController {
       .additional({ status: 'success', message: `Sent to ${agreement.ownerName ?? 'the owner'} by SMS.`, code: 201 })
       .response()
       .setStatusCode(201)
+  }
+
+  /** Change one face's name, heading or rate card. An empty rate uses the board's. */
+  async updateFace() {
+    const board = await this.managed()
+    const face = await board.faceFor(String(this.params.face))
+    const data = await this.validate({
+      label: 'nullable|string|max:40',
+      headingDeg: 'nullable|integer|min:0|max:359',
+      rateMinor: 'nullable|integer|min:0',
+      minPeriods: 'nullable|integer|min:1|max:52',
+    })
+    const sent = (key: string) => key in this.body
+    const number = (value: unknown) => (value === null || value === undefined || value === '' ? null : Number(value))
+
+    await face.revise({
+      ...(sent('label') ? { label: String(data.label ?? '') } : {}),
+      ...(sent('headingDeg') ? { headingDeg: number(data.headingDeg) } : {}),
+      ...(sent('rateMinor') ? { rateMinor: number(data.rateMinor) } : {}),
+      ...(sent('minPeriods') ? { minPeriods: number(data.minPeriods) ?? 1 } : {}),
+    })
+
+    return new ManagedBoardResource(board).additional({ status: 'success', message: `${face.label} saved`, code: 200 })
+  }
+
+  /** Keep days off the market, on one face or the whole board. */
+  async block() {
+    const board = await this.managed()
+    const data = await this.validate({
+      startsOn: 'required|date',
+      endsOn: 'required|date',
+      faceId: ['nullable', UUID],
+      note: 'nullable|string|max:191',
+    })
+
+    await Availability.block(board, this.user, {
+      startsOn: Day.of(String(data.startsOn)),
+      endsOn: Day.of(String(data.endsOn)),
+      faceId: data.faceId ? String(data.faceId) : null,
+      note: data.note ? String(data.note) : null,
+    })
+
+    return new ManagedBoardResource(board)
+      .additional({ status: 'success', message: 'Days blocked. Advertisers can’t book them.', code: 201 })
+      .response()
+      .setStatusCode(201)
+  }
+
+  async unblock() {
+    const board = await this.managed()
+    const block = await AvailabilityBlock.query().where({ id: String(this.params.block), boardId: board.id }).first()
+
+    if (!block) throw new RequestException('Blocked days not found.', 404)
+
+    await block.delete()
+
+    return new ManagedBoardResource(board).additional({ status: 'success', message: 'Days open for booking again.', code: 200 })
   }
 
   /** The board in the route, when the signed-in user looks after it. */

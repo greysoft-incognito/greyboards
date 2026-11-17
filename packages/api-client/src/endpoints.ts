@@ -14,7 +14,9 @@ import type {
   ApiResponse,
   AppLimits,
   ArtworkReview,
+  AvailabilityBlockInput,
   Board,
+  BoardFaceInput,
   BoardAgreement,
   BoardDetail,
   BoardInput,
@@ -96,7 +98,7 @@ export function createEndpoints(alova: GreyboardsAlova) {
     /** Every listed board in the map's view as a light pin, up to a few hundred. Works signed out. */
     boardPins: (params: BoardPinSearch) => alova.Get<BoardPinsResponse>('/boards/pins', { params, cacheFor: null }),
     /** Days already booked on a board, for its calendar. */
-    boardAvailability: (id: ID, params: { from?: string; to?: string } = {}) => alova.Get<ApiResponse<BookedDays[]>>(`/boards/${id}/availability`, { params, cacheFor: null }),
+    boardAvailability: (id: ID, params: { from?: string; to?: string; faceId?: ID } = {}) => alova.Get<ApiResponse<BookedDays[]>>(`/boards/${id}/availability`, { params, cacheFor: null }),
     /** Hold dates on a board while the advertiser pays. */
     bookBoard: (id: ID, data: BookingInput) => alova.Post<ApiResponse<Booking>>(`/boards/${id}/bookings`, data),
     booking: (id: ID) => alova.Get<ApiResponse<Booking>>(`/bookings/${id}`, { cacheFor: null }),
@@ -231,6 +233,11 @@ export function createEndpoints(alova: GreyboardsAlova) {
       },
       removeBoardPhoto: (id: ID, photo: ID) => alova.Delete<ApiResponse<{ id: ID }>>(`/account/boards/${id}/photos/${photo}`),
       /** Text the owner of a scouted board a link to sign, or send the waiting one again. */
+      /** Change a face's name, heading or rate card. */
+      updateBoardFace: (id: ID, face: ID, data: BoardFaceInput) => alova.Put<ApiResponse<BoardDetail>>(`/account/boards/${id}/faces/${face}`, data),
+      /** Keep days off the market, on one face or the whole board. */
+      blockDays: (id: ID, data: AvailabilityBlockInput) => alova.Post<ApiResponse<BoardDetail>>(`/account/boards/${id}/blocks`, data),
+      unblockDays: (id: ID, block: ID) => alova.Delete<ApiResponse<BoardDetail>>(`/account/boards/${id}/blocks/${block}`),
       sendAgreement: (id: ID) => alova.Post<ApiResponse<BoardAgreement>>(`/account/boards/${id}/agreement`),
 
       /** The owner profiles the account manages. */

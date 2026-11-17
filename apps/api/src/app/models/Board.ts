@@ -2,7 +2,9 @@ import { Model } from '@arkstack/database'
 import { Storage } from '@arkstack/filesystem'
 import { abortIf } from '@arkstack/common'
 import { raw, type QueryBuilder } from 'arkormx'
+import { AvailabilityBlock } from './AvailabilityBlock'
 import { BoardAgreement } from './BoardAgreement'
+import { BoardFace } from './BoardFace'
 import { BoardPhoto, type BoardPhotoInput } from './BoardPhoto'
 import { OwnerProfile } from './OwnerProfile'
 import { User, type UploadedFile } from './User'
@@ -185,12 +187,16 @@ export class Board extends Model {
   static async tag(user: User, details: BoardDetails, owner: BoardOwnerChoice, asOwner: boolean): Promise<Board> {
     const profile = await Board.ownerFor(user, owner, asOwner)
 
-    return Board.query().create({
+    const board = await Board.query().create({
       ...Board.clean(details),
       status: Board.PENDING,
       taggedById: user.id,
       ownerProfileId: profile.id,
     })
+
+    await board.syncFaces()
+
+    return board
   }
 
   private static async ownerFor(user: User, owner: BoardOwnerChoice, asOwner: boolean): Promise<OwnerProfile> {
@@ -239,6 +245,16 @@ export class Board extends Model {
 
   photos() {
     return this.hasMany(BoardPhoto, 'boardId')
+  }
+
+  /** The board's faces, A first. */
+  boardFaces() {
+    return this.hasMany(BoardFace, 'boardId').oldest('position')
+  }
+
+  /** Days the owner keeps for themselves. */
+  availabilityBlocks() {
+    return this.hasMany(AvailabilityBlock, 'boardId')
   }
 
   /** Agreements sent to the owner of a scouted board, newest last. */
@@ -345,7 +361,59 @@ export class Board extends Model {
     const moved = Board.REVIEWED_FIELDS.some((field) => field in changes && changes[field] !== this[field as keyof this])
     const resubmit = this.status === Board.REJECTED || (this.isListed() && moved)
 
+    if (changes.faces !== undefined && changes.faces < this.faces) await this.checkFacesFree(changes.faces)
+
     await this.update(resubmit ? { ...changes, status: Board.PENDING, reviewNote: null } : changes)
+    await this.syncFaces()
+  }
+
+  /**
+   * Make the face rows match the board's face count: add missing faces after the last,
+   * drop faces past it. The first face starts with the board's heading.
+   */
+  async syncFaces(): Promise<void> {
+    const count = Math.max(1, Number(this.faces) || 1)
+    const faces = (await this.boardFaces().getResults()).all()
+
+    for (let position = faces.length + 1; position <= count; position++) {
+      await BoardFace.query().create({
+        boardId: this.id,
+        position,
+        label: BoardFace.labelFor(position),
+        headingDeg: position === 1 ? this.headingDeg : null,
+        minPeriods: 1,
+      })
+    }
+
+    await BoardFace.query().where({ boardId: this.id }).whereRaw('position > ?', [count]).delete()
+  }
+
+  /** Refuse to drop faces that still have bookings to run. */
+  private async checkFacesFree(count: number): Promise<void> {
+    const booked = await BoardFace.query()
+      .where({ boardId: this.id })
+      .whereRaw("position > ? and exists (select 1 from bookings where bookings.face_id = board_faces.id and bookings.status in ('held', 'paid', 'live'))", [count])
+      .exists()
+
+    abortIf(booked, 'A face you are removing still has bookings. Keep it until they end.', 422)
+  }
+
+  /**
+   * The face an advertiser books. A board with one face needs no choice; on others they
+   * pick one, and it must belong to this board.
+   */
+  async faceFor(faceId?: string | null): Promise<BoardFace> {
+    const faces = (await this.boardFaces().getResults()).all()
+    const face = faceId ? faces.find((candidate) => candidate.id === faceId) : faces.length === 1 ? faces[0] : undefined
+
+    abortIf(!face, faceId ? 'That face isn’t on this board.' : 'Pick which face of the board to book.', 422)
+
+    return face!
+  }
+
+  /** What a face costs per week or month: its own rate, else the board's. */
+  rateFor(face: BoardFace): number | null {
+    return face.ownRate() ?? this.rate()
   }
 
   /** Record a reviewer's decision. Pending is not a decision. */
