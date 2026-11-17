@@ -1,0 +1,83 @@
+import AccountController from 'src/app/http/controllers/AccountController'
+import AccountRoleController from 'src/app/http/controllers/AccountRoleController'
+import AuthController from 'src/app/http/controllers/AuthController'
+import SessionController from 'src/app/http/controllers/SessionController'
+import TwoFactorController from 'src/app/http/controllers/TwoFactorController'
+import LimitsController from 'src/app/http/controllers/LimitsController'
+import DocumentController from 'src/app/http/controllers/DocumentController'
+import AdminAccountRoleController from 'src/app/http/controllers/admin/AccountRoleController'
+import AdminDocumentController from 'src/app/http/controllers/admin/DocumentController'
+import OverviewController from 'src/app/http/controllers/admin/OverviewController'
+import SettingsController from 'src/app/http/controllers/admin/SettingsController'
+import RoleController from 'src/app/http/controllers/admin/RoleController'
+import UserController from 'src/app/http/controllers/admin/UserController'
+import { Authorize } from 'src/app/http/middlewares/Authorize'
+import { Router } from '@arkstack/driver-express'
+import { auth, limiter } from '@arkstack/driver-express/middlewares'
+
+Router.get('/', () => {
+  return { status: 'OK' }
+})
+
+// Upload sizes and other limits apps check up front
+Router.get('/limits', [LimitsController, 'show'], [limiter(120, 60)])
+
+// Privacy policy, terms, about and other pages admins publish
+Router.get('/documents', [DocumentController, 'index'], [limiter(120, 60)])
+Router.get('/documents/:document', [DocumentController, 'show'], [limiter(120, 60)])
+
+// Auth
+Router.post('/auth/register', [AuthController, 'register'], [limiter(20, 60)])
+Router.post('/auth/login', [AuthController, 'login'], [limiter(20, 60)])
+Router.post('/auth/two-factor', [AuthController, 'twoFactorChallenge'], [limiter(10, 60)])
+Router.post('/auth/forgot-password', [AuthController, 'forgotPassword'], [limiter(5, 60)])
+Router.post('/auth/reset-password', [AuthController, 'resetPassword'], [limiter(10, 60)])
+Router.post('/auth/verify-email', [AuthController, 'verifyEmail'], [limiter(10, 60)])
+Router.get('/auth/me', [AuthController, 'me'], [auth])
+Router.post('/auth/logout', [AuthController, 'logout'], [auth])
+
+// Account settings
+Router.put('/account/profile', [AccountController, 'updateProfile'], [auth])
+Router.post('/account/avatar', [AccountController, 'updateAvatar'], [auth, limiter(20, 60)])
+Router.delete('/account/avatar', [AccountController, 'removeAvatar'], [auth])
+Router.put('/account/email', [AccountController, 'updateEmail'], [auth, limiter(10, 60)])
+Router.post('/account/email/verification', [AccountController, 'sendVerification'], [auth, limiter(3, 60)])
+Router.put('/account/password', [AccountController, 'updatePassword'], [auth, limiter(10, 60)])
+Router.delete('/account', [AccountController, 'destroy'], [auth, limiter(5, 60)])
+
+// Marketplace roles: advertiser, owner, scout and billposter
+Router.get('/account-roles', [AccountRoleController, 'definitions'], [limiter(120, 60)])
+Router.get('/account/roles', [AccountRoleController, 'index'], [auth])
+Router.post('/account/roles', [AccountRoleController, 'create'], [auth, limiter(20, 60)])
+Router.delete('/account/roles/:kind', [AccountRoleController, 'destroy'], [auth])
+
+// Signed-in devices
+Router.get('/account/sessions', [SessionController, 'index'], [auth])
+Router.delete('/account/sessions', [SessionController, 'destroyOthers'], [auth])
+Router.delete('/account/sessions/:session', [SessionController, 'destroy'], [auth])
+
+// Two-step sign-in
+Router.get('/account/two-factor', [TwoFactorController, 'show'], [auth])
+Router.post('/account/two-factor/setup', [TwoFactorController, 'setup'], [auth])
+Router.post('/account/two-factor', [TwoFactorController, 'enable'], [auth, limiter(10, 60)])
+Router.post('/account/two-factor/recovery-codes', [TwoFactorController, 'regenerateRecoveryCodes'], [auth])
+Router.delete('/account/two-factor', [TwoFactorController, 'disable'], [auth, limiter(10, 60)])
+
+// Admin dashboard. Each area needs a role that grants it.
+Router.get('/admin/overview', [OverviewController, 'show'], [auth, Authorize.to('dashboard.view')])
+Router.get('/admin/users', [UserController, 'index'], [auth, Authorize.to('users.view', 'users.manage')])
+Router.get('/admin/users/:user', [UserController, 'show'], [auth, Authorize.to('users.view', 'users.manage')])
+Router.put('/admin/users/:user', [UserController, 'update'], [auth, Authorize.to('users.manage')])
+Router.get('/admin/account-roles', [AdminAccountRoleController, 'index'], [auth, Authorize.to('partners.review')])
+Router.put('/admin/account-roles/:role', [AdminAccountRoleController, 'update'], [auth, Authorize.to('partners.review')])
+Router.get('/admin/settings', [SettingsController, 'index'], [auth, Authorize.to('settings.manage')])
+Router.put('/admin/settings/:group', [SettingsController, 'update'], [auth, Authorize.to('settings.manage')])
+Router.get('/admin/roles', [RoleController, 'index'], [auth, Authorize.to('roles.manage', 'users.view', 'users.manage')])
+Router.post('/admin/roles', [RoleController, 'create'], [auth, Authorize.to('roles.manage')])
+Router.put('/admin/roles/:role', [RoleController, 'update'], [auth, Authorize.to('roles.manage')])
+Router.delete('/admin/roles/:role', [RoleController, 'destroy'], [auth, Authorize.to('roles.manage')])
+Router.get('/admin/documents', [AdminDocumentController, 'index'], [auth, Authorize.to('pages.manage')])
+Router.get('/admin/documents/:document', [AdminDocumentController, 'show'], [auth, Authorize.to('pages.manage')])
+Router.post('/admin/documents', [AdminDocumentController, 'create'], [auth, Authorize.to('pages.manage')])
+Router.put('/admin/documents/:document', [AdminDocumentController, 'update'], [auth, Authorize.to('pages.manage')])
+Router.delete('/admin/documents/:document', [AdminDocumentController, 'destroy'], [auth, Authorize.to('pages.manage')])
