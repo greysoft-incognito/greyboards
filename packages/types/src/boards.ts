@@ -61,15 +61,79 @@ export interface BoardPhoto {
   createdAt: string
 }
 
-/** A board with its photos. The owner's contact and review notes come only to its owner, tagger and reviewers. */
+/**
+ * A board owner, with or without an account. Scouts make one the first time they tag an
+ * owner's board; the owner claims it later by proving the phone number. One account can
+ * manage several.
+ */
+export interface OwnerProfile {
+  id: ID
+  name: string
+  phone: string | null
+  /** Whether an account manages it. */
+  claimed: boolean
+  userId: ID | null
+  phoneVerifiedAt: string | null
+  createdAt: string
+}
+
+/** An owner offered while typing a name when tagging a board. The number is mostly hidden. */
+export interface OwnerSuggestion {
+  id: ID
+  name: string
+  phone: string | null
+  claimed: boolean
+  /** Boards already under this owner. */
+  boards: number
+}
+
+/** `expired` is a sent agreement whose link ran out before the owner signed. */
+export type BoardAgreementStatus = 'sent' | 'signed' | 'declined' | 'cancelled' | 'expired'
+
+/** The agreement a board owner signs by SMS when a scout runs their board, as the scout and reviewers see it. */
+export interface BoardAgreement {
+  id: ID
+  status: BoardAgreementStatus
+  ownerName: string | null
+  ownerPhone: string
+  /** The owner's part of each booking, in percent, as it was when the agreement was sent. */
+  ownerSharePercent: number
+  rate: BoardRate | null
+  sendCount: number
+  lastSentAt: string
+  /** Seconds until the link can be texted again, while it is waiting. */
+  resendInSeconds: number | null
+  expiresAt: string
+  signedName: string | null
+  signedAt: string | null
+  declinedAt: string | null
+  createdAt: string
+}
+
+/** An agreement as the owner reads it from the link in their SMS. */
+export interface AgreementOffer {
+  status: BoardAgreementStatus
+  ownerName: string | null
+  /** Mostly hidden, such as +234••••••0000. */
+  ownerPhone: string
+  ownerSharePercent: number
+  rate: BoardRate | null
+  expiresAt: string
+  signedName: string | null
+  signedAt: string | null
+  scout: { name: string; avatarUrl: string | null } | null
+  board: Pick<Board, 'name' | 'kindLabel' | 'widthM' | 'heightM' | 'faces' | 'lit' | 'address' | 'city' | 'latitude' | 'longitude' | 'coverUrl'>
+}
+
+/** A board with its photos. The owner, agreement and review notes come only to whoever looks after it and reviewers. */
 export interface BoardDetail extends Board {
   photos: BoardPhoto[]
-  ownerName?: string | null
-  ownerPhone?: string | null
-  ownerId?: ID | null
+  owner?: OwnerProfile | null
   taggedById?: ID | null
   reviewNote?: string | null
   reviewedAt?: string | null
+  /** For boards a scout runs for their owner. */
+  agreement?: BoardAgreement | null
 }
 
 export interface AdminBoard extends BoardDetail {
@@ -96,7 +160,11 @@ export interface BoardInput {
   rateMinor?: number | null
   currency?: string | null
   ratePeriod?: BoardRatePeriod | null
-  /** Scouts note who owns the board so we can reach them. */
+}
+
+/** Who owns a board being tagged: a suggested or managed profile, or a new owner's name and phone. */
+export interface BoardOwnerChoice {
+  ownerProfileId?: ID | null
   ownerName?: string | null
   ownerPhone?: string | null
 }
