@@ -3,9 +3,9 @@ import { ScrollView, StyleSheet, View } from 'react-native'
 import { Image } from 'expo-image'
 import * as ImagePicker from 'expo-image-picker'
 import { useFocusEffect, useLocalSearchParams } from 'expo-router'
-import { FileSignature, Lightbulb, MapPin, Ruler, User } from 'lucide-react-native'
+import { Compass, FileSignature, Lightbulb, MapPin, Ruler, User } from 'lucide-react-native'
 import type { BoardAgreement, BoardDetail } from '@greyboards/types'
-import { BoardCover, BoardStatusBadge, boardPlace, formatRate, formatSize } from '@/components/boards/BoardBits'
+import { BoardCover, BoardStatusBadge, boardPlace, formatHeading, formatRate, formatSize } from '@/components/boards/BoardBits'
 import { Section, SettingsPage } from '@/components/settings/SettingsPage'
 import { Button, Callout, Text } from '@/components/ui'
 import { api } from '@/lib/api'
@@ -117,6 +117,7 @@ export default function BoardScreen() {
           {board.reviewNote ? <Callout>{board.reviewNote}</Callout> : null}
           <Line icon={MapPin} text={boardPlace(board)} />
           <Line icon={Ruler} text={`${board.kindLabel}, ${formatSize(board)}${board.faces > 1 ? `, ${board.faces} faces` : ''}`} />
+          {board.headingDeg !== null || board.facing ? <Line icon={Compass} text={[board.headingDeg !== null ? formatHeading(board.headingDeg) : null, board.facing].filter(Boolean).join(', ')} /> : null}
           {board.lit ? <Line icon={Lightbulb} text="Lit at night" /> : null}
           {rate ? <Text variant="title">{rate}</Text> : <Text variant="muted">No rate yet. Add one on the web to take bookings.</Text>}
         </Section>
