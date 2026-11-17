@@ -70,7 +70,7 @@ export default function Jobs({ loaderData }: Route.ComponentProps) {
 					{jobs.map((job) => (
 						<JobRow key={job.id} job={job} />
 					))}
-					{meta && <Pager meta={meta} />}
+					{meta && <Pager meta={meta} noun="jobs" />}
 				</div>
 			) : (
 				<Empty mine={mine} />
