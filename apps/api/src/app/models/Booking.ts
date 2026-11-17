@@ -7,6 +7,7 @@ import { Refunds } from '@app/services/Refunds'
 import { Payouts } from '@app/services/Payouts'
 import { Day } from '@app/support/Day'
 import { Money } from '@app/support/Money'
+import { Auction } from './Auction'
 import { AvailabilityBlock } from './AvailabilityBlock'
 import { BoardFace } from './BoardFace'
 import { Settings } from '@app/support/Settings'
@@ -38,12 +39,29 @@ export type ProofStatus = 'none' | 'submitted' | 'accepted' | 'disputed'
 /** `billposter` puts the job on the marketplace; `owner` means the owner or their scout does it. */
 export type PrintedBy = 'billposter' | 'owner'
 
+/** How the booking came about: booked at the listed price, an accepted offer, or a won bid. */
+export type BookingSource = 'book' | 'offer' | 'bid'
+
+/** What a new hold is for and costs. */
+interface HoldTerms {
+  startsOn: string
+  endsOn: string
+  periods: number
+  rateMinor: number
+  /** The rent for the whole run, before printing. */
+  rentMinor: number
+  holdMinutes: number
+  source: BookingSource
+}
+
 /** A run of days a booking takes on a board. */
 export interface BookedDays {
   startsOn: string
   endsOn: string
   /** The owner kept these days, rather than someone booking them. */
   blocked?: boolean
+  /** The days are open for bids. */
+  auction?: boolean
 }
 
 /**
@@ -74,6 +92,7 @@ export class Booking extends Model {
   declare printFeeMinor: number
   /** Who prints and puts the ad up, fixed when it's booked. */
   declare printedBy: PrintedBy
+  declare source: BookingSource
   declare artworkPath: string | null
   declare artworkDisk: string | null
   declare artworkWidth: number | null
@@ -169,10 +188,54 @@ export class Booking extends Model {
 
   /**
    * Hold a face of `board` for `advertiser` from `startsOn` for `periods` of its rate, while
-   * they pay. Holds that ran out are let go first; dates someone else holds or booked, or
-   * the owner blocked, are refused.
+   * they pay. Holds that ran out are let go first; dates someone else holds or booked, the
+   * owner blocked, or that are open for bids are refused.
    */
   static async hold(board: Board, face: BoardFace, advertiser: User, startsOn: string, periods: number): Promise<Booking> {
+    const endsOn = await Booking.checkDates(board, face, advertiser, startsOn, periods)
+
+    await Booking.expireHolds()
+
+    const open = await Booking.query().where({ advertiserId: advertiser.id, status: Booking.HELD }).count()
+
+    abortIf(open >= Booking.MAX_HOLDS, 'Finish or cancel a checkout you started before booking another board.', 429)
+
+    const rateMinor = board.rateFor(face)!
+
+    return Booking.reserve(board, face, advertiser, { startsOn, endsOn, periods, rateMinor, rentMinor: rateMinor * periods, holdMinutes: await Settings.number('bookings.hold_minutes'), source: 'book' })
+  }
+
+  /**
+   * Hold dates an advertiser won with a bid or agreed in an offer, at that price, for the
+   * time winners have to pay. The dates must still be free and not started.
+   */
+  static async award(board: Board, face: BoardFace, advertiser: User, startsOn: string, periods: number, rentMinor: number, source: BookingSource): Promise<Booking> {
+    const blocker = await Commissions.blocker(board)
+    const endsOn = Booking.endOf(startsOn, periods, board.ratePeriod)
+
+    abortIf(!!blocker, blocker ?? '', 422)
+    abortIf(startsOn <= Day.today(), 'Those dates have already started.', 422)
+    abortIf(await Booking.blocked(board, face, startsOn, endsOn), 'The owner keeps some of those dates for their own clients.', 409)
+
+    await Booking.expireHolds()
+
+    return Booking.reserve(board, face, advertiser, {
+      startsOn,
+      endsOn,
+      periods,
+      rateMinor: Math.round(rentMinor / periods),
+      rentMinor,
+      holdMinutes: (await Settings.number('bids.pay_hours')) * 60,
+      source,
+    })
+  }
+
+  /**
+   * Check `advertiser` may ask for these dates on a face: the board takes bookings, they
+   * don't look after it, the dates fit the notice, the length and the face's shortest run,
+   * and nothing blocked or open for bids covers them. Returns the last day.
+   */
+  static async checkDates(board: Board, face: BoardFace, advertiser: User, startsOn: string, periods: number): Promise<string> {
     const blocker = await Commissions.blocker(board)
     const earliest = Day.today(await Settings.number('bookings.lead_days'))
     const maxPeriods = await Settings.number('bookings.max_periods')
@@ -188,34 +251,33 @@ export class Booking extends Model {
     const endsOn = Booking.endOf(startsOn, periods, board.ratePeriod)
 
     abortIf(await Booking.blocked(board, face, startsOn, endsOn), 'The owner keeps some of those dates for their own clients. Pick other dates.', 409)
+    abortIf(await Auction.covers(face, startsOn, endsOn), 'Those dates are open for bids. Bid for them, or pick other dates.', 409)
 
-    await Booking.expireHolds()
+    return endsOn
+  }
 
-    const open = await Booking.query().where({ advertiserId: advertiser.id, status: Booking.HELD }).count()
-
-    abortIf(open >= Booking.MAX_HOLDS, 'Finish or cancel a checkout you started before booking another board.', 429)
-
-    const rateMinor = board.rateFor(face)!
+  /** Create the held booking. The database turns it away if another booking has any of the days. */
+  private static async reserve(board: Board, face: BoardFace, advertiser: User, terms: HoldTerms): Promise<Booking> {
     const printFeeMinor = await PrintJob.feeFor(board)
-    const holdMinutes = await Settings.number('bookings.hold_minutes')
 
     try {
       return await Booking.query().create({
         boardId: board.id,
         faceId: face.id,
         advertiserId: advertiser.id,
-        startsOn,
-        endsOn,
-        periods,
+        startsOn: terms.startsOn,
+        endsOn: terms.endsOn,
+        periods: terms.periods,
         ratePeriod: board.ratePeriod,
-        rateMinor,
+        rateMinor: terms.rateMinor,
         printFeeMinor,
         printedBy: printFeeMinor > 0 && board.printsOwn ? 'owner' : 'billposter',
-        amountMinor: rateMinor * periods + printFeeMinor,
+        amountMinor: terms.rentMinor + printFeeMinor,
         currency: board.currency,
         status: Booking.HELD,
-        holdExpiresAt: new Date(Date.now() + holdMinutes * 60_000),
+        holdExpiresAt: new Date(Date.now() + terms.holdMinutes * 60_000),
         ownerProfileId: board.ownerProfileId,
+        source: terms.source,
       })
     } catch (error) {
       abortIf(Booking.isOverlap(error), 'Someone else has some of those dates. Pick other dates.', 409)
@@ -230,8 +292,8 @@ export class Booking extends Model {
   }
 
   /**
-   * Days already taken on a face of `board` between two days: bookings, and days the owner
-   * blocked for the face or the whole board. At most a year's worth of each.
+   * Days already taken on a face of `board` between two days: bookings, days the owner
+   * blocked for the face or the whole board, and days open for bids. At most 200 of each.
    */
   static async taken(board: Board, face: BoardFace, from: string, to: string): Promise<BookedDays[]> {
     await Booking.expireHolds()
@@ -244,10 +306,12 @@ export class Booking extends Model {
       .limit(200)
       .get()
     const blocks = await Booking.blocks(board, face, from, to).oldest('startsOn').limit(200).get()
+    const auctions = await Auction.covering(face, from, to).oldest('startsOn').limit(200).get()
 
     return [
       ...bookings.all().map((booking) => booking.days()),
       ...blocks.all().map((block) => ({ ...block.days(), blocked: true })),
+      ...auctions.all().map((auction) => ({ ...auction.days(), auction: true })),
     ].sort((first, second) => first.startsOn.localeCompare(second.startsOn))
   }
 

@@ -3,6 +3,7 @@ import { Form, Link, redirect, useNavigation, useSearchParams, useSubmit } from 
 import { ArrowLeft, BadgeCheck, Camera, Compass, ExternalLink, FileSignature, Layers, Lightbulb, Map as MapIcon, MapPin, Pencil, Phone, Ruler, Send, Trash2, User, X } from "lucide-react";
 import type { BoardAgreement, BoardDetail, BoardPhoto, OwnerProfile } from "@greyboards/types";
 import { BoardCover, BoardStatusBadge, formatHeading, formatRate, formatSize, mapLink } from "~/components/boards/BoardBits";
+import { AuctionCard, AuctionsManager, toMinor } from "~/components/bids/BidBits";
 import { BookPanel } from "~/components/bookings/BookPanel";
 import { BlockedDays, RateCard } from "~/components/boards/RateCard";
 import { SpotMap } from "~/components/map/SpotMap";
@@ -28,16 +29,54 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
 		await Promise.all(faces.map(async (face) => [face.id, await api.boardAvailability(board.id, { faceId: face.id }).then(({ data }) => data, () => [])] as const)),
 	);
 	const canBook = user.accountRoles.some((role) => role.kind === "advertiser" && role.status === "active");
+	const { data: auctions } = board.status === "listed" || manages ? await api.boardAuctions(board.id).catch(() => ({ data: [] })) : { data: [] };
 
-	return { board, manages, taken, canBook, today: new Date().toISOString().slice(0, 10), styleUrl: mapStyleUrl(context) };
+	return { board, manages, taken, canBook, auctions, today: new Date().toISOString().slice(0, 10), styleUrl: mapStyleUrl(context) };
 }
 
 export async function action({ request, context, params }: Route.ActionArgs) {
 	const { api } = await requireUser(request, context);
 	const form = await request.formData();
 	const intent = String(form.get("intent"));
+	const id = String(form.get("id") ?? "");
 
 	try {
+		if (intent === "offer") {
+			await api.makeOffer(params.id, {
+				startsOn: String(form.get("startsOn")),
+				periods: Number(form.get("periods")),
+				faceId: String(form.get("faceId") ?? "") || undefined,
+				amountMinor: toMinor(form.get("amount")),
+				note: String(form.get("note") ?? "") || null,
+			});
+
+			throw redirect("/bookings?view=offers&sent=1");
+		}
+
+		if (intent === "bid") {
+			await api.bid(id, toMinor(form.get("amount")));
+
+			return { error: null, message: "Bid placed.", intent, id };
+		}
+
+		if (intent === "open-auction") {
+			await api.account.openAuction(params.id, {
+				faceId: String(form.get("faceId") ?? "") || null,
+				startsOn: String(form.get("startsOn")),
+				periods: Number(form.get("periods")),
+				reserveMinor: toMinor(form.get("reserve")),
+				closesAt: new Date(String(form.get("closesAt"))).toISOString(),
+			});
+
+			return { error: null, message: "Dates open for bids.", intent, id };
+		}
+
+		if (intent === "cancel-auction") {
+			await api.account.cancelAuction(id);
+
+			return { error: null, message: "Bidding closed. The dates are free to book again.", intent, id };
+		}
+
 		if (intent === "book") {
 			const faceId = String(form.get("faceId") ?? "") || undefined;
 			const { data: booking } = await api.bookBoard(params.id, { startsOn: String(form.get("startsOn")), periods: Number(form.get("periods")), faceId });
@@ -105,10 +144,10 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 	} catch (error) {
 		if (error instanceof Response) throw error;
 
-		return { error: formError(error).error, message: null };
+		return { error: formError(error).error, message: null, intent, id };
 	}
 
-	return { error: "Something went wrong. Try again.", message: null };
+	return { error: "Something went wrong. Try again.", message: null, intent, id };
 }
 
 const REVIEW_NOTES: Record<BoardDetail["status"], string> = {
@@ -122,7 +161,8 @@ const REVIEW_NOTES: Record<BoardDetail["status"], string> = {
 export default function BoardPage({ loaderData, actionData }: Route.ComponentProps) {
 	useToastMessage(actionData);
 
-	const { board, manages, taken, canBook, today, styleUrl } = loaderData;
+	const { board, manages, taken, canBook, auctions, today, styleUrl } = loaderData;
+	const errorFor = (intent: string, id = "") => (actionData?.intent === intent && (actionData.id ?? "") === id ? actionData.error : null);
 	const [params] = useSearchParams();
 	const [shown, setShown] = useState<BoardPhoto | null>(board.photos[0] ?? null);
 	const rate = formatRate(board.rate);
@@ -199,7 +239,8 @@ export default function BoardPage({ loaderData, actionData }: Route.ComponentPro
 						{board.description && <p className="border-t border-surface-200 pt-4 text-sm whitespace-pre-line text-ink-700">{board.description}</p>}
 					</div>
 
-					{!manages && board.status === "listed" && <BookPanel board={board} taken={taken} canBook={canBook} error={actionData?.error} />}
+					{!manages && board.status === "listed" && <BookPanel board={board} taken={taken} canBook={canBook} error={errorFor("book") ?? errorFor("offer")} />}
+					{!manages && auctions.map((auction) => <AuctionCard key={auction.id} auction={auction} canBid={canBook} error={errorFor("bid", auction.id)} />)}
 
 					<div className="panel space-y-2 p-2">
 						<SpotMap styleUrl={styleUrl} latitude={board.latitude} longitude={board.longitude} className="aspect-[16/10]" />
@@ -228,6 +269,7 @@ export default function BoardPage({ loaderData, actionData }: Route.ComponentPro
 
 					{manages && board.rateCard.length > 0 && <RateCard board={board} />}
 					{manages && <BlockedDays board={board} today={today} />}
+					{manages && board.status === "listed" && <AuctionsManager board={board} auctions={auctions} today={today} />}
 				</section>
 			</div>
 		</main>

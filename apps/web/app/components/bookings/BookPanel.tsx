@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Form, Link, useNavigation } from "react-router";
-import { CalendarCheck, CalendarX2, ShieldCheck } from "lucide-react";
+import { CalendarCheck, CalendarX2, HandCoins, ShieldCheck } from "lucide-react";
 import type { BookedDays, BoardDetail } from "@greyboards/types";
 import { formatHeading, formatRate } from "~/components/boards/BoardBits";
-import { Alert, Button, buttonClass, Input, Select, Spinner } from "~/components/ui";
+import { Alert, Button, buttonClass, Field, Input, Select, Spinner, Textarea } from "~/components/ui";
 import { formatDays, formatMoney } from "./BookingBits";
 
 /**
@@ -12,7 +12,9 @@ import { formatDays, formatMoney } from "./BookingBits";
  */
 export function BookPanel({ board, taken, canBook, error }: { board: BoardDetail; taken: Record<string, BookedDays[]>; canBook: boolean; error?: string | null }) {
 	const navigation = useNavigation();
-	const busy = navigation.formData?.get("intent") === "book";
+	const intent = navigation.formData?.get("intent");
+	const busy = intent === "book" || intent === "offer";
+	const [offering, setOffering] = useState(false);
 	const [faceId, setFaceId] = useState(board.rateCard[0]?.id ?? "");
 	const face = board.rateCard.find((candidate) => candidate.id === faceId) ?? board.rateCard[0];
 	const minPeriods = Math.min(face?.minPeriods ?? 1, board.booking.maxPeriods);
@@ -49,7 +51,7 @@ export function BookPanel({ board, taken, canBook, error }: { board: BoardDetail
 
 			{canBook ? (
 				<Form method="post" className="space-y-4">
-					<input type="hidden" name="intent" value="book" />
+					<input type="hidden" name="intent" value={offering ? "offer" : "book"} />
 					{face && <input type="hidden" name="faceId" value={face.id} />}
 					{board.rateCard.length > 1 && (
 						<fieldset>
@@ -108,14 +110,29 @@ export function BookPanel({ board, taken, canBook, error }: { board: BoardDetail
 							<dd className="font-display text-xl font-extrabold text-ink-900 tabular-nums">{formatMoney(rate.amountMinor * periods + terms.printFeeMinor, rate.currency)}</dd>
 						</div>
 					</dl>
+					{offering && (
+						<div className="space-y-3 rounded-2xl border-[1.5px] border-brand-200 p-4">
+							<Field label="Your offer for the run" hint={`Listed at ${formatMoney(rate.amountMinor * periods, rate.currency)} before printing`}>
+								<Input name="amount" type="number" min="1" max={(rate.amountMinor * periods) / 100 - 1} step="1000" defaultValue={Math.floor((rate.amountMinor * periods * 0.9) / 100000) * 1000} required />
+							</Field>
+							<Field label="Note for the owner">
+								<Textarea name="note" rows={2} maxLength={500} placeholder="Such as: a three-month campaign if this goes well" />
+							</Field>
+						</div>
+					)}
 					{error && <Alert>{error}</Alert>}
 					<Button type="submit" className="w-full" disabled={busy}>
-						{busy ? <Spinner /> : <CalendarCheck className="h-4 w-4" aria-hidden />}
-						{busy ? "Holding your dates" : "Hold dates and pay"}
+						{busy ? <Spinner /> : offering ? <HandCoins className="h-4 w-4" aria-hidden /> : <CalendarCheck className="h-4 w-4" aria-hidden />}
+						{offering ? (busy ? "Sending your offer" : "Send offer") : busy ? "Holding your dates" : "Hold dates and pay"}
 					</Button>
+					<button type="button" onClick={() => setOffering((current) => !current)} className="w-full text-sm font-semibold text-brand-700 hover:underline">
+						{offering ? "Book at the listed price instead" : "Make an offer instead"}
+					</button>
 					<p className="flex items-start gap-2 text-xs text-ink-500">
 						<ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-available" aria-hidden />
-						We hold your payment until there's a photo of your ad on the board. Your dates are held for a few minutes while you pay.
+						{offering
+							? "The owner can accept, decline or counter. If they accept, the dates are held for you to pay."
+							: "We hold your payment until there's a photo of your ad on the board. Your dates are held for a few minutes while you pay."}
 					</p>
 				</Form>
 			) : (
@@ -129,8 +146,8 @@ export function BookPanel({ board, taken, canBook, error }: { board: BoardDetail
 					<p className="text-sm font-semibold text-ink-700">{board.rateCard.length > 1 && face ? `Not free on ${face.label}` : "Not free"}</p>
 					<ul className="mt-2 space-y-1 text-sm text-ink-500">
 						{days.slice(0, 6).map((run) => (
-							<li key={`${run.startsOn}-${run.blocked ? "kept" : "booked"}`}>
-								{formatDays(run)} · {run.blocked ? "kept by the owner" : "booked"}
+							<li key={`${run.startsOn}-${run.auction ? "bids" : run.blocked ? "kept" : "booked"}`}>
+								{formatDays(run)} · {run.auction ? "open for bids" : run.blocked ? "kept by the owner" : "booked"}
 							</li>
 						))}
 					</ul>

@@ -1,4 +1,9 @@
 import type {
+  Auction,
+  AuctionInput,
+  Offer,
+  OfferInput,
+  OfferQuery,
   AccountRole,
   AccountRoleDefinition,
   AccountRoleKind,
@@ -110,6 +115,18 @@ export function createEndpoints(alova: GreyboardsAlova) {
     /** Start paying for held dates. Send the payer to `checkoutUrl`. */
     checkout: (id: ID) => alova.Post<ApiResponse<Payment>>(`/bookings/${id}/checkout`),
     cancelBooking: (id: ID) => alova.Post<ApiResponse<Booking>>(`/bookings/${id}/cancel`),
+    /** A board's auctions: the running ones, and recent ones for whoever looks after it. */
+    boardAuctions: (id: ID) => alova.Get<ApiResponse<Auction[]>>(`/boards/${id}/auctions`, { cacheFor: null }),
+    auction: (id: ID) => alova.Get<ApiResponse<Auction>>(`/auctions/${id}`, { cacheFor: null }),
+    /** Place or raise a bid. */
+    bid: (id: ID, amountMinor: number) => alova.Post<ApiResponse<Auction>>(`/auctions/${id}/bids`, { amountMinor }),
+    /** Offer below the listed price for some dates. */
+    makeOffer: (id: ID, data: OfferInput) => alova.Post<ApiResponse<Offer>>(`/boards/${id}/offers`, data),
+    /** Agree to an offer, or to its counter. Holds the dates while the advertiser pays. */
+    acceptOffer: (id: ID) => alova.Post<ApiResponse<Booking>>(`/offers/${id}/accept`),
+    declineOffer: (id: ID) => alova.Post<ApiResponse<Offer>>(`/offers/${id}/decline`),
+    counterOffer: (id: ID, amountMinor: number) => alova.Post<ApiResponse<Offer>>(`/offers/${id}/counter`, { amountMinor }),
+    withdrawOffer: (id: ID) => alova.Post<ApiResponse<Offer>>(`/offers/${id}/withdraw`),
     /** The advertiser sends the artwork for a paid booking. */
     uploadArtwork: (id: ID, file: Blob | { uri: string; name: string; type: string }) => alova.Post<ApiResponse<Booking>>(`/bookings/${id}/artwork`, upload('artwork', file)),
     /** Whoever looks after the board approves the artwork, or sends it back with a note. */
@@ -193,6 +210,16 @@ export function createEndpoints(alova: GreyboardsAlova) {
       bookings: (params: BookingQuery = {}) => alova.Get<PaginatedResponse<Booking>>('/account/bookings', { params, cacheFor: null }),
       /** Paid bookings on boards the account tagged or owns, with what each one pays out. */
       boardBookings: (params: PageQuery = {}) => alova.Get<PaginatedResponse<Booking>>('/account/board-bookings', { params, cacheFor: null }),
+      /** Auctions the account bid on. */
+      bids: (params: PageQuery = {}) => alova.Get<PaginatedResponse<Auction>>('/account/bids', { params, cacheFor: null }),
+      /** Offers the account made. */
+      offers: (params: OfferQuery = {}) => alova.Get<PaginatedResponse<Offer>>('/account/offers', { params, cacheFor: null }),
+      /** Offers on boards the account looks after, the waiting ones first. */
+      boardOffers: (params: OfferQuery = {}) => alova.Get<PaginatedResponse<Offer>>('/account/board-offers', { params, cacheFor: null }),
+      /** Open a face's dates to bids. */
+      openAuction: (id: ID, data: AuctionInput) => alova.Post<ApiResponse<Auction>>(`/account/boards/${id}/auctions`, data),
+      /** Close an auction nobody bid on yet. */
+      cancelAuction: (id: ID) => alova.Post<ApiResponse<Auction>>(`/auctions/${id}/cancel`),
       updateProfile: (data: { name: string; username?: string }) => alova.Put<ApiResponse<User>>('/account/profile', data),
       /** `file` is a File/Blob on web, or an RN `{ uri, name, type }` object. */
       updateAvatar: (file: Blob | { uri: string; name: string; type: string }) => {

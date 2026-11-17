@@ -16,6 +16,9 @@ export interface BookingSplit {
   platformAmountMinor: number
 }
 
+/** How a booking came about. */
+export type BookingSource = 'book' | 'offer' | 'bid'
+
 export interface Booking {
   id: ID
   status: BookingStatus
@@ -32,6 +35,8 @@ export interface Booking {
   printFeeMinor: number
   /** Who prints and puts it up: a billposter from the marketplace, or the owner's side. */
   printedBy: PrintedBy
+  /** Booked at the listed price, an accepted offer, or a won bid. */
+  source: BookingSource
   currency: string
   /** Seconds left to pay while the dates are held. */
   holdSecondsLeft: number | null
@@ -206,6 +211,8 @@ export interface BookedDays {
   endsOn: string
   /** The owner kept these days, rather than someone booking them. */
   blocked?: boolean
+  /** The days are open for bids. */
+  auction?: boolean
 }
 
 export interface BookingInput {
