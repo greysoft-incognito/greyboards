@@ -1,0 +1,22 @@
+{
+  "$schema": "https://schema.railpack.com",
+  "provider": "node",
+  "packages": {
+    "node": "24"
+  },
+  "steps": {
+    "build": {
+      "commands": ["pnpm --filter @greyboards/api build"]
+    },
+    "ssh-env": {
+      "commands": [{ "path": "/etc/profile.d/railpack-env.sh", "name": "railpack-env.sh" }],
+      "assets": {
+        "railpack-env.sh": "# Gives SSH login shells the container's PATH and mise settings, which /etc/profile replaces.\nif [ -r /proc/1/environ ]; then\n  for entry in $(tr '\\0' '\\n' < /proc/1/environ | grep -E '^(PATH|MISE_[A-Z_]+)='); do\n    export \"$entry\"\n  done\nfi\n"
+      },
+      "deployOutputs": [{ "include": ["/etc/profile.d/railpack-env.sh"] }]
+    }
+  },
+  "deploy": {
+    "startCommand": "pnpm --filter @greyboards/api start"
+  }
+}

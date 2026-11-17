@@ -1,0 +1,133 @@
+import {
+	isRouteErrorResponse,
+	Links,
+	Meta,
+	Outlet,
+	Scripts,
+	ScrollRestoration,
+	useMatches,
+} from "react-router";
+
+import { DEFAULT_LIMITS } from "@greyboards/types";
+import type { Route } from "./+types/root";
+import { NavigationProgress } from "./components/NavigationProgress";
+import { Toaster } from "./components/Toaster";
+import { cloudflareContext } from "./lib/cloudflare";
+import { getServerApi } from "./lib/api.server";
+import "./app.css";
+
+export const links: Route.LinksFunction = () => [
+	{ rel: "icon", href: "/favicon.ico", sizes: "48x48" },
+	{ rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
+	{ rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
+	{ rel: "manifest", href: "/site.webmanifest" },
+	{ rel: "preconnect", href: "https://fonts.googleapis.com" },
+	{
+		rel: "preconnect",
+		href: "https://fonts.gstatic.com",
+		crossOrigin: "anonymous",
+	},
+	{
+		rel: "stylesheet",
+		href: "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500..800&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
+	},
+];
+
+export async function loader({ request, context }: Route.LoaderArgs) {
+	const { env } = context.get(cloudflareContext);
+	const api = await getServerApi(request, env, null);
+	const [limits, documents] = await Promise.all([
+		api
+			.limits()
+			.then(({ data }) => data)
+			.catch(() => DEFAULT_LIMITS),
+		api
+			.documents({ per_page: 100 })
+			.then(({ data }) => data)
+			.catch(() => []),
+	]);
+
+	return { origin: new URL(request.url).origin, limits, documents };
+}
+
+export const shouldRevalidate = () => false;
+
+/** Share tags every page carries, with the site's logo card. */
+function ShareDefaults() {
+	const origin = (useMatches().find((match) => match.id === "root")?.loaderData as { origin?: string } | undefined)?.origin ?? "";
+	const image = `${origin}/og-image.png`;
+
+	return (
+		<>
+			<meta property="og:site_name" content="Greyboards" />
+			<meta name="twitter:card" content="summary_large_image" />
+			<meta property="og:image" content={image} />
+			<meta property="og:image:width" content="1200" />
+			<meta property="og:image:height" content="630" />
+			<meta property="og:image:alt" content="Greyboards" />
+			<meta name="twitter:image" content={image} />
+		</>
+	);
+}
+
+export function Layout({ children }: { children: React.ReactNode }) {
+	return (
+		<html lang="en">
+			<head>
+				<meta charSet="utf-8" />
+				<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+				<meta name="theme-color" content="#833b4b" />
+				<Meta />
+				<ShareDefaults />
+				<Links />
+			</head>
+			<body>
+				{children}
+				<ScrollRestoration />
+				<Scripts />
+			</body>
+		</html>
+	);
+}
+
+export default function App() {
+	return (
+		<>
+			<NavigationProgress />
+			<Outlet />
+			<Toaster />
+		</>
+	);
+}
+
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+	let message = "Something went wrong";
+	let details = "An unexpected error occurred. Please try again.";
+	let stack: string | undefined;
+
+	if (isRouteErrorResponse(error)) {
+		message = error.status === 404 ? "Page not found" : "Something went wrong";
+		details =
+			error.status === 404
+				? "This page doesn't exist, or you don't have access to it."
+				: error.statusText || (typeof error.data === "string" ? error.data : details);
+	} else if (import.meta.env.DEV && error && error instanceof Error) {
+		details = error.message;
+		stack = error.stack;
+	}
+
+	return (
+		<main className="mx-auto flex min-h-dvh max-w-xl flex-col items-center justify-center gap-4 p-6 text-center">
+			<h1 className="font-display text-4xl font-bold">{message}</h1>
+			<p className="text-ink-500">{details}</p>
+			<a href="/dashboard" className="mt-2 rounded-xl bg-brand-500 px-5 py-2.5 text-sm font-semibold text-white">
+				Back to your dashboard
+			</a>
+			{stack && (
+				<pre className="mt-6 w-full overflow-x-auto rounded-lg bg-surface-100 p-4 text-left text-xs">
+					<code>{stack}</code>
+				</pre>
+			)}
+		</main>
+	);
+}

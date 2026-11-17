@@ -1,0 +1,45 @@
+import { type RouteConfig, index, layout, prefix, route } from "@react-router/dev/routes";
+
+export default [
+	index("routes/home.tsx"),
+	route("signin", "routes/signin.tsx"),
+	route("signup", "routes/signup.tsx"),
+	route("signout", "routes/signout.tsx"),
+	route("forgot-password", "routes/forgot-password.tsx"),
+	route("reset-password", "routes/reset-password.tsx"),
+	route("verify-email", "routes/verify-email.tsx"),
+
+	// Signed-in area with the app header.
+	layout("routes/app-layout.tsx", [
+		route("dashboard", "routes/dashboard.tsx"),
+		route("settings", "routes/settings/layout.tsx", [
+			index("routes/settings/index.tsx"),
+			route("profile", "routes/settings/profile.tsx"),
+			route("email", "routes/settings/email.tsx"),
+			route("roles", "routes/settings/roles.tsx"),
+			route("password", "routes/settings/password.tsx"),
+			route("two-step", "routes/settings/two-step.tsx"),
+			route("devices", "routes/settings/devices.tsx"),
+			route("delete-account", "routes/settings/delete-account.tsx"),
+		]),
+	]),
+
+	// Admin dashboard. Each page needs a role that grants it.
+	...prefix("admin", [
+		layout("routes/admin/layout.tsx", [
+			index("routes/admin/overview.tsx"),
+			route("users", "routes/admin/users.tsx"),
+			route("users/:id", "routes/admin/user.tsx"),
+			route("applications", "routes/admin/applications.tsx"),
+			route("pages/:document?", "routes/admin/pages.tsx"),
+			route("roles/:role?", "routes/admin/roles.tsx"),
+			route("configuration/:group?", "routes/admin/configuration.tsx"),
+		]),
+	]),
+
+	// Public pages under the site header and footer.
+	layout("routes/site-layout.tsx", [
+		route("pages/:slug", "routes/document.tsx"),
+		...(["privacy", "terms", "about"] as const).map((slug) => route(slug, "routes/document.tsx", { id: `document-${slug}` })),
+	]),
+] satisfies RouteConfig;
