@@ -104,7 +104,7 @@ describe('Bookings', () => {
     expect((await api('post', `/bookings/${rival.id}/checkout`, undefined, 'rival')).status).toBe(422)
   })
 
-  it('takes payment into escrow and keeps the commission from the owner, apart from printing', async () => {
+  it('takes payment into escrow and shares the rent 80/20 on a board its owner runs, apart from printing', async () => {
     const held = (await api('get', '/account/bookings?status=held')).body.data.find((booking: { startsOn: string }) => booking.startsOn === '2027-01-31')
     const started = await api('post', `/bookings/${held.id}/checkout`)
 
@@ -120,16 +120,16 @@ describe('Bookings', () => {
 
     expect(booking).toMatchObject({ status: 'paid', split: null, holdSecondsLeft: null })
     expect((await api('get', `/bookings/${held.id}`, undefined, 'owner')).body.data.split).toEqual({
-      ownerSharePercent: 85,
-      ownerAmountMinor: 170_000_000,
+      ownerSharePercent: 80,
+      ownerAmountMinor: 160_000_000,
       scoutAmountMinor: 0,
-      platformAmountMinor: 30_000_000,
+      platformAmountMinor: 40_000_000,
     })
     expect((await api('get', '/account/board-bookings', undefined, 'owner')).body.data.map((entry: { id: string }) => entry.id)).toContain(held.id)
     expect(sql(`select account, kind, amount_minor from ledger_entries where booking_id = '${held.id}'`)).toMatch(/escrow\s*\|\s*payment_in\s*\|\s*216800000/)
   })
 
-  it('books scouted boards only once the owner signs, and pays the scout from the commission', async () => {
+  it('books scouted boards only once the owner signs, and shares the rent 70/20/10 with the scout', async () => {
     expect((await api('post', `/boards/${scoutedBoard}/bookings`, { startsOn: day(20), periods: 1 })).status).toBe(422)
 
     await api('post', `/account/boards/${scoutedBoard}/agreement`, undefined, 'scout')
@@ -147,8 +147,8 @@ describe('Bookings', () => {
     expect((await api('get', `/bookings/${held.id}`, undefined, 'scout')).body.data.split).toEqual({
       ownerSharePercent: 70,
       ownerAmountMinor: 70_000_000,
-      scoutAmountMinor: 9_000_000,
-      platformAmountMinor: 21_000_000,
+      scoutAmountMinor: 10_000_000,
+      platformAmountMinor: 20_000_000,
     })
     expect(lastText(phone)).toContain('Your board "Garki gate" is booked')
     expect(lastText(phone)).toContain('receive ₦700,000 after the ad is up')

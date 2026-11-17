@@ -92,6 +92,8 @@ export interface SettingGroup {
   /** A Lucide icon name for the group's list entry. */
   icon: string
   fields: SettingField[]
+  /** Number fields that must add up to `equals` together, such as a split into percents. */
+  total: { fields: string[]; equals: number } | null
 }
 
 /** A named collection of permissions accounts are given. */

@@ -1,19 +1,8 @@
 /**
- * Booking boards and sharing the money. Admins change these in the dashboard; these are the defaults.
+ * Booking boards. How the money is shared is in config/revenue.ts. Admins change these in the dashboard; these are the defaults.
  */
 export default () => {
   return {
-    /**
-     * Greyboards' commission from the owner on boards owners run themselves, in percent.
-     * On boards a scout runs, the owner's signed share decides it instead.
-     */
-    commission_percent: Number(env('BOOKING_COMMISSION_PERCENT', 15)),
-
-    /**
-     * The scout's part of Greyboards' commission on boards they brought in, in percent.
-     */
-    scout_share_percent: Number(env('BOOKING_SCOUT_SHARE_PERCENT', 30)),
-
     /**
      * Minutes the dates stay held for someone at checkout.
      */

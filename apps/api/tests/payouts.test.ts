@@ -84,7 +84,7 @@ describe('Payouts', () => {
   it('pays the owner’s share into their profile’s account, and lets staff send a failed one again', async () => {
     const summary = (await api('get', '/account/payouts')).body.data
 
-    expect(summary).toMatchObject({ enabled: true, owedMinor: 17_000_000, paidMinor: 0 })
+    expect(summary).toMatchObject({ enabled: true, owedMinor: 16_000_000, paidMinor: 0 })
     expect(summary.owners).toHaveLength(1)
 
     profileId = summary.owners[0].profileId
@@ -96,7 +96,7 @@ describe('Payouts', () => {
 
     const failed = (await api('get', '/admin/payouts?status=failed', undefined, 'admin')).body.data.find((payout: { bookingId: string }) => payout.bookingId === bookingId)
 
-    expect(failed).toMatchObject({ account: 'owner', amountMinor: 17_000_000, status: 'failed', failureReason: 'The bank turned the transfer down.' })
+    expect(failed).toMatchObject({ account: 'owner', amountMinor: 16_000_000, status: 'failed', failureReason: 'The bank turned the transfer down.' })
     expect((await api('post', `/admin/payouts/${failed.id}/retry`)).status).toBe(403)
 
     await api('put', `/account/owner-profiles/${profileId}/payout-account`, { bankCode: '044', accountNumber: '0123456789' })
@@ -106,7 +106,7 @@ describe('Payouts', () => {
     expect(retried.body.data).toMatchObject({ status: 'paid', bankName: 'Access Bank', accountNumber: '••••••6789' })
     expect((await api('post', `/admin/payouts/${failed.id}/retry`, undefined, 'admin')).status).toBe(422)
 
-    expect((await api('get', '/account/payouts')).body.data).toMatchObject({ owedMinor: 0, paidMinor: 17_000_000 })
+    expect((await api('get', '/account/payouts')).body.data).toMatchObject({ owedMinor: 0, paidMinor: 16_000_000 })
     expect((await api('get', '/account/payouts/history')).body.data[0]).toMatchObject({ bookingId, status: 'paid' })
 
     ark('payouts:send')

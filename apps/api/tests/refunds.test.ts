@@ -82,7 +82,7 @@ describe('Cancellations and refunds', { timeout: 30_000 }, () => {
     await api('post', `/bookings/${id}/cancel`)
 
     expect(ledger(id).sort()).toEqual(
-      ['escrow payment_in 67500000', 'escrow cancelled -67500000', 'refund refund_due 42500000', 'owner payout_due 21250000', 'platform commission 3750000', 'refund refunded -42500000'].sort(),
+      ['escrow payment_in 67500000', 'escrow cancelled -67500000', 'refund refund_due 42500000', 'owner payout_due 20000000', 'platform commission 5000000', 'refund refunded -42500000'].sort(),
     )
     expect((await api('post', `/bookings/${id}/cancel`)).status).toBe(422)
   })

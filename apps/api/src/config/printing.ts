@@ -32,7 +32,7 @@ export default () => {
     rush_days: Number(env('PRINT_RUSH_DAYS', 3)),
 
     /**
-     * Extra pay on a job that went back close to go-live, in percent of its fee. It comes out of Greyboards' commission.
+     * Extra pay on a job that went back close to go-live, in percent of its fee. It comes out of Greyboards' part of the rent.
      */
     rush_bonus_percent: Number(env('PRINT_RUSH_BONUS_PERCENT', 25)),
 

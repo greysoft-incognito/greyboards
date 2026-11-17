@@ -176,6 +176,20 @@ describe('Admin dashboard', () => {
     expect((await api('put', '/admin/settings/nothing', {})).status).toBe(404)
   })
 
+  it('keeps the revenue split adding up to 100', async () => {
+    const revenue = (await api('get', '/admin/settings')).body.data.find((group: { id: string }) => group.id === 'revenue')
+
+    expect(revenue.total).toEqual({ fields: ['owner_percent', 'platform_percent', 'scout_percent'], equals: 100 })
+    expect(revenue.fields.map((field: { default: unknown }) => field.default)).toEqual([70, 20, 10, 'owner'])
+
+    const off = await api('put', '/admin/settings/revenue', { owner_percent: 75 })
+
+    expect(off.status).toBe(422)
+    expect(off.body.message).toMatch(/must add up to 100, not 105/)
+    expect((await api('put', '/admin/settings/revenue', { owner_percent: 75, platform_percent: 20, scout_percent: 10 })).status).toBe(422)
+    expect((await api('put', '/admin/settings/revenue', { owner_percent: 70, platform_percent: 20, scout_percent: 10 })).status).toBe(200)
+  })
+
   it('applies upload limits as soon as they are saved', async () => {
     await api('put', '/admin/settings/uploads', { max_avatar_mb: 1 })
 

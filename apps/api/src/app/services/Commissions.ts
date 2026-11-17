@@ -10,16 +10,37 @@ export interface Split {
   ownerAmountMinor: number
   scoutAmountMinor: number
   platformAmountMinor: number
-  /** The scout who runs the board, paid from Greyboards' commission. */
+  /** The scout who brought the board in. */
   scoutId: string | null
 }
 
+/** The revenue split in use: percents of the rent that add up to 100. */
+export interface RevenueSplit {
+  owner: number
+  platform: number
+  scout: number
+  unscoutedTo: 'owner' | 'platform'
+}
+
 /**
- * The one place that decides who gets what from a booking. A board a scout runs pays the
- * owner the share they signed for; a board its owner runs pays them all but the commission.
- * The scout's cut comes out of Greyboards' commission, so owners pay one clear rate.
+ * The one place that decides who gets what from a booking. Printing and posting is paid
+ * first, apart from this; the rent left is shared between the owner, Greyboards and the
+ * scout who brought the board in, by the revenue split admins set. A board a scout runs
+ * pays the owner the share they signed for. With no scout, the scout's part goes where
+ * the split says.
  */
 export class Commissions {
+  static async revenue(): Promise<RevenueSplit> {
+    const unscoutedTo = await Settings.get<string>('revenue.unscouted_to')
+
+    return {
+      owner: await Settings.number('revenue.owner_percent'),
+      platform: await Settings.number('revenue.platform_percent'),
+      scout: await Settings.number('revenue.scout_percent'),
+      unscoutedTo: unscoutedTo === 'platform' ? 'platform' : 'owner',
+    }
+  }
+
   /** The scout running `board`, or null when its owner tagged it. */
   static async scoutOf(board: Board): Promise<string | null> {
     if (!board.taggedById) return null
@@ -40,14 +61,16 @@ export class Commissions {
     return signed ? null : 'The owner hasn’t signed for this board yet, so it can’t be booked.'
   }
 
-  static async split(board: Board, amountMinor: number): Promise<Split> {
+  /** Share `rentMinor`, what is left once printing and posting is paid for. */
+  static async split(board: Board, rentMinor: number): Promise<Split> {
+    const revenue = await Commissions.revenue()
     const scoutId = await Commissions.scoutOf(board)
     const signed = scoutId ? await board.agreements().where({ status: BoardAgreement.SIGNED }).first() : null
-    const ownerSharePercent = signed ? signed.ownerSharePercent : 100 - (await Settings.number('bookings.commission_percent'))
-    const ownerAmountMinor = Money.share(amountMinor, ownerSharePercent)
-    const commission = amountMinor - ownerAmountMinor
-    const scoutAmountMinor = scoutId ? Money.share(commission, await Settings.number('bookings.scout_share_percent')) : 0
+    const ownerSharePercent = signed ? signed.ownerSharePercent : revenue.owner + (revenue.unscoutedTo === 'owner' ? revenue.scout : 0)
+    const scoutPercent = scoutId ? Math.min(revenue.scout, 100 - ownerSharePercent) : 0
+    const ownerAmountMinor = Money.share(rentMinor, ownerSharePercent)
+    const scoutAmountMinor = Money.share(rentMinor, scoutPercent)
 
-    return { ownerSharePercent, ownerAmountMinor, scoutAmountMinor, platformAmountMinor: commission - scoutAmountMinor, scoutId }
+    return { ownerSharePercent, ownerAmountMinor, scoutAmountMinor, platformAmountMinor: rentMinor - ownerAmountMinor - scoutAmountMinor, scoutId }
   }
 }

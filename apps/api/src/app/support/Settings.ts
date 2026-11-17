@@ -33,6 +33,8 @@ export interface SettingGroup {
   description: string
   icon: string
   fields: SettingField[]
+  /** Number fields that must add up to `equals` together, such as a split into percents. */
+  total?: { fields: string[]; equals: number }
 }
 
 /**
@@ -95,6 +97,8 @@ export class Settings {
    * the config value is removed, so the field follows .env again.
    */
   static async update(group: SettingGroup, values: Record<string, unknown>): Promise<void> {
+    await Settings.checkTotal(group, values)
+
     for (const field of group.fields) {
       if (!(field.name in values)) continue
 
@@ -109,6 +113,24 @@ export class Settings {
     }
 
     await Cache.forget(Settings.CACHE_KEY)
+  }
+
+  /** Turn away a change that leaves the group's `total` fields adding up to anything else. */
+  static async checkTotal(group: SettingGroup, values: Record<string, unknown>): Promise<void> {
+    if (!group.total) return
+
+    const fields = group.fields.filter((field) => group.total!.fields.includes(field.name))
+    let sum = 0
+
+    for (const field of fields) {
+      const submitted = field.name in values ? Settings.cast(field, values[field.name]) : undefined
+
+      sum += Number(submitted === undefined ? await Settings.get(field.key) : (submitted ?? config(field.key as never)))
+    }
+
+    const labels = fields.map((field) => field.label.toLowerCase()).join(', ')
+
+    abortIf(sum !== group.total.equals, `The ${labels} parts must add up to ${group.total.equals}, not ${sum}.`, 422)
   }
 
   /** A submitted value in the field's own type. */
