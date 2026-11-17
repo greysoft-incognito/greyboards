@@ -10,7 +10,7 @@ import { useTabBarInset } from '@/components/GlassTabBar'
 import { Button, Text } from '@/components/ui'
 import { api } from '@/lib/api'
 import { session, useUser } from '@/lib/session'
-import { colors, fonts, radius } from '@/theme'
+import { colors, fonts, surfaces } from '@/theme'
 
 type Status = { text: string; tone?: 'good' | 'warn' }
 
@@ -128,13 +128,13 @@ const styles = StyleSheet.create({
   screen: { backgroundColor: colors.canvas },
   page: { padding: 16, gap: 24 },
   flex: { flex: 1, gap: 2 },
-  card: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16, borderRadius: radius.xl, borderWidth: 1.5, borderColor: colors.surface200, backgroundColor: colors.white },
+  card: { ...surfaces.panel, flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16 },
   pressed: { backgroundColor: colors.surface100 },
   group: { gap: 8 },
   groupLabel: { paddingHorizontal: 4, fontSize: 12, letterSpacing: 1.6, fontFamily: fonts.semibold, color: colors.ink500 },
-  list: { borderRadius: radius.xl, borderWidth: 1.5, borderColor: colors.surface200, backgroundColor: colors.white, overflow: 'hidden' },
+  list: { ...surfaces.panel, overflow: 'hidden' },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 14 },
-  divided: { borderTopWidth: 1, borderTopColor: colors.surface200 },
+  divided: { borderTopWidth: 1, borderTopColor: colors.surface100 },
   label: { fontFamily: fonts.medium, color: colors.ink900 },
   danger: { color: colors.red700 },
   state: { maxWidth: 120, fontSize: 14, color: colors.ink500 },

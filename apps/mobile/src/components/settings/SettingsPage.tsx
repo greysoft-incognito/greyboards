@@ -4,7 +4,7 @@ import { router } from 'expo-router'
 import { ChevronLeft } from 'lucide-react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Text } from '@/components/ui'
-import { colors, fonts, radius } from '@/theme'
+import { colors, fonts, surfaces } from '@/theme'
 
 /** A settings screen: a way back, its title and what it's for, then its sections. */
 export function SettingsPage({ title, description, children }: { title: string; description?: string; children: ReactNode }) {
@@ -40,7 +40,7 @@ const styles = StyleSheet.create({
   page: { paddingHorizontal: 20, gap: 8 },
   back: { alignSelf: 'flex-start', marginLeft: -6, paddingVertical: 4 },
   sections: { gap: 16, marginTop: 16 },
-  section: { gap: 14, padding: 16, borderRadius: radius.xl, borderWidth: 1.5, borderColor: colors.surface200, backgroundColor: colors.white },
+  section: { gap: 14, padding: 18, ...surfaces.panel },
   danger: { borderColor: colors.red200 },
-  title: { fontSize: 17, lineHeight: 22, fontFamily: fonts.semibold, color: colors.ink900 },
+  title: { fontSize: 18, lineHeight: 24, fontFamily: fonts.display, color: colors.ink900 },
 })

@@ -1,16 +1,16 @@
 import { ActivityIndicator, Pressable, type PressableProps, StyleSheet, type StyleProp, type ViewStyle } from 'react-native'
-import { colors, fonts, radius } from '@/theme'
+import { colors, fonts, radius, shadows } from '@/theme'
 import { Text } from './Text'
 
 type Variant = 'primary' | 'brand' | 'dark' | 'secondary' | 'ghost' | 'danger' | 'glass'
 
 const variants: Record<Variant, { box: ViewStyle; pressed: ViewStyle; text: string }> = {
-  primary: { box: { backgroundColor: colors.brand500 }, pressed: { backgroundColor: colors.brand600 }, text: colors.white },
+  primary: { box: { backgroundColor: colors.brand500, boxShadow: shadows.glow }, pressed: { backgroundColor: colors.brand600 }, text: colors.white },
   brand: { box: { backgroundColor: colors.brand700 }, pressed: { backgroundColor: colors.brand800 }, text: colors.white },
   dark: { box: { backgroundColor: colors.ink900 }, pressed: { backgroundColor: colors.ink700 }, text: colors.white },
   secondary: {
-    box: { backgroundColor: colors.white, borderColor: colors.surface300 },
-    pressed: { borderColor: colors.ink500 },
+    box: { backgroundColor: colors.white, borderColor: colors.surface100, boxShadow: '0 1px 2px rgba(30,31,34,0.08)' },
+    pressed: { backgroundColor: colors.surface100 },
     text: colors.ink900,
   },
   ghost: { box: {}, pressed: { backgroundColor: colors.surface100 }, text: colors.ink700 },
@@ -55,7 +55,7 @@ export function Button({ title, variant = 'primary', loading = false, size = 'md
 
 const styles = StyleSheet.create({
   base: {
-    minHeight: 44,
+    minHeight: 48,
     paddingHorizontal: 16,
     borderRadius: radius.field,
     borderWidth: 1.5,

@@ -25,6 +25,7 @@ export function RoleStatus({ status }: { status: AccountRoleStatus }) {
 
   return (
     <View style={[styles.badge, { backgroundColor: look.background }]}>
+      <View style={[styles.dot, { backgroundColor: look.color }]} />
       <Text style={[styles.badgeText, { color: look.color }]}>{look.label}</Text>
     </View>
   )
@@ -47,7 +48,8 @@ export function heldRole(roles: AccountRole[], kind: AccountRoleKind) {
 }
 
 const styles = StyleSheet.create({
-  badge: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.full },
-  badgeText: { fontSize: 12, lineHeight: 16, fontFamily: fonts.semibold },
+  badge: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.full },
+  dot: { width: 6, height: 6, borderRadius: 3 },
+  badgeText: { fontSize: 12, lineHeight: 16, fontFamily: fonts.bold },
   tile: { borderRadius: radius.xl, backgroundColor: colors.brand50, alignItems: 'center', justifyContent: 'center' },
 })

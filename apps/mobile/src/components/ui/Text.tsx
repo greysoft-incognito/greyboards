@@ -14,7 +14,7 @@ const styles = StyleSheet.create({
   muted: { fontSize: 14, lineHeight: 20, color: colors.ink500 },
   small: { fontSize: 12, lineHeight: 16, color: colors.ink500 },
   label: { fontSize: 14, lineHeight: 20, fontFamily: fonts.semibold },
-  title: { fontSize: 20, lineHeight: 26, fontFamily: fonts.display, letterSpacing: -0.3 },
-  display: { fontSize: 30, lineHeight: 36, fontFamily: fonts.display, letterSpacing: -0.6 },
+  title: { fontSize: 20, lineHeight: 26, fontFamily: fonts.displayHeavy, letterSpacing: -0.5 },
+  display: { fontSize: 30, lineHeight: 36, fontFamily: fonts.displayHeavy, letterSpacing: -0.9 },
   link: { fontSize: 14, lineHeight: 20, fontFamily: fonts.semibold, color: colors.brand700 },
 })

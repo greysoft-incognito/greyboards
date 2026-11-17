@@ -56,19 +56,27 @@ export const fonts = {
 
 export const radius = {
   md: 8,
-  field: 10,
-  lg: 12,
-  xl: 16,
+  field: 14,
+  lg: 14,
+  xl: 22,
   full: 999,
 } as const
 
-/** The wine sweep used on the web's brand panels, as gradient stops. */
-export const brandSweep = [colors.brand700, colors.brand500] as const
+/** The wine glow of brand panels, from a lit corner into ink, as gradient stops. */
+export const brandSweep = [colors.brand400, colors.brand700, colors.ink900] as const
 
-/** Flat containers and fields: firm 1.5px edges, no shadows. */
+/** Soft shadows that cards and wine buttons rest on, as on the web. */
+export const shadows = {
+  card: '0 1px 2px rgba(30,31,34,0.05), 0 8px 24px rgba(30,31,34,0.06)',
+  raised: '0 1px 2px rgba(30,31,34,0.08), 0 24px 60px rgba(30,31,34,0.18)',
+  glow: '0 10px 24px rgba(131,59,75,0.32)',
+  hero: '0 16px 36px rgba(88,38,52,0.35)',
+} as const
+
+/** White cards on shadows, and filled fields that ring in wine while focused. */
 export const surfaces = {
-  panel: { borderWidth: 1.5, borderColor: colors.surface200, borderRadius: radius.xl, backgroundColor: colors.surface50 },
-  field: { borderWidth: 1.5, borderColor: colors.surface300, borderRadius: radius.field, backgroundColor: colors.surface50 },
-  fieldFocused: { borderColor: colors.brand500, boxShadow: `inset 0 0 0 1px ${colors.brand500}` },
+  panel: { borderWidth: 1, borderColor: colors.surface100, borderRadius: radius.xl, backgroundColor: colors.surface50, boxShadow: shadows.card },
+  field: { borderWidth: 1.5, borderColor: 'transparent', borderRadius: radius.field, backgroundColor: colors.canvas },
+  fieldFocused: { borderColor: colors.brand500, backgroundColor: colors.surface50, boxShadow: '0 0 0 4px rgba(131,59,75,0.12)' },
   backdrop: 'rgba(30,31,34,0.6)',
 } as const

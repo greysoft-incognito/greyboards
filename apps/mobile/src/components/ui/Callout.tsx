@@ -21,6 +21,6 @@ export function Callout({ tone = 'alert', children }: { tone?: keyof typeof tone
 }
 
 const styles = StyleSheet.create({
-  box: { borderWidth: 1, borderRadius: radius.md, paddingHorizontal: 16, paddingVertical: 12 },
+  box: { borderWidth: 1, borderRadius: radius.lg, paddingHorizontal: 16, paddingVertical: 12 },
   text: { fontSize: 14, lineHeight: 20 },
 })

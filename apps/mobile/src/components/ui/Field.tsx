@@ -14,7 +14,7 @@ export function Field({ label, error, hint, children }: { label: string; error?:
   )
 }
 
-/** A flat text box whose border thickens in wine while focused. */
+/** A filled text box that turns white and rings in wine while focused. */
 export function Input({ invalid, style, onFocus, onBlur, ...props }: TextInputProps & { invalid?: boolean }) {
   const [focused, setFocused] = useState(false)
 
