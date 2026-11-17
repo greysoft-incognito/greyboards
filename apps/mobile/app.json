@@ -30,6 +30,19 @@
       "expo-secure-store",
       "expo-font",
       [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Greyboards uses your location to place the boards you tag and to show they were photographed on site."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Greyboards uses the camera to photograph boards you tag.",
+          "photosPermission": "Greyboards lets you pick photos for your profile and boards."
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "image": "./assets/splash/splash-icon-ios.png",
