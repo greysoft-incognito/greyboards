@@ -32,6 +32,9 @@ export type ArtworkStatus = 'none' | 'submitted' | 'approved' | 'rejected'
  */
 export type ProofStatus = 'none' | 'submitted' | 'accepted' | 'disputed'
 
+/** `billposter` puts the job on the marketplace; `owner` means the owner or their scout does it. */
+export type PrintedBy = 'billposter' | 'owner'
+
 /** A run of days a booking takes on a board. */
 export interface BookedDays {
   startsOn: string
@@ -63,6 +66,8 @@ export class Booking extends Model {
   declare scoutId: string | null
   declare ownerProfileId: string | null
   declare printFeeMinor: number
+  /** Who prints and puts the ad up, fixed when it's booked. */
+  declare printedBy: PrintedBy
   declare artworkPath: string | null
   declare artworkDisk: string | null
   declare artworkWidth: number | null
@@ -115,6 +120,7 @@ export class Booking extends Model {
     scoutId: 'scout_id',
     ownerProfileId: 'owner_profile_id',
     printFeeMinor: 'print_fee_minor',
+    printedBy: 'printed_by',
     artworkPath: 'artwork_path',
     artworkDisk: 'artwork_disk',
     artworkWidth: 'artwork_width',
@@ -190,6 +196,7 @@ export class Booking extends Model {
         ratePeriod: board.ratePeriod,
         rateMinor,
         printFeeMinor,
+        printedBy: printFeeMinor > 0 && board.printsOwn ? 'owner' : 'billposter',
         amountMinor: rateMinor * periods + printFeeMinor,
         currency: board.currency,
         status: Booking.HELD,

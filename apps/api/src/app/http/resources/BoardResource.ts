@@ -37,6 +37,7 @@ export class BoardResource extends Resource {
       latitude: board.latitude,
       longitude: board.longitude,
       rate: rate === null ? null : { amountMinor: rate, currency: board.currency, period: board.ratePeriod },
+      printsOwn: !!board.printsOwn,
       status: board.status,
       distanceM: distance === undefined || distance === null ? null : Math.round(Number(distance)),
       coverUrl: cover ? await cover.url() : null,

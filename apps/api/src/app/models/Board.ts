@@ -47,6 +47,10 @@ export interface BoardDetails {
   rateMinor?: number | null
   currency?: string
   ratePeriod?: BoardRatePeriod
+  /** The owner, or their scout, prints and puts up booked ads instead of a billposter. */
+  printsOwn?: boolean
+  /** What they charge for that, in minor units. Null uses the standard print price. */
+  printFeeMinor?: number | null
 }
 
 /** What an advertiser narrows the map down to. */
@@ -101,6 +105,8 @@ export class Board extends Model {
   declare rateMinor: string | number | null
   declare currency: string
   declare ratePeriod: BoardRatePeriod
+  declare printsOwn: boolean
+  declare printFeeMinor: string | number | null
   declare status: BoardStatus
   declare reviewNote: string | null
   declare ownerProfileId: string | null
@@ -152,6 +158,8 @@ export class Board extends Model {
     headingDeg: 'heading_deg',
     rateMinor: 'rate_minor',
     ratePeriod: 'rate_period',
+    printsOwn: 'prints_own',
+    printFeeMinor: 'print_fee_minor',
     reviewNote: 'review_note',
     ownerProfileId: 'owner_profile_id',
     taggedById: 'tagged_by_id',

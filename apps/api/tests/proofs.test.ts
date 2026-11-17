@@ -47,8 +47,8 @@ describe('Proof of posting', () => {
   let jobId = ''
 
   /** A paid, approved booking on a new board of `kind` at the test spot. */
-  const approvedBooking = async (kind: string, startsOn: string, offset: number) => {
-    const board = (await api('post', '/account/boards', { name: `Proof ${kind}`, kind, widthM: 10, heightM: 5, latitude: latitude + offset, longitude, rateMinor: 50_000_000, as: 'owner' }, 'owner')).body.data
+  const approvedBooking = async (kind: string, startsOn: string, offset: number, extra: Record<string, unknown> = {}) => {
+    const board = (await api('post', '/account/boards', { name: `Proof ${kind}`, kind, widthM: 10, heightM: 5, latitude: latitude + offset, longitude, rateMinor: 50_000_000, as: 'owner', ...extra }, 'owner')).body.data
 
     await api('put', `/admin/boards/${board.id}`, { status: 'listed' }, 'reviewer')
 
@@ -164,5 +164,20 @@ describe('Proof of posting', () => {
 
     expect(done).toMatchObject({ status: 'live', proof: { status: 'accepted' } })
     expect(ledger(digital).sort()).toEqual(['escrow -50000000', 'escrow 50000000', 'owner 42500000', 'platform 7500000'].sort())
+  }, 30_000)
+
+  it('lets an owner who prints their own board charge their price and take the fee', async () => {
+    const booking = await approvedBooking('billboard', '2027-10-01', 0.1, { printsOwn: true, printFeeMinor: 10_000_000 })
+    const spot = (metres: number) => ({ ...at(metres), latitude: at(metres).latitude + 0.1 })
+
+    expect(booking).toMatchObject({ printedBy: 'owner', printFeeMinor: 10_000_000, amountMinor: 60_000_000, printJob: null })
+    expect((await upload(`/bookings/${booking.id}/proofs`, 'photo', 'poster', spot(5))).status).toBe(403)
+
+    for (const metres of [5, 12]) await upload(`/bookings/${booking.id}/proofs`, 'photo', 'owner', spot(metres))
+
+    await api('post', `/bookings/${booking.id}/proof/submit`, undefined, 'owner')
+    await api('post', `/bookings/${booking.id}/proof/accept`)
+
+    expect(ledger(booking.id).sort()).toEqual(['escrow -60000000', 'escrow 60000000', 'owner 10000000', 'owner 42500000', 'platform 7500000'].sort())
   }, 30_000)
 })

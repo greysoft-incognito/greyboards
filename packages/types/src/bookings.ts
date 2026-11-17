@@ -26,8 +26,10 @@ export interface Booking {
   rate: BoardRate
   /** Everything the advertiser pays, the print fee included. */
   amountMinor: number
-  /** Printing and putting up the artwork, paid to the billposter. 0 on digital boards. */
+  /** Printing and putting up the artwork. 0 on digital boards. */
   printFeeMinor: number
+  /** Who prints and puts it up: a billposter from the marketplace, or the owner's side. */
+  printedBy: PrintedBy
   currency: string
   /** Seconds left to pay while the dates are held. */
   holdSecondsLeft: number | null
@@ -153,6 +155,9 @@ export interface ArtworkReview {
   decision: 'approve' | 'reject'
   note?: string
 }
+
+/** `owner` covers the owner or the scout who runs the board for them. */
+export type PrintedBy = 'billposter' | 'owner'
 
 /** Whether a board takes bookings, and the limits for the date picker. */
 export interface BoardBookingTerms {

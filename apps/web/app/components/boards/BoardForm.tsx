@@ -191,6 +191,17 @@ export function BoardForm({
 						</Select>
 					</Field>
 				</div>
+				<div className="grid gap-4 sm:grid-cols-2">
+					<Field label="Who prints and puts up ads" error={fieldErrors.printsOwn}>
+						<Select name="printsOwn" defaultValue={board?.printsOwn ? "1" : "0"}>
+							<option value="0">A Greyboards billposter</option>
+							<option value="1">{scouting ? "The owner or I do it" : "We do it ourselves"}</option>
+						</Select>
+					</Field>
+					<Field label="Your print price in naira" error={fieldErrors.printFeeMinor} hint="Only when you print. Empty uses the standard price.">
+						<Input name="printFee" type="number" min="0" step="1000" defaultValue={board?.ownPrintFeeMinor ? board.ownPrintFeeMinor / 100 : ""} placeholder="150000" />
+					</Field>
+				</div>
 				{scouting && <OwnerPicker errors={fieldErrors} />}
 				{!board && as === "owner" && <ManagedOwnerSelect profiles={ownerProfiles} error={fieldErrors.ownerProfileId} />}
 			</section>

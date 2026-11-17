@@ -68,10 +68,10 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 }
 
 /** The steps from payment to the owner being paid. Each lights up once the booking gets there. */
-const STEPS: { label: string; detail: string; icon: typeof CreditCard; done: (booking: Booking) => boolean }[] = [
+const STEPS: { label: string; detail: string | ((booking: Booking) => string); icon: typeof CreditCard; done: (booking: Booking) => boolean }[] = [
 	{ label: "Paid", detail: "Your money waits in escrow.", icon: CreditCard, done: (booking) => ["paid", "live", "completed"].includes(booking.status) },
 	{ label: "Artwork approved", detail: "The owner checks your design fits the board.", icon: Image, done: (booking) => booking.artwork?.status === "approved" || isLive(booking) },
-	{ label: "Printed and posted", detail: "A billposter prints it and puts it up.", icon: Printer, done: (booking) => booking.printJob?.status === "posted" || (!!booking.proof && booking.proof.status !== "none") || isLive(booking) },
+	{ label: "Printed and posted", detail: (booking) => (booking.printedBy === "owner" ? "The board's owner prints it and puts it up." : "A billposter prints it and puts it up."), icon: Printer, done: (booking) => booking.printJob?.status === "posted" || (!!booking.proof && booking.proof.status !== "none") || isLive(booking) },
 	{ label: "Proof accepted", detail: "Geotagged photos show your ad on the board.", icon: Camera, done: (booking) => booking.proof?.status === "accepted" || isLive(booking) },
 	{ label: "Everyone paid", detail: "Only then does the money leave escrow.", icon: Wallet, done: (booking) => !!booking.releasedAt },
 ];
@@ -201,7 +201,7 @@ function Split({ booking }: { booking: Booking }) {
 	const rows = [
 		{ label: `Owner (${split.ownerSharePercent}%)`, amount: split.ownerAmountMinor },
 		...(split.scoutAmountMinor ? [{ label: "Scout", amount: split.scoutAmountMinor }] : []),
-		...(booking.printFeeMinor ? [{ label: "Billposter, for printing", amount: booking.printFeeMinor }] : []),
+		...(booking.printFeeMinor ? [{ label: booking.printedBy === "owner" ? "Printing, by the owner's side" : "Billposter, for printing", amount: booking.printFeeMinor }] : []),
 		{ label: "Greyboards", amount: split.platformAmountMinor },
 	];
 
@@ -237,7 +237,7 @@ function Steps({ booking }: { booking: Booking }) {
 						</span>
 						<span>
 							<span className={`block font-semibold ${done ? "text-ink-900" : "text-ink-700"}`}>{step.label}</span>
-							<span className="block text-sm text-ink-500">{step.detail}</span>
+							<span className="block text-sm text-ink-500">{typeof step.detail === "function" ? step.detail(booking) : step.detail}</span>
 						</span>
 					</li>
 				);
