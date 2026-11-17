@@ -1,6 +1,6 @@
 import { FakeGateway } from './FakeGateway'
 import { Flutterwave } from './Flutterwave'
-import type { PaymentGateway, PayoutGateway } from './PaymentGateway'
+import type { PaymentGateway, PayoutGateway, RefundGateway } from './PaymentGateway'
 
 /** The gateway payments go through, chosen by `payments.driver`. */
 export class Gateways {
@@ -16,5 +16,10 @@ export class Gateways {
   /** The gateway payouts go through. */
   static payouts(): PayoutGateway {
     return config('payments.driver') === 'fake' ? new FakeGateway() : new Flutterwave()
+  }
+
+  /** The gateway that refunds a payment made with `provider`. */
+  static refunds(provider: string): RefundGateway {
+    return provider === 'fake' ? new FakeGateway() : new Flutterwave()
   }
 }

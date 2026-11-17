@@ -13,7 +13,7 @@ import { randomBytes } from 'node:crypto'
 const BATCH = 50
 
 /** One share of a released booking. */
-interface Share {
+export interface Share {
   account: LedgerAccount
   kind: string
   amountMinor: number
@@ -44,7 +44,7 @@ export class Payouts {
   }
 
   /** Who the print fee goes to: the billposter who took the job, or, when the owner's side prints, the scout who runs the board or else the owner. */
-  private static printer(booking: Booking, job: PrintJob | null): Pick<Share, 'account' | 'userId' | 'ownerProfileId'> {
+  static printer(booking: Booking, job: PrintJob | null): Pick<Share, 'account' | 'userId' | 'ownerProfileId'> {
     if (booking.printedBy !== 'owner') return { account: 'billposter', userId: job?.billposterId ?? null, ownerProfileId: null }
     if (booking.scoutId) return { account: 'scout', userId: booking.scoutId, ownerProfileId: null }
 

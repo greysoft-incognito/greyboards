@@ -1,9 +1,9 @@
-import type { Bank, PaymentGateway, PaymentRequest, PaymentResult, PayoutGateway, TransferRequest, TransferResult } from './PaymentGateway'
+import type { Bank, PaymentGateway, PaymentRequest, PaymentResult, PayoutGateway, RefundGateway, RefundResult, TransferRequest, TransferResult } from './PaymentGateway'
 import { ValidationException } from 'kanun'
 import { timingSafeEqual } from 'node:crypto'
 
-/** Takes payments through Flutterwave's hosted checkout, and pays people out by bank transfer. */
-export class Flutterwave implements PaymentGateway, PayoutGateway {
+/** Takes payments through Flutterwave's hosted checkout, refunds them, and pays people out by bank transfer. */
+export class Flutterwave implements PaymentGateway, PayoutGateway, RefundGateway {
   readonly key = 'flutterwave'
 
   enabled(): boolean {
@@ -94,6 +94,41 @@ export class Flutterwave implements PaymentGateway, PayoutGateway {
     if (!response?.ok || !data) return { paid: false, final: false, reason: null, raw: response?.body ?? {} }
 
     return Flutterwave.transferResult(data)
+  }
+
+  /** Refund part or all of a payment, by the transaction id its verification returned. */
+  async refund(payment: { reference: string; response: Record<string, unknown> | null }, amount: number): Promise<RefundResult> {
+    const transaction = payment.response?.id
+
+    if (!transaction) return { id: null, refunded: false, final: true, reason: 'The payment has no Flutterwave transaction to refund.', raw: {} }
+
+    const response = await this.send(`/transactions/${encodeURIComponent(String(transaction))}/refund`, { method: 'POST', body: JSON.stringify({ amount }) }).catch(
+      (error: Error) => ({ ok: false, body: { message: error.message } as Record<string, unknown> }),
+    )
+
+    if (!response.ok) return { id: null, refunded: false, final: true, reason: String(response.body.message || 'Flutterwave could not refund this payment.'), raw: response.body }
+
+    return Flutterwave.refundResult((response.body.data ?? {}) as Record<string, unknown>)
+  }
+
+  async refundStatus(id: string): Promise<RefundResult> {
+    const response = await this.send(`/refunds/${encodeURIComponent(id)}`).catch(() => null)
+
+    if (!response?.ok) return { id, refunded: false, final: false, reason: null, raw: response?.body ?? {} }
+
+    return Flutterwave.refundResult((response.body.data ?? {}) as Record<string, unknown>)
+  }
+
+  private static refundResult(data: Record<string, unknown>): RefundResult {
+    const status = String(data.status ?? '').toLowerCase()
+
+    return {
+      id: data.id ? String(data.id) : null,
+      refunded: status === 'completed',
+      final: status === 'completed' || status === 'failed',
+      reason: status === 'failed' ? 'Flutterwave could not complete the refund.' : null,
+      raw: data,
+    }
   }
 
   private static transferResult(data: Record<string, unknown>): TransferResult {

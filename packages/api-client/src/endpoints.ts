@@ -265,6 +265,7 @@ export function createEndpoints(alova: GreyboardsAlova) {
       bookings: (params: BookingQuery = {}) => alova.Get<PaginatedResponse<Booking>>('/admin/bookings', { params, cacheFor: null }),
       payouts: (params: PageQuery & { status?: PayoutStatus | null } = {}) => alova.Get<PaginatedResponse<Payout>>('/admin/payouts', { params, cacheFor: null }),
       retryPayout: (id: ID) => alova.Post<ApiResponse<Payout>>(`/admin/payouts/${id}/retry`),
+      refundBooking: (id: ID, data: { reason: string }) => alova.Post<ApiResponse<Booking>>(`/admin/bookings/${id}/refund`, data),
       overview: () => alova.Get<ApiResponse<AdminOverview>>('/admin/overview', { cacheFor: null }),
       users: (params: AdminUserQuery = {}) => alova.Get<PaginatedResponse<AdminUser>>('/admin/users', { params, cacheFor: null }),
       /** One account with the marketplace roles it holds. */

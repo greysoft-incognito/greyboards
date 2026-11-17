@@ -3,6 +3,7 @@ import { abortIf } from '@arkstack/common'
 import type { QueryBuilder } from 'arkormx'
 import { BoardPolicy } from '@app/policies/BoardPolicy'
 import { Commissions } from '@app/services/Commissions'
+import { Refunds } from '@app/services/Refunds'
 import { Payouts } from '@app/services/Payouts'
 import { Day } from '@app/support/Day'
 import { Money } from '@app/support/Money'
@@ -318,9 +319,9 @@ export class Booking extends Model {
     return this.isHeld() ? Math.ceil((this.holdExpiresAt!.getTime() - Date.now()) / 1000) : null
   }
 
-  /** The advertiser lets go of a hold. Paid bookings go through support, so refunds stay in the ledger. */
+  /** The advertiser lets go of a hold. A paid booking is cancelled through `Refunds`, which works out the money back. */
   async cancel(): Promise<void> {
-    abortIf(this.status !== Booking.HELD, 'Only a booking that isn’t paid yet can be cancelled here. Contact support about a paid one.', 422)
+    abortIf(this.status !== Booking.HELD, 'Only a booking that isn’t paid yet can be let go of here.', 422)
 
     await this.update({ status: Booking.CANCELLED, cancelledAt: new Date(), holdExpiresAt: null })
   }
@@ -342,6 +343,7 @@ export class Booking extends Model {
 
       await this.update({ status: Booking.CANCELLED, cancelledAt: paidAt, holdExpiresAt: null })
       await this.record('refund', 'payment_refund_due', this.amountMinor, payment.reference, 'Paid after the hold ran out and the days were taken')
+      await Refunds.forLatePayment(this, payment)
 
       return
     }

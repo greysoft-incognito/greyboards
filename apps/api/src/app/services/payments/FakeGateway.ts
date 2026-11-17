@@ -1,12 +1,12 @@
 import { Payment } from '@app/models/Payment'
-import type { Bank, PaymentGateway, PaymentRequest, PaymentResult, PayoutGateway, TransferRequest, TransferResult } from './PaymentGateway'
+import type { Bank, PaymentGateway, PaymentRequest, PaymentResult, PayoutGateway, RefundGateway, RefundResult, TransferRequest, TransferResult } from './PaymentGateway'
 
 /**
  * Approves every payment and transfer at once, for development and tests. It sends the payer
  * straight back to the return page and never runs in production. Account number 0000000000
  * belongs to nobody, and transfers to 0000000001 fail.
  */
-export class FakeGateway implements PaymentGateway, PayoutGateway {
+export class FakeGateway implements PaymentGateway, PayoutGateway, RefundGateway {
   readonly key = 'fake'
 
   enabled(): boolean {
@@ -45,5 +45,13 @@ export class FakeGateway implements PaymentGateway, PayoutGateway {
 
   async transferStatus(): Promise<TransferResult> {
     return { paid: true, final: true, reason: null, raw: { fake: true } }
+  }
+
+  async refund(payment: { reference: string }): Promise<RefundResult> {
+    return { id: `fake-refund-${payment.reference}`, refunded: true, final: true, reason: null, raw: { fake: true } }
+  }
+
+  async refundStatus(id: string): Promise<RefundResult> {
+    return { id, refunded: true, final: true, reason: null, raw: { fake: true } }
   }
 }

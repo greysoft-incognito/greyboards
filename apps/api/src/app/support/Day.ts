@@ -35,6 +35,11 @@ export class Day {
     return target.toISOString().slice(0, 10)
   }
 
+  /** Whole days from `from` to `to`; negative when `to` is earlier. */
+  static between(from: string, to: string): number {
+    return Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000)
+  }
+
   static valid(day: string): boolean {
     return Day.PATTERN.test(day) && new Date(`${day}T00:00:00Z`).toISOString().slice(0, 10) === day
   }

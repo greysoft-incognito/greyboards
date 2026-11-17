@@ -28,5 +28,15 @@ export default () => {
      * The most weeks or months one booking can cover.
      */
     max_periods: Number(env('BOOKING_MAX_PERIODS', 12)),
+
+    /**
+     * Days before the start that an advertiser can cancel a paid booking for all their money back.
+     */
+    full_refund_days: Number(env('BOOKING_FULL_REFUND_DAYS', 7)),
+
+    /**
+     * Percent of the rent refunded when they cancel later, before the start. The rest goes to the owner and Greyboards.
+     */
+    late_refund_percent: Number(env('BOOKING_LATE_REFUND_PERCENT', 50)),
   }
 }

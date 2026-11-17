@@ -141,6 +141,7 @@ Router.post('/payments/:reference/verify', [PaymentController, 'verify'], [auth,
 Router.post('/payments/flutterwave/webhook', [PaymentController, 'flutterwave'], [limiter(120, 60)])
 
 Router.get('/admin/bookings', [AdminBookingController, 'index'], [auth, Authorize.to('bookings.view')])
+Router.post('/admin/bookings/:booking/refund', [AdminBookingController, 'refund'], [auth, Authorize.to('payouts.manage'), limiter(30, 60)])
 Router.get('/admin/payouts', [AdminPayoutController, 'index'], [auth, Authorize.to('payouts.manage')])
 Router.post('/admin/payouts/:payout/retry', [AdminPayoutController, 'retry'], [auth, Authorize.to('payouts.manage'), limiter(30, 60)])
 
