@@ -73,7 +73,7 @@ export function JobRow({ job }: { job: PrintJob }) {
 			</div>
 			<div className="flex flex-col items-end justify-center gap-0.5 pr-2 text-right max-sm:hidden">
 				<span className="font-display text-lg font-extrabold text-ink-900 tabular-nums">{formatMoney(job.feeMinor, job.currency)}</span>
-				<span className="text-xs text-ink-500">You earn</span>
+				<span className="text-xs text-ink-500">{job.bonusMinor > 0 ? "With rush bonus" : "You earn"}</span>
 			</div>
 		</Link>
 	);
