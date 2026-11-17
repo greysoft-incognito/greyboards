@@ -439,7 +439,19 @@ export class Booking extends Model {
     abortIf(distanceM > maxDistance, `This photo was taken ${distanceM} m from the board. Take it within ${maxDistance} m so the advertiser can trust it.`, 422)
     abortIf(count >= PostingProof.MAX_PER_BOOKING, `Keep it to ${PostingProof.MAX_PER_BOOKING} photos. Remove one first.`, 422)
 
+    await this.stepInIfUnclaimed(user)
+
     return PostingProof.store(this, user, file, where, distanceM)
+  }
+
+  /** Someone looking after the board who posts proof while no billposter holds the job takes the job, and its fee, for the owner's side. */
+  private async stepInIfUnclaimed(user: User): Promise<void> {
+    const job = await PrintJob.query().where({ bookingId: this.id }).first()
+
+    if (!job || !job.isAvailable() || job.isHeldBy(user)) return
+
+    await job.stepIn()
+    await this.update({ printedBy: 'owner' })
   }
 
   async removeProof(proof: PostingProof): Promise<void> {
@@ -458,7 +470,7 @@ export class Booking extends Model {
     abortIf(count < needed, `Add at least ${needed} photos of the ad on the board.`, 422)
 
     await this.update({ proofStatus: 'submitted', proofSubmittedAt: new Date() })
-    await PrintJob.query().where({ bookingId: this.id }).updateFrom({ status: PrintJob.POSTED, postedAt: new Date() })
+    await PrintJob.query().where({ bookingId: this.id }).whereRaw('status <> ?', [PrintJob.CANCELLED]).updateFrom({ status: PrintJob.POSTED, postedAt: new Date() })
   }
 
   /**
