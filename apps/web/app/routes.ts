@@ -12,6 +12,10 @@ export default [
 	// Signed-in area with the app header.
 	layout("routes/app-layout.tsx", [
 		route("dashboard", "routes/dashboard.tsx"),
+		route("boards", "routes/boards/index.tsx"),
+		route("boards/new", "routes/boards/new.tsx"),
+		route("boards/:id", "routes/boards/board.tsx"),
+		route("boards/:id/edit", "routes/boards/edit.tsx"),
 		route("settings", "routes/settings/layout.tsx", [
 			index("routes/settings/index.tsx"),
 			route("profile", "routes/settings/profile.tsx"),
@@ -31,6 +35,7 @@ export default [
 			route("users", "routes/admin/users.tsx"),
 			route("users/:id", "routes/admin/user.tsx"),
 			route("applications", "routes/admin/applications.tsx"),
+			route("boards", "routes/admin/boards.tsx"),
 			route("pages/:document?", "routes/admin/pages.tsx"),
 			route("roles/:role?", "routes/admin/roles.tsx"),
 			route("configuration/:group?", "routes/admin/configuration.tsx"),

@@ -1,15 +1,18 @@
 import { useEffect, useRef } from "react";
 import { Link, NavLink, useLocation } from "react-router";
-import { LayoutDashboard, type LucideIcon } from "lucide-react";
-import type { User } from "@greyboards/types";
+import { LayoutDashboard, type LucideIcon, Presentation } from "lucide-react";
+import type { AccountRoleKind, User } from "@greyboards/types";
 import { Logo, buttonClass } from "~/components/ui";
 import { AccountMenu } from "~/components/AccountMenu";
 
 const tab = ({ isActive }: { isActive: boolean }) =>
 	`flex min-h-10 items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition max-sm:flex-1 sm:px-4 ${isActive ? "bg-ink-900 text-white" : "text-ink-700 hover:bg-surface-100"}`;
 
-/** The areas a signed-in account can open. Areas for each marketplace role join as they are built. */
-const AREAS: { to: string; label: string; icon: LucideIcon }[] = [{ to: "/dashboard", label: "Dashboard", icon: LayoutDashboard }];
+/** The areas a signed-in account can open. An area with `roles` shows to accounts holding any of them. */
+const AREAS: { to: string; label: string; icon: LucideIcon; roles?: AccountRoleKind[] }[] = [
+	{ to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+	{ to: "/boards", label: "Boards", icon: Presentation, roles: ["owner", "scout"] },
+];
 
 /** The top bar. Signed-in people get their areas, on a row of their own on phones; visitors get a way in. Its height is kept in `--header-height` for content that sticks below it. */
 export function AppHeader({ user }: { user: User | null }) {
@@ -35,7 +38,7 @@ export function AppHeader({ user }: { user: User | null }) {
 				<Logo to={user ? "/dashboard" : "/"} compact />
 				{user && (
 					<nav aria-label="Main" className="flex items-center gap-1 max-sm:order-last max-sm:w-full sm:ml-auto">
-						{AREAS.map((area) => (
+						{AREAS.filter((area) => !area.roles || user.accountRoles.some((role) => area.roles!.includes(role.kind))).map((area) => (
 							<NavLink key={area.to} prefetch="intent" to={area.to} className={tab}>
 								<area.icon className="h-4 w-4" aria-hidden />
 								{area.label}

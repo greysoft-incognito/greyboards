@@ -2,7 +2,7 @@ import { Form, Link, useNavigation, useSearchParams } from "react-router";
 import { Check, Pause, X } from "lucide-react";
 import type { AccountRoleKind, AccountRoleReview, AccountRoleStatus, AdminAccountRole } from "@greyboards/types";
 import { AdminHeader } from "~/components/admin/AdminHeader";
-import { Pager } from "~/components/admin/Pager";
+import { Pager } from "~/components/Pager";
 import { ROLE_ICONS, RoleStatus } from "~/components/AccountRoles";
 import { Avatar } from "~/components/Avatar";
 import { Alert, Button, Input, Select } from "~/components/ui";
