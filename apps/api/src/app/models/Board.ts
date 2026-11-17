@@ -47,6 +47,26 @@ export interface BoardDetails {
   ratePeriod?: BoardRatePeriod
 }
 
+/** What an advertiser narrows the map down to. */
+export interface BoardFilters {
+  kind?: BoardKind | null
+  lit?: boolean | null
+  maxRateMinor?: number | null
+}
+
+/** A board as a point on the map, with just enough to draw and label it. */
+export interface BoardPin {
+  id: string
+  name: string
+  kind: BoardKind
+  latitude: number
+  longitude: number
+  lit: boolean
+  rateMinor: number | null
+  currency: string
+  ratePeriod: BoardRatePeriod
+}
+
 /** Who owns a board being tagged: a profile picked from the suggestions, or a new owner's name and phone. */
 export interface BoardOwnerChoice {
   ownerProfileId?: string | null
@@ -110,6 +130,9 @@ export class Board extends Model {
 
   /** Photos kept per board. */
   static readonly MAX_PHOTOS = 12
+
+  /** Pins sent for one view of the map. Past this the map asks people to zoom in. */
+  static readonly MAX_PINS = 500
 
   /** The farthest a nearby search reaches, in kilometres. */
   static readonly MAX_RADIUS_KM = 100
@@ -226,8 +249,43 @@ export class Board extends Model {
     return query.where({ status })
   }
 
-  scopeOfKind(query: QueryBuilder<Board>, kind: BoardKind): QueryBuilder<Board> {
-    return query.where({ kind })
+  /** Boards that pass an advertiser's filters. A board with no rate yet never passes a price limit. */
+  scopeFiltered(query: QueryBuilder<Board>, filters: BoardFilters): QueryBuilder<Board> {
+    if (filters.kind) query.where({ kind: filters.kind })
+    if (typeof filters.lit === 'boolean') query.where({ lit: filters.lit })
+    if (filters.maxRateMinor !== null && filters.maxRateMinor !== undefined) query.whereRaw('rate_minor <= ?', [filters.maxRateMinor])
+
+    return query
+  }
+
+  /**
+   * Listed boards inside `box` as map pins, at most `MAX_PINS`. `truncated` says there were
+   * more, so the map can ask for a closer look instead of showing a random few.
+   */
+  static async pins(box: BoundingBox, filters: BoardFilters): Promise<{ pins: BoardPin[]; truncated: boolean }> {
+    const rows = await Board.scope('listed')
+      .scope('within', box)
+      .scope('filtered', filters)
+      .latest('createdAt')
+      .limit(Board.MAX_PINS + 1)
+      .get()
+
+    const boards = rows.all().slice(0, Board.MAX_PINS)
+
+    return {
+      truncated: rows.all().length > Board.MAX_PINS,
+      pins: boards.map((board) => ({
+        id: board.id,
+        name: board.name,
+        kind: board.kind,
+        latitude: Number(board.latitude),
+        longitude: Number(board.longitude),
+        lit: board.lit,
+        rateMinor: board.rate(),
+        currency: board.currency,
+        ratePeriod: board.ratePeriod,
+      })),
+    }
   }
 
   /** Boards `user` owns or tagged. */

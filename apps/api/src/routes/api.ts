@@ -59,6 +59,7 @@ Router.delete('/account/roles/:kind', [AccountRoleController, 'destroy'], [auth]
 // Boards: listed ones on the map for everyone, and the ones scouts and owners tag
 Router.get('/board-kinds', [BoardController, 'kinds'], [limiter(120, 60)])
 Router.get('/boards', [BoardController, 'index'], [limiter(240, 60)])
+Router.get('/boards/pins', [BoardController, 'pins'], [limiter(240, 60)])
 Router.get('/boards/:board', [BoardController, 'show'], [limiter(240, 60)])
 Router.get('/account/boards', [AccountBoardController, 'index'], [auth])
 Router.post('/account/boards', [AccountBoardController, 'create'], [auth, Authorize.actingAs('owner', 'scout'), limiter(30, 60)])
