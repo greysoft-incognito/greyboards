@@ -69,6 +69,14 @@ export class Refunds {
     return Refunds.close(booking, user, booking.amountMinor, reason)
   }
 
+  /** Staff settle a dispute: cancel a paid booking, give part back, and share the rest by the split. */
+  static async partly(booking: Booking, user: User, refundMinor: number, reason: string): Promise<Refund | null> {
+    abortIf(booking.status !== Booking.PAID, 'Only a paid booking whose money is still held can be refunded here.', 422)
+    abortIf(refundMinor <= 0 || refundMinor >= booking.amountMinor, 'Refund part of what was paid: more than nothing and less than all of it.', 422)
+
+    return Refunds.close(booking, user, refundMinor, reason)
+  }
+
   /** Send a whole payment back, such as one that landed after its dates were taken. */
   static async forPayment(booking: Booking, payment: Payment, reason: string): Promise<Refund | null> {
     return Refunds.send(booking, payment, payment.amountMinor, reason, null)

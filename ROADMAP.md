@@ -28,7 +28,7 @@ What's built and what's left, following the phases in [docs/proposal.md](docs/pr
 - [x] Shared (co-op) bookings
 - [x] Messages about a booking
 - [x] Reviews
-- [ ] Disputes
+- [x] Disputes
 - [ ] Campaign reports
 - [ ] Scout pipeline and territories
 
