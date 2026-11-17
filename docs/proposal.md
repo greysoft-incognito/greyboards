@@ -4,7 +4,7 @@ Status: draft for discussion. Nothing here is built yet. Percentages and prices 
 
 ## 1. The idea in one paragraph
 
-Greyboards is a marketplace for outdoor advertising that works entirely online. Billboard owners and the scouts who sign them up put boards on a live map. Advertisers find a board anywhere in the world, book it or bid for it, upload their artwork, and get photo proof that it went up, without ever visiting the site. Greyboards holds the money until the proof arrives, takes a commission from the owner, and pays the scout who brought the board in.
+Greyboards is a marketplace for outdoor advertising that works entirely online. Scouts find billboards in the field, sign their owners to an exclusive agreement and put the boards on a live map. Most owners never touch the app: the scout manages the board for them, and they get texts and bank transfers. Advertisers find a board anywhere in the world, book it or bid for it, upload their artwork, and get photo proof that it went up, without ever visiting the site. Greyboards holds the money until the proof arrives, takes a commission from the owner, and pays the scout who brought the board in.
 
 The promise to an advertiser is **"book it, see it, pay only when it's up"**. Most of the features below exist to make that promise true for someone who will never stand in front of the board.
 
@@ -14,8 +14,9 @@ One account can hold several roles. An agency can be an advertiser and an owner;
 
 | Role | Comes to | Pays or earns |
 | --- | --- | --- |
-| **Owner** | List boards, fill empty dates, approve artwork, get paid | Pays Greyboards a commission on each booking |
-| **Scout** | Find boards in the field, sign owners to an exclusive agreement, tag the boards | Earns a commission on every booking of the boards they tagged |
+| **Owner (managed)**, most owners | Nothing: they never sign in. They sign an agreement with a scout, get a text when their board is booked, and get paid by bank transfer | Pays Greyboards a commission on each booking |
+| **Owner (self-serve)**, larger media companies | List boards, set rates, approve artwork, upload proof and see earnings themselves | Pays Greyboards a commission on each booking |
+| **Scout** | Find boards, sign owners, tag the boards, and run them for managed owners: rates, artwork checks, installation and proof photos | Earns a commission on every booking of the boards they signed |
 | **Advertiser** | Find boards, book, bid or share, upload artwork, track the campaign | Pays for bookings |
 | **Admin** | Verify tags and owners, review artwork, settle disputes, set commissions | |
 | **Installer** (suggested, phase 2) | Print and put up artwork on static boards | Paid per job |
@@ -24,10 +25,10 @@ One account can hold several roles. An agency can be an advertiser and an owner;
 
 ### 3.1 Tagging (owners and scouts)
 
-A **tag** is a board captured on the map. Both owners and scouts tag, but the evidence differs:
+A **tag** is a board captured on the map. Scouts do almost all tagging:
 
-- **Owner tags their own board.** They capture it on site with the mobile app, or add it from the web and send a scout or installer later to confirm it.
-- **Scout tags someone else's board.** The scout meets the owner in person, records the agreement in the app (see 3.2), then captures the board.
+- **Scout tags someone else's board.** The scout meets the owner in person, records the agreement in the app (see 3.2), then captures the board. This is the normal path.
+- **A self-serve owner tags their own board.** They capture it on site with the mobile app, or add it from the web and a scout confirms it later.
 
 A capture is only accepted from the app's own camera, never the photo gallery, and records:
 
@@ -38,25 +39,37 @@ A capture is only accepted from the app's own camera, never the photo gallery, a
 
 **"Real-time location" means live GPS and compass during capture**, shown as a moving pin and an accuracy ring. It does not mean tracking scouts all the time; the app only reads location while the capture screen is open.
 
-**A tag becomes a listing in three steps:** `captured` → `verified` (an admin, or an automatic check, confirms the photos, location and owner) → `listed` (the owner has set prices and dates). Only listed boards appear to advertisers.
+**A tag becomes a listing in three steps:** `captured` → `verified` (an admin, or an automatic check, confirms the photos, location and owner) → `listed` (prices and dates are set, by the scout for a managed owner, or by a self-serve owner). Only listed boards appear to advertisers.
 
 **Duplicates.** Before saving, the app checks for tagged boards within about 30 m facing a similar direction and shows them. The first verified tag with a valid owner agreement wins; competing tags go to admin review.
 
 ### 3.2 Exclusive agreements (scouts)
 
-The scout's physical meeting with the owner becomes a record in the app:
+The scout's physical meeting with the owner becomes a record in the scout's app. The owner needs only a phone that can receive texts, not a smartphone or an account:
 
-1. The scout enters the owner's name and phone number; the owner confirms with a one-time code sent to their phone, on the spot.
-2. Both see the agreement: Greyboards' exclusive right to market the board for a term (for example 12 months), the commission the owner pays, and the payout account.
-3. The owner signs on the scout's screen (or later from a link), and both get a copy.
-4. The owner gets an invitation to claim their account, so they can manage the board themselves later. The board stays credited to the scout for the term.
+1. The scout enters the owner's name and phone number. Greyboards texts the owner a code, which they read out to the scout, so we know the number is real and theirs.
+2. The scout records the owner's bank account for payouts. Greyboards checks the account name matches the owner before the first payout.
+3. The scout goes through the agreement with the owner: Greyboards' exclusive right to market the board for a term (for example 12 months), the commission, the owner's minimum price, and **who approves ads**. By default the owner hands ad approval to the scout within simple rules (for example no political or alcohol ads), and can ask to be called about each one instead.
+4. The owner signs on the scout's screen. A photo of a signed paper copy and of the owner's ID are attached too, since a screen signature alone may not be enough if there's a dispute.
+5. The owner gets a text with a link to the agreement. They can create an account later if they want to manage the board themselves; until then, and for the term, the board is run by the scout.
+
+### 3.3 Owners: rent and manage
+
+**Managed owners (no app).** The scout runs the board on their behalf, and the owner hears about it by text (SMS, or WhatsApp where we can):
+
+- "Your board on Lekki–Epe is booked for December for ₦1,200,000. You'll receive ₦1,020,000 after the ad is up."
+- "Payment of ₦1,020,000 sent to GTBank ••4821."
+
+They can reply or call Greyboards support, and can ask the scout to block dates they use for their own clients. The scout sets rates within the owner's minimum, checks artwork against the agreed rules, arranges printing and installation, and uploads proof photos. Owners are paid by bank transfer whether or not they ever sign in.
+
+**Self-serve owners (web and app).** Larger owners with many boards manage everything themselves:
 
 ### 3.3 Owners: rent and manage
 
 - **Rate card per face:** price per week or month, minimum booking length, and for digital boards price per slot.
 - **Availability calendar:** blocked dates, seasonal prices, and bookings already made.
 - **Booking requests:** accept automatically or review each one. Every booking needs the owner's approval of the artwork.
-- **Proof of posting:** after the artwork is up, the owner (or installer) uploads geotagged photos from the app. This releases the payment.
+- **Proof of posting:** after the artwork is up, the owner, installer or scout uploads geotagged photos from the app. This releases the payment.
 - **Earnings:** what each board earned, Greyboards' commission, and payouts to their bank account.
 
 ### 3.4 Advertisers: place, share and bid
@@ -68,12 +81,12 @@ The scout's physical meeting with the owner becomes a record in the app:
 1. **Shared booking (co-op).** Several advertisers split one board's cost. On a digital board each gets a share of the loop (for example 2 of 6 ten-second slots). On a static board the period is split (for example weeks 1–2 and weeks 3–4). The organiser invites others by link, and each pays their own share; the booking only goes ahead once every share is paid, or the organiser covers the rest.
 2. **Team sharing.** An agency's team members see and manage the same campaigns. This maps directly onto *Spaces and members* in toneflix/photos.
 
-**Bids.** An owner can open a board's future period to bids instead of a fixed price:
+**Bids.** A board's future period can be opened to bids instead of a fixed price (by a self-serve owner, or by the scout for a managed owner):
 
-- The owner sets a reserve price and a closing time. Bids are visible as the current highest amount, not who placed them.
+- The reserve price is at least the owner's minimum. The owner or scout sets it and a closing time and a closing time. Bids are visible as the current highest amount, not who placed them.
 - A bid in the last 5 minutes extends the closing time by 5 minutes so last-second bids can't snipe.
 - The winner has 24 hours to pay. If they don't, the next highest bidder is offered the period.
-- Suggested addition: **"make an offer"** on fixed-price boards, which the owner can accept, decline or counter.
+- Suggested addition: **"make an offer"** on fixed-price boards, which the owner or their scout can accept, decline or counter.
 
 ### 3.5 Commissions
 
@@ -87,7 +100,7 @@ Example with a ₦1,000,000 booking, a 15% platform commission and a scout share
 | Scout receives (30% of Greyboards' commission) | ₦45,000 |
 | Greyboards keeps | ₦105,000 |
 
-Paying the scout from Greyboards' share means owners pay one clear rate whether or not a scout brought them in. Commissions are paid only after proof of posting is accepted, and can be reversed within a short window if a booking is refunded.
+Paying the scout from Greyboards' share means owners pay one clear rate whether or not a scout brought them in. Because scouts now also run managed boards (artwork checks, installation, proof photos), their share should probably be higher for managed boards than for self-serve ones, or they should be paid a fee per proof visit. Commissions are paid only after proof of posting is accepted, and can be reversed within a short window if a booking is refunded.
 
 All money moves through a ledger (escrow in, commission, scout share, owner payout), so every balance can be traced back to the booking that made it.
 
@@ -99,10 +112,10 @@ Ranked by how much the core promise depends on them.
 2. **Artwork checks and approval.** Check the file against the board's size and resolution, let the owner approve, and run a content-policy review. Some places also need a signage authority's approval; the booking should show who is responsible for that.
 3. **Printing and installation.** Static boards need vinyl printed and put up. Either the owner quotes print-and-install as an add-on, or Greyboards lists local installers who take jobs (installer role). This is the most common gap in the current idea.
 4. **Verification and fraud checks.** Phone and ID verification for owners and scouts, in-app camera only, GPS accuracy limits, duplicate detection, and admin review of first tags from new scouts.
-5. **Scout pipeline.** Prospects → contacted → signed → captured → verified → earning, so scouts can work a street systematically, plus territories so two scouts don't chase the same owner.
+5. **Scout pipeline and tasks.** Prospects → contacted → signed → captured → verified → earning, so scouts can work a street systematically, plus territories so two scouts don't chase the same owner, and a task list for managed boards (artwork to check, installs to arrange, proof photos due).
 6. **Map search that fits how buyers think.** Clustering, filters (type, size, price, lit, digital, available dates), search by radius, by area drawn on the map, and along a route. Saved searches with alerts when a matching board frees up.
 7. **Board page that replaces the site visit.** Photos, street-level view, facing direction on a mini map, nearby points of interest, and an estimate of daily traffic where data exists.
-8. **Messages.** Advertiser, owner and installer chat about a booking inside the app, so agreements and evidence stay with the booking.
+8. **Messages and texts.** Advertiser, scout, owner and installer chat about a booking inside the app, so agreements and evidence stay with the booking. Managed owners get the same updates by SMS or WhatsApp.
 9. **Cancellations, refunds and disputes.** Clear policy per booking type, a dispute flow attached to the booking, and admin decisions recorded in the ledger.
 10. **Reviews.** Advertisers rate boards and owners after a campaign; owners rate advertisers.
 11. **Campaign report.** A shareable page and PDF with the proof photos, dates and boards, for advertisers to show their own clients.
@@ -114,7 +127,7 @@ Ranked by how much the core promise depends on them.
 
 | Phase | Scope |
 | --- | --- |
-| **1. Core marketplace** | Accounts and roles, tagging with live GPS and compass (mobile), scout agreements, verification queue, listings and rate cards, map search, fixed-price booking with date holds, artwork upload and owner approval, escrow payments, proof of posting, commission ledger and payouts, admin moderation |
+| **1. Core marketplace** | Accounts and roles, tagging with live GPS and compass (mobile), scout agreements for owners without accounts, verification queue, listings and rate cards, map search, fixed-price booking with date holds, artwork upload and approval (by the scout for managed owners), SMS updates to owners, escrow payments, proof of posting, commission ledger and payouts, admin moderation |
 | **2. Market mechanics** | Bids and offers, shared bookings, installer marketplace, messages, reviews, disputes, campaign reports, scout pipeline and territories |
 | **3. Scale** | Digital slot scheduling and play logs, traffic estimates and price guidance, owner bulk tools, public API for agencies |
 
@@ -135,7 +148,8 @@ Same layout and tools as toneflix/photos: a pnpm monorepo with Node 24 and Postg
 **New domain pieces (first draft):**
 
 - `boards`, `board_faces` (the rentable unit), `board_captures` (each tag's GPS, heading, accuracy, photos and device)
-- `owner_agreements` (scout, owner, term, signature, status)
+- `owners` (name, verified phone, bank account; linked to a user only if they ever sign up), `owner_agreements` (scout, owner, term, minimum price, ad rules, signature, paper copy, status)
+- `scout_tasks` (artwork checks, installs and proof visits for managed boards)
 - `rate_cards`, `availability_blocks`
 - `bookings` with a date range per face, guarded by a PostgreSQL exclusion constraint so two bookings can never overlap
 - `booking_shares` (co-op participants), `auctions`, `bids`, `offers`
@@ -150,7 +164,7 @@ Commission rates belong to one authority (a `Commissions` policy read from setti
 
 ## 7. Questions to decide
 
-1. **Scout commission:** a share of Greyboards' commission (as in 3.5) or an extra charge on the owner? For how long: the agreement's term, or for as long as the board stays listed?
+1. **Scout commission:** now that scouts run boards for managed owners, should they earn more on those than on self-serve boards, or get a fee per proof visit? Separately: a share of Greyboards' commission (as in 3.5) or an extra charge on the owner? For how long: the agreement's term, or for as long as the board stays listed?
 2. **Sharing:** is the shared booking (co-op) in 3.4 what you meant, or something else?
 3. **Bids:** may only owners open a period for bids, or can advertisers request an auction? Is the open highest-bid format right, or do you want sealed bids?
 4. **Printing and installation:** owner's job, installers on the platform, or both?
