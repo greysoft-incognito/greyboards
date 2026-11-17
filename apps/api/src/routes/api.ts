@@ -6,6 +6,7 @@ import AuthController from 'src/app/http/controllers/AuthController'
 import BoardController from 'src/app/http/controllers/BoardController'
 import BookingController from 'src/app/http/controllers/BookingController'
 import PaymentController from 'src/app/http/controllers/PaymentController'
+import PrintJobController from 'src/app/http/controllers/PrintJobController'
 import OwnerProfileController from 'src/app/http/controllers/OwnerProfileController'
 import SessionController from 'src/app/http/controllers/SessionController'
 import TwoFactorController from 'src/app/http/controllers/TwoFactorController'
@@ -113,6 +114,17 @@ Router.get('/account/board-bookings', [BookingController, 'onMyBoards'], [auth])
 Router.get('/bookings/:booking', [BookingController, 'show'], [auth])
 Router.post('/bookings/:booking/checkout', [BookingController, 'checkout'], [auth, limiter(10, 60)])
 Router.post('/bookings/:booking/cancel', [BookingController, 'cancel'], [auth])
+Router.post('/bookings/:booking/artwork', [BookingController, 'uploadArtwork'], [auth, limiter(20, 60)])
+Router.post('/bookings/:booking/artwork/review', [BookingController, 'reviewArtwork'], [auth])
+
+// Billposters print approved artwork and put it up. A reserved job is theirs alone for a few hours.
+Router.get('/print-jobs', [PrintJobController, 'index'], [auth, Authorize.actingAs('billposter'), limiter(120, 60)])
+Router.get('/account/print-jobs', [PrintJobController, 'mine'], [auth, Authorize.actingAs('billposter')])
+Router.get('/print-jobs/:job', [PrintJobController, 'show'], [auth, Authorize.actingAs('billposter')])
+Router.post('/print-jobs/:job/reserve', [PrintJobController, 'reserve'], [auth, Authorize.actingAs('billposter'), limiter(30, 60)])
+Router.post('/print-jobs/:job/confirm', [PrintJobController, 'confirm'], [auth, Authorize.actingAs('billposter')])
+Router.post('/print-jobs/:job/release', [PrintJobController, 'release'], [auth, Authorize.actingAs('billposter')])
+Router.post('/print-jobs/:job/print-photo', [PrintJobController, 'printPhoto'], [auth, Authorize.actingAs('billposter'), limiter(20, 60)])
 
 // Payments finish on the provider's checkout. The webhook checks each one with the provider.
 Router.post('/payments/:reference/verify', [PaymentController, 'verify'], [auth, limiter(30, 60)])

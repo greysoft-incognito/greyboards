@@ -7,17 +7,22 @@ import { Day } from '@app/support/Day'
 import { Money } from '@app/support/Money'
 import { Settings } from '@app/support/Settings'
 import { Sms } from '@app/support/Sms'
+import { StoredImage } from '@app/support/StoredImage'
 import { Board, type BoardRatePeriod } from './Board'
 import { LedgerEntry } from './LedgerEntry'
 import { OwnerProfile } from './OwnerProfile'
 import { Payment } from './Payment'
-import { User } from './User'
+import { PrintJob } from './PrintJob'
+import { User, type UploadedFile } from './User'
 
 /**
  * `held` while the advertiser pays, `paid` once the money is in escrow, `live` once the
  * artwork is up and proven, `completed` when the run ends. A hold that runs out is `expired`.
  */
 export type BookingStatus = 'held' | 'paid' | 'live' | 'completed' | 'cancelled' | 'expired'
+
+/** The advertiser's artwork: none yet, waiting for the owner's check, approved or sent back. */
+export type ArtworkStatus = 'none' | 'submitted' | 'approved' | 'rejected'
 
 /** A run of days a booking takes on a board. */
 export interface BookedDays {
@@ -49,6 +54,15 @@ export class Booking extends Model {
   declare platformAmountMinor: number | null
   declare scoutId: string | null
   declare ownerProfileId: string | null
+  declare printFeeMinor: number
+  declare artworkPath: string | null
+  declare artworkDisk: string | null
+  declare artworkWidth: number | null
+  declare artworkHeight: number | null
+  declare artworkStatus: ArtworkStatus
+  declare artworkNote: string | null
+  declare artworkReviewedById: string | null
+  declare artworkReviewedAt: Date | null
   declare paidAt: Date | null
   declare cancelledAt: Date | null
   declare createdAt: Date
@@ -87,6 +101,15 @@ export class Booking extends Model {
     platformAmountMinor: 'platform_amount_minor',
     scoutId: 'scout_id',
     ownerProfileId: 'owner_profile_id',
+    printFeeMinor: 'print_fee_minor',
+    artworkPath: 'artwork_path',
+    artworkDisk: 'artwork_disk',
+    artworkWidth: 'artwork_width',
+    artworkHeight: 'artwork_height',
+    artworkStatus: 'artwork_status',
+    artworkNote: 'artwork_note',
+    artworkReviewedById: 'artwork_reviewed_by_id',
+    artworkReviewedAt: 'artwork_reviewed_at',
     paidAt: 'paid_at',
     cancelledAt: 'cancelled_at',
   }
@@ -97,6 +120,7 @@ export class Booking extends Model {
     ownerAmountMinor: 'number',
     scoutAmountMinor: 'number',
     platformAmountMinor: 'number',
+    printFeeMinor: 'number',
   } as never
 
   /**
@@ -135,6 +159,7 @@ export class Booking extends Model {
     abortIf(open >= Booking.MAX_HOLDS, 'Finish or cancel a checkout you started before booking another board.', 429)
 
     const rateMinor = board.rate()!
+    const printFeeMinor = await PrintJob.feeFor(board)
     const holdMinutes = await Settings.number('bookings.hold_minutes')
 
     try {
@@ -146,7 +171,8 @@ export class Booking extends Model {
         periods,
         ratePeriod: board.ratePeriod,
         rateMinor,
-        amountMinor: rateMinor * periods,
+        printFeeMinor,
+        amountMinor: rateMinor * periods + printFeeMinor,
         currency: board.currency,
         status: Booking.HELD,
         holdExpiresAt: new Date(Date.now() + holdMinutes * 60_000),
@@ -215,6 +241,11 @@ export class Booking extends Model {
     )
   }
 
+  /** What the board itself costs, without printing. The owner, scout and Greyboards share this. */
+  rentMinor(): number {
+    return this.amountMinor - this.printFeeMinor
+  }
+
   days(): BookedDays {
     return { startsOn: Day.of(this.startsOn), endsOn: Day.of(this.endsOn) }
   }
@@ -247,7 +278,7 @@ export class Booking extends Model {
    */
   async markPaid(payment: Payment): Promise<void> {
     const board = await this.board().firstOrFail()
-    const split = await Commissions.split(board, this.amountMinor)
+    const split = await Commissions.split(board, this.rentMinor())
     const paidAt = new Date()
 
     try {
@@ -263,6 +294,45 @@ export class Booking extends Model {
 
     await this.record('escrow', 'payment_in', this.amountMinor, payment.reference, 'Held until the artwork is up')
     await this.tellOwner(board)
+  }
+
+  /** The advertiser's artwork, for the owner to check. A new file replaces one not yet approved. */
+  async submitArtwork(file: UploadedFile): Promise<void> {
+    abortIf(this.status !== Booking.PAID, 'Add artwork once the booking is paid.', 422)
+    abortIf(this.artworkStatus === 'approved', 'The artwork is already approved and on its way to print.', 422)
+
+    const saved = await StoredImage.save(`bookings/${this.id}/artwork`, file)
+
+    await StoredImage.remove(this.artworkDisk, this.artworkPath)
+    await this.update({
+      artworkPath: saved.path,
+      artworkDisk: saved.disk,
+      artworkWidth: saved.width,
+      artworkHeight: saved.height,
+      artworkStatus: 'submitted',
+      artworkNote: null,
+      artworkReviewedById: null,
+      artworkReviewedAt: null,
+    })
+  }
+
+  /** The owner or scout approves the artwork, which puts the print job up for billposters, or sends it back with a note. */
+  async reviewArtwork(reviewer: User, approve: boolean, note?: string | null): Promise<void> {
+    abortIf(this.artworkStatus !== 'submitted', 'There is no artwork waiting for a check.', 422)
+    abortIf(!approve && !note?.trim(), 'Say what to change so the advertiser can fix it.', 422)
+
+    await this.update({
+      artworkStatus: approve ? 'approved' : 'rejected',
+      artworkNote: note?.trim() || null,
+      artworkReviewedById: reviewer.id,
+      artworkReviewedAt: new Date(),
+    })
+
+    if (approve) await PrintJob.open(this)
+  }
+
+  artworkUrl(): Promise<string | null> {
+    return this.artworkPath && this.artworkDisk ? StoredImage.url(this.artworkDisk, this.artworkPath) : Promise.resolve(null)
   }
 
   /** Add a line to this booking's ledger. */

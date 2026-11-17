@@ -1,4 +1,4 @@
-import { CalendarCheck, CircleHelp, FileText, Gauge, Handshake, KeyRound, type LucideIcon, Shield, SlidersHorizontal, Upload, Users } from "lucide-react";
+import { CalendarCheck, CircleHelp, FileText, Gauge, Handshake, KeyRound, type LucideIcon, Printer, Shield, SlidersHorizontal, Upload, Users } from "lucide-react";
 
 /** Lucide icons the API can name, such as a settings group's icon. */
 const ICONS: Record<string, LucideIcon> = {
@@ -7,6 +7,7 @@ const ICONS: Record<string, LucideIcon> = {
 	gauge: Gauge,
 	handshake: Handshake,
 	"key-round": KeyRound,
+	printer: Printer,
 	shield: Shield,
 	"sliders-horizontal": SlidersHorizontal,
 	upload: Upload,

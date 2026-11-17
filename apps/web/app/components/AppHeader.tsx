@@ -1,12 +1,12 @@
 import { useEffect, useRef } from "react";
 import { Link, NavLink, useLocation } from "react-router";
-import { CalendarCheck, LayoutDashboard, type LucideIcon, Map as MapIcon, Presentation } from "lucide-react";
+import { CalendarCheck, LayoutDashboard, type LucideIcon, Map as MapIcon, Presentation, Printer } from "lucide-react";
 import type { AccountRoleKind, User } from "@greyboards/types";
 import { Logo, buttonClass } from "~/components/ui";
 import { AccountMenu } from "~/components/AccountMenu";
 
 const tab = ({ isActive }: { isActive: boolean }) =>
-	`flex min-h-10 items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition max-sm:flex-1 sm:px-4 ${isActive ? "bg-ink-900 text-white" : "text-ink-700 hover:bg-surface-100"}`;
+	`flex min-h-10 min-w-0 items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition max-sm:flex-1 max-sm:flex-col max-sm:gap-0.5 max-sm:px-1 max-sm:py-1.5 max-sm:text-[0.6875rem] sm:px-4 ${isActive ? "bg-ink-900 text-white" : "text-ink-700 hover:bg-surface-100"}`;
 
 /** The areas a signed-in account can open. An area with `roles` shows to accounts holding any of them. */
 const AREAS: { to: string; label: string; icon: LucideIcon; roles?: AccountRoleKind[] }[] = [
@@ -14,6 +14,7 @@ const AREAS: { to: string; label: string; icon: LucideIcon; roles?: AccountRoleK
 	{ to: "/map", label: "Map", icon: MapIcon },
 	{ to: "/boards", label: "Boards", icon: Presentation, roles: ["owner", "scout"] },
 	{ to: "/bookings", label: "Bookings", icon: CalendarCheck },
+	{ to: "/jobs", label: "Jobs", icon: Printer, roles: ["billposter"] },
 ];
 
 /** The top bar. Signed-in people get their areas, on a row of their own on phones; visitors get a way in. Its height is kept in `--header-height` for content that sticks below it. */

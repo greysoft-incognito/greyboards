@@ -62,10 +62,13 @@ describe('Bookings', () => {
     expect((await api('post', `/boards/${ownBoard}/bookings`, { startsOn: day(10), periods: 13 })).status).toBe(422)
     expect((await api('post', `/boards/${ownBoard}/bookings`, { startsOn: day(10), periods: 1 }, 'owner')).status).toBe(403)
 
+    expect((await api('get', `/boards/${ownBoard}`)).body.data.booking).toMatchObject({ open: true, maxPeriods: 12, printFeeMinor: 16_800_000 })
+
     const held = await api('post', `/boards/${ownBoard}/bookings`, { startsOn: '2027-01-31', periods: 2 })
 
     expect(held.status).toBe(201)
-    expect(held.body.data).toMatchObject({ status: 'held', startsOn: '2027-01-31', endsOn: '2027-03-30', periods: 2, amountMinor: 200_000_000, split: null })
+    // 12 × 4 m at ₦3,500 per m² to print and post.
+    expect(held.body.data).toMatchObject({ status: 'held', startsOn: '2027-01-31', endsOn: '2027-03-30', periods: 2, amountMinor: 216_800_000, printFeeMinor: 16_800_000, split: null })
     expect(held.body.data.holdSecondsLeft).toBeGreaterThan(800)
   })
 
@@ -99,7 +102,7 @@ describe('Bookings', () => {
     expect((await api('post', `/bookings/${rival.id}/checkout`, undefined, 'rival')).status).toBe(422)
   })
 
-  it('takes payment into escrow and keeps the commission from the owner', async () => {
+  it('takes payment into escrow and keeps the commission from the owner, apart from printing', async () => {
     const held = (await api('get', '/account/bookings?status=held')).body.data.find((booking: { startsOn: string }) => booking.startsOn === '2027-01-31')
     const started = await api('post', `/bookings/${held.id}/checkout`)
 
@@ -122,7 +125,7 @@ describe('Bookings', () => {
     })
     expect((await api('get', '/account/board-bookings', undefined, 'owner')).body.data.map((entry: { id: string }) => entry.id)).toContain(held.id)
     expect((await api('post', `/bookings/${held.id}/cancel`)).status).toBe(422)
-    expect(sql(`select account, kind, amount_minor from ledger_entries where booking_id = '${held.id}'`)).toMatch(/escrow\s*\|\s*payment_in\s*\|\s*200000000/)
+    expect(sql(`select account, kind, amount_minor from ledger_entries where booking_id = '${held.id}'`)).toMatch(/escrow\s*\|\s*payment_in\s*\|\s*216800000/)
   })
 
   it('books scouted boards only once the owner signs, and pays the scout from the commission', async () => {

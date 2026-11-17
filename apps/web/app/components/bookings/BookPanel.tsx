@@ -55,12 +55,24 @@ export function BookPanel({ board, taken, canBook, error }: { board: BoardDetail
 							</Select>
 						</label>
 					</div>
-					<div className="flex items-baseline justify-between rounded-2xl bg-surface-100 px-4 py-3">
-						<span className="text-sm text-ink-700">
-							{formatRate(rate)} × {periods}
-						</span>
-						<span className="font-display text-xl font-extrabold text-ink-900 tabular-nums">{formatMoney(rate.amountMinor * periods, rate.currency)}</span>
-					</div>
+					<dl className="space-y-1.5 rounded-2xl bg-surface-100 px-4 py-3 text-sm">
+						<div className="flex justify-between gap-4">
+							<dt className="text-ink-700">
+								{formatRate(rate)} × {periods}
+							</dt>
+							<dd className="text-ink-900 tabular-nums">{formatMoney(rate.amountMinor * periods, rate.currency)}</dd>
+						</div>
+						{terms.printFeeMinor > 0 && (
+							<div className="flex justify-between gap-4">
+								<dt className="text-ink-700">Printing and posting</dt>
+								<dd className="text-ink-900 tabular-nums">{formatMoney(terms.printFeeMinor, rate.currency)}</dd>
+							</div>
+						)}
+						<div className="flex items-baseline justify-between gap-4 border-t border-surface-200 pt-1.5">
+							<dt className="font-semibold text-ink-900">Total</dt>
+							<dd className="font-display text-xl font-extrabold text-ink-900 tabular-nums">{formatMoney(rate.amountMinor * periods + terms.printFeeMinor, rate.currency)}</dd>
+						</div>
+					</dl>
 					{error && <Alert>{error}</Alert>}
 					<Button type="submit" className="w-full" disabled={busy}>
 						{busy ? <Spinner /> : <CalendarCheck className="h-4 w-4" aria-hidden />}

@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { Form, Link, redirect, useNavigation, useSearchParams } from "react-router";
 import { ArrowLeft, BadgeCheck, CalendarDays, Camera, CreditCard, Image, Printer, ShieldCheck, Wallet, X } from "lucide-react";
-import type { Booking, BookingStatus } from "@greyboards/types";
+import type { Booking } from "@greyboards/types";
 import { BoardCover, formatRate } from "~/components/boards/BoardBits";
+import { ArtworkPanel } from "~/components/bookings/ArtworkPanel";
 import { BookingStatusBadge, formatDays, formatMoney } from "~/components/bookings/BookingBits";
 import { Alert, Button, Spinner } from "~/components/ui";
 import { formError } from "~/lib/api.server";
+import { postedPhoto } from "~/lib/boards.server";
 import { requireUser } from "~/lib/session.server";
 import { toast, useToastMessage } from "~/lib/toast";
 import type { Route } from "./+types/booking";
@@ -21,7 +23,8 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
 
 export async function action({ request, context, params }: Route.ActionArgs) {
 	const { api } = await requireUser(request, context);
-	const intent = String((await request.formData()).get("intent"));
+	const form = await request.formData();
+	const intent = String(form.get("intent"));
 
 	try {
 		if (intent === "pay") {
@@ -35,6 +38,22 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 
 			return { error: null, message: "Booking cancelled. The dates are free again." };
 		}
+
+		if (intent === "artwork") {
+			const artwork = postedPhoto(form, "artwork");
+
+			if (!artwork) return { error: "Choose the artwork first.", message: null };
+
+			await api.uploadArtwork(params.id, artwork);
+
+			return { error: null, message: "Artwork sent for checking." };
+		}
+
+		if (intent === "approve" || intent === "reject") {
+			await api.reviewArtwork(params.id, { decision: intent, note: String(form.get("note") ?? "") || undefined });
+
+			return { error: null, message: intent === "approve" ? "Approved. It goes to a billposter next." : "Sent back with your note." };
+		}
 	} catch (error) {
 		if (error instanceof Response) throw error;
 
@@ -44,14 +63,18 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 	return { error: "Something went wrong. Try again.", message: null };
 }
 
-/** The steps from payment to the owner being paid. Later steps light up as the booking moves on. */
-const STEPS: { label: string; detail: string; icon: typeof CreditCard; reached: BookingStatus[] }[] = [
-	{ label: "Paid", detail: "Your money waits in escrow.", icon: CreditCard, reached: ["paid", "live", "completed"] },
-	{ label: "Artwork approved", detail: "The owner checks your design fits the board.", icon: Image, reached: ["live", "completed"] },
-	{ label: "Printed and posted", detail: "A billposter or the owner puts it up.", icon: Printer, reached: ["live", "completed"] },
-	{ label: "Proof accepted", detail: "Geotagged photos show your ad on the board.", icon: Camera, reached: ["live", "completed"] },
-	{ label: "Owner paid", detail: "Only then does the money leave escrow.", icon: Wallet, reached: ["live", "completed"] },
+/** The steps from payment to the owner being paid. Each lights up once the booking gets there. */
+const STEPS: { label: string; detail: string; icon: typeof CreditCard; done: (booking: Booking) => boolean }[] = [
+	{ label: "Paid", detail: "Your money waits in escrow.", icon: CreditCard, done: (booking) => ["paid", "live", "completed"].includes(booking.status) },
+	{ label: "Artwork approved", detail: "The owner checks your design fits the board.", icon: Image, done: (booking) => booking.artwork?.status === "approved" || isLive(booking) },
+	{ label: "Printed and posted", detail: "A billposter prints it and puts it up.", icon: Printer, done: (booking) => booking.printJob?.status === "posted" || isLive(booking) },
+	{ label: "Proof accepted", detail: "Geotagged photos show your ad on the board.", icon: Camera, done: isLive },
+	{ label: "Owner paid", detail: "Only then does the money leave escrow.", icon: Wallet, done: isLive },
 ];
+
+function isLive(booking: Booking) {
+	return booking.status === "live" || booking.status === "completed";
+}
 
 /** One booking: the board, the days, the money, and what happens next. */
 export default function BookingPage({ loaderData, actionData }: Route.ComponentProps) {
@@ -93,6 +116,12 @@ export default function BookingPage({ loaderData, actionData }: Route.ComponentP
 									{booking.periods === 1 ? "" : "s"}
 								</dd>
 							</div>
+							{booking.printFeeMinor > 0 && (
+								<div className="flex justify-between gap-4">
+									<dt className="text-ink-500">Printing and posting</dt>
+									<dd className="text-ink-900 tabular-nums">{formatMoney(booking.printFeeMinor, booking.currency)}</dd>
+								</div>
+							)}
 							<div className="flex justify-between gap-4 border-t border-surface-200 pt-2">
 								<dt className="font-semibold text-ink-900">Total</dt>
 								<dd className="font-display text-lg font-extrabold text-ink-900 tabular-nums">{formatMoney(booking.amountMinor, booking.currency)}</dd>
@@ -104,6 +133,7 @@ export default function BookingPage({ loaderData, actionData }: Route.ComponentP
 						{isAdvertiser && booking.status === "held" && <PayOrCancel booking={booking} />}
 						{booking.split && <Split booking={booking} />}
 					</div>
+					{booking.artwork && ["paid", "live", "completed"].includes(booking.status) && <ArtworkPanel booking={booking} isAdvertiser={isAdvertiser} />}
 				</section>
 
 				<section className="space-y-4">
@@ -166,6 +196,7 @@ function Split({ booking }: { booking: Booking }) {
 	const rows = [
 		{ label: `Owner (${split.ownerSharePercent}%)`, amount: split.ownerAmountMinor },
 		...(split.scoutAmountMinor ? [{ label: "Scout", amount: split.scoutAmountMinor }] : []),
+		...(booking.printFeeMinor ? [{ label: "Billposter, for printing", amount: booking.printFeeMinor }] : []),
 		{ label: "Greyboards", amount: split.platformAmountMinor },
 	];
 
@@ -192,7 +223,7 @@ function Steps({ booking }: { booking: Booking }) {
 	return (
 		<ol className="panel space-y-4 p-5 sm:p-6">
 			{STEPS.map((step) => {
-				const done = step.reached.includes(booking.status);
+				const done = step.done(booking);
 
 				return (
 					<li key={step.label} className="flex gap-3">
