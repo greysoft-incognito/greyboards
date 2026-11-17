@@ -3,6 +3,8 @@ name: Deploy API
 on:
   push:
     branches: [deploy]
+  release:
+    types: [published]
   workflow_dispatch:
     inputs:
       action:
@@ -32,7 +34,7 @@ env:
 
 jobs:
   check:
-    if: github.event_name == 'push' || (inputs.action == 'deploy' && inputs.run_checks)
+    if: github.event_name != 'workflow_dispatch' || (inputs.action == 'deploy' && inputs.run_checks)
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -66,6 +68,8 @@ jobs:
     if: ${{ !failure() && !cancelled() }}
     runs-on: ubuntu-latest
     environment: api-production
+    env:
+      SSHPASS: ${{ secrets.API_SSH_PASSWORD }}
     steps:
       - uses: actions/checkout@v7
 
@@ -77,10 +81,8 @@ jobs:
           SSH_PORT: ${{ secrets.API_SSH_PORT || '22' }}
           KNOWN_HOSTS: ${{ secrets.API_SSH_KNOWN_HOSTS }}
         run: |
-          mkdir -p ~/.ssh
+          mkdir -p ~/.ssh ~/.local/bin
           chmod 700 ~/.ssh
-          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
 
           if [ -n "$KNOWN_HOSTS" ]; then
             printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
@@ -93,13 +95,50 @@ jobs:
             HostName $SSH_HOST
             User $SSH_USER
             Port $SSH_PORT
-            IdentityFile ~/.ssh/deploy_key
-            IdentitiesOnly yes
             ServerAliveInterval 30
           EOF
 
+          if [ -n "$SSH_KEY" ]; then
+            printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
+            chmod 600 ~/.ssh/deploy_key
+            printf '  IdentityFile ~/.ssh/deploy_key\n  IdentitiesOnly yes\n' >> ~/.ssh/config
+          elif [ -n "$SSHPASS" ]; then
+            sudo apt-get install -y -qq sshpass > /dev/null
+          else
+            echo "Set the API_SSH_KEY or API_SSH_PASSWORD secret." >&2
+            exit 1
+          fi
+
+          # `remote` runs a command on the server with whichever credential is set.
+          cat > ~/.local/bin/remote <<'EOF'
+          #!/usr/bin/env bash
+          if [ -n "$SSHPASS" ] && [ ! -f ~/.ssh/deploy_key ]; then
+            exec sshpass -e ssh -o PreferredAuthentications=password,keyboard-interactive api "$@"
+          fi
+          exec ssh api "$@"
+          EOF
+          chmod +x ~/.local/bin/remote
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Prepare the server
+        if: github.event_name != 'workflow_dispatch' || inputs.action == 'deploy'
+        env:
+          API_DOTENV: ${{ secrets.API_DOTENV }}
+          APP_PORT: ${{ vars.API_PORT || '3100' }}
+          API_DOMAIN: ${{ vars.API_DOMAIN }}
+          API_URL: ${{ vars.API_URL }}
+          FRONTEND_URL: ${{ vars.FRONTEND_URL }}
+        run: |
+          if [ -n "$API_DOTENV" ]; then
+            printf '%s\n' "$API_DOTENV" | remote "mkdir -p '$DEPLOY_PATH/shared' && umask 077 && cat > '$DEPLOY_PATH/shared/.env'"
+          fi
+
+          remote "$(printf 'DEPLOY_PATH=%q APP_PORT=%q API_DOMAIN=%q API_URL=%q FRONTEND_URL=%q bash -ls' \
+            "$DEPLOY_PATH" "$APP_PORT" "$API_DOMAIN" "$API_URL" "$FRONTEND_URL")" \
+            < .github/scripts/setup-api-server.sh
+
       - name: Upload release
-        if: github.event_name == 'push' || inputs.action == 'deploy'
+        if: github.event_name != 'workflow_dispatch' || inputs.action == 'deploy'
         id: release
         run: |
           release="$(date -u +%Y%m%d%H%M%S)-${GITHUB_SHA::7}"
@@ -109,10 +148,10 @@ jobs:
             package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc tsconfig.base.json \
             packages apps/api apps/web/package.json apps/mobile/package.json
 
-          ssh api "mkdir -p '$DEPLOY_PATH/releases' && cat > '$DEPLOY_PATH/releases/$release.tar.gz'" < release.tar.gz
+          remote "mkdir -p '$DEPLOY_PATH/releases' && cat > '$DEPLOY_PATH/releases/$release.tar.gz'" < release.tar.gz
 
       - name: Deploy
-        if: github.event_name == 'push' || inputs.action == 'deploy'
+        if: github.event_name != 'workflow_dispatch' || inputs.action == 'deploy'
         env:
           RELEASE: ${{ steps.release.outputs.name }}
           SKIP_MIGRATIONS: ${{ inputs.skip_migrations || false }}
@@ -120,7 +159,7 @@ jobs:
           PM2_NAME: ${{ vars.API_PM2_NAME || 'greyboards-api' }}
           RESTART_COMMAND: ${{ vars.API_RESTART_COMMAND }}
         run: |
-          ssh api "$(printf 'DEPLOY_PATH=%q SKIP_MIGRATIONS=%q KEEP_RELEASES=%q PM2_NAME=%q RESTART_COMMAND=%q bash -ls -- deploy %q' \
+          remote "$(printf 'DEPLOY_PATH=%q SKIP_MIGRATIONS=%q KEEP_RELEASES=%q PM2_NAME=%q RESTART_COMMAND=%q bash -ls -- deploy %q' \
             "$DEPLOY_PATH" "$SKIP_MIGRATIONS" "$KEEP_RELEASES" "$PM2_NAME" "$RESTART_COMMAND" "$RELEASE")" \
             < .github/scripts/deploy-api.sh
 
@@ -130,7 +169,7 @@ jobs:
           PM2_NAME: ${{ vars.API_PM2_NAME || 'greyboards-api' }}
           RESTART_COMMAND: ${{ vars.API_RESTART_COMMAND }}
         run: |
-          ssh api "$(printf 'DEPLOY_PATH=%q PM2_NAME=%q RESTART_COMMAND=%q bash -ls -- rollback' \
+          remote "$(printf 'DEPLOY_PATH=%q PM2_NAME=%q RESTART_COMMAND=%q bash -ls -- rollback' \
             "$DEPLOY_PATH" "$PM2_NAME" "$RESTART_COMMAND")" \
             < .github/scripts/deploy-api.sh
 
