@@ -4,7 +4,7 @@ import { Image } from 'expo-image'
 import * as ImagePicker from 'expo-image-picker'
 import { router } from 'expo-router'
 import { Binoculars, Camera, LocateFixed, MapPin, Presentation, X } from 'lucide-react-native'
-import type { BoardKind, BoardKindDefinition, BoardOwnerChoice, BoardRatePeriod } from '@greyboards/types'
+import type { BoardKind, BoardKindDefinition, BoardOwnerChoice, BoardRatePeriod, NearbyBoard } from '@greyboards/types'
 import { HeadingPicker } from '@/components/boards/HeadingPicker'
 import { OwnerPicker } from '@/components/boards/OwnerPicker'
 import { taggingRoles } from '@/components/boards/BoardBits'
@@ -48,9 +48,28 @@ export default function TagBoard() {
   const [shots, setShots] = useState<Shot[]>([])
   const [owner, setOwner] = useState<BoardOwnerChoice>({})
   const [heading, setHeading] = useState<number | null>(null)
+  const [nearby, setNearby] = useState<NearbyBoard[]>([])
   const [form, setForm] = useState({ name: '', kind: 'billboard' as BoardKind, widthM: '', heightM: '', faces: '1', lit: '0', facing: '', address: '', city: '', rate: '', ratePeriod: 'month' as BoardRatePeriod })
   const errors = save.problem.fields
   const set = (key: keyof typeof form) => (value: string) => setForm((current) => ({ ...current, [key]: value }))
+
+  // Boards already tagged here and facing the same way, so nobody tags one twice.
+  useEffect(() => {
+    if (!spot) return setNearby([])
+
+    let current = true
+    const timer = setTimeout(() => {
+      api.account
+        .nearbyBoards({ lat: spot.latitude, lng: spot.longitude, headingDeg: heading })
+        .then(({ data }) => current && setNearby(data))
+        .catch(() => current && setNearby([]))
+    }, 400)
+
+    return () => {
+      current = false
+      clearTimeout(timer)
+    }
+  }, [spot, heading])
 
   useEffect(() => {
     api
@@ -162,6 +181,11 @@ export default function TagBoard() {
         </View>
         {locate.problem.message ? <Callout>{locate.problem.message}</Callout> : null}
         {errors.latitude || errors.longitude ? <Callout>{errors.latitude ?? errors.longitude}</Callout> : null}
+        {nearby.length ? (
+          <Callout tone="warning">
+            {nearby.length === 1 ? 'A board is already tagged here' : `${nearby.length} boards are already tagged here`}: {nearby.map((board) => `${board.name} (${board.distanceM} m)`).join(', ')}. Check it isn’t this one. If you tag it anyway, our reviewers will compare them.
+          </Callout>
+        ) : null}
         <Button title={locate.busy ? 'Finding you…' : spot ? 'Place it again' : 'Use where I am'} variant="secondary" loading={locate.busy} onPress={findMe} />
         <Field label="Street address" error={errors.address}>
           <Input value={form.address} onChangeText={set('address')} maxLength={191} placeholder="Admiralty Way, by the roundabout" />

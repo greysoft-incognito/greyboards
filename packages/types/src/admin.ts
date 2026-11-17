@@ -1,5 +1,6 @@
 import type { AccountRole, AccountRoleKind, AccountRoleStatus, ID, Permission, UserRole } from './models'
 import type { PageQuery } from './api'
+import type { PartnerChecks } from './partners'
 
 /** Limits the API enforces that apps can check before sending anything. */
 export interface AppLimits {
@@ -48,6 +49,8 @@ export interface AdminUserDetail extends AdminUser {
 /** A marketplace role as reviewers see it, with the account that holds it. */
 export interface AdminAccountRole extends AccountRole {
   user: AdminUser | null
+  /** For scouts and billposters: their ID and bank account. */
+  checks: PartnerChecks | null
 }
 
 export interface AdminAccountRoleQuery extends PageQuery {

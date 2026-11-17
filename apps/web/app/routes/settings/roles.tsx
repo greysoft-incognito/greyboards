@@ -1,11 +1,13 @@
 import { Form, useNavigation } from "react-router";
-import type { AccountRoleKind } from "@greyboards/types";
+import type { AccountRoleKind, IdentityDocument } from "@greyboards/types";
 import { requireSignIn, requireUser } from "~/lib/session.server";
 import { settingsAction } from "~/lib/settings.server";
 import { useToastMessage } from "~/lib/toast";
 import { Alert, Button } from "~/components/ui";
 import { ROLE_ICONS, RoleStatus, heldRole } from "~/components/AccountRoles";
 import { PageHeader, resultFor } from "~/components/settings/Section";
+import { PartnerChecksPanel } from "~/components/settings/PartnerChecksPanel";
+import { postedPhoto } from "~/lib/boards.server";
 import type { Route } from "./+types/roles";
 
 export const meta = () => [{ title: "How you use Greyboards · Settings · Greyboards" }];
@@ -13,14 +15,33 @@ export const meta = () => [{ title: "How you use Greyboards · Settings · Greyb
 export async function loader({ request, context }: Route.LoaderArgs) {
 	const { api } = await requireSignIn(request, context);
 	const [{ user }, roles] = await Promise.all([requireUser(request, context), api.account.roles()]);
+	const reviewed = roles.definitions.filter((definition) => definition.needsReview).map((definition) => definition.kind);
+	const applying = roles.data.some((role) => reviewed.includes(role.kind));
+	const checks = applying ? await api.account.partnerChecks().catch(() => null) : null;
 
-	return { roles: roles.data, definitions: roles.definitions, name: user.name };
+	return { roles: roles.data, definitions: roles.definitions, name: user.name, checks: checks?.data ?? null, documents: checks?.documents ?? [] };
 }
 
 export async function action({ request, context }: Route.ActionArgs) {
 	const { api } = await requireSignIn(request, context);
 	const form = await request.formData();
 	const kind = String(form.get("kind")) as AccountRoleKind;
+
+	if (form.get("intent") === "send-id") {
+		const photo = postedPhoto(form);
+
+		if (!photo) return { intent: "send-id", error: "Choose a photo of your ID.", message: null, fieldErrors: {} as Record<string, string> };
+
+		return settingsAction("send-id", async () => {
+			const identity = {
+				documentType: String(form.get("documentType")) as IdentityDocument,
+				documentNumber: String(form.get("documentNumber") ?? ""),
+				fullName: String(form.get("fullName") ?? ""),
+			};
+
+			return { message: (await api.account.sendIdentity(identity, photo, photo.name)).message };
+		});
+	}
 
 	if (form.get("intent") === "drop") {
 		return settingsAction(`drop-${kind}`, async () => ({ message: (await api.account.dropRole(kind)).message }));
@@ -33,7 +54,8 @@ export async function action({ request, context }: Route.ActionArgs) {
 export default function Roles({ loaderData, actionData }: Route.ComponentProps) {
 	useToastMessage(actionData);
 
-	const { roles, definitions } = loaderData;
+	const { roles, definitions, checks, documents } = loaderData;
+	const idResult = resultFor(actionData, "send-id");
 	const navigation = useNavigation();
 
 	return (
@@ -82,6 +104,11 @@ export default function Roles({ loaderData, actionData }: Route.ComponentProps) 
 					);
 				})}
 			</ul>
+			{checks && (
+				<div className="mt-4">
+					<PartnerChecksPanel checks={checks} documents={documents} error={idResult?.error} fieldErrors={idResult?.fieldErrors} />
+				</div>
+			)}
 		</>
 	);
 }

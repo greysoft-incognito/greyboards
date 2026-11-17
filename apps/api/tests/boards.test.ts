@@ -3,6 +3,7 @@ import { beforeAll, describe, expect, it } from 'vitest'
 import { app } from '../src/core/bootstrap'
 import { execFileSync } from 'node:child_process'
 import request from 'parasito'
+import { passChecks } from './support/partner'
 
 const tokens: Record<string, string> = {}
 
@@ -51,6 +52,7 @@ describe('Boards', () => {
 
     const scoutRole = (await api('get', '/account/roles', undefined, 'scout')).body.data[0]
 
+    await passChecks(tokens.scout)
     await api('put', `/admin/account-roles/${scoutRole.id}`, { status: 'active' }, 'reviewer')
   }, 60_000)
 

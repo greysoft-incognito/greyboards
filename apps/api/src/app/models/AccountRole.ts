@@ -2,6 +2,7 @@ import { Model } from '@arkstack/database'
 import type { QueryBuilder } from 'arkormx'
 import { abortIf } from '@arkstack/common'
 import { AccountMail } from '@app/notifications/AccountMail'
+import { PartnerChecks } from '@app/services/PartnerChecks'
 import { User } from './User'
 
 export type AccountRoleKind = 'advertiser' | 'owner' | 'scout' | 'billposter'
@@ -112,9 +113,11 @@ export class AccountRole extends Model {
     abortIf(status === AccountRole.PENDING, 'Pick active, rejected or suspended.', 422)
     abortIf(reviewer.id === this.userId, 'You cannot review your own role.', 422)
 
-    await this.update({ status, note: note?.trim() || null, reviewedById: reviewer.id, reviewedAt: new Date() })
-
     const user = await this.user().first()
+
+    if (status === AccountRole.ACTIVE && AccountRole.definition(this.kind).needsReview && user) await PartnerChecks.approve(user, reviewer)
+
+    await this.update({ status, note: note?.trim() || null, reviewedById: reviewer.id, reviewedAt: new Date() })
 
     if (user) await AccountMail.roleReviewed(user, this)?.catch(() => undefined)
   }

@@ -84,6 +84,31 @@ export default class AccountBoardController extends BaseController {
     return new BoardCollection(boards).additional({ status: 'success', message: 'OK', code: 200 })
   }
 
+  /**
+   * Boards already tagged where the user stands and facing the same way, so they don't tag
+   * one twice. Only names, distance and status show.
+   */
+  async nearby() {
+    const query = await this.validateQuery({
+      lat: 'required|numeric|min:-90|max:90',
+      lng: 'required|numeric|min:-180|max:180',
+      headingDeg: 'nullable|integer|min:0|max:359',
+      except: ['nullable', UUID],
+    })
+    const heading = query.headingDeg === undefined || query.headingDeg === null || query.headingDeg === '' ? null : Number(query.headingDeg)
+    const boards = await Board.possibleDuplicates(Number(query.lat), Number(query.lng), heading, query.except ? String(query.except) : undefined)
+
+    return new GenericResource(
+      boards.map((board) => ({
+        id: board.id,
+        name: board.name,
+        status: board.status,
+        headingDeg: board.headingDeg,
+        distanceM: Math.round(Number((board as any).distance_m ?? board.distanceM ?? 0)),
+      })),
+    ).additional({ status: 'success', message: 'OK', code: 200 })
+  }
+
   /** Tag a board. `as` says whether the user owns it or scouted it. */
   async create() {
     const data = await this.validate({ ...rules(true), ...ownerRules, as: 'required|in:owner,scout' })

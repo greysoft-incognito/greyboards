@@ -1,4 +1,5 @@
-import type { AccountRole } from '@app/models/AccountRole'
+import { AccountRole } from '@app/models/AccountRole'
+import { PartnerChecks } from '@app/services/PartnerChecks'
 import { AccountRoleResource } from './AccountRoleResource'
 import { AdminUserResource } from './AdminUserResource'
 
@@ -11,6 +12,7 @@ export class AdminAccountRoleResource extends AccountRoleResource {
     return {
       ...(await super.data()),
       user: user ? await new AdminUserResource(user).data() : null,
+      checks: user && AccountRole.definition(role.kind).needsReview ? await PartnerChecks.summary(user, true) : null,
     }
   }
 }
