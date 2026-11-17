@@ -1,17 +1,22 @@
 import { useEffect, useRef, useState } from "react";
 import { Form, Link, redirect, useNavigation, useSearchParams, useSubmit } from "react-router";
-import { ArrowLeft, BadgeCheck, Camera, Compass, ExternalLink, FileSignature, Layers, Lightbulb, MapPin, Pencil, Phone, Ruler, Send, Trash2, User, X } from "lucide-react";
+import { ArrowLeft, BadgeCheck, Camera, Compass, ExternalLink, FileSignature, Layers, Lightbulb, Map as MapIcon, MapPin, Pencil, Phone, Ruler, Send, Trash2, User, X } from "lucide-react";
 import type { BoardAgreement, BoardDetail, BoardPhoto, OwnerProfile } from "@greyboards/types";
 import { BoardCover, BoardStatusBadge, formatRate, formatSize, mapLink } from "~/components/boards/BoardBits";
 import { BookPanel } from "~/components/bookings/BookPanel";
+import { SpotMap } from "~/components/map/SpotMap";
 import { Alert, Button, buttonClass, Spinner } from "~/components/ui";
 import { formError } from "~/lib/api.server";
 import { photoLocation, postedPhoto } from "~/lib/boards.server";
+import { mapStyleUrl } from "~/lib/map.server";
 import { requireUser } from "~/lib/session.server";
 import { toast, useToastMessage } from "~/lib/toast";
+import mapStyles from "maplibre-gl/dist/maplibre-gl.css?url";
 import type { Route } from "./+types/board";
 
 export const meta = ({ loaderData }: Route.MetaArgs) => [{ title: `${loaderData?.board.name ?? "Board"} · Greyboards` }];
+
+export const links: Route.LinksFunction = () => [{ rel: "stylesheet", href: mapStyles }];
 
 export async function loader({ request, context, params }: Route.LoaderArgs) {
 	const { api, user } = await requireUser(request, context);
@@ -20,7 +25,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
 	const taken = board.booking.open && !manages ? await api.boardAvailability(board.id).then(({ data }) => data, () => []) : [];
 	const canBook = user.accountRoles.some((role) => role.kind === "advertiser" && role.status === "active");
 
-	return { board, manages, taken, canBook };
+	return { board, manages, taken, canBook, styleUrl: mapStyleUrl(context) };
 }
 
 export async function action({ request, context, params }: Route.ActionArgs) {
@@ -83,7 +88,7 @@ const REVIEW_NOTES: Record<BoardDetail["status"], string> = {
 export default function BoardPage({ loaderData, actionData }: Route.ComponentProps) {
 	useToastMessage(actionData);
 
-	const { board, manages, taken, canBook } = loaderData;
+	const { board, manages, taken, canBook, styleUrl } = loaderData;
 	const [params] = useSearchParams();
 	const [shown, setShown] = useState<BoardPhoto | null>(board.photos[0] ?? null);
 	const rate = formatRate(board.rate);
@@ -161,6 +166,14 @@ export default function BoardPage({ loaderData, actionData }: Route.ComponentPro
 					</div>
 
 					{!manages && board.status === "listed" && <BookPanel board={board} taken={taken} canBook={canBook} error={actionData?.error} />}
+
+					<div className="panel space-y-2 p-2">
+						<SpotMap styleUrl={styleUrl} latitude={board.latitude} longitude={board.longitude} className="aspect-[16/10]" />
+						<Link prefetch="intent" to={`/map?at=${board.latitude},${board.longitude},15`} className="flex items-center gap-2 px-2 pb-1 text-sm font-semibold text-brand-700 hover:underline">
+							<MapIcon className="h-4 w-4" aria-hidden />
+							See boards nearby
+						</Link>
+					</div>
 
 					{manages && (
 						<div className="panel space-y-4 p-5 sm:p-6">

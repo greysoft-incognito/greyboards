@@ -9,6 +9,10 @@ export default [
 	route("reset-password", "routes/reset-password.tsx"),
 	route("verify-email", "routes/verify-email.tsx"),
 
+	// The board map, open to everyone.
+	route("map", "routes/map/index.tsx"),
+	route("map/data", "routes/map/data.ts"),
+
 	// Signed-in area with the app header.
 	layout("routes/app-layout.tsx", [
 		route("dashboard", "routes/dashboard.tsx"),

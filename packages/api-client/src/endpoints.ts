@@ -21,6 +21,8 @@ import type {
   BoardOwnerChoice,
   BoardPhoto,
   BoardPhotoLocation,
+  BoardPinSearch,
+  BoardPinsResponse,
   BoardReview,
   BoardSearch,
   BoardStatus,
@@ -68,6 +70,8 @@ export function createEndpoints(alova: GreyboardsAlova) {
     boardKinds: () => alova.Get<ApiResponse<BoardKindDefinition[]>>('/board-kinds'),
     /** Listed boards inside the map's bounds, or near a point with the nearest first. Works signed out. */
     boards: (params: BoardSearch = {}) => alova.Get<PaginatedResponse<Board>>('/boards', { params, cacheFor: null }),
+    /** Every listed board in the map's view as a light pin, up to a few hundred. Works signed out. */
+    boardPins: (params: BoardPinSearch) => alova.Get<BoardPinsResponse>('/boards/pins', { params, cacheFor: null }),
     /** Days already booked on a board, for its calendar. */
     boardAvailability: (id: ID, params: { from?: string; to?: string } = {}) => alova.Get<ApiResponse<BookedDays[]>>(`/boards/${id}/availability`, { params, cacheFor: null }),
     /** Hold dates on a board while the advertiser pays. */

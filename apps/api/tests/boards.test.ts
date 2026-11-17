@@ -96,6 +96,33 @@ describe('Boards', () => {
     expect(found.distanceM).toBeLessThan(1100)
     expect(far.body.data.map((board: { id: string }) => board.id)).not.toContain(id)
 
+    const box = `west=${lng - 0.001}&south=${lat - 0.001}&east=${lng + 0.001}&north=${lat + 0.001}`
+    const pins = await api('get', `/boards/pins?${box}`, undefined, null)
+    const ids = async (query: string) => (await api('get', `/boards/pins?${box}&${query}`, undefined, null)).body.data.map((pin: { id: string }) => pin.id)
+
+    expect(pins.status).toBe(200)
+    expect(pins.body.meta).toMatchObject({ truncated: false, max: 500 })
+    const pin = pins.body.data.find((entry: { id: string }) => entry.id === id)
+
+    expect(pin.latitude).toBeCloseTo(lat, 9)
+    expect(pin.longitude).toBeCloseTo(lng, 9)
+    expect(pin).toEqual({
+      id,
+      name: 'Admiralty Way, by the roundabout',
+      kind: 'billboard',
+      latitude: pin.latitude,
+      longitude: pin.longitude,
+      lit: false,
+      rateMinor: 85_000_000,
+      currency: 'NGN',
+      ratePeriod: 'month',
+    })
+    expect(await ids('kind=billboard&lit=false&maxRateMinor=85000000')).toContain(id)
+    expect(await ids('kind=unipole')).not.toContain(id)
+    expect(await ids('lit=true')).not.toContain(id)
+    expect(await ids('maxRateMinor=84999999')).not.toContain(id)
+    expect((await api('get', '/boards/pins?west=3', undefined, null)).status).toBe(422)
+
     const shown = await api('get', `/boards/${id}`, undefined, null)
 
     expect(shown.body.data).toMatchObject({ id, status: 'listed' })
