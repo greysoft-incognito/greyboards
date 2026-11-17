@@ -1,8 +1,8 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { app } from '../src/core/bootstrap'
-import { execFileSync } from 'node:child_process'
 import request from 'parasito'
+import { ark } from './support/ark'
 
 const tokens: Record<string, string> = {}
 
@@ -26,7 +26,6 @@ const upload = (path: string, field: string, as: string, fields: Record<string, 
   return request(app).post(`/api${path}`).set({ Accept: 'application/json', Authorization: `Bearer ${tokens[as]}` }).send(form)
 }
 
-const ark = (...args: string[]) => execFileSync('npx', ['ark', ...args], { cwd: process.cwd(), encoding: 'utf8' })
 
 describe('Payouts', () => {
   const latitude = 7.4 + Math.random() / 100

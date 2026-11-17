@@ -1,8 +1,8 @@
 import { beforeAll, describe, expect, it } from 'vitest'
 
 import { app } from '../src/core/bootstrap'
-import { execFileSync } from 'node:child_process'
 import request from 'parasito'
+import { ark } from './support/ark'
 
 const tokens: Record<string, string> = {}
 
@@ -16,7 +16,7 @@ const api = (method: 'get' | 'post' | 'put' | 'delete', path: string, body?: Rec
 
 describe('Pages and policies', () => {
   beforeAll(async () => {
-    execFileSync('npx', ['ark', 'seed', 'DocumentSeeder'], { cwd: process.cwd(), encoding: 'utf8' })
+    ark('seed', 'DocumentSeeder')
 
     for (const who of ['admin', 'member']) {
       const email = `documents-${who}-${Date.now()}@greyboards.test`
@@ -24,7 +24,7 @@ describe('Pages and policies', () => {
 
       tokens[who] = register.body.data.token
 
-      if (who === 'admin') execFileSync('npx', ['ark', 'users:role', email, 'admin'], { cwd: process.cwd(), encoding: 'utf8' })
+      if (who === 'admin') ark('users:role', email, 'admin')
     }
   }, 60_000)
 
