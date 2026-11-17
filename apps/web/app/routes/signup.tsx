@@ -90,7 +90,7 @@ export default function SignUp({ loaderData, actionData }: Route.ComponentProps)
 								return (
 									<label
 										key={definition.kind}
-										className="flex cursor-pointer items-start gap-3 rounded-xl border-[1.5px] border-surface-200 px-3.5 py-3 transition hover:border-ink-500 has-[:checked]:border-brand-500 has-[:checked]:bg-brand-50"
+										className="flex cursor-pointer items-start gap-3 rounded-2xl border-[1.5px] border-transparent bg-canvas px-3.5 py-3 transition hover:bg-surface-100 has-[:checked]:border-brand-500 has-[:checked]:bg-brand-50 has-[:checked]:shadow-[0_0_0_4px_rgba(131,59,75,0.1)]"
 									>
 										<input type="checkbox" name="roles" value={definition.kind} defaultChecked={definition.kind === "advertiser"} className="mt-1 accent-brand-500" />
 										<Icon className="mt-0.5 h-5 w-5 shrink-0 text-brand-600" aria-hidden />

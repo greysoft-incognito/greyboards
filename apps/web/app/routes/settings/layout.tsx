@@ -14,7 +14,7 @@ export default function SettingsLayout() {
 		<main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
 			<div className="gap-10 md:grid md:grid-cols-[15rem_1fr]">
 				<aside className="hidden md:block">
-					<Link prefetch="intent" to="/settings" className="font-display font-bold tracking-tight text-3xl text-ink-900 hover:text-brand-800">
+					<Link prefetch="intent" to="/settings" className="font-display text-3xl font-extrabold tracking-[-0.03em] text-ink-900 hover:text-brand-800">
 						Settings
 					</Link>
 					<nav className="mt-8 space-y-7" aria-label="Settings">
@@ -27,9 +27,9 @@ export default function SettingsLayout() {
 											<NavLink prefetch="intent"
 												to={page.to}
 												className={({ isActive }) =>
-													`block rounded-lg px-3 py-2 text-sm transition ${
+													`block rounded-xl px-3 py-2.5 text-sm transition ${
 														isActive
-															? "bg-brand-600 font-semibold text-white"
+															? "bg-brand-50 font-semibold text-brand-700"
 															: "danger" in page
 																? "text-red-700 hover:bg-red-50"
 																: "text-ink-700 hover:bg-surface-200/70"

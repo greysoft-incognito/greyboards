@@ -25,7 +25,12 @@ const STATUS_STYLES: Record<AccountRoleStatus, string> = {
 
 /** Where a role's review stands, as a small badge. */
 export function RoleStatus({ status }: { status: AccountRoleStatus }) {
-	return <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${STATUS_STYLES[status]}`}>{STATUS_LABELS[status]}</span>;
+	return (
+		<span className={`inline-flex items-center gap-1.5 self-start rounded-full px-2.5 py-1 text-xs font-bold ${STATUS_STYLES[status]}`}>
+			<span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden />
+			{STATUS_LABELS[status]}
+		</span>
+	);
 }
 
 /** The role the account holds of `kind`, if any. */

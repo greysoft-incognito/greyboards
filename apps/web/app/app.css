@@ -63,19 +63,20 @@
 		display: flex;
 		align-items: center;
 		width: 100%;
-		border: 1.5px solid var(--color-surface-300);
-		border-radius: 0.625rem;
-		background: var(--color-surface-50);
+		border: 1.5px solid transparent;
+		border-radius: 0.875rem;
+		background: var(--color-canvas);
 		color: var(--color-ink-900);
 		transition: border-color 150ms, background-color 150ms, box-shadow 150ms;
 
 		&:hover {
-			border-color: var(--color-ink-500);
+			background: var(--color-surface-100);
 		}
 
 		&:focus-within {
-			border-color: var(--color-brand-600);
-			box-shadow: inset 0 0 0 1px var(--color-brand-600);
+			border-color: var(--color-brand-500);
+			background: var(--color-surface-50);
+			box-shadow: 0 0 0 4px rgb(131 59 75 / 0.12);
 		}
 
 		&:has([aria-invalid="true"]),
@@ -111,11 +112,30 @@
 		white-space: nowrap;
 	}
 
-	/* A flat container with a firm border. */
+	/* A white card resting on a soft shadow. */
 	.panel {
-		border: 1.5px solid var(--color-surface-200);
-		border-radius: 1rem;
+		border: 1px solid var(--color-surface-100);
+		border-radius: 1.5rem;
 		background: var(--color-surface-50);
+		box-shadow: 0 1px 2px rgb(30 31 34 / 0.05), 0 8px 24px rgb(30 31 34 / 0.05);
+	}
+
+	/* Frosted glass that floats over a map or scene. */
+	.glass {
+		border: 1px solid rgb(255 255 255 / 0.9);
+		background: rgb(255 255 255 / 0.86);
+		box-shadow: 0 1px 2px rgb(30 31 34 / 0.06), 0 10px 30px rgb(30 31 34 / 0.08);
+		backdrop-filter: blur(14px);
+		-webkit-backdrop-filter: blur(14px);
+	}
+
+	/* A card that lifts a little under the pointer. */
+	.lift {
+		transition: transform 160ms ease, box-shadow 160ms ease;
+	}
+	.lift:hover {
+		transform: translateY(-2px);
+		box-shadow: 0 14px 30px rgb(30 31 34 / 0.12);
 	}
 
 	/* Markdown pages and policies. */
@@ -186,9 +206,9 @@
 	}
 }
 
-/* The wine sweep behind brand panels. */
+/* The wine glow behind brand panels, from a lit corner into ink. */
 .bg-brand-sweep {
-	background-image: linear-gradient(120deg, var(--color-brand-700), var(--color-brand-500));
+	background-image: radial-gradient(120% 140% at 100% 0%, var(--color-brand-400) 0%, var(--color-brand-700) 45%, var(--color-ink-900) 100%);
 }
 
 /* Images fade in as they load. */
