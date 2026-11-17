@@ -179,6 +179,39 @@ export interface BoardSearch extends PageQuery {
   lng?: number
   radiusKm?: number
   kind?: BoardKind
+  lit?: boolean
+  /** Highest rate, in minor units. Boards without a rate are left out. */
+  maxRateMinor?: number
+}
+
+/** The map's visible area, in degrees. */
+export interface MapBounds {
+  west: number
+  south: number
+  east: number
+  north: number
+}
+
+/** What narrows the map down. */
+export type BoardPinSearch = MapBounds & Pick<BoardSearch, 'kind' | 'lit' | 'maxRateMinor'>
+
+/** A listed board as a point on the map. */
+export interface BoardPin {
+  id: ID
+  name: string
+  kind: BoardKind
+  latitude: number
+  longitude: number
+  lit: boolean
+  rateMinor: number | null
+  currency: string
+  ratePeriod: BoardRatePeriod
+}
+
+/** Pins for one view of the map. `truncated` means there were more than `max`, so zoom in. */
+export interface BoardPinsResponse {
+  data: BoardPin[]
+  meta: { truncated: boolean; max: number }
 }
 
 /** Where the phone was when a board photo was taken. */

@@ -6,11 +6,11 @@ import type {
   AdminAccountRole,
   AdminAccountRoleQuery,
   AdminBoard,
-  AgreementOffer,
   AdminOverview,
   AdminUser,
   AdminUserDetail,
   AdminUserQuery,
+  AgreementOffer,
   ApiResponse,
   AppLimits,
   Board,
@@ -21,6 +21,8 @@ import type {
   BoardOwnerChoice,
   BoardPhoto,
   BoardPhotoLocation,
+  BoardPinSearch,
+  BoardPinsResponse,
   BoardReview,
   BoardSearch,
   BoardStatus,
@@ -63,6 +65,8 @@ export function createEndpoints(alova: GreyboardsAlova) {
     boardKinds: () => alova.Get<ApiResponse<BoardKindDefinition[]>>('/board-kinds'),
     /** Listed boards inside the map's bounds, or near a point with the nearest first. Works signed out. */
     boards: (params: BoardSearch = {}) => alova.Get<PaginatedResponse<Board>>('/boards', { params, cacheFor: null }),
+    /** Every listed board in the map's view as a light pin, up to a few hundred. Works signed out. */
+    boardPins: (params: BoardPinSearch) => alova.Get<BoardPinsResponse>('/boards/pins', { params, cacheFor: null }),
     /** A board and its photos. Unlisted boards show only to their owner, tagger and reviewers. */
     board: (id: ID) => alova.Get<ApiResponse<BoardDetail>>(`/boards/${id}`, { cacheFor: null }),
 
