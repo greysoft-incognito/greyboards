@@ -26,3 +26,38 @@ export interface PaymentGateway {
   initialize(request: PaymentRequest): Promise<{ url: string }>
   verify(reference: string): Promise<PaymentResult>
 }
+
+/** A bank money can be sent to. */
+export interface Bank {
+  code: string
+  name: string
+}
+
+/** A transfer out to someone's bank account. `amount` is in major units. */
+export interface TransferRequest {
+  reference: string
+  amount: number
+  currency: string
+  bankCode: string
+  accountNumber: string
+  narration: string
+}
+
+/** Where a transfer stands. `final` is false while the provider is still sending it. */
+export interface TransferResult {
+  paid: boolean
+  final: boolean
+  reason: string | null
+  raw: Record<string, unknown>
+}
+
+/** A provider that can pay people out to their bank accounts. */
+export interface PayoutGateway {
+  readonly key: string
+  enabled(): boolean
+  banks(country: string): Promise<Bank[]>
+  /** The name on an account, or null when the bank doesn't know it. */
+  accountName(bankCode: string, accountNumber: string): Promise<string | null>
+  transfer(request: TransferRequest): Promise<TransferResult>
+  transferStatus(reference: string): Promise<TransferResult>
+}

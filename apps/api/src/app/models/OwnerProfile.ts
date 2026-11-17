@@ -124,6 +124,14 @@ export class OwnerProfile extends Model {
     return !!user && this.userId === user.id
   }
 
+  /**
+   * Whether `user` sets where this owner is paid: the owner once they've claimed the profile,
+   * else the scout who made it and runs the boards for them.
+   */
+  takesPayoutsFor(user: User): boolean {
+    return this.userId ? this.userId === user.id : this.createdById === user.id
+  }
+
   /** The number with most digits hidden, for people who don't manage the profile. */
   maskedPhone(): string | null {
     return this.phone ? Sms.mask(this.phone) : null

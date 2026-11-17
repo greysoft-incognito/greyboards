@@ -22,6 +22,12 @@ Schedule.command('bookings:settle')
   .withoutOverlapping()
   .onOneServer()
 
+// Send owners, scouts and billposters what they're owed, and check transfers still on their way.
+Schedule.command('payouts:send')
+  .everyThirtyMinutes()
+  .withoutOverlapping()
+  .onOneServer()
+
 // Take back print jobs that missed their dates, and warn whoever looks after a board when nobody took its job.
 Schedule.command('print-jobs:check')
   .hourly()

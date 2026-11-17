@@ -1,9 +1,9 @@
-import type { PaymentGateway, PaymentRequest, PaymentResult } from './PaymentGateway'
+import type { Bank, PaymentGateway, PaymentRequest, PaymentResult, PayoutGateway, TransferRequest, TransferResult } from './PaymentGateway'
 import { ValidationException } from 'kanun'
 import { timingSafeEqual } from 'node:crypto'
 
-/** Takes payments through Flutterwave's hosted checkout. */
-export class Flutterwave implements PaymentGateway {
+/** Takes payments through Flutterwave's hosted checkout, and pays people out by bank transfer. */
+export class Flutterwave implements PaymentGateway, PayoutGateway {
   readonly key = 'flutterwave'
 
   enabled(): boolean {
@@ -51,6 +51,64 @@ export class Flutterwave implements PaymentGateway {
       currency: data.currency ? String(data.currency).toUpperCase() : null,
       raw: data,
     }
+  }
+
+  async banks(country: string): Promise<Bank[]> {
+    const response = await this.send(`/banks/${encodeURIComponent(country.toUpperCase())}`).catch(() => ({ ok: false, body: {} as Record<string, unknown> }))
+    const rows = (response.ok ? (response.body.data ?? []) : []) as { code?: string; name?: string }[]
+
+    return rows.filter((row) => row.code && row.name).map((row) => ({ code: String(row.code), name: String(row.name) }))
+  }
+
+  async accountName(bankCode: string, accountNumber: string): Promise<string | null> {
+    const response = await this.send('/accounts/resolve', { method: 'POST', body: JSON.stringify({ account_bank: bankCode, account_number: accountNumber }) }).catch(() => null)
+    const name = (response?.body.data as { account_name?: string } | undefined)?.account_name
+
+    return response?.ok && name ? String(name) : null
+  }
+
+  async transfer(request: TransferRequest): Promise<TransferResult> {
+    const response = await this.send('/transfers', {
+      method: 'POST',
+      body: JSON.stringify({
+        account_bank: request.bankCode,
+        account_number: request.accountNumber,
+        amount: request.amount,
+        currency: request.currency,
+        narration: request.narration,
+        reference: request.reference,
+        debit_currency: request.currency,
+      }),
+    }).catch((error: Error) => ({ ok: false, body: { message: error.message } as Record<string, unknown> }))
+
+    // Queued transfers finish later; a refused one is final.
+    if (!response.ok) return { paid: false, final: true, reason: Flutterwave.transferMessage(response.body), raw: response.body }
+
+    return Flutterwave.transferResult((response.body.data ?? {}) as Record<string, unknown>)
+  }
+
+  async transferStatus(reference: string): Promise<TransferResult> {
+    const response = await this.send(`/transfers?reference=${encodeURIComponent(reference)}`).catch(() => null)
+    const data = ((response?.body.data ?? []) as Record<string, unknown>[])[0]
+
+    if (!response?.ok || !data) return { paid: false, final: false, reason: null, raw: response?.body ?? {} }
+
+    return Flutterwave.transferResult(data)
+  }
+
+  private static transferResult(data: Record<string, unknown>): TransferResult {
+    const status = String(data.status ?? '').toUpperCase()
+
+    return {
+      paid: status === 'SUCCESSFUL',
+      final: status === 'SUCCESSFUL' || status === 'FAILED',
+      reason: status === 'FAILED' ? String(data.complete_message || 'The transfer failed.') : null,
+      raw: data,
+    }
+  }
+
+  private static transferMessage(body: Record<string, unknown>): string {
+    return String(body.message || 'Flutterwave could not send this transfer.')
   }
 
   /** Flutterwave signs webhooks by sending back the secret hash set in its dashboard. */
