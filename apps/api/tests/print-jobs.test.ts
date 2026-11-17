@@ -1,9 +1,9 @@
 import { beforeAll, describe, expect, it } from 'vitest'
 
 import { app } from '../src/core/bootstrap'
-import { execFileSync } from 'node:child_process'
 import request from 'parasito'
 import { passChecks } from './support/partner'
+import { ark } from './support/ark'
 
 const tokens: Record<string, string> = {}
 
@@ -25,7 +25,7 @@ const upload = (path: string, field: string, as: string) => {
   return request(app).post(`/api${path}`).set({ Accept: 'application/json', Authorization: `Bearer ${tokens[as]}` }).send(form)
 }
 
-const sql = (statement: string) => execFileSync('npx', ['ark', 'db', statement], { cwd: process.cwd(), encoding: 'utf8' })
+const sql = (statement: string) => ark('db', statement)
 
 describe('Artwork and print jobs', () => {
   const latitude = 4.8 + Math.random() / 100
@@ -41,7 +41,7 @@ describe('Artwork and print jobs', () => {
 
       tokens[who] = register.body.data.token
 
-      if (who === 'reviewer') execFileSync('npx', ['ark', 'users:role', email, 'reviewer'], { cwd: process.cwd(), encoding: 'utf8' })
+      if (who === 'reviewer') ark('users:role', email, 'reviewer')
     }
 
     for (const who of ['poster', 'rival']) {
