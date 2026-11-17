@@ -7,6 +7,7 @@ import BoardController from 'src/app/http/controllers/BoardController'
 import BookingController from 'src/app/http/controllers/BookingController'
 import PaymentController from 'src/app/http/controllers/PaymentController'
 import PrintJobController from 'src/app/http/controllers/PrintJobController'
+import ProofController from 'src/app/http/controllers/ProofController'
 import OwnerProfileController from 'src/app/http/controllers/OwnerProfileController'
 import SessionController from 'src/app/http/controllers/SessionController'
 import TwoFactorController from 'src/app/http/controllers/TwoFactorController'
@@ -116,6 +117,13 @@ Router.post('/bookings/:booking/checkout', [BookingController, 'checkout'], [aut
 Router.post('/bookings/:booking/cancel', [BookingController, 'cancel'], [auth])
 Router.post('/bookings/:booking/artwork', [BookingController, 'uploadArtwork'], [auth, limiter(20, 60)])
 Router.post('/bookings/:booking/artwork/review', [BookingController, 'reviewArtwork'], [auth])
+
+// Proof the ad is up: geotagged photos from the billposter, checked by the advertiser, release the money.
+Router.post('/bookings/:booking/proofs', [ProofController, 'store'], [auth, limiter(30, 60)])
+Router.delete('/bookings/:booking/proofs/:proof', [ProofController, 'destroy'], [auth])
+Router.post('/bookings/:booking/proof/submit', [ProofController, 'submit'], [auth])
+Router.post('/bookings/:booking/proof/accept', [ProofController, 'accept'], [auth])
+Router.post('/bookings/:booking/proof/dispute', [ProofController, 'dispute'], [auth])
 
 // Billposters print approved artwork and put it up. A reserved job is theirs alone for a few hours.
 Router.get('/print-jobs', [PrintJobController, 'index'], [auth, Authorize.actingAs('billposter'), limiter(120, 60)])

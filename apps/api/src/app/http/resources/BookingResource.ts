@@ -1,6 +1,9 @@
 import type { Booking } from '@app/models/Booking'
 import type { Board } from '@app/models/Board'
 import { PrintJob } from '@app/models/PrintJob'
+import type { User } from '@app/models/User'
+import { BookingPolicy } from '@app/policies/BookingPolicy'
+import { ProofSummary } from './ProofSummary'
 import { Day } from '@app/support/Day'
 import { Resource } from 'resora'
 import { BoardResource } from './BoardResource'
@@ -16,7 +19,7 @@ export class BookingResource extends Resource {
 
   private detailed = false
 
-  private reviewer = false
+  private viewer: User | null = null
 
   /** The booked board, when the caller already loaded it. */
   onBoard(board: Board | null): this {
@@ -32,16 +35,18 @@ export class BookingResource extends Resource {
     return this
   }
 
-  /** Add the artwork and the print job, for the booking's own page. `reviewer` looks after the board and checks the artwork. */
-  withDetails(reviewer = false): this {
+  /** Add the artwork, the print job and the proof, with what `viewer` can do to each, for the booking's own page. */
+  withDetails(viewer: User): this {
     this.detailed = true
-    this.reviewer = reviewer
+    this.viewer = viewer
 
     return this
   }
 
   private async details(booking: Booking) {
+    const viewer = this.viewer!
     const job = await PrintJob.query().where({ bookingId: booking.id }).first()
+    const manages = await BookingPolicy.managesBoard(viewer, booking)
 
     return {
       artwork: {
@@ -51,9 +56,10 @@ export class BookingResource extends Resource {
         height: booking.artworkHeight,
         note: booking.artworkNote,
         reviewedAt: booking.artworkReviewedAt,
-        canReview: this.reviewer && booking.artworkStatus === 'submitted',
+        canReview: manages && booking.artworkStatus === 'submitted',
       },
       printJob: job ? { id: job.id, status: job.displayStatus(), dueOn: Day.of(job.dueOn), printPhotoUrl: await job.printPhotoUrl() } : null,
+      proof: await new ProofSummary(booking).for(viewer).data(),
     }
   }
 
@@ -86,6 +92,7 @@ export class BookingResource extends Resource {
       board: board ? await new BoardResource(board).data() : null,
       ...(this.detailed ? await this.details(booking) : {}),
       paidAt: booking.paidAt,
+      releasedAt: booking.releasedAt,
       cancelledAt: booking.cancelledAt,
       createdAt: booking.createdAt,
     }
