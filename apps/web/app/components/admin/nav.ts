@@ -1,0 +1,12 @@
+import type { Permission } from "@greyboards/types";
+import { BadgeCheck, FileText, Gauge, KeyRound, type LucideIcon, SlidersHorizontal, Users } from "lucide-react";
+
+/** The admin sidebar, in order. Each page shows to roles holding any of its permissions. */
+export const ADMIN_PAGES: { to: string; label: string; icon: LucideIcon; permissions: Permission[]; end?: boolean }[] = [
+	{ to: "/admin", label: "Overview", icon: Gauge, permissions: ["dashboard.view"], end: true },
+	{ to: "/admin/users", label: "Users", icon: Users, permissions: ["users.view", "users.manage"] },
+	{ to: "/admin/applications", label: "Applications", icon: BadgeCheck, permissions: ["partners.review"] },
+	{ to: "/admin/pages", label: "Pages", icon: FileText, permissions: ["pages.manage"] },
+	{ to: "/admin/roles", label: "Roles", icon: KeyRound, permissions: ["roles.manage"] },
+	{ to: "/admin/configuration", label: "Configuration", icon: SlidersHorizontal, permissions: ["settings.manage"] },
+];
