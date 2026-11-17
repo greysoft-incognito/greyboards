@@ -22,6 +22,12 @@ Schedule.command('bookings:settle')
   .withoutOverlapping()
   .onOneServer()
 
+// Close auctions whose time ran out, pass wins nobody paid for to the next bid, and lapse unanswered offers.
+Schedule.command('bids:settle')
+  .everyMinute()
+  .withoutOverlapping()
+  .onOneServer()
+
 // Send owners, scouts and billposters what they're owed, and check transfers still on their way.
 Schedule.command('payouts:send')
   .everyThirtyMinutes()

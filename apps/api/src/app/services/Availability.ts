@@ -1,5 +1,7 @@
 import { abortIf } from '@arkstack/common'
+import { Auction } from '@app/models/Auction'
 import { AvailabilityBlock } from '@app/models/AvailabilityBlock'
+import type { BoardFace } from '@app/models/BoardFace'
 import type { Board } from '@app/models/Board'
 import { Booking } from '@app/models/Booking'
 import type { User } from '@app/models/User'
@@ -36,6 +38,7 @@ export class Availability {
       .exists()
 
     abortIf(booked, 'Some of those days are already booked. Pick days around the bookings.', 409)
+    abortIf(await Availability.biddingOn(board, face, input.startsOn, input.endsOn), 'Some of those days are open for bids. Pick days around them.', 409)
 
     return AvailabilityBlock.query().create({
       boardId: board.id,
@@ -45,5 +48,15 @@ export class Availability {
       note: input.note?.trim() || null,
       createdById: user.id,
     })
+  }
+
+  /** Whether bidding covers any of the days, on the face or any face when blocking the whole board. */
+  private static biddingOn(board: Board, face: BoardFace | null, from: string, to: string): Promise<boolean> {
+    return Auction.query()
+      .where({ boardId: board.id })
+      .whereIn('status', Auction.TAKING)
+      .whereRaw('ends_on >= ? and starts_on <= ?', [from, to])
+      .when(!!face, (query) => query.where({ faceId: face!.id }))
+      .exists()
   }
 }

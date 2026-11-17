@@ -91,6 +91,7 @@ export class BookingResource extends Resource {
       amountMinor: booking.amountMinor,
       printFeeMinor: booking.printFeeMinor,
       printedBy: booking.printedBy,
+      source: booking.source ?? 'book',
       currency: booking.currency,
       holdSecondsLeft: booking.secondsLeft(),
       advertiserId: booking.advertiserId,

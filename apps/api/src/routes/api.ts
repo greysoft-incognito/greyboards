@@ -4,6 +4,8 @@ import AccountBoardController from 'src/app/http/controllers/AccountBoardControl
 import AgreementController from 'src/app/http/controllers/AgreementController'
 import AuthController from 'src/app/http/controllers/AuthController'
 import BoardController from 'src/app/http/controllers/BoardController'
+import AuctionController from 'src/app/http/controllers/AuctionController'
+import OfferController from 'src/app/http/controllers/OfferController'
 import BookingController from 'src/app/http/controllers/BookingController'
 import PaymentController from 'src/app/http/controllers/PaymentController'
 import PrintJobController from 'src/app/http/controllers/PrintJobController'
@@ -126,6 +128,21 @@ Router.post('/bookings/:booking/checkout', [BookingController, 'checkout'], [aut
 Router.post('/bookings/:booking/cancel', [BookingController, 'cancel'], [auth])
 Router.post('/bookings/:booking/artwork', [BookingController, 'uploadArtwork'], [auth, limiter(20, 60)])
 Router.post('/bookings/:booking/artwork/review', [BookingController, 'reviewArtwork'], [auth])
+
+// Bids and offers. A won bid or accepted offer becomes a booking held while the advertiser pays.
+Router.get('/boards/:board/auctions', [AuctionController, 'index'], [limiter(120, 60)])
+Router.get('/auctions/:auction', [AuctionController, 'show'], [limiter(240, 60)])
+Router.post('/account/boards/:board/auctions', [AuctionController, 'create'], [auth, limiter(20, 60)])
+Router.post('/auctions/:auction/bids', [AuctionController, 'bid'], [auth, Authorize.actingAs('advertiser'), limiter(30, 60)])
+Router.post('/auctions/:auction/cancel', [AuctionController, 'cancel'], [auth])
+Router.get('/account/bids', [AuctionController, 'mine'], [auth])
+Router.post('/boards/:board/offers', [OfferController, 'create'], [auth, Authorize.actingAs('advertiser'), limiter(20, 60)])
+Router.get('/account/offers', [OfferController, 'index'], [auth])
+Router.get('/account/board-offers', [OfferController, 'onMyBoards'], [auth])
+Router.post('/offers/:offer/accept', [OfferController, 'accept'], [auth, limiter(20, 60)])
+Router.post('/offers/:offer/decline', [OfferController, 'decline'], [auth])
+Router.post('/offers/:offer/counter', [OfferController, 'counter'], [auth, limiter(20, 60)])
+Router.post('/offers/:offer/withdraw', [OfferController, 'withdraw'], [auth])
 
 // Proof the ad is up: geotagged photos from the billposter, checked by the advertiser, release the money.
 Router.post('/bookings/:booking/proofs', [ProofController, 'store'], [auth, limiter(30, 60)])
