@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Link, NavLink, useLocation } from "react-router";
-import { LayoutDashboard, type LucideIcon, Presentation } from "lucide-react";
+import { CalendarCheck, LayoutDashboard, type LucideIcon, Presentation } from "lucide-react";
 import type { AccountRoleKind, User } from "@greyboards/types";
 import { Logo, buttonClass } from "~/components/ui";
 import { AccountMenu } from "~/components/AccountMenu";
@@ -12,6 +12,7 @@ const tab = ({ isActive }: { isActive: boolean }) =>
 const AREAS: { to: string; label: string; icon: LucideIcon; roles?: AccountRoleKind[] }[] = [
 	{ to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
 	{ to: "/boards", label: "Boards", icon: Presentation, roles: ["owner", "scout"] },
+	{ to: "/bookings", label: "Bookings", icon: CalendarCheck },
 ];
 
 /** The top bar. Signed-in people get their areas, on a row of their own on phones; visitors get a way in. Its height is kept in `--header-height` for content that sticks below it. */

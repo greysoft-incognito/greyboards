@@ -3,6 +3,7 @@ import { Form, Link, redirect, useNavigation, useSearchParams, useSubmit } from 
 import { ArrowLeft, BadgeCheck, Camera, Compass, ExternalLink, FileSignature, Layers, Lightbulb, MapPin, Pencil, Phone, Ruler, Send, Trash2, User, X } from "lucide-react";
 import type { BoardAgreement, BoardDetail, BoardPhoto, OwnerProfile } from "@greyboards/types";
 import { BoardCover, BoardStatusBadge, formatRate, formatSize, mapLink } from "~/components/boards/BoardBits";
+import { BookPanel } from "~/components/bookings/BookPanel";
 import { Alert, Button, buttonClass, Spinner } from "~/components/ui";
 import { formError } from "~/lib/api.server";
 import { photoLocation, postedPhoto } from "~/lib/boards.server";
@@ -15,8 +16,11 @@ export const meta = ({ loaderData }: Route.MetaArgs) => [{ title: `${loaderData?
 export async function loader({ request, context, params }: Route.LoaderArgs) {
 	const { api, user } = await requireUser(request, context);
 	const { data: board } = await api.board(params.id);
+	const manages = board.owner?.userId === user.id || board.taggedById === user.id;
+	const taken = board.booking.open && !manages ? await api.boardAvailability(board.id).then(({ data }) => data, () => []) : [];
+	const canBook = user.accountRoles.some((role) => role.kind === "advertiser" && role.status === "active");
 
-	return { board, manages: board.owner?.userId === user.id || board.taggedById === user.id };
+	return { board, manages, taken, canBook };
 }
 
 export async function action({ request, context, params }: Route.ActionArgs) {
@@ -25,6 +29,13 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 	const intent = String(form.get("intent"));
 
 	try {
+		if (intent === "book") {
+			const { data: booking } = await api.bookBoard(params.id, { startsOn: String(form.get("startsOn")), periods: Number(form.get("periods")) });
+			const { data: payment } = await api.checkout(booking.id).catch(() => ({ data: null }));
+
+			throw redirect(payment?.checkoutUrl ?? `/bookings/${booking.id}`);
+		}
+
 		if (intent === "add-photo") {
 			const photo = postedPhoto(form);
 
@@ -72,7 +83,7 @@ const REVIEW_NOTES: Record<BoardDetail["status"], string> = {
 export default function BoardPage({ loaderData, actionData }: Route.ComponentProps) {
 	useToastMessage(actionData);
 
-	const { board, manages } = loaderData;
+	const { board, manages, taken, canBook } = loaderData;
 	const [params] = useSearchParams();
 	const [shown, setShown] = useState<BoardPhoto | null>(board.photos[0] ?? null);
 	const rate = formatRate(board.rate);
@@ -148,6 +159,8 @@ export default function BoardPage({ loaderData, actionData }: Route.ComponentPro
 						</ul>
 						{board.description && <p className="border-t border-surface-200 pt-4 text-sm whitespace-pre-line text-ink-700">{board.description}</p>}
 					</div>
+
+					{!manages && board.status === "listed" && <BookPanel board={board} taken={taken} canBook={canBook} error={actionData?.error} />}
 
 					{manages && (
 						<div className="panel space-y-4 p-5 sm:p-6">
