@@ -1,8 +1,8 @@
 import { beforeAll, describe, expect, it } from 'vitest'
 
 import { app } from '../src/core/bootstrap'
-import { execFileSync } from 'node:child_process'
 import request from 'parasito'
+import { ark } from './support/ark'
 
 const tokens: Record<string, string> = {}
 
@@ -14,7 +14,6 @@ const api = (method: 'get' | 'post' | 'put', path: string, body?: Record<string,
   return body ? call.send(body) : call
 }
 
-const ark = (...args: string[]) => execFileSync('npx', ['ark', ...args], { cwd: process.cwd(), encoding: 'utf8' })
 
 const ledger = (bookingId: string) =>
   ark('db', `select account || ' ' || kind || ' ' || amount_minor as line from ledger_entries where booking_id = '${bookingId}' order by \"createdAt\", account`)

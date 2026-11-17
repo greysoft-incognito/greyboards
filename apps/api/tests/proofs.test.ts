@@ -1,9 +1,9 @@
 import { beforeAll, describe, expect, it } from 'vitest'
 
 import { app } from '../src/core/bootstrap'
-import { execFileSync } from 'node:child_process'
 import request from 'parasito'
 import { passChecks } from './support/partner'
+import { ark } from './support/ark'
 
 const tokens: Record<string, string> = {}
 
@@ -27,10 +27,10 @@ const upload = (path: string, field: string, as: string, fields: Record<string, 
   return request(app).post(`/api${path}`).set({ Accept: 'application/json', Authorization: `Bearer ${tokens[as]}` }).send(form)
 }
 
-const sql = (statement: string) => execFileSync('npx', ['ark', 'db', statement], { cwd: process.cwd(), encoding: 'utf8' })
+const sql = (statement: string) => ark('db', statement)
 
 
-const settle = () => execFileSync('npx', ['ark', 'bookings:settle'], { cwd: process.cwd(), encoding: 'utf8' })
+const settle = () => ark('bookings:settle')
 
 /** The ledger lines of a booking, as "account amount" rows. */
 const ledger = (bookingId: string) =>
@@ -70,7 +70,7 @@ describe('Proof of posting', () => {
 
       tokens[who] = register.body.data.token
 
-      if (who === 'reviewer') execFileSync('npx', ['ark', 'users:role', email, 'reviewer'], { cwd: process.cwd(), encoding: 'utf8' })
+      if (who === 'reviewer') ark('users:role', email, 'reviewer')
     }
 
     const role = (await api('get', '/account/roles', undefined, 'poster')).body.data[0]
