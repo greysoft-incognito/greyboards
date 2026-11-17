@@ -5,6 +5,7 @@ import AgreementController from 'src/app/http/controllers/AgreementController'
 import AuthController from 'src/app/http/controllers/AuthController'
 import BoardController from 'src/app/http/controllers/BoardController'
 import AuctionController from 'src/app/http/controllers/AuctionController'
+import ShareController from 'src/app/http/controllers/ShareController'
 import OfferController from 'src/app/http/controllers/OfferController'
 import BookingController from 'src/app/http/controllers/BookingController'
 import PaymentController from 'src/app/http/controllers/PaymentController'
@@ -143,6 +144,11 @@ Router.post('/offers/:offer/accept', [OfferController, 'accept'], [auth, limiter
 Router.post('/offers/:offer/decline', [OfferController, 'decline'], [auth])
 Router.post('/offers/:offer/counter', [OfferController, 'counter'], [auth, limiter(20, 60)])
 Router.post('/offers/:offer/withdraw', [OfferController, 'withdraw'], [auth])
+
+// Shared bookings: others join from the organiser's invite link and pay their own share.
+Router.get('/shares/:token', [ShareController, 'show'], [auth, limiter(60, 60)])
+Router.post('/shares/:token/claim', [ShareController, 'claim'], [auth, Authorize.actingAs('advertiser'), limiter(20, 60)])
+Router.post('/bookings/:booking/shares/cover', [ShareController, 'cover'], [auth, limiter(10, 60)])
 
 // Proof the ad is up: geotagged photos from the billposter, checked by the advertiser, release the money.
 Router.post('/bookings/:booking/proofs', [ProofController, 'store'], [auth, limiter(30, 60)])

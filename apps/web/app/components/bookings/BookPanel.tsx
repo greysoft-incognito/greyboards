@@ -15,6 +15,8 @@ export function BookPanel({ board, taken, canBook, error }: { board: BoardDetail
 	const intent = navigation.formData?.get("intent");
 	const busy = intent === "book" || intent === "offer";
 	const [offering, setOffering] = useState(false);
+	const [shares, setShares] = useState(1);
+	const splitting = shares > 1 && !offering;
 	const [faceId, setFaceId] = useState(board.rateCard[0]?.id ?? "");
 	const face = board.rateCard.find((candidate) => candidate.id === faceId) ?? board.rateCard[0];
 	const minPeriods = Math.min(face?.minPeriods ?? 1, board.booking.maxPeriods);
@@ -78,7 +80,15 @@ export function BookPanel({ board, taken, canBook, error }: { board: BoardDetail
 					<div className="grid grid-cols-2 gap-3">
 						<label className="text-sm font-semibold text-ink-700">
 							First day
-							<Input type="date" name="startsOn" required min={terms.earliestStart} defaultValue={terms.earliestStart} className="mt-1" />
+							<Input
+								key={splitting ? "shared" : "solo"}
+								type="date"
+								name="startsOn"
+								required
+								min={splitting ? terms.shares.earliestStart : terms.earliestStart}
+								defaultValue={splitting ? terms.shares.earliestStart : terms.earliestStart}
+								className="mt-1"
+							/>
 						</label>
 						<label className="text-sm font-semibold text-ink-700">
 							How long
@@ -92,6 +102,19 @@ export function BookPanel({ board, taken, canBook, error }: { board: BoardDetail
 							</Select>
 						</label>
 					</div>
+					{terms.shares.enabled && !offering && (
+						<label className="block text-sm font-semibold text-ink-700">
+							Split the cost
+							<Select name="shares" value={shares} onChange={(event) => setShares(Number(event.target.value))} className="mt-1">
+								<option value={1}>No, just me</option>
+								{Array.from({ length: terms.shares.max - 1 }, (_, index) => index + 2).map((count) => (
+									<option key={count} value={count}>
+										Between {count} advertisers
+									</option>
+								))}
+							</Select>
+						</label>
+					)}
 					<dl className="space-y-1.5 rounded-2xl bg-surface-100 px-4 py-3 text-sm">
 						<div className="flex justify-between gap-4">
 							<dt className="text-ink-700">
@@ -103,6 +126,12 @@ export function BookPanel({ board, taken, canBook, error }: { board: BoardDetail
 							<div className="flex justify-between gap-4">
 								<dt className="text-ink-700">{board.printsOwn ? "Printing and posting by the owner" : "Printing and posting"}</dt>
 								<dd className="text-ink-900 tabular-nums">{formatMoney(terms.printFeeMinor, rate.currency)}</dd>
+							</div>
+						)}
+						{splitting && (
+							<div className="flex justify-between gap-4">
+								<dt className="text-ink-700">Each share, about</dt>
+								<dd className="text-ink-900 tabular-nums">{formatMoney(Math.floor((rate.amountMinor * periods + terms.printFeeMinor) / shares), rate.currency)}</dd>
 							</div>
 						)}
 						<div className="flex items-baseline justify-between gap-4 border-t border-surface-200 pt-1.5">
@@ -123,7 +152,7 @@ export function BookPanel({ board, taken, canBook, error }: { board: BoardDetail
 					{error && <Alert>{error}</Alert>}
 					<Button type="submit" className="w-full" disabled={busy}>
 						{busy ? <Spinner /> : offering ? <HandCoins className="h-4 w-4" aria-hidden /> : <CalendarCheck className="h-4 w-4" aria-hidden />}
-						{offering ? (busy ? "Sending your offer" : "Send offer") : busy ? "Holding your dates" : "Hold dates and pay"}
+						{offering ? (busy ? "Sending your offer" : "Send offer") : busy ? "Holding your dates" : splitting ? "Hold dates and invite the others" : "Hold dates and pay"}
 					</Button>
 					<button type="button" onClick={() => setOffering((current) => !current)} className="w-full text-sm font-semibold text-brand-700 hover:underline">
 						{offering ? "Book at the listed price instead" : "Make an offer instead"}
@@ -132,7 +161,9 @@ export function BookPanel({ board, taken, canBook, error }: { board: BoardDetail
 						<ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-available" aria-hidden />
 						{offering
 							? "The owner can accept, decline or counter. If they accept, the dates are held for you to pay."
-							: "We hold your payment until there's a photo of your ad on the board. Your dates are held for a few minutes while you pay."}
+							: splitting
+								? `You get an invite link for each share. Everyone has ${terms.shares.payHours} hours to pay theirs, and you can cover any left unpaid.`
+								: "We hold your payment until there's a photo of your ad on the board. Your dates are held for a few minutes while you pay."}
 					</p>
 				</Form>
 			) : (

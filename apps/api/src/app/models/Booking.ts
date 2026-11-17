@@ -4,6 +4,7 @@ import type { QueryBuilder } from 'arkormx'
 import { BoardPolicy } from '@app/policies/BoardPolicy'
 import { Commissions } from '@app/services/Commissions'
 import { Refunds } from '@app/services/Refunds'
+import { Shares } from '@app/services/Shares'
 import { Payouts } from '@app/services/Payouts'
 import { Day } from '@app/support/Day'
 import { Money } from '@app/support/Money'
@@ -52,6 +53,7 @@ interface HoldTerms {
   rentMinor: number
   holdMinutes: number
   source: BookingSource
+  shared?: boolean
 }
 
 /** A run of days a booking takes on a board. */
@@ -93,6 +95,8 @@ export class Booking extends Model {
   /** Who prints and puts the ad up, fixed when it's booked. */
   declare printedBy: PrintedBy
   declare source: BookingSource
+  /** Split between advertisers, each paying a share. `advertiserId` is the organiser. */
+  declare shared: boolean
   declare artworkPath: string | null
   declare artworkDisk: string | null
   declare artworkWidth: number | null
@@ -191,8 +195,10 @@ export class Booking extends Model {
    * they pay. Holds that ran out are let go first; dates someone else holds or booked, the
    * owner blocked, or that are open for bids are refused.
    */
-  static async hold(board: Board, face: BoardFace, advertiser: User, startsOn: string, periods: number): Promise<Booking> {
+  static async hold(board: Board, face: BoardFace, advertiser: User, startsOn: string, periods: number, shares = 1): Promise<Booking> {
     const endsOn = await Booking.checkDates(board, face, advertiser, startsOn, periods)
+    const shared = shares > 1
+    const payHours = shared ? await Booking.checkShares(startsOn, shares) : 0
 
     await Booking.expireHolds()
 
@@ -201,8 +207,29 @@ export class Booking extends Model {
     abortIf(open >= Booking.MAX_HOLDS, 'Finish or cancel a checkout you started before booking another board.', 429)
 
     const rateMinor = board.rateFor(face)!
+    const holdMinutes = shared ? payHours * 60 : await Settings.number('bookings.hold_minutes')
+    const booking = await Booking.reserve(board, face, advertiser, { startsOn, endsOn, periods, rateMinor, rentMinor: rateMinor * periods, holdMinutes, source: 'book', shared })
 
-    return Booking.reserve(board, face, advertiser, { startsOn, endsOn, periods, rateMinor, rentMinor: rateMinor * periods, holdMinutes: await Settings.number('bookings.hold_minutes'), source: 'book' })
+    if (shared) await Shares.create(booking, advertiser, shares)
+
+    return booking
+  }
+
+  /**
+   * Whether a booking can be split `shares` ways: shared bookings are on, the count is
+   * within the most allowed, and there's time for everyone to pay before the notice
+   * period. Returns the hours everyone has to pay.
+   */
+  private static async checkShares(startsOn: string, shares: number): Promise<number> {
+    const maxShares = await Settings.number('shares.max_shares')
+    const payHours = await Settings.number('shares.pay_hours')
+    const earliest = Day.today((await Settings.number('bookings.lead_days')) + Math.ceil(payHours / 24))
+
+    abortIf(!(await Settings.get('shares.enabled')), 'Shared bookings aren’t available right now.', 422)
+    abortIf(shares > maxShares, `Split a booking between up to ${maxShares} advertisers.`, 422)
+    abortIf(startsOn < earliest, `A shared booking can start from ${earliest}, so everyone has time to pay before the artwork goes up.`, 422)
+
+    return payHours
   }
 
   /**
@@ -278,6 +305,7 @@ export class Booking extends Model {
         holdExpiresAt: new Date(Date.now() + terms.holdMinutes * 60_000),
         ownerProfileId: board.ownerProfileId,
         source: terms.source,
+        shared: !!terms.shared,
       })
     } catch (error) {
       abortIf(Booking.isOverlap(error), 'Someone else has some of those dates. Pick other dates.', 409)
@@ -382,9 +410,9 @@ export class Booking extends Model {
     return this.hasMany(LedgerEntry, 'bookingId')
   }
 
-  /** Bookings an advertiser made. */
+  /** Bookings an advertiser made, or holds a share of. */
   scopeMadeBy(query: QueryBuilder<Booking>, user: User): QueryBuilder<Booking> {
-    return query.where({ advertiserId: user.id })
+    return query.whereRaw('(advertiser_id = ? or (shared and id in (select booking_id from booking_shares where user_id = ?)))', [user.id, user.id])
   }
 
   /** Bookings on boards `user` tagged or owns. */
@@ -423,14 +451,34 @@ export class Booking extends Model {
     abortIf(this.status !== Booking.HELD, 'Only a booking that isn’t paid yet can be let go of here.', 422)
 
     await this.update({ status: Booking.CANCELLED, cancelledAt: new Date(), holdExpiresAt: null })
+
+    if (this.shared) await Shares.refundAll(this, 'The organiser let go of the shared booking')
   }
 
   /**
    * Record the advertiser's payment: the money goes into escrow and the split is fixed.
    * A payment that lands after its hold ran out still counts if the days are free; if
    * someone else took them meanwhile, the booking is cancelled and the money is owed back.
+   * A payment for shares of a shared booking goes through `Shares`.
    */
   async markPaid(payment: Payment): Promise<void> {
+    if (this.shared) return Shares.paid(this, payment)
+
+    if (!(await this.confirmPaid())) {
+      await this.record('refund', 'payment_refund_due', this.amountMinor, payment.reference, 'Paid after the hold ran out and the days were taken')
+      await Refunds.forPayment(this, payment, 'Paid after the hold ran out and the days were taken')
+
+      return
+    }
+
+    await this.record('escrow', 'payment_in', this.amountMinor, payment.reference, 'Held until the artwork is up')
+  }
+
+  /**
+   * All the money is in: the booking is paid, its split fixed, and the owner told. Returns
+   * false, cancelling it, when its hold ran out and someone else took the days meanwhile.
+   */
+  async confirmPaid(): Promise<boolean> {
     const board = await this.board().firstOrFail()
     const split = await Commissions.split(board, this.rentMinor())
     const paidAt = new Date()
@@ -441,14 +489,13 @@ export class Booking extends Model {
       if (!Booking.isOverlap(error)) throw error
 
       await this.update({ status: Booking.CANCELLED, cancelledAt: paidAt, holdExpiresAt: null })
-      await this.record('refund', 'payment_refund_due', this.amountMinor, payment.reference, 'Paid after the hold ran out and the days were taken')
-      await Refunds.forLatePayment(this, payment)
 
-      return
+      return false
     }
 
-    await this.record('escrow', 'payment_in', this.amountMinor, payment.reference, 'Held until the artwork is up')
     await this.tellOwner(board)
+
+    return true
   }
 
   /** The advertiser's artwork, for the owner to check. A new file replaces one not yet approved. */
@@ -574,9 +621,9 @@ export class Booking extends Model {
     return new Date(this.proofSubmittedAt.getTime() + (await Settings.number('proofs.accept_hours')) * 3_600_000)
   }
 
-  /** Add a line to this booking's ledger. */
-  private async record(account: LedgerEntry['account'], kind: string, amountMinor: number, reference: string | null, memo: string): Promise<void> {
-    await LedgerEntry.query().create({ bookingId: this.id, account, kind, amountMinor, currency: this.currency, reference, memo, userId: this.advertiserId })
+  /** Add a line to this booking's ledger, for the advertiser or, on a shared booking, whoever paid. */
+  async record(account: LedgerEntry['account'], kind: string, amountMinor: number, reference: string | null, memo: string, userId = this.advertiserId): Promise<void> {
+    await LedgerEntry.query().create({ bookingId: this.id, account, kind, amountMinor, currency: this.currency, reference, memo, userId })
   }
 
   /** Text the owner that the ad is up and their share is on its way. */

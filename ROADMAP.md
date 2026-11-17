@@ -25,7 +25,7 @@ What's built and what's left, following the phases in [docs/proposal.md](docs/pr
 ## Phase 2: Market mechanics
 
 - [x] Bids and offers
-- [ ] Shared (co-op) bookings
+- [x] Shared (co-op) bookings
 - [ ] Messages about a booking
 - [ ] Reviews
 - [ ] Disputes

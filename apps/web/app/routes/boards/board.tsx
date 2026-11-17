@@ -79,7 +79,11 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 
 		if (intent === "book") {
 			const faceId = String(form.get("faceId") ?? "") || undefined;
-			const { data: booking } = await api.bookBoard(params.id, { startsOn: String(form.get("startsOn")), periods: Number(form.get("periods")), faceId });
+			const shares = Number(form.get("shares") ?? 1) || 1;
+			const { data: booking } = await api.bookBoard(params.id, { startsOn: String(form.get("startsOn")), periods: Number(form.get("periods")), faceId, shares });
+
+			if (shares > 1) throw redirect(`/bookings/${booking.id}`);
+
 			const { data: payment } = await api.checkout(booking.id).catch(() => ({ data: null }));
 
 			throw redirect(payment?.checkoutUrl ?? `/bookings/${booking.id}`);

@@ -1,4 +1,5 @@
 import type {
+  ShareInvite,
   Auction,
   AuctionInput,
   Offer,
@@ -115,6 +116,12 @@ export function createEndpoints(alova: GreyboardsAlova) {
     /** Start paying for held dates. Send the payer to `checkoutUrl`. */
     checkout: (id: ID) => alova.Post<ApiResponse<Payment>>(`/bookings/${id}/checkout`),
     cancelBooking: (id: ID) => alova.Post<ApiResponse<Booking>>(`/bookings/${id}/cancel`),
+    /** What a shared booking's invite link offers. */
+    shareInvite: (token: string) => alova.Get<ApiResponse<ShareInvite>>(`/shares/${token}`, { cacheFor: null }),
+    /** Take the share from an invite link, to pay it. */
+    claimShare: (token: string) => alova.Post<ApiResponse<Booking>>(`/shares/${token}/claim`),
+    /** The organiser takes every unpaid share, to pay the rest themselves. */
+    coverShares: (id: ID) => alova.Post<ApiResponse<Booking>>(`/bookings/${id}/shares/cover`),
     /** A board's auctions: the running ones, and recent ones for whoever looks after it. */
     boardAuctions: (id: ID) => alova.Get<ApiResponse<Auction[]>>(`/boards/${id}/auctions`, { cacheFor: null }),
     auction: (id: ID) => alova.Get<ApiResponse<Auction>>(`/auctions/${id}`, { cacheFor: null }),

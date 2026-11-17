@@ -51,6 +51,7 @@ export class ManagedBoardResource extends BoardResource {
         earliestStart: Day.today(await Settings.number('bookings.lead_days')),
         maxPeriods: await Settings.number('bookings.max_periods'),
         printFeeMinor: await PrintJob.feeFor(board),
+        shares: await ManagedBoardResource.shareTerms(),
       },
       photos: await Promise.all(photos.map((photo) => new BoardPhotoResource(photo).of(this.showPrivate ? board : undefined).data())),
       ...(this.showPrivate
@@ -64,6 +65,18 @@ export class ManagedBoardResource extends BoardResource {
             blocks: await ManagedBoardResource.upcomingBlocks(board),
           }
         : {}),
+    }
+  }
+
+  /** Whether bookings can be split with others, between how many, and from when. */
+  private static async shareTerms() {
+    const payHours = await Settings.number('shares.pay_hours')
+
+    return {
+      enabled: !!(await Settings.get('shares.enabled')),
+      max: await Settings.number('shares.max_shares'),
+      earliestStart: Day.today((await Settings.number('bookings.lead_days')) + Math.ceil(payHours / 24)),
+      payHours,
     }
   }
 

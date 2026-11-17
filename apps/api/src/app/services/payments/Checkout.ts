@@ -1,5 +1,6 @@
 import { Booking } from '@app/models/Booking'
 import { Payment } from '@app/models/Payment'
+import { Shares } from '@app/services/Shares'
 import type { User } from '@app/models/User'
 import { abortIf } from '@arkstack/common'
 import { randomBytes } from 'node:crypto'
@@ -10,10 +11,16 @@ import type { PaymentGateway, PaymentResult } from './PaymentGateway'
 export class Checkout {
   constructor(readonly gateway: PaymentGateway = Gateways.current()) {}
 
-  /** A pending payment for `booking` and the checkout page to finish it on. */
+  /** A pending payment for `booking`, or on a shared booking for `user`'s unpaid shares, and the checkout page to finish it on. */
   async start(booking: Booking, user: User): Promise<{ payment: Payment; url: string }> {
     abortIf(!booking.isHeld(), 'The hold on these dates ran out. Book them again.', 422)
     abortIf(!this.gateway.enabled(), 'Payments are not available right now.', 503)
+
+    const due = booking.shared ? await Shares.due(booking, user) : null
+
+    abortIf(!!due && due.amountMinor <= 0, 'You have no share of this booking left to pay.', 422)
+
+    const amountMinor = due ? due.amountMinor : booking.amountMinor
 
     const board = await booking.board().firstOrFail()
     const { startsOn, endsOn } = booking.days()
@@ -23,11 +30,11 @@ export class Checkout {
     // Start with the provider first, so a failed start leaves no pending payment behind.
     const session = await this.gateway.initialize({
       reference,
-      amount: booking.amountMinor / 100,
+      amount: amountMinor / 100,
       currency: booking.currency,
       email: user.email,
       name: user.name,
-      title: `${board.name}, ${startsOn} to ${endsOn}`,
+      title: `${board.name}, ${startsOn} to ${endsOn}${due ? ', your share' : ''}`,
       returnUrl,
     })
     const payment = await Payment.query().create({
@@ -36,8 +43,9 @@ export class Checkout {
       reference,
       provider: this.gateway.key,
       status: 'pending',
-      amountMinor: booking.amountMinor,
+      amountMinor,
       currency: booking.currency,
+      shareIds: due ? due.shares.map((share) => share.id) : null,
     })
 
     return { payment, url: session.url }
