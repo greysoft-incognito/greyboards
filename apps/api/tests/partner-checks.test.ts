@@ -2,8 +2,8 @@ import { beforeAll, describe, expect, it } from 'vitest'
 
 import { app } from '../src/core/bootstrap'
 import { addBank, sendId } from './support/partner'
-import { execFileSync } from 'node:child_process'
 import request from 'parasito'
+import { ark } from './support/ark'
 
 const tokens: Record<string, string> = {}
 
@@ -25,7 +25,7 @@ describe('Partner checks and duplicate boards', { timeout: 30_000 }, () => {
 
       tokens[who] = register.body.data.token
 
-      if (who === 'admin') execFileSync('npx', ['ark', 'users:role', email, 'admin'], { cwd: process.cwd(), encoding: 'utf8' })
+      if (who === 'admin') ark('users:role', email, 'admin')
     }
 
     roleId = (await api('get', '/account/roles')).body.data.find((role: { kind: string }) => role.kind === 'scout').id
