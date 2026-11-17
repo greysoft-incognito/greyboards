@@ -71,18 +71,19 @@ export class PrintJob extends Model {
     feeMinor: 'number',
   } as never
 
-  /** What printing and posting `board`'s face costs, in minor units. Digital boards need none. */
+  /** What printing and posting `board`'s face costs, in minor units: the owner's own price when they print, else the standard one. Digital boards need none. */
   static async feeFor(board: Board): Promise<number> {
     if (board.kind === 'digital') return 0
+    if (board.printsOwn && board.printFeeMinor !== null && board.printFeeMinor !== undefined) return Number(board.printFeeMinor)
 
     const perSqm = await Settings.number('printing.price_per_sqm')
 
     return Math.round(Number(board.widthM) * Number(board.heightM) * perSqm) * 100
   }
 
-  /** Put a booking's job up for billposters, once its artwork is approved. */
+  /** Put a booking's job up for billposters, once its artwork is approved. Owners who print their own boards need no job. */
   static async open(booking: Booking): Promise<PrintJob | null> {
-    if (booking.printFeeMinor <= 0) return null
+    if (booking.printFeeMinor <= 0 || booking.printedBy === 'owner') return null
 
     const existing = await PrintJob.query().where({ bookingId: booking.id }).first()
 

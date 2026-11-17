@@ -21,14 +21,23 @@ export class Payouts {
   /** The shares `booking` releases. They add up to what the advertiser paid. */
   static async shares(booking: Booking): Promise<Share[]> {
     const job = booking.printFeeMinor > 0 ? await PrintJob.query().where({ bookingId: booking.id }).first() : null
+    const printer = Payouts.printer(booking, job)
     const shares: Share[] = [
       { account: 'owner', kind: 'payout_due', amountMinor: booking.ownerAmountMinor ?? 0, userId: null, ownerProfileId: booking.ownerProfileId, memo: 'Owner’s share' },
       { account: 'scout', kind: 'payout_due', amountMinor: booking.scoutAmountMinor ?? 0, userId: booking.scoutId, ownerProfileId: null, memo: 'Scout’s cut of the commission' },
-      { account: 'billposter', kind: 'payout_due', amountMinor: booking.printFeeMinor, userId: job?.billposterId ?? null, ownerProfileId: null, memo: 'Printing and posting' },
+      { ...printer, kind: 'payout_due', amountMinor: booking.printFeeMinor, memo: 'Printing and posting' },
       { account: 'platform', kind: 'commission', amountMinor: booking.platformAmountMinor ?? 0, userId: null, ownerProfileId: null, memo: 'Greyboards’ commission' },
     ]
 
     return shares.filter((share) => share.amountMinor > 0)
+  }
+
+  /** Who the print fee goes to: the billposter who took the job, or, when the owner's side prints, the scout who runs the board or else the owner. */
+  private static printer(booking: Booking, job: PrintJob | null): Pick<Share, 'account' | 'userId' | 'ownerProfileId'> {
+    if (booking.printedBy !== 'owner') return { account: 'billposter', userId: job?.billposterId ?? null, ownerProfileId: null }
+    if (booking.scoutId) return { account: 'scout', userId: booking.scoutId, ownerProfileId: null }
+
+    return { account: 'owner', userId: null, ownerProfileId: booking.ownerProfileId }
   }
 
   /** Record the release, once. Returns false when it was already released. */

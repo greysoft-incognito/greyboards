@@ -15,6 +15,7 @@ const number = (form: FormData, key: string) => {
 /** The board details a BoardForm posted. The rate is typed in naira and sent in kobo. */
 export function boardInput(form: FormData): BoardInput {
 	const rate = number(form, "rate");
+	const printFee = number(form, "printFee");
 
 	return {
 		name: text(form, "name") ?? "",
@@ -33,6 +34,8 @@ export function boardInput(form: FormData): BoardInput {
 		accuracyM: number(form, "accuracyM"),
 		rateMinor: rate === null ? null : Math.round(rate * 100),
 		ratePeriod: (text(form, "ratePeriod") ?? "month") as BoardInput["ratePeriod"],
+		printsOwn: form.get("printsOwn") === "1",
+		printFeeMinor: printFee === null ? null : Math.round(printFee * 100),
 	};
 }
 

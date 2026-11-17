@@ -36,6 +36,8 @@ const rules = (creating: boolean) => {
     rateMinor: 'nullable|integer|min:0',
     currency: 'nullable|alpha|min:3|max:3',
     ratePeriod: `nullable|in:${Board.PERIODS.join(',')}`,
+    printsOwn: 'nullable|boolean',
+    printFeeMinor: 'nullable|integer|min:0',
   }
 }
 
@@ -46,7 +48,7 @@ const ownerRules = {
   ownerPhone: ['nullable', 'string', PHONE],
 }
 
-const NUMBERS = ['widthM', 'heightM', 'faces', 'latitude', 'longitude', 'accuracyM', 'rateMinor'] as const
+const NUMBERS = ['widthM', 'heightM', 'faces', 'latitude', 'longitude', 'accuracyM', 'rateMinor', 'printFeeMinor'] as const
 
 /** Only the fields that were sent, with numbers as numbers, so a missing field keeps what the board has. */
 const details = (data: Record<string, any>, sent: Record<string, unknown>): Partial<BoardDetails> => {
@@ -60,7 +62,7 @@ const details = (data: Record<string, any>, sent: Record<string, unknown>): Part
     picked[key] = value !== null && (NUMBERS as readonly string[]).includes(key) ? Number(value) : value
   }
 
-  if (typeof picked.lit === 'string') picked.lit = ['1', 'true', 'on'].includes(picked.lit)
+  for (const flag of ['lit', 'printsOwn']) if (typeof picked[flag] === 'string') picked[flag] = ['1', 'true', 'on'].includes(picked[flag] as string)
 
   return picked as Partial<BoardDetails>
 }

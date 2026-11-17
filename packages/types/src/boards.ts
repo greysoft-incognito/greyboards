@@ -41,6 +41,8 @@ export interface Board {
   latitude: number
   longitude: number
   rate: BoardRate | null
+  /** The owner, or their scout, prints and puts up booked ads instead of a billposter. */
+  printsOwn: boolean
   status: BoardStatus
   /** Metres from the search point, on a nearby search. */
   distanceM: number | null
@@ -133,6 +135,8 @@ export interface BoardDetail extends Board {
   booking: BoardBookingTerms
   owner?: OwnerProfile | null
   taggedById?: ID | null
+  /** What the owner charges to print and put up an ad, when they do it. Null uses the standard price. */
+  ownPrintFeeMinor?: number | null
   reviewNote?: string | null
   reviewedAt?: string | null
   /** For boards a scout runs for their owner. */
@@ -163,6 +167,8 @@ export interface BoardInput {
   rateMinor?: number | null
   currency?: string | null
   ratePeriod?: BoardRatePeriod | null
+  printsOwn?: boolean
+  printFeeMinor?: number | null
 }
 
 /** Who owns a board being tagged: a suggested or managed profile, or a new owner's name and phone. */

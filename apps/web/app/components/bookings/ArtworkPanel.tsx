@@ -29,6 +29,8 @@ export function ArtworkPanel({ booking, isAdvertiser }: { booking: Booking; isAd
 	const artwork = booking.artwork!;
 	const job = booking.printJob;
 	const canUpload = isAdvertiser && booking.status === "paid" && artwork.status !== "approved";
+	const ownersPrint = booking.printedBy === "owner" && booking.printFeeMinor > 0;
+	const note = artwork.status === "approved" && ownersPrint ? (isAdvertiser ? "Approved. The board's owner prints it and puts it up." : "Approved. Download it full size, print it and put it up by the start date, then add the proof photos.") : ARTWORK_NOTES[artwork.status];
 
 	return (
 		<div className="panel space-y-4 p-5 sm:p-6">
@@ -38,7 +40,7 @@ export function ArtworkPanel({ booking, isAdvertiser }: { booking: Booking; isAd
 				</span>
 				<div>
 					<h2 className="font-display text-xl font-extrabold tracking-tight text-ink-900">Artwork</h2>
-					<p className="mt-0.5 text-sm text-ink-500">{artwork.canReview ? "Check the design fits the board before it's printed." : ARTWORK_NOTES[artwork.status]}</p>
+					<p className="mt-0.5 text-sm text-ink-500">{artwork.canReview ? "Check the design fits the board before it's printed." : note}</p>
 				</div>
 			</div>
 

@@ -46,6 +46,7 @@ export class ManagedBoardResource extends BoardResource {
         ? {
             owner: owner ? await new OwnerProfileResource(owner).data() : null,
             taggedById: board.taggedById,
+            ownPrintFeeMinor: board.printFeeMinor === null ? null : Number(board.printFeeMinor),
             reviewNote: board.reviewNote,
             reviewedAt: board.reviewedAt,
             agreement: agreement ? await new BoardAgreementResource(agreement).data() : null,
