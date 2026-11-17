@@ -1,8 +1,8 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { app } from '../src/core/bootstrap'
-import { execFileSync } from 'node:child_process'
 import request from 'parasito'
+import { ark } from './support/ark'
 
 const pixel = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64')
 
@@ -17,7 +17,7 @@ const api = (method: 'get' | 'post' | 'put' | 'delete', path: string, body?: Rec
   return body ? call.send(body) : call
 }
 
-const assignRole = (email: string, role: string) => execFileSync('npx', ['ark', 'users:role', email, role], { cwd: process.cwd(), encoding: 'utf8' })
+const assignRole = (email: string, role: string) => ark('users:role', email, role)
 
 const signIn = (who: string) => api('post', '/auth/login', { email: accounts[who].email, password: 'password123' }, null)
 

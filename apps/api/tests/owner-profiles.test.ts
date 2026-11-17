@@ -2,9 +2,9 @@ import { beforeAll, describe, expect, it } from 'vitest'
 
 import { app } from '../src/core/bootstrap'
 import { lastCode } from './support/sms'
-import { execFileSync } from 'node:child_process'
 import request from 'parasito'
 import { passChecks } from './support/partner'
+import { ark } from './support/ark'
 
 const tokens: Record<string, string> = {}
 
@@ -32,7 +32,7 @@ describe('Owner profiles', () => {
 
       tokens[who] = register.body.data.token
 
-      if (who === 'reviewer') execFileSync('npx', ['ark', 'users:role', email, 'reviewer'], { cwd: process.cwd(), encoding: 'utf8' })
+      if (who === 'reviewer') ark('users:role', email, 'reviewer')
     }
 
     const scoutRole = (await api('get', '/account/roles')).body.data[0]
