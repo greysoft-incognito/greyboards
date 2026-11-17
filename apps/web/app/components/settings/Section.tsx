@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 export function PageHeader({ title, description }: { title: string; description?: ReactNode }) {
 	return (
 		<header className="mb-8">
-			<h1 className="font-display font-bold tracking-tight text-4xl text-ink-900">{title}</h1>
+			<h1 className="font-display text-4xl font-extrabold tracking-[-0.03em] text-ink-900">{title}</h1>
 			{description && <p className="mt-2 max-w-2xl text-ink-500">{description}</p>}
 		</header>
 	);
@@ -24,7 +24,7 @@ export function Section({
 }) {
 	return (
 		<section
-			className={`panel p-6 sm:p-8 ${tone === "danger" ? "!border-red-300" : ""}`}
+			className={`panel p-6 sm:p-8 ${tone === "danger" ? "!border-red-200" : ""}`}
 		>
 			{title && <h2 className={`font-display font-bold tracking-tight text-2xl ${tone === "danger" ? "text-red-800" : "text-ink-900"}`}>{title}</h2>}
 			{description && <p className="mt-1 text-sm text-ink-500">{description}</p>}

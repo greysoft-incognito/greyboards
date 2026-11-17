@@ -210,7 +210,7 @@ function RoleEditor({ role, permissions }: { role: Role | null; permissions: Per
 					</div>
 				</fieldset>
 			</div>
-			<div className="sticky bottom-0 flex items-center justify-end gap-3 border-t-[1.5px] border-surface-200 bg-canvas/95 px-4 py-4 backdrop-blur sm:px-8">
+			<div className="sticky bottom-0 flex items-center justify-end gap-3 border-t border-surface-100 bg-canvas/95 px-4 py-4 backdrop-blur sm:px-8">
 				{role && !locked && (
 					<Button
 						variant="danger"

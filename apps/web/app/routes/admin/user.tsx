@@ -50,7 +50,7 @@ export default function AdminUserPage({ loaderData, actionData }: Route.Componen
 				</div>
 
 				<section className="panel">
-					<h2 className="border-b-[1.5px] border-surface-200 px-5 py-4 font-display text-lg font-bold text-ink-900">Works as</h2>
+					<h2 className="border-b border-surface-100 px-5 py-4 font-display text-lg font-bold text-ink-900">Works as</h2>
 					{account.accountRoles.length ? (
 						<ul className="divide-y divide-surface-200">
 							{account.accountRoles.map((held) => {

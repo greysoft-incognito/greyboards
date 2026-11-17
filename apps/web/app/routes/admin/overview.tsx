@@ -41,7 +41,7 @@ export default function AdminOverview({ loaderData }: Route.ComponentProps) {
 				<StatTiles items={stats} />
 
 				<section className="panel">
-					<div className="flex items-center justify-between gap-4 border-b-[1.5px] border-surface-200 px-5 py-4">
+					<div className="flex items-center justify-between gap-4 border-b border-surface-100 px-5 py-4">
 						<h2 className="font-display text-lg font-bold text-ink-900">Marketplace roles</h2>
 						{canReview && (
 							<Link prefetch="intent" to="/admin/applications" className="text-sm font-semibold text-brand-700 hover:underline">
@@ -73,7 +73,7 @@ export default function AdminOverview({ loaderData }: Route.ComponentProps) {
 				</section>
 
 				<section className="panel">
-					<div className="flex items-center justify-between gap-4 border-b-[1.5px] border-surface-200 px-5 py-4">
+					<div className="flex items-center justify-between gap-4 border-b border-surface-100 px-5 py-4">
 						<h2 className="font-display text-lg font-bold text-ink-900">Newest accounts</h2>
 						{canManageUsers && (
 							<Link prefetch="intent" to="/admin/users" className="text-sm font-semibold text-brand-700 hover:underline">

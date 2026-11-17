@@ -6,7 +6,7 @@ import { Logo, buttonClass } from "~/components/ui";
 import { AccountMenu } from "~/components/AccountMenu";
 
 const tab = ({ isActive }: { isActive: boolean }) =>
-	`flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition max-sm:flex-1 sm:px-4 ${isActive ? "bg-ink-900 text-white" : "text-ink-700 hover:bg-surface-100"}`;
+	`flex min-h-10 items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition max-sm:flex-1 sm:px-4 ${isActive ? "bg-ink-900 text-white" : "text-ink-700 hover:bg-surface-100"}`;
 
 /** The areas a signed-in account can open. Areas for each marketplace role join as they are built. */
 const AREAS: { to: string; label: string; icon: LucideIcon }[] = [{ to: "/dashboard", label: "Dashboard", icon: LayoutDashboard }];
@@ -30,8 +30,8 @@ export function AppHeader({ user }: { user: User | null }) {
 	}, []);
 
 	return (
-		<header ref={header} className="sticky top-0 z-20 border-b-[1.5px] border-surface-200 bg-white/90 backdrop-blur-md">
-			<div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-x-3 gap-y-2 px-4 py-3 sm:px-6">
+		<header ref={header} className="sticky top-0 z-20 px-3 pt-3 sm:px-5">
+			<div className="glass mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-x-3 gap-y-2 rounded-[1.25rem] py-2.5 pr-2.5 pl-4">
 				<Logo to={user ? "/dashboard" : "/"} compact />
 				{user && (
 					<nav aria-label="Main" className="flex items-center gap-1 max-sm:order-last max-sm:w-full sm:ml-auto">

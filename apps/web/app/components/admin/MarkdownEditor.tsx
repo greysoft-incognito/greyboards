@@ -56,7 +56,7 @@ export function MarkdownEditor({ value, onChange, invalid }: { value: string; on
 
 	return (
 		<div className="field flex-col !items-stretch !p-0" aria-invalid={invalid ? true : undefined}>
-			<div className="flex flex-wrap items-center justify-between gap-2 border-b-[1.5px] border-surface-200 px-2 py-2">
+			<div className="flex flex-wrap items-center justify-between gap-2 border-b border-surface-100 px-2 py-2">
 				<div className="flex gap-1" role="tablist" aria-label="Editor">
 					<button type="button" role="tab" aria-selected={mode === "write"} onClick={() => setMode("write")} className={tab("write")}>
 						Write

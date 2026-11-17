@@ -20,13 +20,13 @@ export const shouldRevalidate = revalidateOnSubmit;
 export default function AdminLayout({ loaderData }: Route.ComponentProps) {
 	const pages = ADMIN_PAGES.filter((page) => page.permissions.some((permission) => loaderData.user.permissions.includes(permission)));
 	const item = (isActive: boolean) =>
-		`flex items-center gap-3 rounded-[0.625rem] px-3 py-2.5 text-sm font-medium whitespace-nowrap transition ${
-			isActive ? "bg-brand-600 text-white" : "text-ink-700 hover:bg-surface-100 hover:text-ink-900"
+		`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium whitespace-nowrap transition ${
+			isActive ? "bg-brand-50 font-semibold text-brand-700" : "text-ink-700 hover:bg-surface-100 hover:text-ink-900"
 		}`;
 
 	return (
 		<div className="min-h-dvh bg-canvas md:grid md:grid-cols-[16rem_1fr]">
-			<aside className="border-b-[1.5px] border-surface-200 bg-white md:sticky md:top-0 md:flex md:h-dvh md:flex-col md:border-r-[1.5px] md:border-b-0">
+			<aside className="border-b border-surface-100 bg-white md:sticky md:top-0 md:flex md:h-dvh md:flex-col md:border-r md:border-b-0">
 				<div className="flex items-center justify-between gap-3 px-4 py-4 md:px-5 md:py-6">
 					<Logo to="/admin" />
 					<Link prefetch="intent" to="/dashboard" className="text-sm font-medium text-ink-500 hover:text-ink-900 md:hidden">
@@ -42,7 +42,7 @@ export default function AdminLayout({ loaderData }: Route.ComponentProps) {
 						</NavLink>
 					))}
 				</nav>
-				<div className="hidden border-t-[1.5px] border-surface-200 p-3 md:block">
+				<div className="hidden border-t border-surface-100 p-3 md:block">
 					<Link prefetch="intent" to="/dashboard" className={item(false)}>
 						<ArrowLeft className="h-5 w-5 shrink-0" aria-hidden />
 						Back to app
