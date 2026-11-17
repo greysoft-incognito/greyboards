@@ -1,0 +1,52 @@
+{
+  "expo": {
+    "name": "Greyboards",
+    "slug": "greyboards",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "ng.greysoft.greyboards"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#F4F4F5",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "package": "ng.greysoft.greyboards"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "output": "single"
+    },
+    "scheme": "greyboards",
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash/splash-icon-ios.png",
+          "imageWidth": 200,
+          "backgroundColor": "#F4F4F5",
+          "android": {
+            "mdpi": "./assets/splash/splash-icon-mdpi.png",
+            "hdpi": "./assets/splash/splash-icon-hdpi.png",
+            "xhdpi": "./assets/splash/splash-icon-xhdpi.png",
+            "xxhdpi": "./assets/splash/splash-icon-xxhdpi.png",
+            "xxxhdpi": "./assets/splash/splash-icon-xxxhdpi.png"
+          }
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
