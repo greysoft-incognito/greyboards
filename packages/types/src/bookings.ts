@@ -37,9 +37,59 @@ export interface Booking {
   paidAt: string | null
   cancelledAt: string | null
   createdAt: string
+  /** When the proof was accepted and the money left escrow. */
+  releasedAt: string | null
   /** On the booking's own page only. */
   artwork?: BookingArtwork
   printJob?: BookingPrintJob | null
+  proof?: BookingProof
+}
+
+/**
+ * Proof the ad is up: `none` until sent, `submitted` while the advertiser checks it,
+ * `accepted` once the money is released, `disputed` when the advertiser asked for better.
+ */
+export type ProofStatus = 'none' | 'submitted' | 'accepted' | 'disputed'
+
+/** A geotagged photo of the ad on its board. */
+export interface ProofPhoto {
+  id: ID
+  url: string
+  width: number
+  height: number
+  latitude: number
+  longitude: number
+  accuracyM: number | null
+  /** Metres from the board. */
+  distanceM: number
+  takenAt: string | null
+  createdAt: string
+}
+
+export interface BookingProof {
+  status: ProofStatus
+  /** What the advertiser asked to fix. */
+  note: string | null
+  submittedAt: string | null
+  /** When an unchecked proof counts as accepted. */
+  acceptsAt: string | null
+  acceptedAt: string | null
+  photos: ProofPhoto[]
+  minPhotos: number
+  maxPhotos: number
+  /** How far from the board a photo may be taken. */
+  maxDistanceM: number
+  /** Whether the viewer photographs this ad: the billposter on the job, or the owner of a board with none. */
+  canAdd: boolean
+  /** Whether the viewer booked it and the proof waits for them. */
+  canReview: boolean
+}
+
+export interface ProofPhotoLocation {
+  latitude: number
+  longitude: number
+  accuracyM?: number | null
+  takenAt?: string | null
 }
 
 /** Whoever looks after the board checks the artwork before it goes to print. */
@@ -87,6 +137,9 @@ export interface PrintJob {
   artworkUrl: string | null
   bookedDays: BookedDays | null
   printPhotoUrl: string | null
+  /** The booking and its proof, for the billposter holding the job. */
+  bookingId: ID | null
+  proof: BookingProof | null
   createdAt: string
 }
 

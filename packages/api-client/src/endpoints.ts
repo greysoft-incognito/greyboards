@@ -42,6 +42,9 @@ import type {
   Payment,
   PrintJob,
   PrintJobSearch,
+  ProofPhoto,
+  ProofPhotoLocation,
+  BookingProof,
   PermissionDefinition,
   Role,
   RoleInput,
@@ -98,6 +101,23 @@ export function createEndpoints(alova: GreyboardsAlova) {
     uploadArtwork: (id: ID, file: Blob | { uri: string; name: string; type: string }) => alova.Post<ApiResponse<Booking>>(`/bookings/${id}/artwork`, upload('artwork', file)),
     /** Whoever looks after the board approves the artwork, or sends it back with a note. */
     reviewArtwork: (id: ID, data: ArtworkReview) => alova.Post<ApiResponse<Booking>>(`/bookings/${id}/artwork/review`, data),
+
+    /** Proof the ad is up. The billposter on the job, or the owner of a board with none, adds photos taken at the board. */
+    proofs: {
+      add: (id: ID, file: Blob | { uri: string; name: string; type: string }, where: ProofPhotoLocation) => {
+        const form = upload('photo', file)
+
+        for (const [key, value] of Object.entries(where)) if (value !== undefined && value !== null) form.append(key, String(value))
+
+        return alova.Post<ApiResponse<ProofPhoto>>(`/bookings/${id}/proofs`, form)
+      },
+      remove: (id: ID, photo: ID) => alova.Delete<ApiResponse<{ id: ID }>>(`/bookings/${id}/proofs/${photo}`),
+      /** Send the photos to the advertiser to check. */
+      submit: (id: ID) => alova.Post<ApiResponse<BookingProof>>(`/bookings/${id}/proof/submit`),
+      /** The advertiser agrees the ad is up, which pays everyone. */
+      accept: (id: ID) => alova.Post<ApiResponse<Booking>>(`/bookings/${id}/proof/accept`),
+      dispute: (id: ID, note: string) => alova.Post<ApiResponse<Booking>>(`/bookings/${id}/proof/dispute`, { note }),
+    },
 
     /** Print jobs for billposters. Needs an active billposter role. */
     printJobs: {
