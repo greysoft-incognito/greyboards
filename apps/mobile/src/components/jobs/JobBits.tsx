@@ -66,7 +66,7 @@ export function JobRow({ job }: { job: PrintJob }) {
           <Text variant="small" style={styles.flex}>
             Up by {formatDay(job.dueOn)}
           </Text>
-          <Text style={styles.pay}>{formatMoney(job.feeMinor, job.currency)}</Text>
+          <Text style={styles.pay}>{job.priced ? formatMoney(job.feeMinor, job.currency) : job.myOffer ? formatMoney(job.myOffer.amountMinor, job.currency) : 'Send a price'}</Text>
         </View>
       </View>
     </Pressable>

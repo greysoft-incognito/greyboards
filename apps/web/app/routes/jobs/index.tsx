@@ -46,7 +46,7 @@ export default function Jobs({ loaderData }: Route.ComponentProps) {
 			<div className="flex flex-wrap items-end justify-between gap-4">
 				<div>
 					<h1 className="font-display text-3xl font-extrabold tracking-[-0.03em] text-ink-900 sm:text-4xl">Print jobs</h1>
-					<p className="mt-1 text-ink-500">{mine ? "Jobs you hold or took, the soonest due first." : "Approved artwork waiting to be printed and put up near you."}</p>
+					<p className="mt-1 text-ink-500">{mine ? "Jobs you took, the soonest due first." : "Approved artwork near you, waiting for your price to print and put it up."}</p>
 				</div>
 				{roleStatus === "active" && (
 					<nav aria-label="Print jobs" className="glass flex gap-1 rounded-2xl p-1">
@@ -55,6 +55,9 @@ export default function Jobs({ loaderData }: Route.ComponentProps) {
 						</NavLink>
 						<NavLink to="/jobs?view=mine" className={() => tab({ isActive: mine })}>
 							My jobs
+						</NavLink>
+						<NavLink to="/jobs/prices" className={() => tab({ isActive: false })}>
+							Prices
 						</NavLink>
 					</nav>
 				)}

@@ -28,6 +28,7 @@ export default [
 		route("reports", "routes/reports/index.tsx"),
 		route("pipeline", "routes/pipeline/index.tsx"),
 		route("jobs", "routes/jobs/index.tsx"),
+		route("jobs/prices", "routes/jobs/prices.tsx"),
 		route("jobs/:id", "routes/jobs/job.tsx"),
 		route("checkout/complete", "routes/checkout-complete.tsx"),
 		route("settings", "routes/settings/layout.tsx", [

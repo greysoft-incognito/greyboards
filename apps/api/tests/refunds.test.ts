@@ -29,7 +29,7 @@ describe('Cancellations and refunds', { timeout: 30_000 }, () => {
   const longitude = 7.49
   let boardId = ''
 
-  /** A paid booking of one month from `startsOn` on the test board (₦500,000 rent, ₦175,000 to print). */
+  /** A paid booking of one month from `startsOn` on the test board (₦500,000 rent, ₦175,000 for the owner to print). */
   const paidBooking = async (startsOn: string) => {
     const held = (await api('post', `/boards/${boardId}/bookings`, { startsOn, periods: 1 })).body.data
     const payment = (await api('post', `/bookings/${held.id}/checkout`)).body.data
@@ -49,7 +49,7 @@ describe('Cancellations and refunds', { timeout: 30_000 }, () => {
       if (who === 'admin') ark('users:role', email, 'admin')
     }
 
-    boardId = (await api('post', '/account/boards', { name: 'Refund board', kind: 'billboard', widthM: 10, heightM: 5, latitude, longitude, rateMinor: 50_000_000, as: 'owner' }, 'owner')).body.data.id
+    boardId = (await api('post', '/account/boards', { name: 'Refund board', kind: 'billboard', widthM: 10, heightM: 5, latitude, longitude, rateMinor: 50_000_000, printsOwn: true, printFeeMinor: 17_500_000, as: 'owner' }, 'owner')).body.data.id
     await api('put', `/admin/boards/${boardId}`, { status: 'listed' }, 'admin')
   }, 60_000)
 

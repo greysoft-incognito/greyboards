@@ -33,6 +33,7 @@ import AdminPayoutController from 'src/app/http/controllers/admin/PayoutControll
 import AdminDisputeController from 'src/app/http/controllers/admin/DisputeController'
 import TerritoryController from 'src/app/http/controllers/admin/TerritoryController'
 import PayoutController from 'src/app/http/controllers/PayoutController'
+import PrintOfferController from 'src/app/http/controllers/PrintOfferController'
 import { Authorize } from 'src/app/http/middlewares/Authorize'
 import { Router } from '@arkstack/driver-express'
 import { auth, limiter } from '@arkstack/driver-express/middlewares'
@@ -201,6 +202,20 @@ Router.post('/print-jobs/:job/reserve', [PrintJobController, 'reserve'], [auth, 
 Router.post('/print-jobs/:job/confirm', [PrintJobController, 'confirm'], [auth, Authorize.actingAs('dispatch')])
 Router.post('/print-jobs/:job/release', [PrintJobController, 'release'], [auth, Authorize.actingAs('dispatch')])
 Router.post('/print-jobs/:job/print-photo', [PrintJobController, 'printPhoto'], [auth, Authorize.actingAs('dispatch'), limiter(20, 60)])
+
+// Dispatchers set their own prices: a rate for requests, and a price (bid) on any job near them.
+Router.get('/account/dispatch-rate', [PrintOfferController, 'rate'], [auth, Authorize.actingAs('dispatch')])
+Router.put('/account/dispatch-rate', [PrintOfferController, 'saveRate'], [auth, Authorize.actingAs('dispatch'), limiter(20, 60)])
+Router.get('/account/print-offers', [PrintOfferController, 'mine'], [auth, Authorize.actingAs('dispatch')])
+Router.post('/print-jobs/:job/offers', [PrintOfferController, 'bid'], [auth, Authorize.actingAs('dispatch'), limiter(30, 60)])
+Router.post('/print-offers/:offer/accept', [PrintOfferController, 'accept'], [auth, Authorize.actingAs('dispatch')])
+Router.post('/print-offers/:offer/decline', [PrintOfferController, 'decline'], [auth, Authorize.actingAs('dispatch')])
+Router.delete('/print-offers/:offer', [PrintOfferController, 'withdraw'], [auth, Authorize.actingAs('dispatch')])
+
+// Advertisers see the prices on their print job, ask dispatchers nearby, and pay the one they pick.
+Router.get('/bookings/:booking/print-offers', [PrintOfferController, 'forBooking'], [auth])
+Router.post('/bookings/:booking/print-requests', [PrintOfferController, 'request'], [auth, limiter(20, 60)])
+Router.post('/bookings/:booking/print-offers/:offer/checkout', [PrintOfferController, 'checkout'], [auth, limiter(10, 60)])
 
 // Payments finish on the provider's checkout. The webhook checks each one with the provider.
 Router.post('/payments/:reference/verify', [PaymentController, 'verify'], [auth, limiter(30, 60)])

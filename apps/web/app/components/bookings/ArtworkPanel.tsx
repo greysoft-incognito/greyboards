@@ -9,14 +9,14 @@ import { formatDay } from "./BookingBits";
 const SHARED_NOTES = {
 	none: "Each advertiser sends their own design. Once everyone has, they're merged into one print for checking.",
 	submitted: "Everyone's designs are merged. Waiting for whoever looks after the board to check the print.",
-	approved: "Approved. The merged print goes to a dispatcher to print and put up.",
+	approved: "Approved. Dispatchers near the board send their prices to print and put it up.",
 	rejected: "Sent back. Anyone can send a new design as the note asks, and the print is merged again.",
 } as const;
 
 const ARTWORK_NOTES = {
 	none: "Upload the design to print. Match the board's shape so nothing gets cropped.",
 	submitted: "Waiting for whoever looks after the board to check it fits.",
-	approved: "Approved. It goes to a dispatcher to print and put up.",
+	approved: "Approved. Dispatchers near the board send their prices to print and put it up.",
 	rejected: "Sent back. Change it as the note asks and upload it again.",
 } as const;
 
@@ -81,7 +81,7 @@ export function ArtworkPanel({ booking, isAdvertiser }: { booking: Booking; isAd
 				<div className="flex items-center gap-3 border-t border-surface-200 pt-4 text-sm">
 					<Printer className="h-5 w-5 shrink-0 text-ink-500" aria-hidden />
 					<span className="flex-1 text-ink-700">
-						<span className="block font-semibold text-ink-900">{JOB_LABELS[job.status]}</span>
+						<span className="block font-semibold text-ink-900">{job.status === "open" && !job.priced ? "Taking prices from dispatchers" : JOB_LABELS[job.status]}</span>
 						Due up by {formatDay(job.dueOn)}
 					</span>
 					{job.printPhotoUrl && (

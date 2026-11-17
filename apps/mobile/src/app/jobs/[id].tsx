@@ -10,13 +10,62 @@ import { JobStatusBadge, formatDay, formatDistance, formatMoney } from '@/compon
 import { MessagesSection } from '@/components/messages/MessagesSection'
 import { ProofSection } from '@/components/proofs/ProofSection'
 import { Section, SettingsPage } from '@/components/settings/SettingsPage'
-import { Button, Callout, Text } from '@/components/ui'
+import { Button, Callout, Field, Input, Text } from '@/components/ui'
 import { api } from '@/lib/api'
 import { FormProblem, PlainProblem } from '@/lib/forms'
 import { megabytes, useLimits } from '@/lib/limits'
 import { uploadFile } from '@/lib/upload-file'
 import { useAction } from '@/lib/use-action'
 import { colors, radius } from '@/theme'
+
+/** Send a price on a job nobody has paid for, or answer the advertiser's request at your rate. */
+function SendPrice({ job, onChange }: { job: PrintJob; onChange: () => void }) {
+  const action = useAction()
+  const offer = job.myOffer
+  const [amount, setAmount] = useState(offer ? String(offer.amountMinor / 100) : '')
+  const [note, setNote] = useState(offer?.note ?? '')
+
+  const act = (task: () => Promise<unknown>, message: string) =>
+    action.run(async () => {
+      await task()
+      onChange()
+
+      return message
+    })
+
+  if (offer?.status === 'requested') {
+    return (
+      <Section title="Asked at your rate">
+        <Text>The advertiser asked you to do this job for {formatMoney(offer.amountMinor, offer.currency)}. The job is yours once they pay.</Text>
+        <Button title="Accept" loading={action.busy} onPress={() => act(() => api.printJobs.acceptRequest(offer.id).send(), 'Accepted. The job is yours once the advertiser pays.')} />
+        <Button title="Decline" variant="ghost" disabled={action.busy} onPress={() => act(() => api.printJobs.declineRequest(offer.id).send(), 'Request declined.')} />
+      </Section>
+    )
+  }
+
+  const send = () => {
+    const naira = Number(amount.replace(/[^\d.]/g, ''))
+
+    if (!naira) return action.run(async () => { throw new PlainProblem('Enter your price in naira.') })
+
+    return act(() => api.printJobs.sendPrice(job.id, Math.round(naira * 100), note.trim() || null).send(), 'Price sent. The job is yours if the advertiser pays it.')
+  }
+
+  return (
+    <Section title={offer ? 'Your price' : 'Send your price'}>
+      {offer?.status === 'pending' ? <Text variant="muted">{formatMoney(offer.amountMinor, offer.currency)} is with the advertiser. The job is yours if they pay it.</Text> : null}
+      <Field label="Price in naira">
+        <Input value={amount} onChangeText={setAmount} keyboardType="numeric" placeholder="175000" />
+      </Field>
+      <Field label="Note for the advertiser" hint="Optional, such as the material.">
+        <Input value={note} onChangeText={setNote} maxLength={200} />
+      </Field>
+      <Button title={offer ? 'Change price' : 'Send price'} loading={action.busy} onPress={send} />
+      {offer?.status === 'pending' ? <Button title="Take it back" variant="ghost" disabled={action.busy} onPress={() => act(() => api.printJobs.withdrawPrice(offer.id).send(), 'Price taken back.')} /> : null}
+      <Text variant="small">Include printing, transport and putting it up by {formatDay(job.dueOn)}. Set your rate on the web under Print jobs › Prices so advertisers can ask you.</Text>
+    </Section>
+  )
+}
 
 /** One print job: where and how big, the pay, the artwork, and the next thing to do. */
 export default function JobScreen() {
@@ -56,12 +105,14 @@ export default function JobScreen() {
           {board ? <Line icon={MapPin} text={`${boardPlace(board)}${job.distanceM !== null ? ` · ${formatDistance(job.distanceM)} away` : ''}`} /> : null}
           {board ? <Line icon={Ruler} text={`${board.kindLabel}, ${formatSize(board)}${board.faces > 1 ? `, ${board.faces} faces` : ''}`} /> : null}
           <Line icon={CalendarClock} text={`Up by ${formatDay(job.dueOn)}`} />
-          <View style={styles.pay}>
-            <Text variant="muted" style={styles.flex}>
-              You earn, once the ad is up
-            </Text>
-            <Text variant="title">{formatMoney(job.feeMinor, job.currency)}</Text>
-          </View>
+          {job.priced ? (
+            <View style={styles.pay}>
+              <Text variant="muted" style={styles.flex}>
+                You earn, once the ad is up
+              </Text>
+              <Text variant="title">{formatMoney(job.feeMinor, job.currency)}</Text>
+            </View>
+          ) : null}
           {directions ? (
             <Button title="Directions to the board" variant="secondary" onPress={() => Linking.openURL(directions).catch(() => undefined)} />
           ) : null}
@@ -136,11 +187,13 @@ function NextStep({ job, onChange }: { job: PrintJob; onChange: () => void }) {
 
   let body: ReactNode = null
 
+  if (job.status === 'open' && !job.priced) return <SendPrice job={job} onChange={onChange} />
+
   if (job.status === 'open') {
     body = (
       <>
         <Button title={action.busy ? 'Reserving…' : 'Reserve this job'} loading={action.busy} onPress={() => act(() => api.printJobs.reserve(job.id).send(), 'Held for you. Confirm once you know you can make the date.')} />
-        <Text variant="small">We hold it for you for a few hours so you can check the date and the materials. You see the artwork once it’s held.</Text>
+        <Text variant="small">This job went back after a miss, at the price the advertiser already paid. We hold it for you for a few hours so you can check the date. You see the artwork once it’s held.</Text>
       </>
     )
   } else if (job.mine && job.status === 'reserved') {

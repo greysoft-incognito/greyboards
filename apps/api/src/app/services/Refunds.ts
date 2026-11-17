@@ -11,6 +11,7 @@ import { Day } from '@app/support/Day'
 import { Money } from '@app/support/Money'
 import { Settings } from '@app/support/Settings'
 import { abortIf } from '@arkstack/common'
+import { DispatchOffers } from './DispatchOffers'
 import { Payouts, type Share } from './Payouts'
 
 /** What cancelling a paid booking now gives back, or why it can't be cancelled. */
@@ -112,6 +113,7 @@ export class Refunds {
     const printed = !!job && [PrintJob.PRINTED, PrintJob.POSTED].includes(job.status)
 
     if (job && !printed) await job.update({ status: 'cancelled', dispatcherId: null, reservedUntil: null })
+    if (job && !printed) await DispatchOffers.close(job)
 
     const kept = Refunds.keptShares(booking, job, booking.amountMinor - refundMinor, printed)
     const parts = await Refunds.split(booking, refundMinor)
@@ -134,25 +136,24 @@ export class Refunds {
   }
 
   /**
-   * Who gets what of a refund: the one payment of a booking, or on a shared booking, each
-   * share's payment in proportion to what it paid.
+   * Who gets what of a refund: each payment that went into the booking (its rent, each share
+   * of a shared booking, a dispatcher's price) in proportion to what it paid.
    */
   private static async split(booking: Booking, refundMinor: number): Promise<{ payment: Payment; amountMinor: number }[]> {
     if (refundMinor <= 0) return []
 
-    if (!booking.shared) {
-      const payment = await Payment.query().where({ bookingId: booking.id, status: 'complete' }).latest('createdAt').first()
-
-      return payment ? [{ payment, amountMinor: refundMinor }] : []
-    }
-
-    const shares = (await BookingShare.query().where({ bookingId: booking.id, status: 'paid' }).limit(50).get()).all()
-    const ids = [...new Set(shares.map((share) => share.paymentId).filter((id): id is string => !!id))]
-    const payments = ids.length ? (await Payment.query().whereIn('id', ids).oldest('createdAt').get()).all() : []
+    const payments = (
+      await Payment.query()
+        .where({ bookingId: booking.id, status: 'complete' })
+        .whereRaw('id not in (select payment_id from refunds)')
+        .oldest('createdAt')
+        .limit(50)
+        .get()
+    ).all()
     const total = payments.reduce((sum, payment) => sum + payment.amountMinor, 0)
     let left = refundMinor
 
-    await BookingShare.query().where({ bookingId: booking.id, status: 'paid' }).updateFrom({ status: 'refunded' })
+    if (booking.shared) await BookingShare.query().where({ bookingId: booking.id, status: 'paid' }).updateFrom({ status: 'refunded' })
 
     return payments.map((payment, index) => {
       const amountMinor = index === payments.length - 1 ? left : Math.round((refundMinor * payment.amountMinor) / total)

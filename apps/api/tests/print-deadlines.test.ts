@@ -4,6 +4,7 @@ import { app } from '../src/core/bootstrap'
 import request from 'parasito'
 import { passChecks } from './support/partner'
 import { ark } from './support/ark'
+import { takeJob } from './support/dispatch'
 
 const tokens: Record<string, string> = {}
 
@@ -63,9 +64,8 @@ describe('Print deadlines', () => {
   }
 
   /** Have `who` take the job, and move its go-live to `days` from today. With the print photo due a day before go-live, 0 is already late. */
-  const take = async (job: string, who: string, days: number) => {
-    await api('post', `/print-jobs/${job}/reserve`, undefined, who)
-    await api('post', `/print-jobs/${job}/confirm`, undefined, who)
+  const take = async ({ job, booking }: { job: string; booking: string }, who: string, days: number) => {
+    await takeJob(api, job, booking, who)
     sql(`update print_jobs set due_on = current_date + ${days} where id = '${job}'`)
   }
 
@@ -92,7 +92,7 @@ describe('Print deadlines', () => {
   }, 120_000)
 
   it('takes a job back from a dispatcher who misses the print date, with a rush bonus, and warns the owner', async () => {
-    await take(first.job, 'poster', 0)
+    await take(first, 'poster', 0)
     expect((await api('get', `/print-jobs/${first.job}`, undefined, 'poster')).body.data).toMatchObject({ status: 'confirmed', printBy: expect.any(String) })
 
     expect(check()).toMatch(/Took back [1-9]\d* missed/)
@@ -118,13 +118,13 @@ describe('Print deadlines', () => {
 
   it('suspends a dispatcher who misses too often, and pays the bonus to whoever finishes the job', async () => {
     sql(`insert into print_job_misses (id, print_job_id, billposter_id, stage, "createdAt", "updatedAt") select gen_random_uuid(), '${first.job}', billposter_id, 'print', now(), now() from print_job_misses where print_job_id = '${first.job}'`)
-    await take(second.job, 'poster', 0)
+    await take(second, 'poster', 0)
     check()
 
     expect((await api('get', '/account/roles', undefined, 'poster')).body.data[0]).toMatchObject({ kind: 'dispatch', status: 'suspended' })
     expect((await api('post', `/print-jobs/${second.job}/reserve`, undefined, 'poster')).status).toBe(403)
 
-    await take(second.job, 'rival', 2)
+    await take(second, 'rival', 2)
     await upload(`/print-jobs/${second.job}/print-photo`, 'photo', 'rival')
 
     for (const metres of [0, 0.00002]) await upload(`/bookings/${second.booking}/proofs`, 'photo', 'rival', at(0.05 + metres))
@@ -133,6 +133,6 @@ describe('Print deadlines', () => {
     await api('post', `/bookings/${second.booking}/proof/accept`)
 
     // Greyboards' ₦100,000 share pays the ₦43,750 bonus.
-    expect(ledger(second.booking).sort()).toEqual(['dispatch 21875000', 'escrow -67500000', 'escrow 67500000', 'owner 40000000', 'platform 5625000'].sort())
+    expect(ledger(second.booking).sort()).toEqual(['dispatch 21875000', 'escrow -67500000', 'escrow 50000000', 'escrow 17500000', 'owner 40000000', 'platform 5625000'].sort())
   }, 60_000)
 })

@@ -64,13 +64,13 @@ describe('Bookings', () => {
     expect((await api('post', `/boards/${ownBoard}/bookings`, { startsOn: day(10), periods: 13 })).status).toBe(422)
     expect((await api('post', `/boards/${ownBoard}/bookings`, { startsOn: day(10), periods: 1 }, 'owner')).status).toBe(403)
 
-    expect((await api('get', `/boards/${ownBoard}`)).body.data.booking).toMatchObject({ open: true, maxPeriods: 12, printFeeMinor: 16_800_000 })
+    expect((await api('get', `/boards/${ownBoard}`)).body.data.booking).toMatchObject({ open: true, maxPeriods: 12, printFeeMinor: 0 })
 
     const held = await api('post', `/boards/${ownBoard}/bookings`, { startsOn: '2027-01-31', periods: 2 })
 
     expect(held.status).toBe(201)
-    // 12 × 4 m at ₦3,500 per m² to print and post.
-    expect(held.body.data).toMatchObject({ status: 'held', startsOn: '2027-01-31', endsOn: '2027-03-30', periods: 2, amountMinor: 216_800_000, printFeeMinor: 16_800_000, split: null })
+    // Rent only: dispatchers price printing and posting once the artwork is approved.
+    expect(held.body.data).toMatchObject({ status: 'held', startsOn: '2027-01-31', endsOn: '2027-03-30', periods: 2, amountMinor: 200_000_000, printFeeMinor: 0, split: null })
     expect(held.body.data.holdSecondsLeft).toBeGreaterThan(800)
   })
 
@@ -126,7 +126,7 @@ describe('Bookings', () => {
       platformAmountMinor: 40_000_000,
     })
     expect((await api('get', '/account/board-bookings', undefined, 'owner')).body.data.map((entry: { id: string }) => entry.id)).toContain(held.id)
-    expect(sql(`select account, kind, amount_minor from ledger_entries where booking_id = '${held.id}'`)).toMatch(/escrow\s*\|\s*payment_in\s*\|\s*216800000/)
+    expect(sql(`select account, kind, amount_minor from ledger_entries where booking_id = '${held.id}'`)).toMatch(/escrow\s*\|\s*payment_in\s*\|\s*200000000/)
   })
 
   it('books scouted boards only once the owner signs, and shares the rent 70/20/10 with the scout', async () => {

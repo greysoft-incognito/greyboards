@@ -5,6 +5,7 @@ import type { PrintJob } from "@greyboards/types";
 import { BoardCover, formatSize, mapLink } from "~/components/boards/BoardBits";
 import { formatDay, formatDays, formatMoney } from "~/components/bookings/BookingBits";
 import { JobStatusBadge, boardPlace, formatDistance } from "~/components/jobs/JobBits";
+import { SendPrice } from "~/components/jobs/PrintOffers";
 import { ProofPanel } from "~/components/proofs/ProofPanel";
 import { Alert, Button, Spinner } from "~/components/ui";
 import { formError } from "~/lib/api.server";
@@ -29,6 +30,27 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 	const intent = String(form.get("intent"));
 
 	try {
+		if (intent === "send-price") {
+			const amount = Number(String(form.get("amount") ?? "").replace(/[^\d.]/g, ""));
+
+			if (!amount) return { error: null, message: null, fieldErrors: { amount: "Enter your price in naira." } };
+
+			await api.printJobs.sendPrice(params.id, Math.round(amount * 100), String(form.get("note") ?? "").trim() || null);
+
+			return { error: null, message: "Price sent. The job is yours if the advertiser pays it." };
+		}
+
+		if (intent === "withdraw-price" || intent === "accept-request" || intent === "decline-request") {
+			const { data: job } = await api.printJobs.show(params.id);
+
+			if (!job.myOffer) return { error: "That price or request isn't open any more.", message: null };
+			if (intent === "withdraw-price") await api.printJobs.withdrawPrice(job.myOffer.id);
+			if (intent === "accept-request") await api.printJobs.acceptRequest(job.myOffer.id);
+			if (intent === "decline-request") await api.printJobs.declineRequest(job.myOffer.id);
+
+			return { error: null, message: intent === "withdraw-price" ? "Price taken back." : intent === "accept-request" ? "Accepted. The job is yours once the advertiser pays." : "Request declined." };
+		}
+
 		if (intent === "reserve") {
 			await api.printJobs.reserve(params.id);
 
@@ -65,7 +87,9 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 			return { error: null, message: "Print photo added." };
 		}
 	} catch (error) {
-		return { error: formError(error).error, message: null };
+		const result = formError(error);
+
+		return { error: result.fieldErrors.amountMinor ? null : result.error, message: null, fieldErrors: { amount: result.fieldErrors.amountMinor } };
 	}
 
 	return { error: "Something went wrong. Try again.", message: null };
@@ -112,12 +136,14 @@ export default function JobPage({ loaderData, actionData }: Route.ComponentProps
 								Up by {formatDay(job.dueOn)}
 							</li>
 						</ul>
+						{job.priced && (
 						<div className="flex items-baseline justify-between rounded-2xl bg-surface-100 px-4 py-3">
 							<span className="text-sm text-ink-700">{job.bonusMinor > 0 ? `You earn, once the ad is up. Includes a ${formatMoney(job.bonusMinor, job.currency)} rush bonus.` : "You earn, once the ad is up"}</span>
 							<span className="font-display text-xl font-extrabold text-ink-900 tabular-nums">{formatMoney(job.feeMinor, job.currency)}</span>
 						</div>
+						)}
 						{actionData?.error && <Alert>{actionData.error}</Alert>}
-						<NextStep job={job} />
+						<NextStep job={job} fieldError={actionData && "fieldErrors" in actionData ? actionData.fieldErrors?.amount : undefined} />
 					</div>
 
 					{job.mine && job.proof && ["printed", "posted"].includes(job.status) && <ProofPanel proof={job.proof} />}
@@ -160,10 +186,12 @@ export default function JobPage({ loaderData, actionData }: Route.ComponentProps
 	);
 }
 
-/** What the dispatcher does next: reserve, confirm, then show the print. */
-function NextStep({ job }: { job: PrintJob }) {
+/** What the dispatcher does next: price the job (or reserve one that went back at its price), then show the print. */
+function NextStep({ job, fieldError }: { job: PrintJob; fieldError?: string }) {
 	const navigation = useNavigation();
 	const intent = navigation.formData?.get("intent");
+
+	if (job.status === "open" && !job.priced) return <SendPrice job={job} fieldError={fieldError} />;
 
 	if (job.status === "open") {
 		return (
@@ -175,7 +203,7 @@ function NextStep({ job }: { job: PrintJob }) {
 						Reserve this job
 					</Button>
 				</Form>
-				<p className="text-xs text-ink-500">We hold it for you for a few hours so you can check the date and the materials. You see the artwork once it's held. Missing the print or go-live date loses you the job, and repeated misses suspend your dispatcher role.</p>
+				<p className="text-xs text-ink-500">This job went back after a miss, at the price the advertiser already paid. We hold it for you for a few hours so you can check the date and the materials. You see the artwork once it's held. Missing the print or go-live date loses you the job, and repeated misses suspend your dispatcher role.</p>
 			</div>
 		);
 	}

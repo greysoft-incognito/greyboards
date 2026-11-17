@@ -4,13 +4,28 @@
 export default () => {
   return {
     /**
-     * What printing and posting costs per square metre of board face, in naira. Added to
-     * bookings of printed boards and paid to the dispatcher once the ad is up.
+     * The price per square metre of board face, in naira, that a new dispatcher's rate starts
+     * at. Each dispatcher sets their own; advertisers pay the price they pick.
      */
     price_per_sqm: Number(env('PRINT_PRICE_PER_SQM', 3500)),
 
     /**
-     * Hours a dispatcher holds a job before confirming they can deliver it.
+     * Hours a dispatcher's price stays open for the advertiser to pay, after they bid or accept a request.
+     */
+    offer_hours: Number(env('PRINT_OFFER_HOURS', 48)),
+
+    /**
+     * Hours a dispatcher has to answer an advertiser's request.
+     */
+    request_hours: Number(env('PRINT_REQUEST_HOURS', 24)),
+
+    /**
+     * Requests an advertiser can have waiting on one job at once.
+     */
+    max_requests: Number(env('PRINT_MAX_REQUESTS', 3)),
+
+    /**
+     * Hours a dispatcher holds a job that went back at its paid price, before confirming they can deliver it.
      */
     reserve_hours: Number(env('PRINT_RESERVE_HOURS', 2)),
 

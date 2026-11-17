@@ -67,7 +67,7 @@ export class BookingResource extends Resource {
         reviewedAt: booking.artworkReviewedAt,
         canReview: manages && booking.artworkStatus === 'submitted',
       },
-      printJob: job ? { id: job.id, status: job.displayStatus(), dueOn: Day.of(job.dueOn), printPhotoUrl: await job.printPhotoUrl() } : null,
+      printJob: job ? { id: job.id, status: job.displayStatus(), priced: job.isPriced(), dueOn: Day.of(job.dueOn), printPhotoUrl: await job.printPhotoUrl() } : null,
       proof: await new ProofSummary(booking).for(viewer).data(),
       cancellation: BookingPolicy.owns(viewer, booking) && booking.status === 'paid' ? await Refunds.quote(booking) : null,
       shares: booking.shared ? await BookingResource.shares(booking, viewer) : null,

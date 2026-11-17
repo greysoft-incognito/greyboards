@@ -15,6 +15,8 @@ export class Payment extends Model {
   declare amountMinor: number
   /** On a shared booking, the shares this payment is for. */
   declare shareIds: string[] | null
+  /** A payment for a dispatcher's price to print and post, after the rent was paid. */
+  declare printOfferId: string | null
   declare currency: string
   declare response: Record<string, unknown> | null
   declare paidAt: Date | null
@@ -29,6 +31,7 @@ export class Payment extends Model {
     amountMinor: 'amount_minor',
     paidAt: 'paid_at',
     shareIds: 'share_ids',
+    printOfferId: 'print_offer_id',
   }
 
   protected override casts = {
