@@ -23,6 +23,8 @@ export interface Booking {
   startsOn: string
   endsOn: string
   periods: number
+  /** The face of the board it runs on. */
+  face: { id: ID; label: string } | null
   rate: BoardRate
   /** Everything the advertiser pays, the print fee included. */
   amountMinor: number
@@ -196,11 +198,15 @@ export interface BoardBookingTerms {
 export interface BookedDays {
   startsOn: string
   endsOn: string
+  /** The owner kept these days, rather than someone booking them. */
+  blocked?: boolean
 }
 
 export interface BookingInput {
   startsOn: string
   periods: number
+  /** Needed on boards with more than one face. */
+  faceId?: ID
 }
 
 export type PaymentStatus = 'pending' | 'complete' | 'rejected'

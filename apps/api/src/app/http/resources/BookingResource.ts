@@ -78,6 +78,7 @@ export class BookingResource extends Resource {
     const booking = this.resource as Booking
     const board = this.board === undefined ? await booking.board().first() : this.board
     const { startsOn, endsOn } = booking.days()
+    const face = booking.faceId ? await booking.face().first() : null
 
     return {
       id: booking.id,
@@ -85,6 +86,7 @@ export class BookingResource extends Resource {
       startsOn,
       endsOn,
       periods: booking.periods,
+      face: face ? { id: face.id, label: face.label } : null,
       rate: { amountMinor: booking.rateMinor, currency: booking.currency, period: booking.ratePeriod },
       amountMinor: booking.amountMinor,
       printFeeMinor: booking.printFeeMinor,

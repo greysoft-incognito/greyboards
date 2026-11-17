@@ -7,6 +7,8 @@ import { Refunds } from '@app/services/Refunds'
 import { Payouts } from '@app/services/Payouts'
 import { Day } from '@app/support/Day'
 import { Money } from '@app/support/Money'
+import { AvailabilityBlock } from './AvailabilityBlock'
+import { BoardFace } from './BoardFace'
 import { Settings } from '@app/support/Settings'
 import { Sms } from '@app/support/Sms'
 import { StoredImage } from '@app/support/StoredImage'
@@ -40,6 +42,8 @@ export type PrintedBy = 'billposter' | 'owner'
 export interface BookedDays {
   startsOn: string
   endsOn: string
+  /** The owner kept these days, rather than someone booking them. */
+  blocked?: boolean
 }
 
 /**
@@ -50,6 +54,7 @@ export interface BookedDays {
 export class Booking extends Model {
   declare id: string
   declare boardId: string
+  declare faceId: string | null
   declare advertiserId: string
   declare startsOn: Date | string
   declare endsOn: Date | string
@@ -107,6 +112,7 @@ export class Booking extends Model {
 
   protected static override columns = {
     boardId: 'board_id',
+    faceId: 'face_id',
     advertiserId: 'advertiser_id',
     startsOn: 'starts_on',
     endsOn: 'ends_on',
@@ -162,20 +168,26 @@ export class Booking extends Model {
   }
 
   /**
-   * Hold `board` for `advertiser` from `startsOn` for `periods` of its rate, while they pay.
-   * Holds that ran out are let go first; dates someone else holds or booked are refused.
+   * Hold a face of `board` for `advertiser` from `startsOn` for `periods` of its rate, while
+   * they pay. Holds that ran out are let go first; dates someone else holds or booked, or
+   * the owner blocked, are refused.
    */
-  static async hold(board: Board, advertiser: User, startsOn: string, periods: number): Promise<Booking> {
+  static async hold(board: Board, face: BoardFace, advertiser: User, startsOn: string, periods: number): Promise<Booking> {
     const blocker = await Commissions.blocker(board)
     const earliest = Day.today(await Settings.number('bookings.lead_days'))
     const maxPeriods = await Settings.number('bookings.max_periods')
+    const minPeriods = Math.min(face.minPeriods, maxPeriods)
 
     abortIf(!!blocker, blocker ?? '', 422)
     abortIf(await BoardPolicy.manages(advertiser, board), 'You look after this board, so you can’t book it.', 422)
     abortIf(!Day.valid(startsOn), 'Pick a start date.', 422)
     abortIf(startsOn < earliest, `The earliest start is ${earliest}, to leave time to print and put the artwork up.`, 422)
     abortIf(startsOn > Day.today(Booking.MAX_DAYS_AHEAD), 'Bookings can start up to a year ahead.', 422)
-    abortIf(periods < 1 || periods > maxPeriods, `Book between 1 and ${maxPeriods} ${board.ratePeriod}s.`, 422)
+    abortIf(periods < minPeriods || periods > maxPeriods, `Book between ${minPeriods} and ${maxPeriods} ${board.ratePeriod}s.`, 422)
+
+    const endsOn = Booking.endOf(startsOn, periods, board.ratePeriod)
+
+    abortIf(await Booking.blocked(board, face, startsOn, endsOn), 'The owner keeps some of those dates for their own clients. Pick other dates.', 409)
 
     await Booking.expireHolds()
 
@@ -183,16 +195,17 @@ export class Booking extends Model {
 
     abortIf(open >= Booking.MAX_HOLDS, 'Finish or cancel a checkout you started before booking another board.', 429)
 
-    const rateMinor = board.rate()!
+    const rateMinor = board.rateFor(face)!
     const printFeeMinor = await PrintJob.feeFor(board)
     const holdMinutes = await Settings.number('bookings.hold_minutes')
 
     try {
       return await Booking.query().create({
         boardId: board.id,
+        faceId: face.id,
         advertiserId: advertiser.id,
         startsOn,
-        endsOn: Booking.endOf(startsOn, periods, board.ratePeriod),
+        endsOn,
         periods,
         ratePeriod: board.ratePeriod,
         rateMinor,
@@ -216,19 +229,37 @@ export class Booking extends Model {
     await Booking.query().where({ status: Booking.HELD }).whereRaw('hold_expires_at < now()').updateFrom({ status: Booking.EXPIRED })
   }
 
-  /** Days already taken on `board` between two days, at most a year's worth of bookings. */
-  static async taken(board: Board, from: string, to: string): Promise<BookedDays[]> {
+  /**
+   * Days already taken on a face of `board` between two days: bookings, and days the owner
+   * blocked for the face or the whole board. At most a year's worth of each.
+   */
+  static async taken(board: Board, face: BoardFace, from: string, to: string): Promise<BookedDays[]> {
     await Booking.expireHolds()
 
-    const rows = await Booking.query()
-      .where({ boardId: board.id })
+    const bookings = await Booking.query()
+      .where({ faceId: face.id })
       .whereIn('status', Booking.TAKING)
       .whereRaw('ends_on >= ? and starts_on <= ?', [from, to])
       .oldest('startsOn')
       .limit(200)
       .get()
+    const blocks = await Booking.blocks(board, face, from, to).oldest('startsOn').limit(200).get()
 
-    return rows.all().map((booking) => booking.days())
+    return [
+      ...bookings.all().map((booking) => booking.days()),
+      ...blocks.all().map((block) => ({ ...block.days(), blocked: true })),
+    ].sort((first, second) => first.startsOn.localeCompare(second.startsOn))
+  }
+
+  /** Whether the owner blocked any day from `from` to `to` on the face or the whole board. */
+  static blocked(board: Board, face: BoardFace, from: string, to: string): Promise<boolean> {
+    return Booking.blocks(board, face, from, to).exists()
+  }
+
+  private static blocks(board: Board, face: BoardFace, from: string, to: string) {
+    return AvailabilityBlock.query()
+      .where({ boardId: board.id })
+      .whereRaw('(face_id is null or face_id = ?) and ends_on >= ? and starts_on <= ?', [face.id, from, to])
   }
 
   /** Whether the database turned a booking away for sharing days with another. */
@@ -265,6 +296,10 @@ export class Booking extends Model {
 
   board() {
     return this.belongsTo(Board, 'boardId')
+  }
+
+  face() {
+    return this.belongsTo(BoardFace, 'faceId')
   }
 
   advertiser() {

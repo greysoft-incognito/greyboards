@@ -8,7 +8,7 @@ import { BookingPolicy } from '@app/policies/BookingPolicy'
 import { PaymentResource } from '@app/http/resources/PaymentResource'
 import { Checkout } from '@app/services/payments/Checkout'
 import { Day } from '@app/support/Day'
-import { imageFile } from '@app/support/rules'
+import { UUID, imageFile } from '@app/support/rules'
 import { Settings } from '@app/support/Settings'
 import { BaseController } from './BaseController'
 import { GenericResource } from 'resora'
@@ -18,17 +18,19 @@ const STATUSES: BookingStatus[] = ['held', 'paid', 'live', 'completed', 'cancell
 
 /** Advertisers book boards; owners and scouts see the bookings on boards they look after. */
 export default class BookingController extends BaseController {
-  /** Days already taken on a board, for its calendar. Works signed out. */
+  /** Days already taken on a face of a board, for its calendar. Works signed out. */
   async availability() {
     const board = await Board.query().findOrFail(String(this.params.board))
-    const query = await this.validateQuery({ from: 'nullable|date', to: 'nullable|date' })
+    const query = await this.validateQuery({ from: 'nullable|date', to: 'nullable|date', faceId: ['nullable', UUID] })
     const from = query.from ? Day.of(String(query.from)) : Day.today()
     const to = query.to ? Day.of(String(query.to)) : Day.addDays(from, 365)
 
     if (!board.isListed()) throw new RequestException('Board not found.', 404)
     if (to < from || Day.addDays(from, 400) < to) throw new RequestException('Ask for up to a year at a time.', 422)
 
-    return new GenericResource(await Booking.taken(board, from, to)).additional({ status: 'success', message: 'OK', code: 200 })
+    const face = await board.faceFor(query.faceId ? String(query.faceId) : (await board.boardFaces().first())?.id)
+
+    return new GenericResource(await Booking.taken(board, face, from, to)).additional({ status: 'success', message: 'OK', code: 200 })
   }
 
   /** Hold the dates for the advertiser while they pay. */
@@ -37,9 +39,11 @@ export default class BookingController extends BaseController {
     const data = await this.validate({
       startsOn: 'required|date',
       periods: 'required|integer|min:1|max:52',
+      faceId: ['nullable', UUID],
     })
 
-    const booking = await Booking.hold(board, this.user, Day.of(String(data.startsOn)), Number(data.periods))
+    const face = await board.faceFor(data.faceId ? String(data.faceId) : null)
+    const booking = await Booking.hold(board, face, this.user, Day.of(String(data.startsOn)), Number(data.periods))
 
     return new BookingResource(booking).onBoard(board).additional({ status: 'success', message: 'Dates held. Pay to book them.', code: 201 }).response().setStatusCode(201)
   }

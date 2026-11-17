@@ -4,6 +4,7 @@ import { ArrowLeft, BadgeCheck, Camera, Compass, ExternalLink, FileSignature, La
 import type { BoardAgreement, BoardDetail, BoardPhoto, OwnerProfile } from "@greyboards/types";
 import { BoardCover, BoardStatusBadge, formatHeading, formatRate, formatSize, mapLink } from "~/components/boards/BoardBits";
 import { BookPanel } from "~/components/bookings/BookPanel";
+import { BlockedDays, RateCard } from "~/components/boards/RateCard";
 import { SpotMap } from "~/components/map/SpotMap";
 import { Alert, Button, buttonClass, Spinner } from "~/components/ui";
 import { formError } from "~/lib/api.server";
@@ -22,10 +23,13 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
 	const { api, user } = await requireUser(request, context);
 	const { data: board } = await api.board(params.id);
 	const manages = board.owner?.userId === user.id || board.taggedById === user.id;
-	const taken = board.booking.open && !manages ? await api.boardAvailability(board.id).then(({ data }) => data, () => []) : [];
+	const faces = board.booking.open && !manages ? board.rateCard : [];
+	const taken = Object.fromEntries(
+		await Promise.all(faces.map(async (face) => [face.id, await api.boardAvailability(board.id, { faceId: face.id }).then(({ data }) => data, () => [])] as const)),
+	);
 	const canBook = user.accountRoles.some((role) => role.kind === "advertiser" && role.status === "active");
 
-	return { board, manages, taken, canBook, styleUrl: mapStyleUrl(context) };
+	return { board, manages, taken, canBook, today: new Date().toISOString().slice(0, 10), styleUrl: mapStyleUrl(context) };
 }
 
 export async function action({ request, context, params }: Route.ActionArgs) {
@@ -35,7 +39,8 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 
 	try {
 		if (intent === "book") {
-			const { data: booking } = await api.bookBoard(params.id, { startsOn: String(form.get("startsOn")), periods: Number(form.get("periods")) });
+			const faceId = String(form.get("faceId") ?? "") || undefined;
+			const { data: booking } = await api.bookBoard(params.id, { startsOn: String(form.get("startsOn")), periods: Number(form.get("periods")), faceId });
 			const { data: payment } = await api.checkout(booking.id).catch(() => ({ data: null }));
 
 			throw redirect(payment?.checkoutUrl ?? `/bookings/${booking.id}`);
@@ -55,6 +60,35 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 			await api.account.removeBoardPhoto(params.id, String(form.get("photo")));
 
 			return { error: null, message: "Photo removed." };
+		}
+
+		if (intent === "save-face") {
+			const rate = String(form.get("rate") ?? "").trim();
+
+			await api.account.updateBoardFace(params.id, String(form.get("face")), {
+				label: String(form.get("label") ?? ""),
+				rateMinor: rate === "" ? null : Math.round(Number(rate) * 100),
+				minPeriods: Number(form.get("minPeriods") ?? 1),
+			});
+
+			return { error: null, message: "Face saved." };
+		}
+
+		if (intent === "block") {
+			const { message } = await api.account.blockDays(params.id, {
+				startsOn: String(form.get("startsOn")),
+				endsOn: String(form.get("endsOn")),
+				faceId: String(form.get("faceId") ?? "") || null,
+				note: String(form.get("note") ?? "") || null,
+			});
+
+			return { error: null, message: message ?? "Days blocked." };
+		}
+
+		if (intent === "unblock") {
+			await api.account.unblockDays(params.id, String(form.get("block")));
+
+			return { error: null, message: "Days open for booking again." };
 		}
 
 		if (intent === "send-agreement") {
@@ -88,7 +122,7 @@ const REVIEW_NOTES: Record<BoardDetail["status"], string> = {
 export default function BoardPage({ loaderData, actionData }: Route.ComponentProps) {
 	useToastMessage(actionData);
 
-	const { board, manages, taken, canBook, styleUrl } = loaderData;
+	const { board, manages, taken, canBook, today, styleUrl } = loaderData;
 	const [params] = useSearchParams();
 	const [shown, setShown] = useState<BoardPhoto | null>(board.photos[0] ?? null);
 	const rate = formatRate(board.rate);
@@ -191,6 +225,9 @@ export default function BoardPage({ loaderData, actionData }: Route.ComponentPro
 							</div>
 						</div>
 					)}
+
+					{manages && board.rateCard.length > 0 && <RateCard board={board} />}
+					{manages && <BlockedDays board={board} today={today} />}
 				</section>
 			</div>
 		</main>

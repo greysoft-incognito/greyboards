@@ -75,6 +75,9 @@ Router.put('/account/boards/:board', [AccountBoardController, 'update'], [auth])
 Router.delete('/account/boards/:board', [AccountBoardController, 'destroy'], [auth])
 Router.post('/account/boards/:board/photos', [AccountBoardController, 'addPhoto'], [auth, limiter(60, 60)])
 Router.delete('/account/boards/:board/photos/:photo', [AccountBoardController, 'removePhoto'], [auth])
+Router.put('/account/boards/:board/faces/:face', [AccountBoardController, 'updateFace'], [auth])
+Router.post('/account/boards/:board/blocks', [AccountBoardController, 'block'], [auth, limiter(60, 60)])
+Router.delete('/account/boards/:board/blocks/:block', [AccountBoardController, 'unblock'], [auth])
 Router.post('/account/boards/:board/agreement', [AccountBoardController, 'sendAgreement'], [auth, limiter(10, 60)])
 
 // Owner profiles: suggestions while tagging, the ones an account manages, and claiming one by phone

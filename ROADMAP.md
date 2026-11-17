@@ -18,7 +18,7 @@ What's built and what's left, following the phases in [docs/proposal.md](docs/pr
 - [ ] Missed print deadlines: the job goes back with a higher fee, repeat misses suspend the billposter, and the scout is warned when nobody has taken a job close to go-live
 - [ ] Bank details and real payouts to owners, scouts and billposters
 - [ ] Refunds and cancellations of paid bookings
-- [ ] Rate cards per board face, and owners blocking dates
+- [x] Rate cards per board face, and owners blocking dates
 - [ ] ID and bank checks for scouts and billposters, and duplicate board detection
 - [ ] Billposter jobs and proof photos in the mobile app
 

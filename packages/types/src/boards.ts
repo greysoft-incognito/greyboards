@@ -133,6 +133,8 @@ export interface AgreementOffer {
 /** A board with its photos. The owner, agreement and review notes come only to whoever looks after it and reviewers. */
 export interface BoardDetail extends Board {
   photos: BoardPhoto[]
+  /** Each face is booked on its own, A first. */
+  rateCard: BoardFace[]
   /** Whether it takes bookings now. */
   booking: BoardBookingTerms
   owner?: OwnerProfile | null
@@ -143,6 +145,8 @@ export interface BoardDetail extends Board {
   reviewedAt?: string | null
   /** For boards a scout runs for their owner. */
   agreement?: BoardAgreement | null
+  /** Days kept off the market that haven't passed yet. */
+  blocks?: AvailabilityBlock[]
 }
 
 export interface AdminBoard extends BoardDetail {
@@ -236,5 +240,42 @@ export interface BoardPhotoLocation {
 
 export interface BoardReview {
   status: 'listed' | 'rejected' | 'unlisted'
+  note?: string | null
+}
+
+/** One side of a board, booked on its own. */
+export interface BoardFace {
+  id: ID
+  position: number
+  label: string
+  headingDeg: number | null
+  /** What it costs per week or month: its own rate, else the board's. */
+  rateMinor: number | null
+  /** Its own rate, or null when it uses the board's. */
+  ownRateMinor: number | null
+  /** The fewest weeks or months one booking can take. */
+  minPeriods: number
+}
+
+export interface BoardFaceInput {
+  label?: string
+  headingDeg?: number | null
+  rateMinor?: number | null
+  minPeriods?: number
+}
+
+/** Days the owner keeps for their own clients. With no face, the whole board. */
+export interface AvailabilityBlock {
+  id: ID
+  faceId: ID | null
+  startsOn: string
+  endsOn: string
+  note: string | null
+}
+
+export interface AvailabilityBlockInput {
+  startsOn: string
+  endsOn: string
+  faceId?: ID | null
   note?: string | null
 }
