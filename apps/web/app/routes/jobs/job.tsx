@@ -113,7 +113,7 @@ export default function JobPage({ loaderData, actionData }: Route.ComponentProps
 							</li>
 						</ul>
 						<div className="flex items-baseline justify-between rounded-2xl bg-surface-100 px-4 py-3">
-							<span className="text-sm text-ink-700">You earn, once the ad is up</span>
+							<span className="text-sm text-ink-700">{job.bonusMinor > 0 ? `You earn, once the ad is up. Includes a ${formatMoney(job.bonusMinor, job.currency)} rush bonus.` : "You earn, once the ad is up"}</span>
 							<span className="font-display text-xl font-extrabold text-ink-900 tabular-nums">{formatMoney(job.feeMinor, job.currency)}</span>
 						</div>
 						{actionData?.error && <Alert>{actionData.error}</Alert>}
@@ -175,7 +175,7 @@ function NextStep({ job }: { job: PrintJob }) {
 						Reserve this job
 					</Button>
 				</Form>
-				<p className="text-xs text-ink-500">We hold it for you for a few hours so you can check the date and the materials. You see the artwork once it's held.</p>
+				<p className="text-xs text-ink-500">We hold it for you for a few hours so you can check the date and the materials. You see the artwork once it's held. Missing the print or go-live date loses you the job, and repeated misses suspend your billposter role.</p>
 			</div>
 		);
 	}
@@ -203,7 +203,7 @@ function NextStep({ job }: { job: PrintJob }) {
 	if (job.status === "confirmed") {
 		return (
 			<div className="space-y-3">
-				<p className="text-sm text-ink-700">Print the artwork, then add a photo of the finished print before you put it up.</p>
+				<p className="text-sm text-ink-700">Print the artwork, then add a photo of the finished print by {formatDay(job.printBy)}. After that date the job goes to someone else.</p>
 				<div className="flex flex-wrap gap-2">
 					<PrintPhoto busy={intent === "print-photo"} />
 					<GiveBack busy={intent === "release"} disabled={!!intent} />

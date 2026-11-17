@@ -22,4 +22,10 @@ Schedule.command('bookings:settle')
   .withoutOverlapping()
   .onOneServer()
 
+// Take back print jobs that missed their dates, and warn whoever looks after a board when nobody took its job.
+Schedule.command('print-jobs:check')
+  .hourly()
+  .withoutOverlapping()
+  .onOneServer()
+
 // Schedule.exec('backup.sh').dailyAt('01:30').onOneServer()
