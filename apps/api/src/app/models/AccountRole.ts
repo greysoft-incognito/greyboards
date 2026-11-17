@@ -5,7 +5,7 @@ import { AccountMail } from '@app/notifications/AccountMail'
 import { PartnerChecks } from '@app/services/PartnerChecks'
 import { User } from './User'
 
-export type AccountRoleKind = 'advertiser' | 'owner' | 'scout' | 'billposter'
+export type AccountRoleKind = 'advertiser' | 'owner' | 'scout' | 'dispatch'
 
 export type AccountRoleStatus = 'active' | 'pending' | 'rejected' | 'suspended'
 
@@ -19,8 +19,8 @@ export interface AccountRoleDefinition {
 
 /**
  * A marketplace role an account holds. One account can hold several: an agency can
- * advertise and own boards, a scout can also be a billposter. Advertisers and owners
- * start at once; scouts and billposters handle other people's boards and money, so an
+ * advertise and own boards, a scout can also be a dispatcher. Advertisers and owners
+ * start at once; scouts and dispatchers handle other people's boards and money, so an
  * admin reviews them first.
  */
 export class AccountRole extends Model {
@@ -46,7 +46,7 @@ export class AccountRole extends Model {
     { kind: 'advertiser', label: 'Advertiser', description: 'Find boards anywhere, book them and track campaigns.', needsReview: false },
     { kind: 'owner', label: 'Board owner', description: 'List your own boards, set rates and get paid.', needsReview: false },
     { kind: 'scout', label: 'Scout', description: 'Find boards, sign their owners and run the boards for them.', needsReview: true },
-    { kind: 'billposter', label: 'Billposter', description: 'Print booked artwork and put it up on boards near you.', needsReview: true },
+    { kind: 'dispatch', label: 'Dispatch', description: 'Print booked artwork and put it up on boards near you.', needsReview: true },
   ]
 
   protected static override table = 'account_roles'

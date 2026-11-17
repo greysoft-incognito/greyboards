@@ -99,7 +99,7 @@ export class User extends BaseUser {
     )
   }
 
-  /** The marketplace roles the account holds: advertiser, owner, scout or billposter. */
+  /** The marketplace roles the account holds: advertiser, owner, scout or dispatcher. */
   accountRoles() {
     return this.hasMany(AccountRole, 'userId')
   }

@@ -21,7 +21,7 @@ The first migration enables the `postgis` extension, so the database user needs 
 
 ## Marketplace roles
 
-`AccountRole` holds the roles a person works in: advertiser, owner, scout and billposter. Advertiser and owner are active as soon as they are taken. Scout and billposter start as pending and are approved, rejected or suspended from `PATCH /api/admin/account-roles/:id` by someone with the `partners.review` permission. The person gets an email with the outcome.
+`AccountRole` holds the roles a person works in: advertiser, owner, scout and dispatcher. Advertiser and owner are active as soon as they are taken. Scout and dispatcher start as pending and are approved, rejected or suspended from `PATCH /api/admin/account-roles/:id` by someone with the `partners.review` permission. The person gets an email with the outcome.
 
 Routes that only one role may use take `Authorize.actingAs('scout')` and similar, next to `Authorize.to(...permissions)` for staff permissions.
 

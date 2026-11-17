@@ -31,7 +31,7 @@ export default function AdminOverview({ loaderData }: Route.ComponentProps) {
 		{ kind: "advertiser", label: "Advertisers" },
 		{ kind: "owner", label: "Board owners" },
 		{ kind: "scout", label: "Scouts" },
-		{ kind: "billposter", label: "Billposters" },
+		{ kind: "dispatch", label: "Dispatchers" },
 	] as const;
 
 	return (

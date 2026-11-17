@@ -17,7 +17,7 @@ import { colors, radius } from '@/theme'
 const SIDES: Record<MessageSide, string> = {
   advertiser: 'Advertiser',
   board: "Board owner's side",
-  billposter: 'Billposter',
+  dispatch: 'Dispatch',
   staff: 'Greyboards',
 }
 

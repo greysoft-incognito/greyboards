@@ -71,7 +71,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 	return { error: "Something went wrong. Try again.", message: null };
 }
 
-/** One print job: where and how big, the pay, and the next thing for the billposter to do. */
+/** One print job: where and how big, the pay, and the next thing for the dispatcher to do. */
 export default function JobPage({ loaderData, actionData }: Route.ComponentProps) {
 	useToastMessage(actionData);
 
@@ -160,7 +160,7 @@ export default function JobPage({ loaderData, actionData }: Route.ComponentProps
 	);
 }
 
-/** What the billposter does next: reserve, confirm, then show the print. */
+/** What the dispatcher does next: reserve, confirm, then show the print. */
 function NextStep({ job }: { job: PrintJob }) {
 	const navigation = useNavigation();
 	const intent = navigation.formData?.get("intent");
@@ -175,7 +175,7 @@ function NextStep({ job }: { job: PrintJob }) {
 						Reserve this job
 					</Button>
 				</Form>
-				<p className="text-xs text-ink-500">We hold it for you for a few hours so you can check the date and the materials. You see the artwork once it's held. Missing the print or go-live date loses you the job, and repeated misses suspend your billposter role.</p>
+				<p className="text-xs text-ink-500">We hold it for you for a few hours so you can check the date and the materials. You see the artwork once it's held. Missing the print or go-live date loses you the job, and repeated misses suspend your dispatcher role.</p>
 			</div>
 		);
 	}

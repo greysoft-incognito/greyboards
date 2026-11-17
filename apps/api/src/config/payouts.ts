@@ -1,5 +1,5 @@
 /**
- * Paying owners, scouts and billposters into their bank accounts. Admins change these in the
+ * Paying owners, scouts and dispatchers into their bank accounts. Admins change these in the
  * dashboard; these are the defaults.
  */
 export default () => {

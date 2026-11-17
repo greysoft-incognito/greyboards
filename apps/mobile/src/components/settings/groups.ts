@@ -7,7 +7,7 @@ export const SETTINGS_GROUPS: { label: string; pages: { to: Href; label: string;
     pages: [
       { to: '/settings/profile', label: 'Profile', hint: 'Your name and photo' },
       { to: '/settings/email', label: 'Email', hint: 'Your address and confirming it' },
-      { to: '/settings/roles', label: 'Roles', hint: 'Advertiser, owner, scout or billposter' },
+      { to: '/settings/roles', label: 'Roles', hint: 'Advertiser, owner, scout or dispatcher' },
     ],
   },
   {

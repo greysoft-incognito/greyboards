@@ -14,7 +14,7 @@ export interface IdentityInput {
 }
 
 /**
- * A photo of a scout's or billposter's government ID, checked by a reviewer before they
+ * A photo of a scout's or dispatcher's government ID, checked by a reviewer before they
  * are let in. One per account; sending a new one replaces it and asks for a fresh look.
  */
 export class IdentityCheck extends Model {

@@ -36,7 +36,7 @@ describe('Artwork and print jobs', () => {
   beforeAll(async () => {
     for (const who of ['advertiser', 'owner', 'reviewer', 'poster', 'rival']) {
       const email = `print-${who}-${Date.now()}@greyboards.test`
-      const roles = who === 'owner' ? ['owner'] : who === 'poster' || who === 'rival' ? ['billposter'] : ['advertiser']
+      const roles = who === 'owner' ? ['owner'] : who === 'poster' || who === 'rival' ? ['dispatch'] : ['advertiser']
       const register = await api('post', '/auth/register', { name: `Print ${who}`, email, password: 'password123', roles }, null)
 
       tokens[who] = register.body.data.token
@@ -87,7 +87,7 @@ describe('Artwork and print jobs', () => {
     jobId = approved.body.data.printJob.id
   })
 
-  it('shows billposters nearby jobs, and the artwork only once they reserve one', async () => {
+  it('shows dispatchers nearby jobs, and the artwork only once they reserve one', async () => {
     const near = await api('get', `/print-jobs?lat=${latitude + 0.01}&lng=${longitude}`, undefined, 'poster')
     const job = near.body.data.find((entry: { id: string }) => entry.id === jobId)
 
@@ -112,7 +112,7 @@ describe('Artwork and print jobs', () => {
     expect((await api('post', `/print-jobs/${jobId}/release`, undefined, 'rival')).body.data.status).toBe('open')
   })
 
-  it('makes the job the billposter’s once confirmed, then takes a photo of the print', async () => {
+  it('makes the job the dispatcher’s once confirmed, then takes a photo of the print', async () => {
     await api('post', `/print-jobs/${jobId}/reserve`, undefined, 'poster')
 
     expect((await api('post', `/print-jobs/${jobId}/confirm`, undefined, 'poster')).body.data.status).toBe('confirmed')

@@ -10,7 +10,7 @@ export interface IdentityDocumentDefinition {
   label: string
 }
 
-/** What a scout or billposter has shown before they are let in. */
+/** What a scout or dispatcher has shown before they are let in. */
 export interface PartnerChecks {
   identity: {
     status: IdentityStatus

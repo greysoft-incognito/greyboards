@@ -4,7 +4,7 @@ import { Model } from '@arkstack/database'
 export type DisputeReason = 'not_up' | 'wrong_ad' | 'damaged' | 'taken_down' | 'payment' | 'other'
 
 /** Which side of the booking raised it. */
-export type DisputeSide = 'advertiser' | 'board' | 'billposter'
+export type DisputeSide = 'advertiser' | 'board' | 'dispatch'
 
 /**
  * What staff decided. `refund_full` and `refund_part` cancel the booking and send money

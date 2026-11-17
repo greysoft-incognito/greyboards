@@ -99,7 +99,7 @@ export default function JobScreen() {
   )
 }
 
-/** What the billposter does next: reserve, confirm, show the print, then put it up. */
+/** What the dispatcher does next: reserve, confirm, show the print, then put it up. */
 function NextStep({ job, onChange }: { job: PrintJob; onChange: () => void }) {
   const { maxImageMb } = useLimits()
   const action = useAction()

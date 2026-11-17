@@ -30,7 +30,7 @@ describe('Marketplace roles', () => {
   it('describes every role to visitors', async () => {
     const definitions = (await api('get', '/account-roles', undefined, null)).body.data
 
-    expect(definitions.map((definition: { kind: string }) => definition.kind)).toEqual(['advertiser', 'owner', 'scout', 'billposter'])
+    expect(definitions.map((definition: { kind: string }) => definition.kind)).toEqual(['advertiser', 'owner', 'scout', 'dispatch'])
   })
 
   it('starts owners at once and sends scouts for review', async () => {

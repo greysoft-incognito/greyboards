@@ -11,7 +11,7 @@ const ID_STATUS: Record<NonNullable<PartnerChecks["identity"]>["status"], string
 };
 
 /**
- * What scouts and billposters send before a reviewer lets them in: a photo of a
+ * What scouts and dispatchers send before a reviewer lets them in: a photo of a
  * government ID, and a bank account whose name matches it.
  */
 export function PartnerChecksPanel({
@@ -34,7 +34,7 @@ export function PartnerChecksPanel({
 	return (
 		<section className="panel space-y-5 p-5 sm:p-6">
 			<div>
-				<h2 className="font-display text-xl font-bold text-ink-900">Checks for scouts and billposters</h2>
+				<h2 className="font-display text-xl font-bold text-ink-900">Checks for scouts and dispatchers</h2>
 				<p className="mt-1 text-sm text-ink-500">You'll handle other people's boards and money, so we check who you are and where to pay you first.</p>
 			</div>
 

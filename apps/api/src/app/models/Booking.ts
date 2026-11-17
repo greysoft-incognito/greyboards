@@ -38,8 +38,8 @@ export type ArtworkStatus = 'none' | 'submitted' | 'approved' | 'rejected'
  */
 export type ProofStatus = 'none' | 'submitted' | 'accepted' | 'disputed'
 
-/** `billposter` puts the job on the marketplace; `owner` means the owner or their scout does it. */
-export type PrintedBy = 'billposter' | 'owner'
+/** `dispatch` puts the job on the marketplace; `owner` means the owner or their scout does it. */
+export type PrintedBy = 'dispatch' | 'owner'
 
 /** How the booking came about: booked at the listed price, an accepted offer, or a won bid. */
 export type BookingSource = 'book' | 'offer' | 'bid'
@@ -299,7 +299,7 @@ export class Booking extends Model {
         ratePeriod: board.ratePeriod,
         rateMinor: terms.rateMinor,
         printFeeMinor,
-        printedBy: printFeeMinor > 0 && board.printsOwn ? 'owner' : 'billposter',
+        printedBy: printFeeMinor > 0 && board.printsOwn ? 'owner' : 'dispatch',
         amountMinor: terms.rentMinor + printFeeMinor,
         currency: board.currency,
         status: Booking.HELD,
@@ -530,7 +530,7 @@ export class Booking extends Model {
     })
   }
 
-  /** The owner or scout approves the artwork, which puts the print job up for billposters, or sends it back with a note. */
+  /** The owner or scout approves the artwork, which puts the print job up for dispatchers, or sends it back with a note. */
   async reviewArtwork(reviewer: User, approve: boolean, note?: string | null): Promise<void> {
     abortIf(this.artworkStatus !== 'submitted', 'There is no artwork waiting for a check.', 422)
     abortIf(!approve && !note?.trim(), 'Say what to change so the advertiser can fix it.', 422)
@@ -567,7 +567,7 @@ export class Booking extends Model {
     return PostingProof.store(this, user, file, where, distanceM)
   }
 
-  /** Someone looking after the board who posts proof while no billposter holds the job takes the job, and its fee, for the owner's side. */
+  /** Someone looking after the board who posts proof while no dispatcher holds the job takes the job, and its fee, for the owner's side. */
   private async stepInIfUnclaimed(user: User): Promise<void> {
     const job = await PrintJob.query().where({ bookingId: this.id }).first()
 

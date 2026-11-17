@@ -15,7 +15,7 @@ export const DISPUTE_REASONS: { value: DisputeReason; label: string }[] = [
 	{ value: "other", label: "Something else" },
 ];
 
-export const DISPUTE_SIDES = { advertiser: "Advertiser", board: "Board’s side", billposter: "Billposter" } as const;
+export const DISPUTE_SIDES = { advertiser: "Advertiser", board: "Board’s side", dispatch: "Dispatch" } as const;
 
 /** What was raised and, once decided, what staff decided and why. */
 export function DisputeSummary({ dispute, currency }: { dispute: Dispute; currency: string }) {

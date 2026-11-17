@@ -28,7 +28,7 @@ Schedule.command('bids:settle')
   .withoutOverlapping()
   .onOneServer()
 
-// Send owners, scouts and billposters what they're owed, and check transfers still on their way.
+// Send owners, scouts and dispatchers what they're owed, and check transfers still on their way.
 Schedule.command('payouts:send')
   .everyThirtyMinutes()
   .withoutOverlapping()

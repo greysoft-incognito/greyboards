@@ -111,7 +111,7 @@ export class Refunds {
     const job = await PrintJob.query().where({ bookingId: booking.id }).first()
     const printed = !!job && [PrintJob.PRINTED, PrintJob.POSTED].includes(job.status)
 
-    if (job && !printed) await job.update({ status: 'cancelled', billposterId: null, reservedUntil: null })
+    if (job && !printed) await job.update({ status: 'cancelled', dispatcherId: null, reservedUntil: null })
 
     const kept = Refunds.keptShares(booking, job, booking.amountMinor - refundMinor, printed)
     const parts = await Refunds.split(booking, refundMinor)

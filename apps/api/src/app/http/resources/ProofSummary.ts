@@ -7,7 +7,7 @@ import { PostingProofResource } from './PostingProofResource'
 
 /**
  * A booking's proof of posting: its photos, where it stands, and what `viewer` can do with
- * it. The advertiser checks it; the billposter, or the owner of a board with no print job,
+ * it. The advertiser checks it; the dispatcher, or the owner of a board with no print job,
  * adds the photos.
  */
 export class ProofSummary {

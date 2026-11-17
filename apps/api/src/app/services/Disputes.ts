@@ -67,7 +67,7 @@ export class Disputes {
     const side = await Disputes.sideOf(booking, user)
     const closed = await Disputes.closedReason(booking)
 
-    abortIf(!side, 'Only the advertiser, whoever looks after the board and the billposter can raise a dispute.', 403)
+    abortIf(!side, 'Only the advertiser, whoever looks after the board and the dispatcher can raise a dispute.', 403)
     abortIf(!!closed, closed!, 422)
     abortIf(!details.trim(), 'Say what went wrong, so staff can look into it.', 422)
 

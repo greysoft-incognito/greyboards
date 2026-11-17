@@ -8,7 +8,7 @@ import { BaseController } from './BaseController'
 import { GenericResource } from 'resora'
 import { RequestException, perPage } from '@arkstack/common'
 
-/** Messages about a booking between the advertiser, whoever looks after the board and the billposter. */
+/** Messages about a booking between the advertiser, whoever looks after the board and the dispatcher. */
 export default class MessageController extends BaseController {
   /** A page of messages, newest first. Reading them marks the booking read. */
   async index() {

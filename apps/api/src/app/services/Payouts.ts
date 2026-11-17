@@ -24,7 +24,7 @@ export interface Share {
 
 /**
  * Moves a booking's money out of escrow once its proof is accepted, to the owner, the
- * scout, the billposter and Greyboards, by the split fixed at payment, then sends each
+ * scout, the dispatcher and Greyboards, by the split fixed at payment, then sends each
  * share to its person's bank account once the hold days pass. The ledger records both.
  */
 export class Payouts {
@@ -32,7 +32,7 @@ export class Payouts {
   static async shares(booking: Booking): Promise<Share[]> {
     const job = booking.printFeeMinor > 0 ? await PrintJob.query().where({ bookingId: booking.id }).first() : null
     const printer = Payouts.printer(booking, job)
-    const bonus = booking.printedBy === 'billposter' && job ? Math.min(Number(job.bonusMinor ?? 0), booking.platformAmountMinor ?? 0) : 0
+    const bonus = booking.printedBy === 'dispatch' && job ? Math.min(Number(job.bonusMinor ?? 0), booking.platformAmountMinor ?? 0) : 0
     const shares: Share[] = [
       { account: 'owner', kind: 'payout_due', amountMinor: booking.ownerAmountMinor ?? 0, userId: null, ownerProfileId: booking.ownerProfileId, memo: 'Owner’s share' },
       { account: 'scout', kind: 'payout_due', amountMinor: booking.scoutAmountMinor ?? 0, userId: booking.scoutId, ownerProfileId: null, memo: 'Scout’s share' },
@@ -43,9 +43,9 @@ export class Payouts {
     return shares.filter((share) => share.amountMinor > 0)
   }
 
-  /** Who the print fee goes to: the billposter who took the job, or, when the owner's side prints, the scout who runs the board or else the owner. */
+  /** Who the print fee goes to: the dispatcher who took the job, or, when the owner's side prints, the scout who runs the board or else the owner. */
   static printer(booking: Booking, job: PrintJob | null): Pick<Share, 'account' | 'userId' | 'ownerProfileId'> {
-    if (booking.printedBy !== 'owner') return { account: 'billposter', userId: job?.billposterId ?? null, ownerProfileId: null }
+    if (booking.printedBy !== 'owner') return { account: 'dispatch', userId: job?.dispatcherId ?? null, ownerProfileId: null }
     if (booking.scoutId) return { account: 'scout', userId: booking.scoutId, ownerProfileId: null }
 
     return { account: 'owner', userId: null, ownerProfileId: booking.ownerProfileId }

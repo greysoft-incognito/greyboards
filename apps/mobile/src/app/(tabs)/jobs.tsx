@@ -16,10 +16,10 @@ import { colors } from '@/theme'
 
 type View_ = 'near' | 'mine'
 
-/** Billposters find open print jobs near them, and follow the ones they took. */
+/** Dispatchers find open print jobs near them, and follow the ones they took. */
 export default function Jobs() {
   const inset = useTabBarInset()
-  const role = useUser().accountRoles.find((held) => held.kind === 'billposter')
+  const role = useUser().accountRoles.find((held) => held.kind === 'dispatch')
   const [view, setView] = useState<View_>('near')
   const [spot, setSpot] = useState<Spot | null>(null)
   const [jobs, setJobs] = useState<PrintJob[]>([])
@@ -84,10 +84,10 @@ export default function Jobs() {
   const empty = !active ? (
     <EmptyState
       icon={Printer}
-      title={role?.status === 'pending' ? 'Being checked' : 'For billposters'}
-      text={role?.status === 'pending' ? 'Your billposter application is being checked. Jobs show here once it’s approved.' : 'Print jobs are for billposters. Apply for the role and we’ll check your details.'}
+      title={role?.status === 'pending' ? 'Being checked' : 'For dispatchers'}
+      text={role?.status === 'pending' ? 'Your dispatcher application is being checked. Jobs show here once it’s approved.' : 'Print jobs are for dispatchers. Apply for the role and we’ll check your details.'}
     >
-      {role?.status !== 'pending' ? <Button title="Become a billposter" variant="secondary" onPress={() => router.push('/settings/roles')} /> : null}
+      {role?.status !== 'pending' ? <Button title="Become a dispatcher" variant="secondary" onPress={() => router.push('/settings/roles')} /> : null}
     </EmptyState>
   ) : view === 'near' && !spot ? (
     <EmptyState icon={Printer} title="Jobs close to you" text="We show boards with approved artwork near where you are, nearest first. Your location is only used for this search.">

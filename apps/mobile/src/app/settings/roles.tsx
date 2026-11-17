@@ -35,7 +35,7 @@ export default function Roles() {
   return (
     <SettingsPage
       title="How you use Greyboards"
-      description="One account can do several things. Advertisers and board owners can start at once; scouts and billposters are checked first."
+      description="One account can do several things. Advertisers and board owners can start at once; scouts and dispatchers are checked first."
     >
       {roles.error ? <Callout>{FormProblem.from(roles.error).message}</Callout> : null}
       {action.problem.message ? <Callout>{action.problem.message}</Callout> : null}

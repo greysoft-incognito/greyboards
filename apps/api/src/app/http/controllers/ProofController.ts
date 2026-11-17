@@ -11,7 +11,7 @@ import { GenericResource } from 'resora'
 import { RequestException } from '@arkstack/common'
 
 /**
- * Proof that an ad is up. The billposter, or the owner of a board with no print job, adds
+ * Proof that an ad is up. The dispatcher, or the owner of a board with no print job, adds
  * geotagged photos and sends them; the advertiser accepts, which pays everyone, or says
  * what's wrong.
  */
@@ -80,7 +80,7 @@ export default class ProofController extends BaseController {
   private async posting(): Promise<Booking> {
     const booking = await this.find()
 
-    if (!(await BookingPolicy.postsProof(this.user, booking))) throw new RequestException('Only the billposter on this job, or the owner of a board with none, adds proof.', 403)
+    if (!(await BookingPolicy.postsProof(this.user, booking))) throw new RequestException('Only the dispatcher on this job, or the owner of a board with none, adds proof.', 403)
 
     return booking
   }

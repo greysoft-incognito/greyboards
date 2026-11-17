@@ -50,7 +50,7 @@ export interface BoardDetails {
   rateMinor?: number | null
   currency?: string
   ratePeriod?: BoardRatePeriod
-  /** The owner, or their scout, prints and puts up booked ads instead of a billposter. */
+  /** The owner, or their scout, prints and puts up booked ads instead of a dispatcher. */
   printsOwn?: boolean
   /** What they charge for that, in minor units. Null uses the standard print price. */
   printFeeMinor?: number | null

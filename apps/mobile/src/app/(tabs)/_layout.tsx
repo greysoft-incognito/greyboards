@@ -17,7 +17,7 @@ export default function TabsLayout() {
   const insets = useSafeAreaInsets()
   const roles = useUser().accountRoles
   const tags = taggingRoles(roles).length > 0
-  const posts = roles.some((role) => role.kind === 'billposter')
+  const posts = roles.some((role) => role.kind === 'dispatch')
 
   return (
     <GlassTabs>

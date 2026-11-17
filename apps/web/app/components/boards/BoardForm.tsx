@@ -196,7 +196,7 @@ export function BoardForm({
 				<div className="grid gap-4 sm:grid-cols-2">
 					<Field label="Who prints and puts up ads" error={fieldErrors.printsOwn}>
 						<Select name="printsOwn" defaultValue={board?.printsOwn ? "1" : "0"}>
-							<option value="0">A Greyboards billposter</option>
+							<option value="0">A Greyboards dispatcher</option>
 							<option value="1">{scouting ? "The owner or I do it" : "We do it ourselves"}</option>
 						</Select>
 					</Field>

@@ -19,7 +19,7 @@ One account can hold several roles. An agency can be an advertiser and an owner;
 | **Scout** | Find boards, sign owners, tag the boards, and run them for managed owners: rates, artwork checks, installation and proof photos | Earns a commission on every booking of the boards they signed |
 | **Advertiser** | Find boards, book, bid or share, upload artwork, track the campaign | Pays for bookings |
 | **Admin** | Verify tags and owners, review artwork, settle disputes, set commissions | |
-| **Billposter** (working name) | Find booked boards nearby that need printing, reserve the job, print the artwork and put it up | Paid per job, after proof |
+| **Dispatcher** (working name) | Find booked boards nearby that need printing, reserve the job, print the artwork and put it up | Paid per job, after proof |
 
 ## 3. Refining the features you listed
 
@@ -60,7 +60,7 @@ The scout's physical meeting with the owner becomes a record in the scout's app.
 - "Your board on Lekki–Epe is booked for December for ₦1,200,000. You'll receive ₦1,020,000 after the ad is up."
 - "Payment of ₦1,020,000 sent to GTBank ••4821."
 
-They can reply or call Greyboards support, and can ask the scout to block dates they use for their own clients. The scout sets rates within the owner's minimum, checks artwork against the agreed rules, makes sure the artwork gets printed and put up (by the owner or a billposter), and uploads proof photos if nobody else does. Owners are paid by bank transfer whether or not they ever sign in.
+They can reply or call Greyboards support, and can ask the scout to block dates they use for their own clients. The scout sets rates within the owner's minimum, checks artwork against the agreed rules, makes sure the artwork gets printed and put up (by the owner or a dispatcher), and uploads proof photos if nobody else does. Owners are paid by bank transfer whether or not they ever sign in.
 
 **Self-serve owners (web and app).** Larger owners with many boards manage everything themselves:
 
@@ -69,7 +69,7 @@ They can reply or call Greyboards support, and can ask the scout to block dates 
 - **Rate card per face:** price per week or month, minimum booking length, and for digital boards price per slot.
 - **Availability calendar:** blocked dates, seasonal prices, and bookings already made.
 - **Booking requests:** accept automatically or review each one. Every booking needs the owner's approval of the artwork.
-- **Proof of posting:** after the artwork is up, whoever put the artwork up (owner, billposter or scout) uploads geotagged photos from the app. This releases the payment.
+- **Proof of posting:** after the artwork is up, whoever put the artwork up (owner, dispatcher or scout) uploads geotagged photos from the app. This releases the payment.
 - **Earnings:** what each board earned, Greyboards' commission, and payouts to their bank account.
 
 ### 3.4 Advertisers: place, share and bid
@@ -93,34 +93,34 @@ They can reply or call Greyboards support, and can ask the scout to block dates 
 Static boards need the artwork printed and put up. Two ways, chosen per board and shown to the advertiser at booking:
 
 1. **The owner prints.** The owner (or their scout) offers print-and-display at a price on the board's rate card, and takes the job automatically when the booking is made.
-2. **A billposter prints.** The job goes to a marketplace of local billposters. This is the default when the owner doesn't print.
+2. **A dispatcher prints.** The job goes to a marketplace of local dispatchers. This is the default when the owner doesn't print.
 
-**Why "billposter".** The person prints *and* displays, so "Printer" is too narrow. Billposter is the trade's own word for someone who puts up posters and billboards, and "posting" is what the industry calls putting an ad on a board, which matches *proof of posting*. Alternatives if you prefer: **Poster crew**, **Fixer**, or **Fulfiller**.
+**Why "dispatch".** The person prints *and* displays, so "Printer" is too narrow. Dispatcher is the trade's own word for someone who puts up posters and billboards, and "posting" is what the industry calls putting an ad on a board, which matches *proof of posting*. Alternatives if you prefer: **Poster crew**, **Fixer**, or **Fulfiller**.
 
-**The billposter's flow:**
+**The dispatcher's flow:**
 
 1. **Find jobs near me.** A map and list of booked boards within their chosen radius that need printing, with the size, material, go-live date and pay.
-2. **Reserve.** Tapping *Reserve* holds the job for them alone for a short window (for example 2 hours) while they confirm they can deliver by the deadline. Once confirmed, the job is theirs; other billposters no longer see it.
+2. **Reserve.** Tapping *Reserve* holds the job for them alone for a short window (for example 2 hours) while they confirm they can deliver by the deadline. Once confirmed, the job is theirs; other dispatchers no longer see it.
 3. **Print.** They download the print-ready artwork (only after reserving) and print it. The app asks for a photo of the finished print before they go to the site, so a wrong print is caught early.
 4. **Display.** On site, they put it up and capture proof in the app, with the same GPS and in-app camera rules as tagging.
 5. **Get paid.** The print-and-display fee is held from the advertiser's payment and released to them when the proof is accepted.
 
-**Keeping it reliable:** a billposter who misses a deadline loses the job, which goes back to the marketplace with a higher fee if the go-live date is close; repeated misses suspend them. Billposters are verified like scouts (phone, ID, bank account) and rated by advertisers. The scout for a managed board is told when a job has no taker 3 days before go-live, so they can step in.
+**Keeping it reliable:** a dispatcher who misses a deadline loses the job, which goes back to the marketplace with a higher fee if the go-live date is close; repeated misses suspend them. Dispatchers are verified like scouts (phone, ID, bank account) and rated by advertisers. The scout for a managed board is told when a job has no taker 3 days before go-live, so they can step in.
 
-**Pricing.** A fixed rate per square metre and material, set by Greyboards per region, keeps it simple for phase 1. Billposters bidding for jobs can come later if fixed rates don't attract enough of them.
+**Pricing.** A fixed rate per square metre and material, set by Greyboards per region, keeps it simple for phase 1. Dispatchers bidding for jobs can come later if fixed rates don't attract enough of them.
 
-One person can be a billposter and a scout, or an owner, on the same account.
+One person can be a dispatcher and a scout, or an owner, on the same account.
 
 ### 3.6 Commissions
 
-Printing and posting is paid first, to the billposter who did it. The rent left is split between the owner, Greyboards and the scout who brought the board in: 70%, 20% and 10% by default. Admins can change the three parts, and they must always add up to 100%. On a board its owner tagged, with no scout, the scout's part goes to the owner by default (an admin setting can send it to Greyboards instead).
+Printing and posting is paid first, to the dispatcher who did it. The rent left is split between the owner, Greyboards and the scout who brought the board in: 70%, 20% and 10% by default. Admins can change the three parts, and they must always add up to 100%. On a board its owner tagged, with no scout, the scout's part goes to the owner by default (an admin setting can send it to Greyboards instead).
 
 Example with a ₦1,000,000 booking on a scouted board, of which ₦100,000 is printing and posting:
 
 | | Amount |
 | --- | --- |
 | Advertiser pays | ₦1,000,000 (held by Greyboards) |
-| Billposter, for printing and posting | ₦100,000 |
+| Dispatcher, for printing and posting | ₦100,000 |
 | Owner receives (70% of the ₦900,000 rent) | ₦630,000 |
 | Greyboards keeps (20%) | ₦180,000 |
 | Scout receives (10%) | ₦90,000 |
@@ -135,12 +135,12 @@ Ranked by how much the core promise depends on them.
 
 1. **Proof of posting and escrow.** Without it an advertiser who never visits has no reason to trust a booking. Payment is held until geotagged photos of the artwork on the board are accepted, with periodic check-in photos for longer bookings. Digital boards add play logs.
 2. **Artwork checks and approval.** Check the file against the board's size and resolution, let the owner approve, and run a content-policy review. Some places also need a signage authority's approval; the booking should show who is responsible for that.
-3. **Printing and display.** Covered in 3.5: owners who print, and a billposter marketplace for everyone else.
+3. **Printing and display.** Covered in 3.5: owners who print, and a dispatcher marketplace for everyone else.
 4. **Verification and fraud checks.** Phone and ID verification for owners and scouts, in-app camera only, GPS accuracy limits, duplicate detection, and admin review of first tags from new scouts.
 5. **Scout pipeline and tasks.** Prospects → contacted → signed → captured → verified → earning, so scouts can work a street systematically, plus territories so two scouts don't chase the same owner, and a task list for managed boards (artwork to check, installs to arrange, proof photos due).
 6. **Map search that fits how buyers think.** Clustering, filters (type, size, price, lit, digital, available dates), search by radius, by area drawn on the map, and along a route. Saved searches with alerts when a matching board frees up.
 7. **Board page that replaces the site visit.** Photos, street-level view, facing direction on a mini map, nearby points of interest, and an estimate of daily traffic where data exists.
-8. **Messages and texts.** Advertiser, scout, owner and billposter chat about a booking inside the app, so agreements and evidence stay with the booking. Managed owners get the same updates by SMS or WhatsApp.
+8. **Messages and texts.** Advertiser, scout, owner and dispatcher chat about a booking inside the app, so agreements and evidence stay with the booking. Managed owners get the same updates by SMS or WhatsApp.
 9. **Cancellations, refunds and disputes.** Clear policy per booking type, a dispute flow attached to the booking, and admin decisions recorded in the ledger.
 10. **Reviews.** Advertisers rate boards and owners after a campaign; owners rate advertisers.
 11. **Campaign report.** A shareable page and PDF with the proof photos, dates and boards, for advertisers to show their own clients.
@@ -152,7 +152,7 @@ Ranked by how much the core promise depends on them.
 
 | Phase | Scope |
 | --- | --- |
-| **1. Core marketplace** | Accounts and roles, tagging with live GPS and compass (mobile), scout agreements for owners without accounts, verification queue, listings and rate cards, map search, fixed-price booking with date holds, artwork upload and approval (by the scout for managed owners), SMS updates to owners, owner printing and the billposter job marketplace at fixed rates, escrow payments, proof of posting, commission ledger and payouts, admin moderation |
+| **1. Core marketplace** | Accounts and roles, tagging with live GPS and compass (mobile), scout agreements for owners without accounts, verification queue, listings and rate cards, map search, fixed-price booking with date holds, artwork upload and approval (by the scout for managed owners), SMS updates to owners, owner printing and the dispatcher job marketplace at fixed rates, escrow payments, proof of posting, commission ledger and payouts, admin moderation |
 | **2. Market mechanics** | Bids and offers, shared bookings, messages, reviews, disputes, campaign reports, scout pipeline and territories |
 | **3. Scale** | Digital slot scheduling and play logs, traffic estimates and price guidance, owner bulk tools, public API for agencies |
 
@@ -175,7 +175,7 @@ Same layout and tools as toneflix/photos: a pnpm monorepo with Node 24 and Postg
 - `boards`, `board_faces` (the rentable unit), `board_captures` (each tag's GPS, heading, accuracy, photos and device)
 - `owners` (name, verified phone, bank account; linked to a user only if they ever sign up), `owner_agreements` (scout, owner, term, minimum price, ad rules, signature, paper copy, status)
 - `scout_tasks` (artwork checks, installs and proof visits for managed boards)
-- `print_jobs` (booking, size, material, fee, deadline, who prints), `print_job_reservations` (billposter, hold expiry, confirmed at)
+- `print_jobs` (booking, size, material, fee, deadline, who prints), `print_job_reservations` (dispatcher, hold expiry, confirmed at)
 - `rate_cards`, `availability_blocks`
 - `bookings` with a date range per face, guarded by a PostgreSQL exclusion constraint so two bookings can never overlap
 - `booking_shares` (co-op participants), `auctions`, `bids`, `offers`
@@ -193,7 +193,7 @@ Commission rates belong to one authority (a `Commissions` policy read from setti
 1. **Scout commission:** now that scouts run boards for managed owners, should they earn more on those than on self-serve boards, or get a fee per proof visit? Separately: a share of Greyboards' commission (as in 3.6) or an extra charge on the owner? For how long: the agreement's term, or for as long as the board stays listed?
 2. **Sharing:** is the shared booking (co-op) in 3.4 what you meant, or something else?
 3. **Bids:** may only owners open a period for bids, or can advertisers request an auction? Is the open highest-bid format right, or do you want sealed bids?
-4. **Print-and-display role name:** billposter, or one of the alternatives in 3.5?
+4. **Print-and-display role name:** dispatcher, or one of the alternatives in 3.5?
 5. **Launch market:** "anywhere in the world" is the goal, but payments, permits and the first scouts need a starting country or city. Lagos?
 6. **Map provider:** MapLibre with hosted tiles, or Google Maps?
 

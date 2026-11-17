@@ -104,7 +104,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 		if (intent === "approve" || intent === "reject") {
 			await api.reviewArtwork(params.id, { decision: intent, note: String(form.get("note") ?? "") || undefined });
 
-			return { error: null, message: intent === "approve" ? "Approved. It goes to a billposter next." : "Sent back with your note." };
+			return { error: null, message: intent === "approve" ? "Approved. It goes to a dispatcher next." : "Sent back with your note." };
 		}
 
 		if (isProofIntent(intent)) return await proofAction(api, params.id, intent, form);
@@ -121,7 +121,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 const STEPS: { label: string; detail: string | ((booking: Booking) => string); icon: typeof CreditCard; done: (booking: Booking) => boolean }[] = [
 	{ label: "Paid", detail: "Your money waits in escrow.", icon: CreditCard, done: (booking) => ["paid", "live", "completed"].includes(booking.status) },
 	{ label: "Artwork approved", detail: "The owner checks your design fits the board.", icon: Image, done: (booking) => booking.artwork?.status === "approved" || isLive(booking) },
-	{ label: "Printed and posted", detail: (booking) => (booking.printedBy === "owner" ? "The board's owner prints it and puts it up." : "A billposter prints it and puts it up."), icon: Printer, done: (booking) => booking.printJob?.status === "posted" || (!!booking.proof && booking.proof.status !== "none") || isLive(booking) },
+	{ label: "Printed and posted", detail: (booking) => (booking.printedBy === "owner" ? "The board's owner prints it and puts it up." : "A dispatcher prints it and puts it up."), icon: Printer, done: (booking) => booking.printJob?.status === "posted" || (!!booking.proof && booking.proof.status !== "none") || isLive(booking) },
 	{ label: "Proof accepted", detail: "Geotagged photos show your ad on the board.", icon: Camera, done: (booking) => booking.proof?.status === "accepted" || isLive(booking) },
 	{ label: "Everyone paid", detail: "Only then does the money leave escrow.", icon: Wallet, done: (booking) => !!booking.releasedAt },
 ];
@@ -333,7 +333,7 @@ function Split({ booking }: { booking: Booking }) {
 	const rows = [
 		{ label: `Owner (${split.ownerSharePercent}%)`, amount: split.ownerAmountMinor },
 		...(split.scoutAmountMinor ? [{ label: "Scout", amount: split.scoutAmountMinor }] : []),
-		...(booking.printFeeMinor ? [{ label: booking.printedBy === "owner" ? "Printing, by the owner's side" : "Billposter, for printing", amount: booking.printFeeMinor }] : []),
+		...(booking.printFeeMinor ? [{ label: booking.printedBy === "owner" ? "Printing, by the owner's side" : "Dispatcher, for printing", amount: booking.printFeeMinor }] : []),
 		{ label: "Greyboards", amount: split.platformAmountMinor },
 	];
 

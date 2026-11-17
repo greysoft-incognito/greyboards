@@ -1,11 +1,11 @@
 /**
- * Checks on scouts and billposters before they are let in, and on boards as they are tagged.
+ * Checks on scouts and dispatchers before they are let in, and on boards as they are tagged.
  * Admins change these in the dashboard; these are the defaults.
  */
 export default () => {
   return {
     /**
-     * Whether scouts and billposters must send a photo of their ID before approval.
+     * Whether scouts and dispatchers must send a photo of their ID before approval.
      */
     require_id: Boolean(env('PARTNERS_REQUIRE_ID', true)),
 

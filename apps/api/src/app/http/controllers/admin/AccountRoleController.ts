@@ -5,7 +5,7 @@ import { BaseController } from '../BaseController'
 import { IdentityCheck } from '@app/models/IdentityCheck'
 import { RequestException, perPage } from '@arkstack/common'
 
-/** Reviewers approve, reject or suspend the scouts and billposters who apply. */
+/** Reviewers approve, reject or suspend the scouts and dispatchers who apply. */
 export default class AccountRoleController extends BaseController {
   async index() {
     const filters = await this.validateQuery({

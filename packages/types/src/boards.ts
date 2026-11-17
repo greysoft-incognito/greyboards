@@ -45,7 +45,7 @@ export interface Board {
   latitude: number
   longitude: number
   rate: BoardRate | null
-  /** The owner, or their scout, prints and puts up booked ads instead of a billposter. */
+  /** The owner, or their scout, prints and puts up booked ads instead of a dispatcher. */
   printsOwn: boolean
   status: BoardStatus
   /** Metres from the search point, on a nearby search. */

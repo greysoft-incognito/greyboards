@@ -1,8 +1,8 @@
 import { Model } from '@arkstack/database'
 import { Booking } from './Booking'
 
-/** Where money sits: held for a booking, owed to an owner, scout or billposter, Greyboards' own, or owed back. */
-export type LedgerAccount = 'escrow' | 'owner' | 'scout' | 'billposter' | 'platform' | 'refund'
+/** Where money sits: held for a booking, owed to an owner, scout or dispatcher, Greyboards' own, or owed back. */
+export type LedgerAccount = 'escrow' | 'owner' | 'scout' | 'dispatch' | 'platform' | 'refund'
 
 /**
  * One movement of money for a booking. Every balance is the sum of its entries, so each

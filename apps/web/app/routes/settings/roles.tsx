@@ -60,7 +60,7 @@ export default function Roles({ loaderData, actionData }: Route.ComponentProps) 
 
 	return (
 		<>
-			<PageHeader title="How you use Greyboards" description="One account can do several things. Advertisers and board owners can start at once; scouts and billposters are checked first." />
+			<PageHeader title="How you use Greyboards" description="One account can do several things. Advertisers and board owners can start at once; scouts and dispatchers are checked first." />
 			<ul className="space-y-4">
 				{definitions.map((definition) => {
 					const Icon = ROLE_ICONS[definition.kind];
