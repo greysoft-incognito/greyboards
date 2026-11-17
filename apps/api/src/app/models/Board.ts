@@ -8,6 +8,7 @@ import { BoardFace } from './BoardFace'
 import { BoardPhoto, type BoardPhotoInput } from './BoardPhoto'
 import { OwnerProfile } from './OwnerProfile'
 import { User, type UploadedFile } from './User'
+import { Settings } from '@app/support/Settings'
 
 export type BoardKind = 'billboard' | 'unipole' | 'gantry' | 'wall' | 'digital' | 'street_pole' | 'bus_shelter'
 
@@ -111,6 +112,8 @@ export class Board extends Model {
   declare printFeeMinor: string | number | null
   declare status: BoardStatus
   declare reviewNote: string | null
+  /** The nearest board facing a similar way when this one was tagged, for reviewers to compare. */
+  declare duplicateOfId: string | null
   declare ownerProfileId: string | null
   declare taggedById: string | null
   declare reviewedById: string | null
@@ -139,6 +142,9 @@ export class Board extends Model {
     { kind: 'bus_shelter', label: 'Bus shelter' },
   ]
 
+  /** Degrees apart two boards may face and still count as facing the same way. */
+  static readonly SAME_HEADING_DEG = 45
+
   /** Photos kept per board. */
   static readonly MAX_PHOTOS = 12
 
@@ -163,6 +169,7 @@ export class Board extends Model {
     printsOwn: 'prints_own',
     printFeeMinor: 'print_fee_minor',
     reviewNote: 'review_note',
+    duplicateOfId: 'duplicate_of_id',
     ownerProfileId: 'owner_profile_id',
     taggedById: 'tagged_by_id',
     reviewedById: 'reviewed_by_id',
@@ -187,16 +194,42 @@ export class Board extends Model {
   static async tag(user: User, details: BoardDetails, owner: BoardOwnerChoice, asOwner: boolean): Promise<Board> {
     const profile = await Board.ownerFor(user, owner, asOwner)
 
+    const duplicate = (await Board.possibleDuplicates(details.latitude, details.longitude, details.headingDeg ?? null))[0]
     const board = await Board.query().create({
       ...Board.clean(details),
       status: Board.PENDING,
       taggedById: user.id,
       ownerProfileId: profile.id,
+      duplicateOfId: duplicate?.id ?? null,
     })
 
     await board.syncFaces()
 
     return board
+  }
+
+  /**
+   * Boards already tagged near a spot and facing a similar way, nearest first, so a scout
+   * sees them before tagging the same board again. Rejected tags don't count.
+   */
+  static async possibleDuplicates(latitude: number, longitude: number, headingDeg: number | null, exceptId?: string): Promise<Board[]> {
+    const radiusM = await Settings.number('partners.duplicate_radius_m')
+    const query = Board.query().whereRaw('status <> ?', [Board.REJECTED]).scope('near', Number(latitude), Number(longitude), radiusM / 1000)
+
+    if (exceptId) query.whereRaw('id <> ?', [exceptId])
+
+    const nearby = (await query.limit(10).get()).all()
+
+    return nearby.filter((board) => Board.facesSameWay(board.headingDeg, headingDeg)).slice(0, 5)
+  }
+
+  /** Whether two headings are close enough to be the same face. An unknown heading could be either. */
+  static facesSameWay(first: number | null, second: number | null): boolean {
+    if (first === null || first === undefined || second === null || second === undefined) return true
+
+    const apart = Math.abs(Number(first) - Number(second)) % 360
+
+    return Math.min(apart, 360 - apart) <= Board.SAME_HEADING_DEG
   }
 
   private static async ownerFor(user: User, owner: BoardOwnerChoice, asOwner: boolean): Promise<OwnerProfile> {

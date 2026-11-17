@@ -17,6 +17,11 @@ import type {
   AvailabilityBlockInput,
   Board,
   BoardFaceInput,
+  IdentityDocumentDefinition,
+  IdentityInput,
+  IdentityReview,
+  NearbyBoard,
+  PartnerChecks,
   BoardAgreement,
   BoardDetail,
   BoardInput,
@@ -208,6 +213,19 @@ export function createEndpoints(alova: GreyboardsAlova) {
       /** The marketplace roles the account holds, with what each one is for. */
       roles: () => alova.Get<ApiResponse<AccountRole[]> & { definitions: AccountRoleDefinition[] }>('/account/roles', { cacheFor: null }),
       /** Take on a role. Scouts and billposters wait for a reviewer. */
+      /** What the account has shown for the scout and billposter checks. */
+      partnerChecks: () => alova.Get<ApiResponse<PartnerChecks> & { documents: IdentityDocumentDefinition[] }>('/account/partner-checks', { cacheFor: null }),
+      /** Send a photo of a government ID for review. */
+      sendIdentity: (data: IdentityInput, photo: Blob, filename = 'id.jpg') => {
+        const form = new FormData()
+
+        form.append('documentType', data.documentType)
+        form.append('documentNumber', data.documentNumber)
+        form.append('fullName', data.fullName)
+        form.append('photo', photo, filename)
+
+        return alova.Post<ApiResponse<PartnerChecks>>('/account/identity', form)
+      },
       takeRole: (kind: AccountRoleKind) => alova.Post<ApiResponse<AccountRole>>('/account/roles', { kind }),
       dropRole: (kind: AccountRoleKind) => alova.Delete<ApiResponse<{ kind: AccountRoleKind }>>(`/account/roles/${kind}`),
 
@@ -233,6 +251,9 @@ export function createEndpoints(alova: GreyboardsAlova) {
       },
       removeBoardPhoto: (id: ID, photo: ID) => alova.Delete<ApiResponse<{ id: ID }>>(`/account/boards/${id}/photos/${photo}`),
       /** Text the owner of a scouted board a link to sign, or send the waiting one again. */
+      /** Boards already tagged near a spot and facing the same way. */
+      nearbyBoards: (params: { lat: number; lng: number; headingDeg?: number | null; except?: ID }) =>
+        alova.Get<ApiResponse<NearbyBoard[]>>('/account/boards/nearby', { params, cacheFor: null }),
       /** Change a face's name, heading or rate card. */
       updateBoardFace: (id: ID, face: ID, data: BoardFaceInput) => alova.Put<ApiResponse<BoardDetail>>(`/account/boards/${id}/faces/${face}`, data),
       /** Keep days off the market, on one face or the whole board. */
@@ -282,6 +303,8 @@ export function createEndpoints(alova: GreyboardsAlova) {
       /** Marketplace roles to review, oldest first. */
       accountRoles: (params: AdminAccountRoleQuery = {}) => alova.Get<PaginatedResponse<AdminAccountRole>>('/admin/account-roles', { params, cacheFor: null }),
       reviewAccountRole: (id: ID, data: AccountRoleReview) => alova.Put<ApiResponse<AdminAccountRole>>(`/admin/account-roles/${id}`, data),
+      /** Accept or turn down an applicant's ID photo on its own. */
+      reviewIdentity: (id: ID, data: IdentityReview) => alova.Put<ApiResponse<AdminAccountRole>>(`/admin/account-roles/${id}/identity`, data),
       /** Every role, with the permissions there are to choose from. */
       /** Boards waiting for review, or those with another status. */
       boards: (params: PageQuery & { status?: BoardStatus } = {}) =>

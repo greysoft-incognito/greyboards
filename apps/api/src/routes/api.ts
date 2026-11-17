@@ -62,6 +62,8 @@ Router.get('/account-roles', [AccountRoleController, 'definitions'], [limiter(12
 Router.get('/account/roles', [AccountRoleController, 'index'], [auth])
 Router.post('/account/roles', [AccountRoleController, 'create'], [auth, limiter(20, 60)])
 Router.delete('/account/roles/:kind', [AccountRoleController, 'destroy'], [auth])
+Router.get('/account/partner-checks', [AccountRoleController, 'checks'], [auth])
+Router.post('/account/identity', [AccountRoleController, 'submitIdentity'], [auth, limiter(10, 60)])
 
 // Boards: listed ones on the map for everyone, and the ones scouts and owners tag
 Router.get('/board-kinds', [BoardController, 'kinds'], [limiter(120, 60)])
@@ -70,6 +72,7 @@ Router.get('/boards/pins', [BoardController, 'pins'], [limiter(240, 60)])
 Router.get('/boards/:board', [BoardController, 'show'], [limiter(240, 60)])
 Router.get('/boards/:board/availability', [BookingController, 'availability'], [limiter(120, 60)])
 Router.get('/account/boards', [AccountBoardController, 'index'], [auth])
+Router.get('/account/boards/nearby', [AccountBoardController, 'nearby'], [auth, Authorize.actingAs('owner', 'scout'), limiter(60, 60)])
 Router.post('/account/boards', [AccountBoardController, 'create'], [auth, Authorize.actingAs('owner', 'scout'), limiter(30, 60)])
 Router.put('/account/boards/:board', [AccountBoardController, 'update'], [auth])
 Router.delete('/account/boards/:board', [AccountBoardController, 'destroy'], [auth])
@@ -113,6 +116,7 @@ Router.get('/admin/users/:user', [UserController, 'show'], [auth, Authorize.to('
 Router.put('/admin/users/:user', [UserController, 'update'], [auth, Authorize.to('users.manage')])
 Router.get('/admin/account-roles', [AdminAccountRoleController, 'index'], [auth, Authorize.to('partners.review')])
 Router.put('/admin/account-roles/:role', [AdminAccountRoleController, 'update'], [auth, Authorize.to('partners.review')])
+Router.put('/admin/account-roles/:role/identity', [AdminAccountRoleController, 'reviewIdentity'], [auth, Authorize.to('partners.review')])
 // Booking boards. Dates are held while the advertiser pays; the money waits in escrow until the ad is up.
 Router.post('/boards/:board/bookings', [BookingController, 'create'], [auth, Authorize.actingAs('advertiser'), limiter(20, 60)])
 Router.get('/account/bookings', [BookingController, 'index'], [auth])

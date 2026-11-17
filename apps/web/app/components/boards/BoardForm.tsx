@@ -3,6 +3,7 @@ import { Form, useNavigation } from "react-router";
 import { Binoculars, Camera, LocateFixed, Presentation } from "lucide-react";
 import type { BoardDetail, BoardKindDefinition, OwnerProfile } from "@greyboards/types";
 import { ManagedOwnerSelect, OwnerPicker } from "./OwnerPicker";
+import { NearbyBoards } from "./NearbyBoards";
 import { Alert, Button, Field, Input, Select, Spinner, Textarea } from "~/components/ui";
 import { useLimits } from "~/lib/limits";
 
@@ -120,6 +121,7 @@ export function BoardForm({
 					</Field>
 				</div>
 				<input type="hidden" name="accuracyM" value={spot.accuracyM} />
+				{!board && <NearbyBoards latitude={spot.latitude} longitude={spot.longitude} />}
 				<div className="grid gap-4 sm:grid-cols-[2fr_1fr]">
 					<Field label="Street address" error={fieldErrors.address}>
 						<Input name="address" defaultValue={board?.address ?? ""} maxLength={191} placeholder="Admiralty Way, by the roundabout" />

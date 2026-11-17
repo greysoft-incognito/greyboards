@@ -5,6 +5,7 @@ import { Sms } from '../src/app/support/Sms'
 import { lastCode, lastText } from './support/sms'
 import { execFileSync } from 'node:child_process'
 import request from 'parasito'
+import { passChecks } from './support/partner'
 
 const tokens: Record<string, string> = {}
 
@@ -40,6 +41,7 @@ describe('Owner agreements', () => {
 
     const scoutRole = (await api('get', '/account/roles')).body.data[0]
 
+    await passChecks(tokens.scout)
     await api('put', `/admin/account-roles/${scoutRole.id}`, { status: 'active' }, 'reviewer')
 
     const local = `0${phone.slice(4)}`

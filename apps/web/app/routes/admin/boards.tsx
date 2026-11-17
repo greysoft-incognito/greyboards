@@ -1,5 +1,5 @@
 import { Form, Link, useNavigation, useSearchParams } from "react-router";
-import { BadgeCheck, Check, EyeOff, FileSignature, MapPin, Phone, X } from "lucide-react";
+import { BadgeCheck, Check, Copy, EyeOff, FileSignature, MapPin, Phone, X } from "lucide-react";
 import type { AdminBoard, BoardReview, BoardStatus } from "@greyboards/types";
 import { AdminHeader } from "~/components/admin/AdminHeader";
 import { Avatar } from "~/components/Avatar";
@@ -148,6 +148,18 @@ function BoardRow({ board }: { board: AdminBoard }) {
 									? "The photo was taken at the board."
 									: `All ${board.photos.length} photos were taken at the board.`}
 				</p>
+				{board.duplicateOf && (
+					<p className="flex items-start gap-2 rounded-xl bg-amber-50 px-3 py-2 text-sm text-ink-700">
+						<Copy className="mt-0.5 h-4 w-4 shrink-0 text-held" aria-hidden />
+						<span>
+							May be the same board as{" "}
+							<Link prefetch="intent" to={`/boards/${board.duplicateOf.id}`} className="font-semibold text-brand-700 hover:underline">
+								{board.duplicateOf.name}
+							</Link>
+							, tagged earlier nearby and facing the same way. The first tag with a signed owner wins.
+						</span>
+					</p>
+				)}
 				<div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-ink-700">
 					{board.tagger && (
 						<span className="flex items-center gap-2">

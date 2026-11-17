@@ -1,6 +1,6 @@
 import { Form, Link, useNavigation, useSearchParams } from "react-router";
-import { Check, Pause, X } from "lucide-react";
-import type { AccountRoleKind, AccountRoleReview, AccountRoleStatus, AdminAccountRole } from "@greyboards/types";
+import { BadgeCheck, Check, CircleAlert, IdCard, Landmark, Pause, X } from "lucide-react";
+import type { AccountRoleKind, AccountRoleReview, AccountRoleStatus, AdminAccountRole, IdentityReview, PartnerChecks } from "@greyboards/types";
 import { AdminHeader } from "~/components/admin/AdminHeader";
 import { Pager } from "~/components/Pager";
 import { ROLE_ICONS, RoleStatus } from "~/components/AccountRoles";
@@ -40,6 +40,17 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 export async function action({ request, context }: Route.ActionArgs) {
 	const { api } = await requireAdmin(request, context, "partners.review");
 	const form = await request.formData();
+
+	if (form.get("intent") === "identity") {
+		const decision = { status: String(form.get("status")), note: String(form.get("note") ?? "") || null } as IdentityReview;
+
+		try {
+			return { error: null, message: (await api.admin.reviewIdentity(String(form.get("id")), decision)).message };
+		} catch (error) {
+			return { error: formError(error).error, message: null };
+		}
+	}
+
 	const review = { status: String(form.get("status")), note: String(form.get("note") ?? "") || null } as AccountRoleReview;
 
 	try {
@@ -136,6 +147,7 @@ function ApplicationRow({ application }: { application: AdminAccountRole }) {
 				<RoleStatus status={application.status} />
 				<span className="text-sm text-ink-500">Applied {new Date(application.createdAt).toLocaleDateString(undefined, { dateStyle: "medium" })}</span>
 			</div>
+			{application.checks && <Checks id={application.id} checks={application.checks} />}
 			<Form method="post" preventScrollReset className="flex flex-wrap items-center gap-2">
 				<input type="hidden" name="id" value={application.id} />
 				<Input name="note" defaultValue={application.note ?? ""} maxLength={191} placeholder="Note for the applicant (optional)" aria-label="Note" className="!py-2 text-sm sm:max-w-sm" />
@@ -149,5 +161,90 @@ function ApplicationRow({ application }: { application: AdminAccountRole }) {
 					))}
 			</Form>
 		</li>
+	);
+}
+
+const ID_STATUS: Record<NonNullable<PartnerChecks["identity"]>["status"], string> = {
+	submitted: "Not checked yet",
+	verified: "Checked",
+	rejected: "Turned down",
+};
+
+/** The applicant's ID and bank account side by side, so the names can be compared. */
+function Checks({ id, checks }: { id: string; checks: PartnerChecks }) {
+	const identity = checks.identity;
+
+	return (
+		<div className="grid gap-3 rounded-2xl bg-surface-100 p-4 text-sm sm:grid-cols-[auto_1fr_1fr]">
+			{identity?.photoUrl ? (
+				<a href={identity.photoUrl} target="_blank" rel="noreferrer" className="block h-24 w-36 overflow-hidden rounded-xl ring-1 ring-surface-200">
+					<img src={identity.photoUrl} alt={`${identity.documentLabel} sent by the applicant`} className="h-full w-full object-cover" />
+				</a>
+			) : (
+				<span className="flex h-24 w-36 items-center justify-center rounded-xl bg-white text-ink-500 ring-1 ring-surface-200">
+					<IdCard className="h-6 w-6" aria-hidden />
+				</span>
+			)}
+			<div>
+				<p className="flex items-center gap-1.5 font-semibold text-ink-900">
+					<IdCard className="h-4 w-4 text-ink-500" aria-hidden />
+					ID
+				</p>
+				{identity ? (
+					<>
+						<p className="text-ink-700">{identity.fullName}</p>
+						<p className="text-ink-500 tabular-nums">
+							{identity.documentLabel} · {identity.documentNumber}
+						</p>
+						<p className="text-ink-500">
+							{ID_STATUS[identity.status]}
+							{identity.note ? `: ${identity.note}` : ""}
+						</p>
+						{identity.status !== "rejected" && (
+							<Form method="post" preventScrollReset className="mt-2 flex flex-wrap gap-2">
+								<input type="hidden" name="intent" value="identity" />
+								<input type="hidden" name="id" value={id} />
+								<input type="hidden" name="note" value="The photo can't be read. Send a clearer one." />
+								{identity.status !== "verified" && (
+									<Button type="submit" name="status" value="verified" variant="secondary" className="!min-h-9 !py-1.5">
+										<BadgeCheck className="h-4 w-4" aria-hidden />
+										ID is fine
+									</Button>
+								)}
+								<Button type="submit" name="status" value="rejected" variant="ghost" className="!min-h-9 !py-1.5">
+									<X className="h-4 w-4" aria-hidden />
+									Ask for a clearer photo
+								</Button>
+							</Form>
+						)}
+					</>
+				) : (
+					<p className="text-ink-500">Not sent yet.</p>
+				)}
+			</div>
+			<div>
+				<p className="flex items-center gap-1.5 font-semibold text-ink-900">
+					<Landmark className="h-4 w-4 text-ink-500" aria-hidden />
+					Bank account
+				</p>
+				{checks.bank ? (
+					<>
+						<p className="text-ink-700">{checks.bank.accountName}</p>
+						<p className="text-ink-500 tabular-nums">
+							{checks.bank.bankName} {checks.bank.maskedNumber}
+						</p>
+					</>
+				) : (
+					<p className="text-ink-500">Not added yet.</p>
+				)}
+				{checks.namesMatch !== null && (
+					<p className={`mt-1 flex items-center gap-1.5 font-medium ${checks.namesMatch ? "text-available" : "text-held"}`}>
+						{checks.namesMatch ? <Check className="h-4 w-4" aria-hidden /> : <CircleAlert className="h-4 w-4" aria-hidden />}
+						{checks.namesMatch ? "Name matches the ID" : "Name doesn't match the ID"}
+					</p>
+				)}
+			</div>
+			{checks.missing.length > 0 && <p className="text-held sm:col-span-3">Can't be approved until they add {checks.missing.join(" and ")}.</p>}
+		</div>
 	);
 }

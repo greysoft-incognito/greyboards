@@ -1,6 +1,7 @@
 import type { AdminUser } from './admin'
 import type { PageQuery } from './api'
 import type { BoardBookingTerms } from './bookings'
+import type { DuplicateBoard } from './partners'
 import type { ID } from './models'
 
 /** The kinds of board the map knows. */
@@ -151,6 +152,8 @@ export interface BoardDetail extends Board {
 
 export interface AdminBoard extends BoardDetail {
   tagger: AdminUser | null
+  /** The nearest board facing a similar way when this one was tagged. */
+  duplicateOf: DuplicateBoard | null
 }
 
 /** What the tag-a-board form sends. */
@@ -278,4 +281,13 @@ export interface AvailabilityBlockInput {
   endsOn: string
   faceId?: ID | null
   note?: string | null
+}
+
+/** A board already tagged near a spot, shown before tagging it again. */
+export interface NearbyBoard {
+  id: ID
+  name: string
+  status: BoardStatus
+  headingDeg: number | null
+  distanceM: number
 }

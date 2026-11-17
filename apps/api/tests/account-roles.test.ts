@@ -3,6 +3,7 @@ import { beforeAll, describe, expect, it } from 'vitest'
 import { app } from '../src/core/bootstrap'
 import { execFileSync } from 'node:child_process'
 import request from 'parasito'
+import { passChecks } from './support/partner'
 
 const tokens: Record<string, string> = {}
 
@@ -64,6 +65,7 @@ describe('Marketplace roles', () => {
     expect(rejected.body.data).toMatchObject({ status: 'rejected', note: 'Add a clear ID photo' })
     expect((await api('post', '/account/roles', { kind: 'scout' })).body.data).toMatchObject({ status: 'pending', note: null })
 
+    await passChecks(tokens.member)
     await api('put', `/admin/account-roles/${mine.id}`, { status: 'active' }, 'reviewer')
 
     expect((await api('get', '/auth/me')).body.data.accountRoles).toEqual(expect.arrayContaining([expect.objectContaining({ kind: 'scout', status: 'active' })]))

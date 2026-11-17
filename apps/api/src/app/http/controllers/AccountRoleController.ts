@@ -4,6 +4,10 @@ import { AccountRoleResource } from '@app/http/resources/AccountRoleResource'
 import { BaseController } from './BaseController'
 import { GenericResource } from 'resora'
 import { assertFound } from '@arkstack/common'
+import { IdentityCheck, type IdentityDocument } from '@app/models/IdentityCheck'
+import { PartnerChecks } from '@app/services/PartnerChecks'
+import { Settings } from '@app/support/Settings'
+import { imageFile } from '@app/support/rules'
 
 /** The marketplace roles the signed-in account holds, and taking on or giving up one. */
 export default class AccountRoleController extends BaseController {
@@ -34,5 +38,32 @@ export default class AccountRoleController extends BaseController {
     await role.drop()
 
     return new GenericResource({ kind: role.kind }).additional({ status: 'success', message: `You no longer work as ${role.named()}`, code: 200 })
+  }
+
+  /** What the account has shown for the scout and billposter checks, and the IDs it can send. */
+  async checks() {
+    return new GenericResource(await PartnerChecks.summary(this.user, false)).additional({
+      status: 'success',
+      message: 'OK',
+      code: 200,
+      documents: IdentityCheck.DOCUMENTS,
+    })
+  }
+
+  /** Send a photo of a government ID for review. A new one replaces the last. */
+  async submitIdentity() {
+    const data = await this.validate({
+      documentType: `required|in:${IdentityCheck.types().join(',')}`,
+      documentNumber: 'required|string|min:5|max:30',
+      fullName: 'required|string|min:3|max:120',
+      photo: imageFile((await Settings.number('uploads.max_image_mb')) * 1024),
+    })
+
+    await IdentityCheck.submit(this.user, { documentType: data.documentType as IdentityDocument, documentNumber: String(data.documentNumber), fullName: String(data.fullName) }, data.photo)
+
+    return new GenericResource(await PartnerChecks.summary(this.user, false))
+      .additional({ status: 'success', message: 'ID sent. We’ll check it with your application.', code: 201 })
+      .response()
+      .setStatusCode(201)
   }
 }
