@@ -2,6 +2,7 @@ import type { Booking } from '@app/models/Booking'
 import { Board } from '@app/models/Board'
 import { PrintJob } from '@app/models/PrintJob'
 import type { User } from '@app/models/User'
+import { Shares } from '@app/services/Shares'
 import { BoardPolicy } from './BoardPolicy'
 
 /** Who may see and act on a booking. The one place these rules live. */
@@ -9,12 +10,18 @@ export class BookingPolicy {
   /** The advertiser who made it, whoever looks after the board, and staff who handle bookings. */
   static async view(user: User, booking: Booking): Promise<boolean> {
     if (BookingPolicy.owns(user, booking)) return true
+    if (booking.shared && (await Shares.holds(user, booking))) return true
     if (await BookingPolicy.managesBoard(user, booking)) return true
 
     return user.can('bookings.view')
   }
 
-  /** Only the advertiser pays for or cancels their booking. */
+  /** Who pays: the advertiser, or on a shared booking, anyone holding a share. */
+  static async pays(user: User, booking: Booking): Promise<boolean> {
+    return BookingPolicy.owns(user, booking) || (booking.shared && (await Shares.holds(user, booking)))
+  }
+
+  /** Only the advertiser, the organiser of a shared booking, cancels it or sends the artwork. */
   static owns(user: User, booking: Booking): boolean {
     return booking.advertiserId === user.id
   }

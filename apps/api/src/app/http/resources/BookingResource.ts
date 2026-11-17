@@ -1,12 +1,13 @@
 import type { Booking } from '@app/models/Booking'
 import type { Board } from '@app/models/Board'
 import { PrintJob } from '@app/models/PrintJob'
-import type { User } from '@app/models/User'
+import { User } from '@app/models/User'
 import { BookingPolicy } from '@app/policies/BookingPolicy'
 import { ProofSummary } from './ProofSummary'
 import { Day } from '@app/support/Day'
 import { Refund } from '@app/models/Refund'
 import { Refunds } from '@app/services/Refunds'
+import { Shares } from '@app/services/Shares'
 import { Resource } from 'resora'
 import { BoardResource } from './BoardResource'
 
@@ -63,6 +64,7 @@ export class BookingResource extends Resource {
       printJob: job ? { id: job.id, status: job.displayStatus(), dueOn: Day.of(job.dueOn), printPhotoUrl: await job.printPhotoUrl() } : null,
       proof: await new ProofSummary(booking).for(viewer).data(),
       cancellation: BookingPolicy.owns(viewer, booking) && booking.status === 'paid' ? await Refunds.quote(booking) : null,
+      shares: booking.shared ? await BookingResource.shares(booking, viewer) : null,
       refunds: (await Refund.query().where({ bookingId: booking.id }).oldest('createdAt').limit(10).get()).all().map((refund) => ({
         amountMinor: Number(refund.amountMinor),
         currency: refund.currency,
@@ -72,6 +74,31 @@ export class BookingResource extends Resource {
         createdAt: refund.createdAt,
       })),
     }
+  }
+
+  /**
+   * Each share of a shared booking, who holds it and whether it's paid. The organiser sees
+   * the invite link of each open share; nobody else sees links.
+   */
+  private static async shares(booking: Booking, viewer: User) {
+    const shares = (await Shares.of(booking)).all()
+    const holders = await User.query().whereIn('id', shares.map((share) => share.userId).filter((id): id is string => !!id)).get()
+    const names = new Map(holders.all().map((holder) => [holder.id, holder.name]))
+    const organiser = viewer.id === booking.advertiserId
+    const base = String(config('app.frontend_url')).replace(/\/+$/, '')
+
+    return Promise.all(shares.map(async (share) => ({
+      id: share.id,
+      position: share.position,
+      amountMinor: share.amountMinor,
+      status: share.status,
+      holder: share.userId ? (names.get(share.userId) ?? null) : null,
+      mine: share.userId === viewer.id,
+      inviteUrl: organiser && share.status === 'open' ? `${base}/shares/${share.token}` : null,
+      paidAt: share.paidAt,
+      designUrl: await share.designUrl(),
+      designSentAt: share.designSentAt,
+    })))
   }
 
   async data() {
@@ -92,6 +119,7 @@ export class BookingResource extends Resource {
       printFeeMinor: booking.printFeeMinor,
       printedBy: booking.printedBy,
       source: booking.source ?? 'book',
+      shared: !!booking.shared,
       currency: booking.currency,
       holdSecondsLeft: booking.secondsLeft(),
       advertiserId: booking.advertiserId,

@@ -13,6 +13,8 @@ export class Payment extends Model {
   declare provider: string
   declare status: PaymentStatus
   declare amountMinor: number
+  /** On a shared booking, the shares this payment is for. */
+  declare shareIds: string[] | null
   declare currency: string
   declare response: Record<string, unknown> | null
   declare paidAt: Date | null
@@ -26,11 +28,13 @@ export class Payment extends Model {
     bookingId: 'booking_id',
     amountMinor: 'amount_minor',
     paidAt: 'paid_at',
+    shareIds: 'share_ids',
   }
 
   protected override casts = {
     amountMinor: 'number',
     response: 'json',
+    shareIds: 'json',
     paidAt: 'datetime',
   } as never
 

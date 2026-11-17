@@ -24,6 +24,7 @@ export default [
 		route("boards/:id/edit", "routes/boards/edit.tsx"),
 		route("bookings", "routes/bookings/index.tsx"),
 		route("bookings/:id", "routes/bookings/booking.tsx"),
+		route("shares/:token", "routes/shares/invite.tsx"),
 		route("jobs", "routes/jobs/index.tsx"),
 		route("jobs/:id", "routes/jobs/job.tsx"),
 		route("checkout/complete", "routes/checkout-complete.tsx"),

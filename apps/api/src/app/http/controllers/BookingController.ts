@@ -40,15 +40,18 @@ export default class BookingController extends BaseController {
       startsOn: 'required|date',
       periods: 'required|integer|min:1|max:52',
       faceId: ['nullable', UUID],
+      shares: 'nullable|integer|min:1|max:20',
     })
 
     const face = await board.faceFor(data.faceId ? String(data.faceId) : null)
-    const booking = await Booking.hold(board, face, this.user, Day.of(String(data.startsOn)), Number(data.periods))
+    const shares = Number(data.shares ?? 1)
+    const booking = await Booking.hold(board, face, this.user, Day.of(String(data.startsOn)), Number(data.periods), shares)
+    const message = shares > 1 ? 'Dates held. Share the invite links, and pay your share.' : 'Dates held. Pay to book them.'
 
-    return new BookingResource(booking).onBoard(board).additional({ status: 'success', message: 'Dates held. Pay to book them.', code: 201 }).response().setStatusCode(201)
+    return new BookingResource(booking).onBoard(board).withDetails(this.user).additional({ status: 'success', message, code: 201 }).response().setStatusCode(201)
   }
 
-  /** Bookings the account made, newest first. */
+  /** Bookings the account made or holds a share of, newest first. */
   async index() {
     const filters = await this.validateQuery({ status: `nullable|in:${STATUSES.join(',')}` })
     const query = Booking.scope('madeBy', this.user)
@@ -110,7 +113,7 @@ export default class BookingController extends BaseController {
   async checkout() {
     const booking = await this.booking()
 
-    if (!BookingPolicy.owns(this.user, booking)) throw new RequestException('Only the person who booked can pay for it.', 403)
+    if (!(await BookingPolicy.pays(this.user, booking))) throw new RequestException('Only the person who booked can pay for it.', 403)
 
     const { payment, url } = await new Checkout().start(booking, this.user)
 

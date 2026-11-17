@@ -37,6 +37,8 @@ export interface Booking {
   printedBy: PrintedBy
   /** Booked at the listed price, an accepted offer, or a won bid. */
   source: BookingSource
+  /** Split between advertisers, each paying a share. `advertiserId` is the organiser. */
+  shared: boolean
   currency: string
   /** Seconds left to pay while the dates are held. */
   holdSecondsLeft: number | null
@@ -55,6 +57,47 @@ export interface Booking {
   /** What the advertiser gets back if they cancel now, while it's paid. Null for anyone else. */
   cancellation?: CancellationQuote | null
   refunds?: BookingRefund[]
+  /** On a shared booking's own page: each share and who holds it. */
+  shares?: BookingShare[] | null
+}
+
+/**
+ * `open` until someone takes it from the invite link, `claimed` once they have, `paid`
+ * once their money is in escrow, `refunded` when the booking didn't go ahead.
+ */
+export type ShareStatus = 'open' | 'claimed' | 'paid' | 'refunded'
+
+/** One advertiser's part of a shared booking. */
+export interface BookingShare {
+  id: ID
+  position: number
+  amountMinor: number
+  status: ShareStatus
+  /** Who holds it, by name. */
+  holder: string | null
+  mine: boolean
+  /** The link to send someone, for the organiser, while the share is open. */
+  inviteUrl: string | null
+  paidAt: string | null
+  /** The holder's own design. The print merges everyone's. */
+  designUrl: string | null
+  designSentAt: string | null
+}
+
+/** What an invite link to a shared booking offers. */
+export interface ShareInvite {
+  position: number
+  count: number
+  amountMinor: number
+  currency: string
+  status: ShareStatus
+  mine: boolean
+  /** Still waiting for someone to take it. */
+  open: boolean
+  /** When the dates stop being held. */
+  payBy: string | null
+  organiser: string | null
+  booking: Booking
 }
 
 /** What cancelling a paid booking now gives back, or why it can't be cancelled. */
@@ -203,6 +246,16 @@ export interface BoardBookingTerms {
   maxPeriods: number
   /** Added once to every booking for printing and putting up the artwork. */
   printFeeMinor: number
+  /** Splitting a booking with other advertisers. */
+  shares: {
+    enabled: boolean
+    /** The most advertisers one booking can be split between, the organiser included. */
+    max: number
+    /** Shared bookings need time for everyone to pay before the notice period. */
+    earliestStart: string
+    /** Hours everyone has to pay their share. */
+    payHours: number
+  }
 }
 
 /** Days a booking already takes on a board. */
@@ -220,6 +273,8 @@ export interface BookingInput {
   periods: number
   /** Needed on boards with more than one face. */
   faceId?: ID
+  /** Split between this many advertisers, the organiser included. */
+  shares?: number
 }
 
 export type PaymentStatus = 'pending' | 'complete' | 'rejected'

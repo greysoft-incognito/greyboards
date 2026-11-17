@@ -1,5 +1,6 @@
 import { Booking } from '@app/models/Booking'
 import { LedgerEntry } from '@app/models/LedgerEntry'
+import { BookingShare } from '@app/models/BookingShare'
 import { Payment } from '@app/models/Payment'
 import { PrintJob } from '@app/models/PrintJob'
 import { Refund } from '@app/models/Refund'
@@ -68,9 +69,9 @@ export class Refunds {
     return Refunds.close(booking, user, booking.amountMinor, reason)
   }
 
-  /** Money owed back for a payment that landed after its dates were taken. */
-  static async forLatePayment(booking: Booking, payment: Payment): Promise<Refund | null> {
-    return Refunds.send(booking, payment, booking.amountMinor, 'Paid after the hold ran out and the days were taken', null)
+  /** Send a whole payment back, such as one that landed after its dates were taken. */
+  static async forPayment(booking: Booking, payment: Payment, reason: string): Promise<Refund | null> {
+    return Refunds.send(booking, payment, payment.amountMinor, reason, null)
   }
 
   /** Check refunds still on their way. */
@@ -105,22 +106,53 @@ export class Refunds {
     if (job && !printed) await job.update({ status: 'cancelled', billposterId: null, reservedUntil: null })
 
     const kept = Refunds.keptShares(booking, job, booking.amountMinor - refundMinor, printed)
+    const parts = await Refunds.split(booking, refundMinor)
 
     await LedgerEntry.transaction(async () => {
       const base = { bookingId: booking.id, currency: booking.currency, reference: null }
 
       await LedgerEntry.query().create({ ...base, account: 'escrow', kind: 'cancelled', amountMinor: -booking.amountMinor, userId: user.id, ownerProfileId: null, memo: reason })
 
-      if (refundMinor > 0) await LedgerEntry.query().create({ ...base, account: 'refund', kind: 'refund_due', amountMinor: refundMinor, userId: booking.advertiserId, ownerProfileId: null, memo: reason })
+      for (const part of parts) await LedgerEntry.query().create({ ...base, account: 'refund', kind: 'refund_due', amountMinor: part.amountMinor, userId: part.payment.userId, ownerProfileId: null, memo: reason })
 
       for (const share of kept) await LedgerEntry.query().create({ ...base, ...share })
     })
 
-    if (refundMinor <= 0) return null
+    const refunds = []
 
-    const payment = await Payment.query().where({ bookingId: booking.id, status: 'complete' }).latest('createdAt').first()
+    for (const part of parts) refunds.push(await Refunds.send(booking, part.payment, part.amountMinor, reason, user))
 
-    return payment ? Refunds.send(booking, payment, refundMinor, reason, user) : null
+    return refunds.find((refund) => refund.paymentId && parts.some((part) => part.payment.id === refund.paymentId && part.payment.userId === user.id)) ?? refunds[0] ?? null
+  }
+
+  /**
+   * Who gets what of a refund: the one payment of a booking, or on a shared booking, each
+   * share's payment in proportion to what it paid.
+   */
+  private static async split(booking: Booking, refundMinor: number): Promise<{ payment: Payment; amountMinor: number }[]> {
+    if (refundMinor <= 0) return []
+
+    if (!booking.shared) {
+      const payment = await Payment.query().where({ bookingId: booking.id, status: 'complete' }).latest('createdAt').first()
+
+      return payment ? [{ payment, amountMinor: refundMinor }] : []
+    }
+
+    const shares = (await BookingShare.query().where({ bookingId: booking.id, status: 'paid' }).limit(50).get()).all()
+    const ids = [...new Set(shares.map((share) => share.paymentId).filter((id): id is string => !!id))]
+    const payments = ids.length ? (await Payment.query().whereIn('id', ids).oldest('createdAt').get()).all() : []
+    const total = payments.reduce((sum, payment) => sum + payment.amountMinor, 0)
+    let left = refundMinor
+
+    await BookingShare.query().where({ bookingId: booking.id, status: 'paid' }).updateFrom({ status: 'refunded' })
+
+    return payments.map((payment, index) => {
+      const amountMinor = index === payments.length - 1 ? left : Math.round((refundMinor * payment.amountMinor) / total)
+
+      left -= amountMinor
+
+      return { payment, amountMinor }
+    })
   }
 
   /** Who keeps what the advertiser doesn't get back: the print fee if it was printed, the rest by the owner's share. */

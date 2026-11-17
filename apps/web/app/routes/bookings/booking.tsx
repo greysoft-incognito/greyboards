@@ -5,6 +5,7 @@ import type { Booking } from "@greyboards/types";
 import { BoardCover, formatRate } from "~/components/boards/BoardBits";
 import { ArtworkPanel } from "~/components/bookings/ArtworkPanel";
 import { ProofPanel } from "~/components/proofs/ProofPanel";
+import { SharesPanel } from "~/components/bookings/SharesPanel";
 import { BookingStatusBadge, formatDays, formatMoney } from "~/components/bookings/BookingBits";
 import { Alert, Button, Input, Spinner } from "~/components/ui";
 import { formError } from "~/lib/api.server";
@@ -35,6 +36,12 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 			throw redirect(payment.checkoutUrl ?? `/bookings/${params.id}`);
 		}
 
+		if (intent === "cover-shares") {
+			const response = await api.coverShares(params.id);
+
+			return { error: null, message: response.message ?? "The unpaid shares are yours to pay." };
+		}
+
 		if (intent === "cancel") {
 			const response = await api.cancelBooking(params.id);
 
@@ -55,6 +62,16 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 			await api.uploadArtwork(params.id, artwork);
 
 			return { error: null, message: "Artwork sent for checking." };
+		}
+
+		if (intent === "design") {
+			const design = postedPhoto(form, "design");
+
+			if (!design) return { error: "Choose your design first.", message: null };
+
+			const { message } = await api.sendShareDesign(params.id, String(form.get("shareId")), design);
+
+			return { error: null, message };
 		}
 
 		if (intent === "approve" || intent === "reject") {
@@ -140,7 +157,8 @@ export default function BookingPage({ loaderData, actionData }: Route.ComponentP
 						{outcome === "failed" && <Alert>The payment didn't go through, so nothing was charged. Try again while your dates are held.</Alert>}
 						{outcome === "pending" && <Alert>Your payment is still being confirmed. Refresh in a moment.</Alert>}
 						{actionData?.error && <Alert>{actionData.error}</Alert>}
-						{isAdvertiser && booking.status === "held" && <PayOrCancel booking={booking} />}
+						{isAdvertiser && booking.status === "held" && !booking.shared && <PayOrCancel booking={booking} />}
+						{booking.shared && booking.shares && <SharesPanel booking={booking} isOrganiser={isAdvertiser} />}
 						{booking.split && <Split booking={booking} />}
 					</div>
 					{booking.artwork && ["paid", "live", "completed"].includes(booking.status) && <ArtworkPanel booking={booking} isAdvertiser={isAdvertiser} />}
@@ -214,7 +232,9 @@ function CancelPaid({ booking }: { booking: Booking }) {
 		<div className="panel space-y-3 p-5 sm:p-6">
 			<h2 className="font-display text-xl font-extrabold tracking-tight text-ink-900">Change of plans?</h2>
 			<p className="text-sm text-ink-700">
-				{quote.full
+				{booking.shared
+					? `Cancel now and ${formatMoney(quote.refundMinor, booking.currency)} goes back, split between everyone who paid by what they paid.`
+					: quote.full
 					? `Cancel now and you get all ${formatMoney(quote.refundMinor, booking.currency)} back.`
 					: `It's close to the start, so cancelling now gives back ${formatMoney(quote.refundMinor, booking.currency)} of the ${formatMoney(booking.amountMinor, booking.currency)} you paid. The rest goes to the owner.`}
 			</p>
