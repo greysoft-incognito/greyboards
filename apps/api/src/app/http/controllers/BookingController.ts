@@ -2,6 +2,8 @@ import { Board } from '@app/models/Board'
 import { Booking, type BookingStatus } from '@app/models/Booking'
 import { BookingCollection } from '@app/http/resources/BookingCollection'
 import { BookingResource } from '@app/http/resources/BookingResource'
+import { Refunds } from '@app/services/Refunds'
+import { Money } from '@app/support/Money'
 import { BookingPolicy } from '@app/policies/BookingPolicy'
 import { PaymentResource } from '@app/http/resources/PaymentResource'
 import { Checkout } from '@app/services/payments/Checkout'
@@ -111,14 +113,23 @@ export default class BookingController extends BaseController {
     return new PaymentResource(payment).withCheckout(url).additional({ status: 'success', message: 'Payment started', code: 201 }).response().setStatusCode(201)
   }
 
+  /** Let go of a hold, or cancel a paid booking by the cancellation terms and send the refund. */
   async cancel() {
     const booking = await this.booking()
 
     if (!BookingPolicy.owns(this.user, booking)) throw new RequestException('Only the person who booked can cancel it.', 403)
 
-    await booking.cancel()
+    if (booking.status !== Booking.PAID) {
+      await booking.cancel()
 
-    return new BookingResource(booking).additional({ status: 'success', message: 'Booking cancelled. The dates are free again.', code: 200 })
+      return new BookingResource(booking).additional({ status: 'success', message: 'Booking cancelled. The dates are free again.', code: 200 })
+    }
+
+    const refund = await Refunds.cancel(booking, this.user)
+    const fresh = await Booking.query().findOrFail(booking.id)
+    const message = refund ? `Booking cancelled. ${Money.format(refund.amountMinor, refund.currency)} is on its way back to you.` : 'Booking cancelled.'
+
+    return new BookingResource(fresh).withDetails(this.user).additional({ status: 'success', message, code: 200 })
   }
 
   /** The booking in the address, if the account may see it. */

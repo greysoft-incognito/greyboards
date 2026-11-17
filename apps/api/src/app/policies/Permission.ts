@@ -18,7 +18,7 @@ export class Permission {
     { name: 'partners.review', label: 'Review scouts and billposters', description: 'Approve, reject or suspend people who apply to scout or print and post.' },
     { name: 'boards.review', label: 'Review boards', description: 'Check boards scouts and owners tag, then list, reject or unlist them.' },
     { name: 'bookings.view', label: 'See bookings', description: 'See every booking, what was paid and where the money sits.' },
-    { name: 'payouts.manage', label: 'Manage payouts', description: 'See every payout to owners, scouts and billposters, and send failed ones again.' },
+    { name: 'payouts.manage', label: 'Manage payouts and refunds', description: 'See every payout to owners, scouts and billposters, send failed ones again, and refund paid bookings.' },
     { name: 'settings.manage', label: 'Change settings', description: 'Change upload limits and other app settings.' },
     { name: 'roles.manage', label: 'Manage roles', description: 'Create roles and choose what each one allows.' },
     { name: 'pages.manage', label: 'Manage pages', description: 'Write the privacy policy, terms, about page and any other pages.' },

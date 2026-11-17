@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { Form, Link, redirect, useNavigation, useSearchParams } from "react-router";
-import { ArrowLeft, BadgeCheck, CalendarDays, Camera, CreditCard, Image, Printer, ShieldCheck, Wallet, X } from "lucide-react";
+import { ArrowLeft, BadgeCheck, CalendarDays, Camera, CreditCard, Image, Printer, ShieldCheck, Undo2, Wallet, X } from "lucide-react";
 import type { Booking } from "@greyboards/types";
 import { BoardCover, formatRate } from "~/components/boards/BoardBits";
 import { ArtworkPanel } from "~/components/bookings/ArtworkPanel";
 import { ProofPanel } from "~/components/proofs/ProofPanel";
 import { BookingStatusBadge, formatDays, formatMoney } from "~/components/bookings/BookingBits";
-import { Alert, Button, Spinner } from "~/components/ui";
+import { Alert, Button, Input, Spinner } from "~/components/ui";
 import { formError } from "~/lib/api.server";
 import { postedPhoto } from "~/lib/boards.server";
 import { isProofIntent, proofAction } from "~/lib/proofs.server";
@@ -20,7 +20,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
 	const { api, user } = await requireUser(request, context);
 	const { data: booking } = await api.booking(params.id);
 
-	return { booking, isAdvertiser: booking.advertiserId === user.id };
+	return { booking, isAdvertiser: booking.advertiserId === user.id, canRefund: user.permissions.includes("payouts.manage") };
 }
 
 export async function action({ request, context, params }: Route.ActionArgs) {
@@ -36,9 +36,15 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 		}
 
 		if (intent === "cancel") {
-			await api.cancelBooking(params.id);
+			const response = await api.cancelBooking(params.id);
 
-			return { error: null, message: "Booking cancelled. The dates are free again." };
+			return { error: null, message: response.message ?? "Booking cancelled. The dates are free again." };
+		}
+
+		if (intent === "refund") {
+			await api.admin.refundBooking(params.id, { reason: String(form.get("reason") ?? "") });
+
+			return { error: null, message: "Booking cancelled and refunded in full." };
 		}
 
 		if (intent === "artwork") {
@@ -84,7 +90,7 @@ function isLive(booking: Booking) {
 export default function BookingPage({ loaderData, actionData }: Route.ComponentProps) {
 	useToastMessage(actionData);
 
-	const { booking, isAdvertiser } = loaderData;
+	const { booking, isAdvertiser, canRefund } = loaderData;
 	const [params] = useSearchParams();
 	const outcome = params.get("payment");
 
@@ -139,6 +145,9 @@ export default function BookingPage({ loaderData, actionData }: Route.ComponentP
 					</div>
 					{booking.artwork && ["paid", "live", "completed"].includes(booking.status) && <ArtworkPanel booking={booking} isAdvertiser={isAdvertiser} />}
 					{booking.proof && booking.artwork?.status === "approved" && <ProofPanel proof={booking.proof} />}
+					{booking.cancellation?.allowed && <CancelPaid booking={booking} />}
+					{canRefund && booking.status === "paid" && <StaffRefund booking={booking} />}
+					{!!booking.refunds?.length && <Refunds booking={booking} />}
 				</section>
 
 				<section className="space-y-4">
@@ -191,6 +200,79 @@ function PayOrCancel({ booking }: { booking: Booking }) {
 					</Button>
 				</Form>
 			</div>
+		</div>
+	);
+}
+
+/** The advertiser cancels a paid booking, seeing first what they get back. */
+function CancelPaid({ booking }: { booking: Booking }) {
+	const quote = booking.cancellation!;
+	const [open, setOpen] = useState(false);
+	const busy = useNavigation().formData?.get("intent") === "cancel";
+
+	return (
+		<div className="panel space-y-3 p-5 sm:p-6">
+			<h2 className="font-display text-xl font-extrabold tracking-tight text-ink-900">Change of plans?</h2>
+			<p className="text-sm text-ink-700">
+				{quote.full
+					? `Cancel now and you get all ${formatMoney(quote.refundMinor, booking.currency)} back.`
+					: `It's close to the start, so cancelling now gives back ${formatMoney(quote.refundMinor, booking.currency)} of the ${formatMoney(booking.amountMinor, booking.currency)} you paid. The rest goes to the owner.`}
+			</p>
+			{open ? (
+				<Form method="post" className="flex flex-wrap gap-2">
+					<input type="hidden" name="intent" value="cancel" />
+					<Button type="submit" variant="danger" disabled={busy}>
+						{busy ? <Spinner /> : <X className="h-4 w-4" aria-hidden />}
+						Cancel and refund {formatMoney(quote.refundMinor, booking.currency)}
+					</Button>
+					<Button variant="ghost" onClick={() => setOpen(false)}>
+						Keep the booking
+					</Button>
+				</Form>
+			) : (
+				<Button variant="secondary" onClick={() => setOpen(true)}>
+					Cancel booking
+				</Button>
+			)}
+		</div>
+	);
+}
+
+/** Staff cancel a paid booking and give all the money back. */
+function StaffRefund({ booking }: { booking: Booking }) {
+	const busy = useNavigation().formData?.get("intent") === "refund";
+
+	return (
+		<Form method="post" className="panel space-y-3 p-5 sm:p-6">
+			<input type="hidden" name="intent" value="refund" />
+			<h2 className="font-display text-xl font-extrabold tracking-tight text-ink-900">Refund in full</h2>
+			<p className="text-sm text-ink-500">Staff only. Cancels the booking, frees the dates and sends all {formatMoney(booking.amountMinor, booking.currency)} back to the advertiser.</p>
+			<Input name="reason" required minLength={5} maxLength={191} placeholder="Why, such as: the board was taken down" aria-label="Reason" />
+			<Button type="submit" variant="danger" disabled={busy}>
+				{busy ? <Spinner /> : <Undo2 className="h-4 w-4" aria-hidden />}
+				Cancel and refund
+			</Button>
+		</Form>
+	);
+}
+
+const REFUND_STATUS = { processing: "On its way back", refunded: "Refunded", failed: "Refund failed, our team is on it" } as const;
+
+function Refunds({ booking }: { booking: Booking }) {
+	return (
+		<div className="panel space-y-3 p-5 sm:p-6">
+			<h2 className="font-display text-xl font-extrabold tracking-tight text-ink-900">Refunds</h2>
+			<ul className="divide-y divide-surface-200 text-sm">
+				{booking.refunds!.map((refund) => (
+					<li key={refund.createdAt} className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0">
+						<span>
+							<span className="block font-semibold text-ink-900">{REFUND_STATUS[refund.status]}</span>
+							<span className="text-ink-500">{refund.reason}</span>
+						</span>
+						<span className="font-display font-extrabold text-ink-900 tabular-nums">{formatMoney(refund.amountMinor, refund.currency)}</span>
+					</li>
+				))}
+			</ul>
 		</div>
 	);
 }

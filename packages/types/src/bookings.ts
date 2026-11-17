@@ -45,6 +45,28 @@ export interface Booking {
   artwork?: BookingArtwork
   printJob?: BookingPrintJob | null
   proof?: BookingProof
+  /** What the advertiser gets back if they cancel now, while it's paid. Null for anyone else. */
+  cancellation?: CancellationQuote | null
+  refunds?: BookingRefund[]
+}
+
+/** What cancelling a paid booking now gives back, or why it can't be cancelled. */
+export interface CancellationQuote {
+  allowed: boolean
+  reason: string | null
+  refundMinor: number
+  /** All the money back. */
+  full: boolean
+}
+
+/** Money going back to the advertiser. */
+export interface BookingRefund {
+  amountMinor: number
+  currency: string
+  status: 'processing' | 'refunded' | 'failed'
+  reason: string
+  refundedAt: string | null
+  createdAt: string
 }
 
 /**

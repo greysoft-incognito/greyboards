@@ -61,3 +61,19 @@ export interface PayoutGateway {
   transfer(request: TransferRequest): Promise<TransferResult>
   transferStatus(reference: string): Promise<TransferResult>
 }
+
+/** Where a refund stands. `id` is the provider's, for checking on it later. */
+export interface RefundResult {
+  id: string | null
+  refunded: boolean
+  final: boolean
+  reason: string | null
+  raw: Record<string, unknown>
+}
+
+/** A provider that can send part or all of a payment back. `amount` is in major units. */
+export interface RefundGateway {
+  readonly key: string
+  refund(payment: { reference: string; response: Record<string, unknown> | null }, amount: number): Promise<RefundResult>
+  refundStatus(id: string): Promise<RefundResult>
+}

@@ -124,7 +124,6 @@ describe('Bookings', () => {
       platformAmountMinor: 30_000_000,
     })
     expect((await api('get', '/account/board-bookings', undefined, 'owner')).body.data.map((entry: { id: string }) => entry.id)).toContain(held.id)
-    expect((await api('post', `/bookings/${held.id}/cancel`)).status).toBe(422)
     expect(sql(`select account, kind, amount_minor from ledger_entries where booking_id = '${held.id}'`)).toMatch(/escrow\s*\|\s*payment_in\s*\|\s*216800000/)
   })
 
