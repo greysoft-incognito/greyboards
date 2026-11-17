@@ -234,6 +234,33 @@ export default () => {
         ],
       },
       {
+        id: 'payouts',
+        title: 'Payouts',
+        description: 'Sending owners, scouts and billposters what they are owed.',
+        icon: 'wallet',
+        fields: [
+          {
+            name: 'enabled',
+            key: 'payouts.enabled',
+            env: 'PAYOUTS_ENABLED',
+            type: 'boolean',
+            label: 'Send payouts',
+            help: 'When on, money owed goes to each person’s bank account automatically. Leave off until live payment keys are set.',
+          },
+          {
+            name: 'hold_days',
+            key: 'payouts.hold_days',
+            env: 'PAYOUT_HOLD_DAYS',
+            type: 'number',
+            label: 'Wait before paying',
+            help: 'Days after the proof is accepted before money goes out, so a refund in that time can still be stopped.',
+            unit: 'days',
+            min: 0,
+            max: 30,
+          },
+        ],
+      },
+      {
         id: 'security',
         title: 'Sign-in',
         description: 'Wrong guesses allowed before a pause.',

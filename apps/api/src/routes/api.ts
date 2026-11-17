@@ -21,6 +21,8 @@ import OverviewController from 'src/app/http/controllers/admin/OverviewControlle
 import SettingsController from 'src/app/http/controllers/admin/SettingsController'
 import RoleController from 'src/app/http/controllers/admin/RoleController'
 import UserController from 'src/app/http/controllers/admin/UserController'
+import AdminPayoutController from 'src/app/http/controllers/admin/PayoutController'
+import PayoutController from 'src/app/http/controllers/PayoutController'
 import { Authorize } from 'src/app/http/middlewares/Authorize'
 import { Router } from '@arkstack/driver-express'
 import { auth, limiter } from '@arkstack/driver-express/middlewares'
@@ -139,6 +141,15 @@ Router.post('/payments/:reference/verify', [PaymentController, 'verify'], [auth,
 Router.post('/payments/flutterwave/webhook', [PaymentController, 'flutterwave'], [limiter(120, 60)])
 
 Router.get('/admin/bookings', [AdminBookingController, 'index'], [auth, Authorize.to('bookings.view')])
+Router.get('/admin/payouts', [AdminPayoutController, 'index'], [auth, Authorize.to('payouts.manage')])
+Router.post('/admin/payouts/:payout/retry', [AdminPayoutController, 'retry'], [auth, Authorize.to('payouts.manage'), limiter(30, 60)])
+
+// Where owners, scouts and billposters are paid, and what they've been sent.
+Router.get('/banks', [PayoutController, 'banks'], [auth, limiter(30, 60)])
+Router.get('/account/payouts', [PayoutController, 'show'], [auth])
+Router.get('/account/payouts/history', [PayoutController, 'history'], [auth])
+Router.put('/account/payout-account', [PayoutController, 'save'], [auth, limiter(10, 60)])
+Router.put('/account/owner-profiles/:profile/payout-account', [PayoutController, 'saveForOwner'], [auth, limiter(10, 60)])
 Router.get('/admin/boards', [AdminBoardController, 'index'], [auth, Authorize.to('boards.review')])
 Router.get('/admin/boards/:board', [AdminBoardController, 'show'], [auth, Authorize.to('boards.review')])
 Router.put('/admin/boards/:board', [AdminBoardController, 'update'], [auth, Authorize.to('boards.review')])

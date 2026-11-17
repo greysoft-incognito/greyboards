@@ -57,6 +57,12 @@ import type {
   TwoFactorStatus,
   User,
   UserRole,
+  Bank,
+  Payout,
+  PayoutAccount,
+  PayoutAccountInput,
+  PayoutStatus,
+  PayoutSummary,
 } from '@greyboards/types'
 import type { GreyboardsAlova } from './client'
 
@@ -156,6 +162,7 @@ export function createEndpoints(alova: GreyboardsAlova) {
     /** One published page or policy by slug, e.g. `privacy`. Works signed out. */
     document: (slug: string) => alova.Get<ApiResponse<SiteDocument>>(`/documents/${slug}`, { cacheFor: null }),
 
+    banks: () => alova.Get<ApiResponse<Bank[]>>('/banks'),
     auth: {
       /** Signs in, or asks for a two-factor code when the account has it on. */
       login: (data: { email: string; password: string }) =>
@@ -231,6 +238,10 @@ export function createEndpoints(alova: GreyboardsAlova) {
       /** Add an owner the account manages, such as an agency's client. */
       createOwnerProfile: (data: { name: string }) => alova.Post<ApiResponse<OwnerProfile>>('/account/owner-profiles', data),
       updateOwnerProfile: (id: ID, data: { name: string }) => alova.Put<ApiResponse<OwnerProfile>>(`/account/owner-profiles/${id}`, data),
+      payouts: () => alova.Get<ApiResponse<PayoutSummary>>('/account/payouts', { cacheFor: null }),
+      payoutHistory: (params: PageQuery = {}) => alova.Get<PaginatedResponse<Payout>>('/account/payouts/history', { params, cacheFor: null }),
+      savePayoutAccount: (data: PayoutAccountInput) => alova.Put<ApiResponse<PayoutAccount>>('/account/payout-account', data),
+      saveOwnerPayoutAccount: (profileId: ID, data: PayoutAccountInput) => alova.Put<ApiResponse<PayoutAccount>>(`/account/owner-profiles/${profileId}/payout-account`, data),
       /** Text a code to the number on an unclaimed owner profile. */
       claimOwnerProfile: (data: { phone: string }) => alova.Post<ApiResponse<{ sent: true }>>('/account/owner-profiles/claim', data),
       verifyOwnerClaim: (data: { phone: string; code: string }) => alova.Post<ApiResponse<OwnerProfile>>('/account/owner-profiles/claim/verify', data),
@@ -252,6 +263,8 @@ export function createEndpoints(alova: GreyboardsAlova) {
     /** The admin dashboard. Each area needs a role that grants it (see `User.permissions`). */
     admin: {
       bookings: (params: BookingQuery = {}) => alova.Get<PaginatedResponse<Booking>>('/admin/bookings', { params, cacheFor: null }),
+      payouts: (params: PageQuery & { status?: PayoutStatus | null } = {}) => alova.Get<PaginatedResponse<Payout>>('/admin/payouts', { params, cacheFor: null }),
+      retryPayout: (id: ID) => alova.Post<ApiResponse<Payout>>(`/admin/payouts/${id}/retry`),
       overview: () => alova.Get<ApiResponse<AdminOverview>>('/admin/overview', { cacheFor: null }),
       users: (params: AdminUserQuery = {}) => alova.Get<PaginatedResponse<AdminUser>>('/admin/users', { params, cacheFor: null }),
       /** One account with the marketplace roles it holds. */

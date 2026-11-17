@@ -22,4 +22,10 @@ Schedule.command('bookings:settle')
   .withoutOverlapping()
   .onOneServer()
 
+// Send owners, scouts and billposters what they're owed, and check transfers still on their way.
+Schedule.command('payouts:send')
+  .everyThirtyMinutes()
+  .withoutOverlapping()
+  .onOneServer()
+
 // Schedule.exec('backup.sh').dailyAt('01:30').onOneServer()
