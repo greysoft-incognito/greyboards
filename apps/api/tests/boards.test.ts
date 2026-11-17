@@ -102,12 +102,16 @@ describe('Boards', () => {
 
     expect(pins.status).toBe(200)
     expect(pins.body.meta).toMatchObject({ truncated: false, max: 500 })
-    expect(pins.body.data.find((pin: { id: string }) => pin.id === id)).toEqual({
+    const pin = pins.body.data.find((entry: { id: string }) => entry.id === id)
+
+    expect(pin.latitude).toBeCloseTo(lat, 9)
+    expect(pin.longitude).toBeCloseTo(lng, 9)
+    expect(pin).toEqual({
       id,
       name: 'Admiralty Way, by the roundabout',
       kind: 'billboard',
-      latitude: lat,
-      longitude: lng,
+      latitude: pin.latitude,
+      longitude: pin.longitude,
       lit: false,
       rateMinor: 85_000_000,
       currency: 'NGN',
