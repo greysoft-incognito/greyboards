@@ -1,3 +1,4 @@
+import { Pipeline } from '@app/services/Pipeline'
 import { Board, type BoardDetails, type BoardOwnerChoice, type BoardStatus } from '@app/models/Board'
 import { BoardAgreement } from '@app/models/BoardAgreement'
 import { BoardAgreementResource } from '@app/http/resources/BoardAgreementResource'
@@ -118,6 +119,8 @@ export default class AccountBoardController extends BaseController {
 
     const owner: BoardOwnerChoice = { ownerProfileId: data.ownerProfileId, ownerName: data.ownerName, ownerPhone: data.ownerPhone }
     const board = await Board.tag(this.user, details(data, this.body) as BoardDetails, owner, asOwner)
+
+    if (!asOwner) await Pipeline.tagged(board, this.user)
 
     return new ManagedBoardResource(board)
       .additional({ status: 'success', message: 'Board tagged. We’ll check it before it goes on the map.', code: 201 })

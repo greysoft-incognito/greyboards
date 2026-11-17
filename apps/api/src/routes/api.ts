@@ -10,6 +10,7 @@ import MessageController from 'src/app/http/controllers/MessageController'
 import ReviewController from 'src/app/http/controllers/ReviewController'
 import DisputeController from 'src/app/http/controllers/DisputeController'
 import CampaignReportController from 'src/app/http/controllers/CampaignReportController'
+import ProspectController from 'src/app/http/controllers/ProspectController'
 import OfferController from 'src/app/http/controllers/OfferController'
 import BookingController from 'src/app/http/controllers/BookingController'
 import PaymentController from 'src/app/http/controllers/PaymentController'
@@ -30,6 +31,7 @@ import RoleController from 'src/app/http/controllers/admin/RoleController'
 import UserController from 'src/app/http/controllers/admin/UserController'
 import AdminPayoutController from 'src/app/http/controllers/admin/PayoutController'
 import AdminDisputeController from 'src/app/http/controllers/admin/DisputeController'
+import TerritoryController from 'src/app/http/controllers/admin/TerritoryController'
 import PayoutController from 'src/app/http/controllers/PayoutController'
 import { Authorize } from 'src/app/http/middlewares/Authorize'
 import { Router } from '@arkstack/driver-express'
@@ -92,6 +94,14 @@ Router.delete('/account/boards/:board/blocks/:block', [AccountBoardController, '
 Router.post('/account/boards/:board/agreement', [AccountBoardController, 'sendAgreement'], [auth, limiter(10, 60)])
 
 // Owner profiles: suggestions while tagging, the ones an account manages, and claiming one by phone
+// The scout pipeline, their territories, and the task list for anyone who looks after boards.
+Router.get('/account/prospects', [ProspectController, 'index'], [auth, Authorize.actingAs('scout')])
+Router.post('/account/prospects', [ProspectController, 'store'], [auth, Authorize.actingAs('scout'), limiter(60, 60)])
+Router.put('/account/prospects/:prospect', [ProspectController, 'update'], [auth, Authorize.actingAs('scout'), limiter(120, 60)])
+Router.post('/account/prospects/:prospect/board', [ProspectController, 'link'], [auth, Authorize.actingAs('scout')])
+Router.delete('/account/prospects/:prospect', [ProspectController, 'destroy'], [auth, Authorize.actingAs('scout')])
+Router.get('/account/territories', [ProspectController, 'territories'], [auth, Authorize.actingAs('scout')])
+Router.get('/account/tasks', [ProspectController, 'tasks'], [auth, Authorize.actingAs('owner', 'scout')])
 Router.get('/owner-profiles', [OwnerProfileController, 'suggest'], [auth, Authorize.actingAs('owner', 'scout'), limiter(120, 60)])
 Router.get('/account/owner-profiles', [OwnerProfileController, 'index'], [auth])
 Router.post('/account/owner-profiles', [OwnerProfileController, 'create'], [auth, Authorize.actingAs('owner'), limiter(20, 60)])
@@ -208,6 +218,10 @@ Router.get('/account/payouts', [PayoutController, 'show'], [auth])
 Router.get('/account/payouts/history', [PayoutController, 'history'], [auth])
 Router.put('/account/payout-account', [PayoutController, 'save'], [auth, limiter(10, 60)])
 Router.put('/account/owner-profiles/:profile/payout-account', [PayoutController, 'saveForOwner'], [auth, limiter(10, 60)])
+Router.get('/admin/territories', [TerritoryController, 'index'], [auth, Authorize.to('partners.review')])
+Router.post('/admin/territories', [TerritoryController, 'store'], [auth, Authorize.to('partners.review')])
+Router.put('/admin/territories/:territory', [TerritoryController, 'update'], [auth, Authorize.to('partners.review')])
+Router.delete('/admin/territories/:territory', [TerritoryController, 'destroy'], [auth, Authorize.to('partners.review')])
 Router.get('/admin/boards', [AdminBoardController, 'index'], [auth, Authorize.to('boards.review')])
 Router.get('/admin/boards/:board', [AdminBoardController, 'show'], [auth, Authorize.to('boards.review')])
 Router.put('/admin/boards/:board', [AdminBoardController, 'update'], [auth, Authorize.to('boards.review')])
