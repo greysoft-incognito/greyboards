@@ -6,6 +6,8 @@ import { BookingPolicy } from '@app/policies/BookingPolicy'
 import { PaymentResource } from '@app/http/resources/PaymentResource'
 import { Checkout } from '@app/services/payments/Checkout'
 import { Day } from '@app/support/Day'
+import { imageFile } from '@app/support/rules'
+import { Settings } from '@app/support/Settings'
 import { BaseController } from './BaseController'
 import { GenericResource } from 'resora'
 import { RequestException, perPage } from '@arkstack/common'
@@ -65,8 +67,38 @@ export default class BookingController extends BaseController {
   async show() {
     const booking = await this.booking()
     const split = !BookingPolicy.owns(this.user, booking)
+    const reviewer = split && (await BookingPolicy.managesBoard(this.user, booking))
 
-    return new BookingResource(booking).withSplit(split).additional({ status: 'success', message: 'OK', code: 200 })
+    return new BookingResource(booking).withSplit(split).withDetails(reviewer).additional({ status: 'success', message: 'OK', code: 200 })
+  }
+
+  /** The advertiser sends their artwork for the owner to check. */
+  async uploadArtwork() {
+    const booking = await this.booking()
+
+    if (!BookingPolicy.owns(this.user, booking)) throw new RequestException('Only the person who booked can add artwork.', 403)
+
+    const data = await this.validate({ artwork: imageFile((await Settings.number('uploads.max_image_mb')) * 1024) })
+
+    await booking.submitArtwork(data.artwork)
+
+    return new BookingResource(booking).withDetails().additional({ status: 'success', message: 'Artwork sent for checking.', code: 200 })
+  }
+
+  /** Whoever looks after the board approves the artwork, or sends it back with a note. */
+  async reviewArtwork() {
+    const booking = await this.booking()
+
+    if (!(await BookingPolicy.managesBoard(this.user, booking))) throw new RequestException('Only whoever looks after the board can check artwork.', 403)
+
+    const data = await this.validate({ decision: 'required|in:approve,reject', note: 'nullable|string|max:500' })
+
+    await booking.reviewArtwork(this.user, data.decision === 'approve', data.note ? String(data.note) : null)
+
+    return new BookingResource(booking)
+      .withSplit(true)
+      .withDetails(true)
+      .additional({ status: 'success', message: data.decision === 'approve' ? 'Artwork approved. It goes to print next.' : 'Artwork sent back.', code: 200 })
   }
 
   /** Start paying for held dates on the provider's checkout. */

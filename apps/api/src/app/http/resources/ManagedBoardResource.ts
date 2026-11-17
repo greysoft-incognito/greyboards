@@ -1,6 +1,7 @@
 import type { Board } from '@app/models/Board'
 import { Commissions } from '@app/services/Commissions'
 import { Day } from '@app/support/Day'
+import { PrintJob } from '@app/models/PrintJob'
 import { Settings } from '@app/support/Settings'
 import { BoardAgreementResource } from './BoardAgreementResource'
 import { BoardPhotoResource } from './BoardPhotoResource'
@@ -38,6 +39,7 @@ export class ManagedBoardResource extends BoardResource {
         reason: blocker,
         earliestStart: Day.today(await Settings.number('bookings.lead_days')),
         maxPeriods: await Settings.number('bookings.max_periods'),
+        printFeeMinor: await PrintJob.feeFor(board),
       },
       photos: await Promise.all(photos.map((photo) => new BoardPhotoResource(photo).of(this.showPrivate ? board : undefined).data())),
       ...(this.showPrivate

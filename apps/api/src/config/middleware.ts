@@ -28,8 +28,9 @@ export default (): MiddlewareConfig => {
         credentials: true,
       }),
       (req, res, next) => uploads.handler(req, res, next).catch(next),
-      // Local disks sign file URLs as APP_URL/<path>, so serve stored avatars and board photos from there.
-      ...['avatars', 'boards'].map((folder) =>
+      // Local disks sign file URLs as APP_URL/<path>, so serve stored images from there: avatars, board
+      // photos, booking artwork and print photos.
+      ...['avatars', 'boards', 'bookings', 'print-jobs'].map((folder) =>
         express.Router().use(
           `/${folder}`,
           express.static(path.join(Arkstack.rootDir(), 'storage/app/public', folder), {
