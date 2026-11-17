@@ -1,0 +1,10 @@
+packages:
+  - apps/*
+  - packages/*
+
+onlyBuiltDependencies:
+  - '@arkstack/console'
+  - '@swc/core'
+  - argon2
+  - esbuild
+  - workerd
