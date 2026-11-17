@@ -36,7 +36,7 @@ export function AppHeader({ user }: { user: User | null }) {
 	}, []);
 
 	return (
-		<header ref={header} className="sticky top-0 z-20 px-3 pt-3 sm:px-5">
+		<header ref={header} className="sticky top-0 z-20 px-3 pt-3 sm:px-5 print:hidden">
 			<div className="glass mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-x-3 gap-y-2 rounded-[1.25rem] py-2.5 pr-2.5 pl-4">
 				<Logo to={user ? "/dashboard" : "/"} compact />
 				{user && (

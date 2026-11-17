@@ -2,6 +2,9 @@ import type {
   PublishedReview,
   RatingSummary,
   ReviewInput,
+  CampaignReport,
+  CampaignReportInput,
+  CampaignReportSummary,
   AdminDispute,
   Dispute,
   DisputeInput,
@@ -128,6 +131,18 @@ export function createEndpoints(alova: GreyboardsAlova) {
     boardReviews: (id: ID, params: PageQuery = {}) => alova.Get<PaginatedResponse<PublishedReview> & { summary: RatingSummary }>(`/boards/${id}/reviews`, { params, cacheFor: null }),
     /** Write or change the viewer's review of a booking. */
     review: (id: ID, data: ReviewInput) => alova.Post<ApiResponse<{ id: ID; rating: number; body: string | null }>>(`/bookings/${id}/review`, data),
+    /** Campaign reports: the advertiser's own, and the shared page anyone with the link opens. */
+    reports: {
+      list: (params: PageQuery = {}) => alova.Get<PaginatedResponse<CampaignReportSummary>>('/reports', { params, cacheFor: null }),
+      /** Bookings whose ads went up, which a report can hold. */
+      bookings: (params: PageQuery = {}) => alova.Get<PaginatedResponse<Booking>>('/reports/bookings', { params, cacheFor: null }),
+      create: (data: CampaignReportInput) => alova.Post<ApiResponse<CampaignReport>>('/reports', data),
+      show: (id: ID) => alova.Get<ApiResponse<CampaignReport>>(`/reports/${id}`, { cacheFor: null }),
+      shared: (token: string) => alova.Get<ApiResponse<CampaignReport>>(`/reports/shared/${token}`, { cacheFor: null }),
+      /** A new link; the old one stops working. */
+      relink: (id: ID) => alova.Post<ApiResponse<{ link: string }>>(`/reports/${id}/link`),
+      remove: (id: ID) => alova.Delete<ApiResponse<unknown>>(`/reports/${id}`),
+    },
     /** Raise a dispute about a booking, for staff to decide. */
     dispute: (id: ID, data: DisputeInput) => alova.Post<ApiResponse<Dispute>>(`/bookings/${id}/disputes`, data),
     /** A page of a booking's messages, newest first. Reading marks them read. */

@@ -1,7 +1,7 @@
 import { Link, NavLink, redirect, useSearchParams } from "react-router";
 import type { Auction, Booking, Offer } from "@greyboards/types";
 import { BidRow, OfferRow, toMinor } from "~/components/bids/BidBits";
-import { CalendarSearch } from "lucide-react";
+import { CalendarSearch, FileChartColumn } from "lucide-react";
 import { BookingRow, formatMoney } from "~/components/bookings/BookingBits";
 import { BoardScene } from "~/components/BoardScene";
 import { Pager } from "~/components/Pager";
@@ -101,6 +101,12 @@ export default function Bookings({ loaderData, actionData }: Route.ComponentProp
 				<div>
 					<h1 className="font-display text-3xl font-extrabold tracking-[-0.03em] text-ink-900 sm:text-4xl">Bookings</h1>
 					<p className="mt-1 text-ink-500">{INTROS[view]}</p>
+					{view === "mine" && (
+						<Link prefetch="intent" to="/reports" className="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 hover:underline">
+							<FileChartColumn className="h-4 w-4" aria-hidden />
+							Campaign reports
+						</Link>
+					)}
 				</div>
 				<nav aria-label="Bookings" className="glass flex max-w-full gap-1 overflow-x-auto rounded-2xl p-1">
 					{views.map((entry) => (
