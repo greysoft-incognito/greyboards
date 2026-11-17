@@ -12,7 +12,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
 	const { api, user } = await requireUser(request, context);
 	const [{ data: board }, { data: kinds }] = await Promise.all([api.board(params.id), api.boardKinds()]);
 
-	if (board.ownerId !== user.id && board.taggedById !== user.id) throw new Response("Not found", { status: 404 });
+	if (board.owner?.userId !== user.id && board.taggedById !== user.id) throw new Response("Not found", { status: 404 });
 
 	return { board, kinds };
 }

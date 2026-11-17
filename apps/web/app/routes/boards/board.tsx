@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Form, Link, redirect, useNavigation, useSearchParams, useSubmit } from "react-router";
-import { ArrowLeft, Camera, Compass, ExternalLink, Layers, Lightbulb, MapPin, Pencil, Phone, Ruler, Trash2, User, X } from "lucide-react";
-import type { BoardDetail, BoardPhoto } from "@greyboards/types";
+import { ArrowLeft, BadgeCheck, Camera, Compass, ExternalLink, FileSignature, Layers, Lightbulb, MapPin, Pencil, Phone, Ruler, Send, Trash2, User, X } from "lucide-react";
+import type { BoardAgreement, BoardDetail, BoardPhoto, OwnerProfile } from "@greyboards/types";
 import { BoardCover, BoardStatusBadge, formatRate, formatSize, mapLink } from "~/components/boards/BoardBits";
 import { Alert, Button, buttonClass, Spinner } from "~/components/ui";
 import { formError } from "~/lib/api.server";
@@ -16,7 +16,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
 	const { api, user } = await requireUser(request, context);
 	const { data: board } = await api.board(params.id);
 
-	return { board, manages: board.ownerId === user.id || board.taggedById === user.id };
+	return { board, manages: board.owner?.userId === user.id || board.taggedById === user.id };
 }
 
 export async function action({ request, context, params }: Route.ActionArgs) {
@@ -39,6 +39,12 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 			await api.account.removeBoardPhoto(params.id, String(form.get("photo")));
 
 			return { error: null, message: "Photo removed." };
+		}
+
+		if (intent === "send-agreement") {
+			const { data } = await api.account.sendAgreement(params.id);
+
+			return { error: null, message: `Sent to ${data.ownerName ?? "the owner"} by SMS.` };
 		}
 
 		if (intent === "remove") {
@@ -147,18 +153,8 @@ export default function BoardPage({ loaderData, actionData }: Route.ComponentPro
 						<div className="panel space-y-4 p-5 sm:p-6">
 							<p className="text-sm text-ink-700">{REVIEW_NOTES[board.status]}</p>
 							{board.reviewNote && <Alert>{board.reviewNote}</Alert>}
-							{board.ownerPhone && (
-								<div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-ink-700">
-									<span className="flex items-center gap-2">
-										<User className="h-4 w-4 text-ink-500" aria-hidden />
-										{board.ownerName ?? "Owner"}
-									</span>
-									<a href={`tel:${board.ownerPhone}`} className="flex items-center gap-2 hover:text-brand-700">
-										<Phone className="h-4 w-4 text-ink-500" aria-hidden />
-										{board.ownerPhone}
-									</a>
-								</div>
-							)}
+							{board.owner && <OwnerLine owner={board.owner} />}
+							{board.agreement !== undefined && board.owner && !(board.owner.userId && board.owner.userId === board.taggedById) && <AgreementPanel board={board} />}
 							{actionData?.error && <Alert>{actionData.error}</Alert>}
 							<div className="flex flex-wrap gap-2">
 								<Link prefetch="intent" to={`/boards/${board.id}/edit`} className={buttonClass("secondary")}>
@@ -269,5 +265,69 @@ function RemoveBoard() {
 				Keep it
 			</Button>
 		</Form>
+	);
+}
+
+function OwnerLine({ owner }: { owner: OwnerProfile }) {
+	return (
+		<div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-ink-700">
+			<span className="flex items-center gap-2">
+				<User className="h-4 w-4 text-ink-500" aria-hidden />
+				{owner.name}
+				{owner.claimed && <BadgeCheck className="h-4 w-4 text-brand-600" aria-label="On Greyboards" />}
+			</span>
+			{owner.phone && (
+				<a href={`tel:${owner.phone}`} className="flex items-center gap-2 tabular-nums hover:text-brand-700">
+					<Phone className="h-4 w-4 text-ink-500" aria-hidden />
+					{owner.phone}
+				</a>
+			)}
+		</div>
+	);
+}
+
+const AGREEMENT_STATES: Record<BoardAgreement["status"], { label: string; tone: string; note: string }> = {
+	sent: { label: "Waiting for the owner", tone: "bg-amber-50 text-held", note: "We texted the owner a link. They sign with a code we send to the same number." },
+	signed: { label: "Signed", tone: "bg-emerald-50 text-available", note: "The owner agreed. You can run this board for them." },
+	declined: { label: "Declined", tone: "bg-red-50 text-red-700", note: "The owner said no. Talk to them before sending it again." },
+	cancelled: { label: "Replaced", tone: "bg-surface-100 text-ink-700", note: "A newer agreement replaced this one." },
+	expired: { label: "Link ran out", tone: "bg-surface-100 text-ink-700", note: "The owner didn't sign in time. Send it again." },
+};
+
+/** Where the owner's agreement stands, with a way to text it (again). */
+function AgreementPanel({ board }: { board: BoardDetail }) {
+	const navigation = useNavigation();
+	const busy = navigation.formData?.get("intent") === "send-agreement";
+	const agreement = board.agreement;
+	const state = agreement ? AGREEMENT_STATES[agreement.status] : null;
+	const canSend = !agreement || agreement.status !== "signed";
+	const rate = agreement ? formatRate(agreement.rate) : null;
+
+	return (
+		<div className="space-y-3 rounded-2xl bg-canvas p-4">
+			<div className="flex flex-wrap items-center justify-between gap-2">
+				<p className="flex items-center gap-2 text-sm font-semibold text-ink-900">
+					<FileSignature className="h-4 w-4 text-brand-600" aria-hidden />
+					Owner agreement
+				</p>
+				{state && <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${state.tone}`}>{state.label}</span>}
+			</div>
+			<p className="text-sm text-ink-500">{state ? state.note : `Text ${board.owner?.name ?? "the owner"} a link to agree that you run this board and they get their share of each booking.`}</p>
+			{agreement && (
+				<p className="text-sm text-ink-700">
+					Owner gets <strong>{agreement.ownerSharePercent}%</strong> of each booking{rate ? `, at ${rate}` : ""}.
+					{agreement.signedName && ` Signed by ${agreement.signedName}.`}
+				</p>
+			)}
+			{canSend && board.owner?.phone && (
+				<Form method="post" preventScrollReset>
+					<input type="hidden" name="intent" value="send-agreement" />
+					<Button type="submit" variant={agreement?.status === "sent" ? "secondary" : "primary"} disabled={busy}>
+						{busy ? <Spinner /> : <Send className="h-4 w-4" aria-hidden />}
+						{agreement?.status === "sent" ? "Text the link again" : "Text the owner to sign"}
+					</Button>
+				</Form>
+			)}
+		</div>
 	);
 }

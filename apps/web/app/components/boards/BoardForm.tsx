@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Form, useNavigation } from "react-router";
 import { Binoculars, Camera, LocateFixed, Presentation } from "lucide-react";
-import type { BoardDetail, BoardKindDefinition } from "@greyboards/types";
+import type { BoardDetail, BoardKindDefinition, OwnerProfile } from "@greyboards/types";
+import { ManagedOwnerSelect, OwnerPicker } from "./OwnerPicker";
 import { Alert, Button, Field, Input, Select, Spinner, Textarea } from "~/components/ui";
 import { useLimits } from "~/lib/limits";
 
@@ -24,6 +25,7 @@ export function BoardForm({
 	tagAs = [],
 	error,
 	fieldErrors = {},
+	ownerProfiles = [],
 }: {
 	kinds: BoardKindDefinition[];
 	board?: BoardDetail;
@@ -31,6 +33,8 @@ export function BoardForm({
 	tagAs?: ("owner" | "scout")[];
 	error?: string | null;
 	fieldErrors?: Errors;
+	/** The owner profiles the account manages, to tag a board under one of them. */
+	ownerProfiles?: OwnerProfile[];
 }) {
 	const navigation = useNavigation();
 	const { maxImageMb } = useLimits();
@@ -175,7 +179,7 @@ export function BoardForm({
 			</section>
 
 			<section className="panel space-y-5 p-5 sm:p-6">
-				<h2 className="font-display text-lg font-extrabold tracking-tight text-ink-900">{scouting ? "Owner and rate" : "Rate"}</h2>
+				<h2 className="font-display text-lg font-extrabold tracking-tight text-ink-900">{scouting ? "Owner and rate" : !board && ownerProfiles.length > 1 ? "Owner and rate" : "Rate"}</h2>
 				<div className="grid gap-4 sm:grid-cols-2">
 					<Field label="Rate in naira" error={fieldErrors.rateMinor} hint={scouting ? "What the owner asks, if you know it." : undefined}>
 						<Input name="rate" type="number" min="0" step="1000" defaultValue={board?.rate ? board.rate.amountMinor / 100 : ""} placeholder="850000" />
@@ -187,16 +191,8 @@ export function BoardForm({
 						</Select>
 					</Field>
 				</div>
-				{(scouting || (board && !board.ownerId)) && (
-					<div className="grid gap-4 sm:grid-cols-2">
-						<Field label="Owner's name" error={fieldErrors.ownerName}>
-							<Input name="ownerName" defaultValue={board?.ownerName ?? ""} maxLength={120} placeholder="Mr Adeyemi" />
-						</Field>
-						<Field label="Owner's phone" error={fieldErrors.ownerPhone} hint="We'll text them to sign the board up.">
-							<Input name="ownerPhone" type="tel" required={scouting} defaultValue={board?.ownerPhone ?? ""} maxLength={20} placeholder="+234 803 000 0000" />
-						</Field>
-					</div>
-				)}
+				{scouting && <OwnerPicker errors={fieldErrors} />}
+				{!board && as === "owner" && <ManagedOwnerSelect profiles={ownerProfiles} error={fieldErrors.ownerProfileId} />}
 			</section>
 
 			{!board && (

@@ -2,7 +2,7 @@ import { Link, redirect } from "react-router";
 import { ArrowLeft } from "lucide-react";
 import { BoardForm } from "~/components/boards/BoardForm";
 import { formError } from "~/lib/api.server";
-import { boardInput, photoLocation, postedPhoto } from "~/lib/boards.server";
+import { boardInput, boardOwner, photoLocation, postedPhoto } from "~/lib/boards.server";
 import { requireUser } from "~/lib/session.server";
 import type { Route } from "./+types/new";
 
@@ -14,9 +14,9 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
 	if (!tagAs.length) throw redirect("/settings/roles");
 
-	const { data: kinds } = await api.boardKinds();
+	const [{ data: kinds }, profiles] = await Promise.all([api.boardKinds(), tagAs.includes("owner") ? api.account.ownerProfiles({ per_page: 100 }) : null]);
 
-	return { kinds, tagAs };
+	return { kinds, tagAs, ownerProfiles: profiles?.data ?? [] };
 }
 
 export async function action({ request, context }: Route.ActionArgs) {
@@ -26,7 +26,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 	let id: string;
 
 	try {
-		id = (await api.account.tagBoard({ ...boardInput(form), as })).data.id;
+		id = (await api.account.tagBoard({ ...boardInput(form), ...boardOwner(form), as })).data.id;
 	} catch (error) {
 		return formError(error);
 	}
@@ -54,7 +54,7 @@ export default function NewBoard({ loaderData, actionData }: Route.ComponentProp
 			</Link>
 			<h1 className="mt-3 font-display text-3xl font-extrabold tracking-[-0.03em] text-ink-900 sm:text-4xl">Tag a board</h1>
 			<p className="mt-1 mb-6 text-ink-500">We check every board before advertisers can find it, usually within a day.</p>
-			<BoardForm kinds={loaderData.kinds} tagAs={loaderData.tagAs} error={actionData?.error} fieldErrors={actionData?.fieldErrors} />
+			<BoardForm kinds={loaderData.kinds} tagAs={loaderData.tagAs} ownerProfiles={loaderData.ownerProfiles} error={actionData?.error} fieldErrors={actionData?.fieldErrors} />
 		</main>
 	);
 }

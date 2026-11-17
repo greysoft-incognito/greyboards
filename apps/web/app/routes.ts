@@ -14,6 +14,7 @@ export default [
 		route("dashboard", "routes/dashboard.tsx"),
 		route("boards", "routes/boards/index.tsx"),
 		route("boards/new", "routes/boards/new.tsx"),
+		route("boards/owners", "routes/boards/owners.ts"),
 		route("boards/:id", "routes/boards/board.tsx"),
 		route("boards/:id/edit", "routes/boards/edit.tsx"),
 		route("settings", "routes/settings/layout.tsx", [
@@ -21,6 +22,7 @@ export default [
 			route("profile", "routes/settings/profile.tsx"),
 			route("email", "routes/settings/email.tsx"),
 			route("roles", "routes/settings/roles.tsx"),
+			route("owners", "routes/settings/owners.tsx"),
 			route("password", "routes/settings/password.tsx"),
 			route("two-step", "routes/settings/two-step.tsx"),
 			route("devices", "routes/settings/devices.tsx"),
@@ -45,6 +47,7 @@ export default [
 	// Public pages under the site header and footer.
 	layout("routes/site-layout.tsx", [
 		route("pages/:slug", "routes/document.tsx"),
+		route("agreements/:token", "routes/agreement.tsx"),
 		...(["privacy", "terms", "about"] as const).map((slug) => route(slug, "routes/document.tsx", { id: `document-${slug}` })),
 	]),
 ] satisfies RouteConfig;
