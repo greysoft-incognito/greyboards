@@ -3,7 +3,7 @@ Greyboards (billboard-as-a-service) is a marketplace for outdoor advertising tha
 
 The promise to an advertiser is "book it, see it, pay only when it's up". Most of the features below exist to make that promise true for someone who will never stand in front of the board.
 
-The product plan lives in [docs/proposal.md](docs/proposal.md).
+The product plan lives in [docs/proposal.md](docs/proposal.md), and what is built and left is in [ROADMAP.md](ROADMAP.md).
 
 ## Repository
 
