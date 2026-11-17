@@ -1,5 +1,6 @@
 export * from './admin'
 export * from './api'
 export * from './boards'
+export * from './bookings'
 export * from './documents'
 export * from './models'

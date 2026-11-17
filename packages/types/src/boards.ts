@@ -1,5 +1,6 @@
 import type { AdminUser } from './admin'
 import type { PageQuery } from './api'
+import type { BoardBookingTerms } from './bookings'
 import type { ID } from './models'
 
 /** The kinds of board the map knows. */
@@ -128,6 +129,8 @@ export interface AgreementOffer {
 /** A board with its photos. The owner, agreement and review notes come only to whoever looks after it and reviewers. */
 export interface BoardDetail extends Board {
   photos: BoardPhoto[]
+  /** Whether it takes bookings now. */
+  booking: BoardBookingTerms
   owner?: OwnerProfile | null
   taggedById?: ID | null
   reviewNote?: string | null
