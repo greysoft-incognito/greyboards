@@ -77,6 +77,16 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 			return { error: null, message: "Artwork sent for checking." };
 		}
 
+		if (intent === "design") {
+			const design = postedPhoto(form, "design");
+
+			if (!design) return { error: "Choose your design first.", message: null };
+
+			const { message } = await api.sendShareDesign(params.id, String(form.get("shareId")), design);
+
+			return { error: null, message };
+		}
+
 		if (intent === "approve" || intent === "reject") {
 			await api.reviewArtwork(params.id, { decision: intent, note: String(form.get("note") ?? "") || undefined });
 

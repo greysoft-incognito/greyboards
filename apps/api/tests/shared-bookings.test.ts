@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, it } from 'vitest'
 
 import { app } from '../src/core/bootstrap'
 import request from 'parasito'
+import sharp from 'sharp'
 import { ark } from './support/ark'
 
 const tokens: Record<string, string> = {}
@@ -28,6 +29,19 @@ const pay = async (bookingId: string, who: string) => {
 }
 
 const tokenOf = (url: string) => url.split('/shares/')[1]
+
+/** Send `who`'s design for a share, as a plain image of one colour. */
+const sendDesign = async (bookingId: string, shareId: string, who: string, field: 'design' | 'artwork' = 'design') => {
+  const png = await sharp({ create: { width: 600, height: 400, channels: 3, background: who === 'organiser' ? '#833b4b' : '#2255aa' } }).png().toBuffer()
+  const form = new FormData()
+
+  form.append(field, new Blob([new Uint8Array(png)], { type: 'image/png' }), 'design.png')
+
+  return request(app)
+    .post(`/api/bookings/${bookingId}/${field === 'design' ? `shares/${shareId}/design` : 'artwork'}`)
+    .set({ Accept: 'application/json', Authorization: `Bearer ${tokens[who]}` })
+    .send(form)
+}
 
 describe('Shared bookings', { timeout: 60_000 }, () => {
   let boardId = ''
@@ -95,6 +109,33 @@ describe('Shared bookings', { timeout: 60_000 }, () => {
     expect(cancelled.status).toBe(200)
     expect(cancelled.body.data.refunds.reduce((sum: number, refund: { amountMinor: number }) => sum + refund.amountMinor, 0)).toBe(booking.amountMinor)
     expect(cancelled.body.data.refunds).toHaveLength(3)
+  })
+
+  it('merges every advertiser’s design into one print', async () => {
+    const booking = (await api('post', `/boards/${boardId}/bookings`, { startsOn: fromToday(100), periods: 1, shares: 2 })).body.data
+
+    await api('post', `/shares/${tokenOf(booking.shares[1].inviteUrl)}/claim`, undefined, 'second')
+    await pay(booking.id, 'second')
+    await pay(booking.id, 'organiser')
+
+    const [mine, theirs] = (await api('get', `/bookings/${booking.id}`)).body.data.shares
+
+    expect((await sendDesign(booking.id, mine.id, 'organiser', 'artwork')).status).toBe(422)
+    expect((await sendDesign(booking.id, mine.id, 'second')).status).toBe(403)
+
+    const first = await sendDesign(booking.id, theirs.id, 'second')
+
+    expect(first.status).toBe(200)
+    expect(first.body.message).toMatch(/once everyone has sent theirs/)
+    expect(first.body.data.artwork.status).toBe('none')
+
+    const merged = (await sendDesign(booking.id, mine.id, 'organiser')).body.data
+
+    // The board is 12 m by 4 m, so the print is three times as wide as it is tall.
+    expect(merged.artwork).toMatchObject({ status: 'submitted', width: 3000, height: 1000 })
+    expect(merged.shares.every((share: { designUrl: string | null }) => !!share.designUrl)).toBe(true)
+    expect((await api('post', `/bookings/${booking.id}/artwork/review`, { decision: 'approve' }, 'owner')).body.data.artwork.status).toBe('approved')
+    expect((await sendDesign(booking.id, mine.id, 'organiser')).status).toBe(422)
   })
 
   it('gives everyone their money back when the shares aren’t all paid in time', async () => {

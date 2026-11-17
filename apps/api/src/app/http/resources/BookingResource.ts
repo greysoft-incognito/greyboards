@@ -89,7 +89,7 @@ export class BookingResource extends Resource {
     const organiser = viewer.id === booking.advertiserId
     const base = String(config('app.frontend_url')).replace(/\/+$/, '')
 
-    return shares.map((share) => ({
+    return Promise.all(shares.map(async (share) => ({
       id: share.id,
       position: share.position,
       amountMinor: share.amountMinor,
@@ -98,7 +98,9 @@ export class BookingResource extends Resource {
       mine: share.userId === viewer.id,
       inviteUrl: organiser && share.status === 'open' ? `${base}/shares/${share.token}` : null,
       paidAt: share.paidAt,
-    }))
+      designUrl: await share.designUrl(),
+      designSentAt: share.designSentAt,
+    })))
   }
 
   async data() {

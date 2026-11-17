@@ -1,4 +1,5 @@
 import { Model } from '@arkstack/database'
+import { StoredImage } from '@app/support/StoredImage'
 import { User } from './User'
 
 /**
@@ -18,6 +19,12 @@ export class BookingShare extends Model {
   declare token: string
   declare paymentId: string | null
   declare paidAt: Date | null
+  /** The holder's own design, merged with the others' into the print. */
+  declare designPath: string | null
+  declare designDisk: string | null
+  declare designWidth: number | null
+  declare designHeight: number | null
+  declare designSentAt: Date | null
   declare createdAt: Date
   declare updatedAt: Date
 
@@ -29,6 +36,11 @@ export class BookingShare extends Model {
     amountMinor: 'amount_minor',
     paymentId: 'payment_id',
     paidAt: 'paid_at',
+    designPath: 'design_path',
+    designDisk: 'design_disk',
+    designWidth: 'design_width',
+    designHeight: 'design_height',
+    designSentAt: 'design_sent_at',
   }
 
   protected override casts = {
@@ -38,6 +50,10 @@ export class BookingShare extends Model {
 
   user() {
     return this.belongsTo(User, 'userId')
+  }
+
+  designUrl(): Promise<string | null> {
+    return this.designPath && this.designDisk ? StoredImage.url(this.designDisk, this.designPath) : Promise.resolve(null)
   }
 
   isPaid(): boolean {
