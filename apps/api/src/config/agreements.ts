@@ -1,13 +1,8 @@
 /**
- * Agreements with board owners, who sign by SMS. Admins can change the share in the dashboard.
+ * Agreements with board owners, who sign by SMS. The owner's share comes from config/revenue.ts.
  */
 export default () => {
   return {
-    /**
-     * The owner's share of each booking on a board a scout runs for them, in percent.
-     */
-    owner_share_percent: Number(env('OWNER_SHARE_PERCENT', 70)),
-
     /**
      * Days the signing link in the owner's SMS keeps working.
      */

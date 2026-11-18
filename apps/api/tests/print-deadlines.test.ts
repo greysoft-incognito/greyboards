@@ -132,7 +132,7 @@ describe('Print deadlines', () => {
     await api('post', `/bookings/${second.booking}/proof/submit`, undefined, 'rival')
     await api('post', `/bookings/${second.booking}/proof/accept`)
 
-    // Platform's ₦75,000 commission pays the ₦43,750 bonus.
-    expect(ledger(second.booking).sort()).toEqual(['billposter 21875000', 'escrow -67500000', 'escrow 67500000', 'owner 42500000', 'platform 3125000'].sort())
+    // Greyboards' ₦100,000 share pays the ₦43,750 bonus.
+    expect(ledger(second.booking).sort()).toEqual(['billposter 21875000', 'escrow -67500000', 'escrow 67500000', 'owner 40000000', 'platform 5625000'].sort())
   }, 60_000)
 })

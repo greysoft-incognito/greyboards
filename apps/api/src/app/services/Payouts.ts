@@ -35,9 +35,9 @@ export class Payouts {
     const bonus = booking.printedBy === 'billposter' && job ? Math.min(Number(job.bonusMinor ?? 0), booking.platformAmountMinor ?? 0) : 0
     const shares: Share[] = [
       { account: 'owner', kind: 'payout_due', amountMinor: booking.ownerAmountMinor ?? 0, userId: null, ownerProfileId: booking.ownerProfileId, memo: 'Owner’s share' },
-      { account: 'scout', kind: 'payout_due', amountMinor: booking.scoutAmountMinor ?? 0, userId: booking.scoutId, ownerProfileId: null, memo: 'Scout’s cut of the commission' },
+      { account: 'scout', kind: 'payout_due', amountMinor: booking.scoutAmountMinor ?? 0, userId: booking.scoutId, ownerProfileId: null, memo: 'Scout’s share' },
       { ...printer, kind: 'payout_due', amountMinor: booking.printFeeMinor + bonus, memo: bonus ? 'Printing and posting, with a rush bonus' : 'Printing and posting' },
-      { account: 'platform', kind: 'commission', amountMinor: (booking.platformAmountMinor ?? 0) - bonus, userId: null, ownerProfileId: null, memo: 'Greyboards’ commission' },
+      { account: 'platform', kind: 'commission', amountMinor: (booking.platformAmountMinor ?? 0) - bonus, userId: null, ownerProfileId: null, memo: 'Greyboards’ share' },
     ]
 
     return shares.filter((share) => share.amountMinor > 0)

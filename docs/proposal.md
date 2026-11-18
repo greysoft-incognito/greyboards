@@ -113,17 +113,19 @@ One person can be a billposter and a scout, or an owner, on the same account.
 
 ### 3.6 Commissions
 
-Example with a ₦1,000,000 booking, a 15% platform commission and a scout share of 30% of that commission:
+Printing and posting is paid first, to the billposter who did it. The rent left is split between the owner, Greyboards and the scout who brought the board in: 70%, 20% and 10% by default. Admins can change the three parts, and they must always add up to 100%. On a board its owner tagged, with no scout, the scout's part goes to the owner by default (an admin setting can send it to Greyboards instead).
+
+Example with a ₦1,000,000 booking on a scouted board, of which ₦100,000 is printing and posting:
 
 | | Amount |
 | --- | --- |
 | Advertiser pays | ₦1,000,000 (held by Greyboards) |
-| Greyboards' commission from the owner (15%) | ₦150,000 |
-| Owner receives | ₦850,000 |
-| Scout receives (30% of Greyboards' commission) | ₦45,000 |
-| Greyboards keeps | ₦105,000 |
+| Billposter, for printing and posting | ₦100,000 |
+| Owner receives (70% of the ₦900,000 rent) | ₦630,000 |
+| Greyboards keeps (20%) | ₦180,000 |
+| Scout receives (10%) | ₦90,000 |
 
-Paying the scout from Greyboards' share means owners pay one clear rate whether or not a scout brought them in. Because scouts now also run managed boards (artwork checks, installation, proof photos), their share should probably be higher for managed boards than for self-serve ones, or they should be paid a fee per proof visit. Commissions are paid only after proof of posting is accepted, and can be reversed within a short window if a booking is refunded.
+Shares are paid only after proof of posting is accepted. A signed agreement keeps the owner's share it was signed at, and a paid booking keeps the split it was paid with.
 
 All money moves through a ledger (escrow in, commission, scout share, owner payout), so every balance can be traced back to the booking that made it.
 

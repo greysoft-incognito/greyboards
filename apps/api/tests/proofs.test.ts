@@ -146,7 +146,7 @@ describe('Proof of posting', () => {
     expect((await api('post', `/bookings/${printed}/proof/accept`)).status).toBe(422)
 
     // ₦500,000 rent at 85/15, and ₦175,000 to print 10 × 5 m.
-    expect(ledger(printed).sort()).toEqual(['billposter 17500000', 'escrow -67500000', 'escrow 67500000', 'owner 42500000', 'platform 7500000'].sort())
+    expect(ledger(printed).sort()).toEqual(['billposter 17500000', 'escrow -67500000', 'escrow 67500000', 'owner 40000000', 'platform 10000000'].sort())
   })
 
   it('lets the owner prove a digital board, and accepts an unchecked proof after the deadline', async () => {
@@ -165,7 +165,7 @@ describe('Proof of posting', () => {
     const done = (await api('get', `/bookings/${digital}`)).body.data
 
     expect(done).toMatchObject({ status: 'live', proof: { status: 'accepted' } })
-    expect(ledger(digital).sort()).toEqual(['escrow -50000000', 'escrow 50000000', 'owner 42500000', 'platform 7500000'].sort())
+    expect(ledger(digital).sort()).toEqual(['escrow -50000000', 'escrow 50000000', 'owner 40000000', 'platform 10000000'].sort())
   }, 30_000)
 
   it('lets an owner who prints their own board charge their price and take the fee', async () => {
@@ -180,6 +180,6 @@ describe('Proof of posting', () => {
     await api('post', `/bookings/${booking.id}/proof/submit`, undefined, 'owner')
     await api('post', `/bookings/${booking.id}/proof/accept`)
 
-    expect(ledger(booking.id).sort()).toEqual(['escrow -60000000', 'escrow 60000000', 'owner 10000000', 'owner 42500000', 'platform 7500000'].sort())
+    expect(ledger(booking.id).sort()).toEqual(['escrow -60000000', 'escrow 60000000', 'owner 10000000', 'owner 40000000', 'platform 10000000'].sort())
   }, 30_000)
 })

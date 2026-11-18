@@ -96,6 +96,8 @@ function GroupForm({ group: loaded }: { group: SettingGroup }) {
 	const [changed, setChanged] = useState(false);
 	const busy = fetcher.state !== "idle";
 	const result = fetcher.state === "idle" && !changed ? fetcher.data : undefined;
+	const total = group.total ? sumOf(group, values) : null;
+	const offTotal = !!group.total && total !== group.total.equals;
 
 	useToastMessage(fetcher.data);
 
@@ -119,6 +121,11 @@ function GroupForm({ group: loaded }: { group: SettingGroup }) {
 					<p className="mt-1 text-ink-500">{group.description}</p>
 				</div>
 				{result?.error && <Alert>{result.error}</Alert>}
+				{group.total && (
+					<p className={`rounded-2xl px-4 py-3 text-sm font-semibold ${offTotal ? "bg-amber-50 text-held" : "bg-emerald-50 text-available"}`}>
+						Together {total}%{offTotal ? `, but they must add up to ${group.total.equals}%.` : ", as they should."}
+					</p>
+				)}
 				<div className="grid gap-5 sm:grid-cols-2">
 					{group.fields.map((field) => (
 						<SettingControl
@@ -135,10 +142,21 @@ function GroupForm({ group: loaded }: { group: SettingGroup }) {
 				</div>
 			</div>
 			<div className="sticky bottom-0 flex items-center justify-end gap-3 border-t border-surface-100 bg-canvas/95 px-4 py-4 backdrop-blur sm:px-8">
-				<Button type="submit" variant="brand" disabled={busy} className="min-w-24">
+				<Button type="submit" variant="brand" disabled={busy || offTotal} className="min-w-24">
 					{busy ? "Saving…" : "Save"}
 				</Button>
 			</div>
 		</fetcher.Form>
 	);
+}
+
+/** What a group's `total` fields add up to, counting an emptied field at its default. */
+function sumOf(group: SettingGroup, values: Values) {
+	return group.fields
+		.filter((field) => group.total?.fields.includes(field.name))
+		.reduce((sum, field) => {
+			const value = values[field.name];
+
+			return sum + Number(value === null || value === undefined || value === "" ? field.default : value);
+		}, 0);
 }

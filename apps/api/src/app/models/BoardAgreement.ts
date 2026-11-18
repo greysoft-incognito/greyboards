@@ -119,7 +119,7 @@ export class BoardAgreement extends Model {
       ownerProfileId: profile!.id,
       ownerName: profile!.name,
       ownerPhone: profile!.phone!,
-      ownerSharePercent: await Settings.number('agreements.owner_share_percent'),
+      ownerSharePercent: await Settings.number('revenue.owner_percent'),
       rateMinor: board.rate(),
       currency: board.currency,
       ratePeriod: board.ratePeriod,

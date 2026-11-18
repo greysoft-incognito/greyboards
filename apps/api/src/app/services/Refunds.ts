@@ -163,17 +163,19 @@ export class Refunds {
     })
   }
 
-  /** Who keeps what the advertiser doesn't get back: the print fee if it was printed, the rest by the owner's share. */
+  /** Who keeps what the advertiser doesn't get back: the print fee if it was printed, the rest in the booking's split. */
   private static keptShares(booking: Booking, job: PrintJob | null, keptMinor: number, printed: boolean): Share[] {
     if (keptMinor <= 0) return []
 
     const printMinor = printed ? Math.min(booking.printFeeMinor, keptMinor) : 0
     const rentMinor = keptMinor - printMinor
     const ownerMinor = booking.ownerSharePercent === null ? 0 : Money.share(rentMinor, booking.ownerSharePercent)
+    const scoutMinor = booking.rentMinor() > 0 ? Math.floor((rentMinor * (booking.scoutAmountMinor ?? 0)) / booking.rentMinor()) : 0
     const shares: Share[] = [
       { account: 'owner', kind: 'payout_due', amountMinor: ownerMinor, userId: null, ownerProfileId: booking.ownerProfileId, memo: 'Owner’s share of a late cancellation' },
+      { account: 'scout', kind: 'payout_due', amountMinor: scoutMinor, userId: booking.scoutId, ownerProfileId: null, memo: 'Scout’s share of a late cancellation' },
       { ...Payouts.printer(booking, job), kind: 'payout_due', amountMinor: printMinor, memo: 'Printed before the booking was cancelled' },
-      { account: 'platform', kind: 'commission', amountMinor: rentMinor - ownerMinor, userId: null, ownerProfileId: null, memo: 'Greyboards’ share of a late cancellation' },
+      { account: 'platform', kind: 'commission', amountMinor: rentMinor - ownerMinor - scoutMinor, userId: null, ownerProfileId: null, memo: 'Greyboards’ share of a late cancellation' },
     ]
 
     return shares.filter((share) => share.amountMinor > 0)

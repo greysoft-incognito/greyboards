@@ -12,6 +12,7 @@ export class SettingGroupResource extends Resource {
       title: group.title,
       description: group.description,
       icon: group.icon,
+      total: group.total ?? null,
       fields: group.fields.map((field) => ({
         name: field.name,
         env: field.env ?? null,
