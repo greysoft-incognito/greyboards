@@ -62,7 +62,7 @@ Cloudflare builds and deploys `apps/web` from GitHub. In the Cloudflare dashboar
 - Build command: `CLOUDFLARE_ENV=production pnpm run build`
 - Deploy command: `npx wrangler deploy`
 
-Then, under the `greyboards` Worker's Settings → Variables and secrets, add `API_URL` (the public API address, such as `https://api.example.com/api`) and, optionally, `MAP_STYLE_URL`. `wrangler.jsonc` holds no variables, so deploys keep the dashboard values. Local values live in `apps/web/.dev.vars`.
+Then, under the `greyboards-web` Worker's Settings → Variables and secrets, add `API_URL` (the public API address, such as `https://api.example.com/api`) and, optionally, `MAP_STYLE_URL`. `wrangler.jsonc` holds no variables, so deploys keep the dashboard values. Local values live in `apps/web/.dev.vars`.
 
 ## Mobile builds (EAS)
 
