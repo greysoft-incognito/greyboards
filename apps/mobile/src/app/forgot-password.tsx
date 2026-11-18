@@ -28,14 +28,13 @@ export default function ForgotPassword() {
         <>
           <Callout tone="notice">{sent.message}</Callout>
           <Text variant="muted">
-            Check <Text style={{ fontWeight: '600' }}>{sent.data.email}</Text>. The link works for an hour. Not there? Look in spam, or try again in a
-            minute.
+            It expires in an hour. Can't find it? Check your spam folder.
           </Text>
         </>
       ) : (
         <>
           {problem.summary ? <Callout>{problem.summary}</Callout> : null}
-          <Text variant="muted">Enter the email you signed up with and we'll send you a link to choose a new password.</Text>
+          <Text variant="muted">We'll email you a link to reset it.</Text>
           <Field label="Email" error={problem.fields.email}>
             <Input
               value={email}

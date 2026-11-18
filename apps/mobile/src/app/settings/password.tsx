@@ -30,7 +30,7 @@ export default function Password() {
         <Field label="New password" error={change.problem.fields.password} hint="At least 8 characters.">
           <Input value={password} onChangeText={setPassword} secureTextEntry autoComplete="new-password" textContentType="newPassword" />
         </Field>
-        <Field label="Type it again" error={change.problem.fields.password_confirmation}>
+        <Field label="Confirm password" error={change.problem.fields.password_confirmation}>
           <Input value={again} onChangeText={setAgain} secureTextEntry autoComplete="new-password" textContentType="newPassword" />
         </Field>
         {change.problem.summary ? <Callout>{change.problem.summary}</Callout> : null}

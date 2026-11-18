@@ -45,7 +45,7 @@ export default function SignUp() {
       }
     >
       {!registrationOpen ? (
-        <Callout>Sign-ups are closed right now. If you already have an account, sign in instead.</Callout>
+        <Callout>Sign-ups are closed right now.</Callout>
       ) : (
         <>
           {problem.summary ? <Callout>{problem.summary}</Callout> : null}

@@ -48,7 +48,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 	}
 }
 
-const STEPS = ["What brings you to Greyboards?", "Now, a little about you"] as const;
+const STEPS = ["What brings you to Greyboards?", "About you"] as const;
 
 export default function SignUp({ loaderData, actionData }: Route.ComponentProps) {
 	const busy = useNavigation().state !== "idle";
@@ -77,7 +77,7 @@ export default function SignUp({ loaderData, actionData }: Route.ComponentProps)
 				</>
 			}
 		>
-			{!registrationOpen && <Alert>Sign-ups are closed right now. If you already have an account, sign in instead.</Alert>}
+			{!registrationOpen && <Alert>Sign-ups are closed right now.</Alert>}
 			<Form method="post" className={`space-y-5 ${registrationOpen ? "" : "hidden"}`}>
 				{loaderData?.next && <input type="hidden" name="next" value={loaderData.next} />}
 				{hasRoles && <SignUpSteps current={step} />}
@@ -164,10 +164,7 @@ function SignUpSteps({ current }: { current: number }) {
 					<span key={label} className={`h-1.5 flex-1 rounded-full transition-colors ${index <= current ? "bg-brand-500" : "bg-surface-200"}`} />
 				))}
 			</div>
-			<p className="mt-3 text-xs font-medium text-ink-500">
-				Step {current + 1} of {STEPS.length}
-			</p>
-			<p className="mt-1 font-display text-xl font-bold tracking-tight text-ink-900">{STEPS[current]}</p>
+			<p className="mt-4 font-display text-xl font-bold tracking-tight text-ink-900">{STEPS[current]}</p>
 		</div>
 	);
 }
