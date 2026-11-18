@@ -24,13 +24,22 @@ export default function Account() {
   const documents = useRequest(() => api.documents({ per_page: 100 }))
   const twoFactorOn = (twoFactor.data?.data as TwoFactorStatus | undefined)?.enabled
   const deviceCount = (devices.data?.data as Session[] | undefined)?.length
-  const about: { label: string; open: () => void }[] = [
-    ...((documents.data?.data as DocumentSummary[] | undefined) ?? []).map((document) => ({
-      label: document.title,
-      open: () => router.push({ pathname: '/pages/[slug]', params: { slug: document.slug } }),
-    })),
-    { label: 'Reputation and badges', open: () => router.push('/reputation') },
-  ]
+  const published = (documents.data?.data as DocumentSummary[] | undefined) ?? []
+  const pageLink = (document: DocumentSummary) => ({
+    key: document.id,
+    label: document.title,
+    open: () => router.push({ pathname: '/pages/[slug]', params: { slug: document.slug } }),
+  })
+  const pageGroups = [
+    {
+      title: 'ABOUT',
+      links: [
+        ...published.filter((document) => document.type === 'page').map(pageLink),
+        { key: 'reputation', label: 'Reputation and badges', open: () => router.push('/reputation') },
+      ],
+    },
+    { title: 'LEGAL', links: published.filter((document) => document.type === 'policy').map(pageLink) },
+  ].filter((group) => group.links.length)
 
   const status: Record<string, Status | undefined> = {
     '/settings/profile': { text: user.name },
@@ -97,17 +106,24 @@ export default function Account() {
         </View>
       ))}
 
-      <View style={styles.group}>
-        <Text style={styles.groupLabel}>ABOUT</Text>
-        <View style={styles.list}>
-          {about.map((page, i) => (
-            <Pressable key={page.label} accessibilityRole="link" onPress={page.open} style={({ pressed }) => [styles.row, i > 0 && styles.divided, pressed && styles.pressed]}>
-              <Text style={[styles.label, styles.flex]}>{page.label}</Text>
-              <ChevronRight size={16} color={colors.ink500} />
-            </Pressable>
-          ))}
+      {pageGroups.map((group) => (
+        <View key={group.title} style={styles.group}>
+          <Text style={styles.groupLabel}>{group.title}</Text>
+          <View style={styles.list}>
+            {group.links.map((link, i) => (
+              <Pressable
+                key={link.key}
+                accessibilityRole="link"
+                onPress={link.open}
+                style={({ pressed }) => [styles.row, i > 0 && styles.divided, pressed && styles.pressed]}
+              >
+                <Text style={[styles.label, styles.flex]}>{link.label}</Text>
+                <ChevronRight size={16} color={colors.ink500} />
+              </Pressable>
+            ))}
+          </View>
         </View>
-      </View>
+      ))}
 
       <Button title={logout.loading ? 'Signing out…' : 'Sign out'} variant="secondary" size="lg" loading={logout.loading} onPress={signOut} />
     </ScrollView>

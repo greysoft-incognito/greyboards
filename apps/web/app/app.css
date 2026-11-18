@@ -204,6 +204,29 @@
 	.markdown hr {
 		border-color: var(--color-surface-200);
 	}
+	.markdown table {
+		width: 100%;
+		overflow: hidden;
+		border-collapse: separate;
+		border-spacing: 0;
+		border-radius: 1rem;
+		background: white;
+		box-shadow: 0 1px 2px rgb(30 31 34 / 0.04), 0 8px 24px -12px rgb(30 31 34 / 0.12);
+	}
+	.markdown th,
+	.markdown td {
+		padding: 0.75rem 1rem;
+		text-align: left;
+		vertical-align: top;
+	}
+	.markdown th {
+		font-weight: 600;
+		color: var(--color-ink-900);
+		background: var(--color-surface-100);
+	}
+	.markdown tr + tr td {
+		border-top: 1px solid var(--color-surface-100);
+	}
 }
 
 /* The wine glow behind brand panels, from a lit corner into ink. */
