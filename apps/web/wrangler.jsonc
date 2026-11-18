@@ -6,10 +6,18 @@
   "compatibility_flags": ["nodejs_compat"],
   "observability": { "enabled": true },
   "upload_source_maps": true,
+  // Keeps variables set in the Cloudflare dashboard on deploy.
+  "keep_vars": true,
   "vars": {
-    // Public URL of the Arkstack API (apps/api). Override per environment.
+    // Local defaults. Production values are set on the Worker in the Cloudflare dashboard.
     "API_URL": "http://localhost:3000/api",
     // MapLibre style for every map. Leave empty for OpenFreeMap's free tiles.
     "MAP_STYLE_URL": ""
+  },
+  "env": {
+    // Built with CLOUDFLARE_ENV=production by Cloudflare's Git builds.
+    "production": {
+      "name": "greyboards-web"
+    }
   }
 }

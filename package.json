@@ -9,7 +9,6 @@
   "scripts": {
     "dev:api": "pnpm --filter @greyboards/api dev",
     "dev:web": "pnpm --filter @greyboards/web dev",
-    "deploy:web": "pnpm --filter @greyboards/web run deploy",
     "dev:mobile": "pnpm --filter @greyboards/mobile start",
     "android:studio": "pnpm --filter @greyboards/mobile android:studio",
     "ark": "pnpm --filter @greyboards/api exec ark",

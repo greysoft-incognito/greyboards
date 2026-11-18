@@ -53,10 +53,15 @@ pnpm test
 pnpm build
 ```
 
-## Deploying
+## Web deploys (Cloudflare Workers)
 
-- API: [docs/DEPLOY.md](docs/DEPLOY.md), over SSH from the **Deploy API** workflow.
-- Web: [docs/DEPLOY-WEB.md](docs/DEPLOY-WEB.md), to Cloudflare Workers from the **Deploy web** workflow.
+Cloudflare builds and deploys `apps/web` from GitHub. In the Cloudflare dashboard, Workers & Pages → Create → Import a repository, pick this repository, and set:
+
+- Root directory: `apps/web`
+- Build command: `CLOUDFLARE_ENV=production pnpm run build`
+- Deploy command: `npx wrangler deploy`
+
+Then, under the `greyboards-web` Worker's Settings → Variables and secrets, add `API_URL` (the public API address, such as `https://api.example.com/api`) and, optionally, `MAP_STYLE_URL`. The production build leaves out the local defaults in `wrangler.jsonc` and keeps the dashboard values on every deploy.
 
 ## Mobile builds (EAS)
 
