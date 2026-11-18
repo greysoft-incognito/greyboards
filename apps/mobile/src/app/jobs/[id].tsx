@@ -4,7 +4,7 @@ import { Image } from 'expo-image'
 import * as ImagePicker from 'expo-image-picker'
 import { useFocusEffect, useLocalSearchParams } from 'expo-router'
 import { CalendarClock, MapPin, Ruler } from 'lucide-react-native'
-import type { PrintJob } from '@greyboards/types'
+import { type PrintJob, currencySymbol } from '@greyboards/types'
 import { BoardCover, boardPlace, formatSize } from '@/components/boards/BoardBits'
 import { JobStatusBadge, formatDay, formatDistance, formatMoney } from '@/components/jobs/JobBits'
 import { MessagesSection } from '@/components/messages/MessagesSection'
@@ -44,17 +44,17 @@ function SendPrice({ job, onChange }: { job: PrintJob; onChange: () => void }) {
   }
 
   const send = () => {
-    const naira = Number(amount.replace(/[^\d.]/g, ''))
+    const price = Number(amount.replace(/[^\d.]/g, ''))
 
-    if (!naira) return action.run(async () => { throw new PlainProblem('Enter your price in naira.') })
+    if (!price) return action.run(async () => { throw new PlainProblem('Enter your price.') })
 
-    return act(() => api.printJobs.sendPrice(job.id, Math.round(naira * 100), note.trim() || null).send(), 'Price sent. The job is yours if the advertiser pays it.')
+    return act(() => api.printJobs.sendPrice(job.id, Math.round(price * 100), note.trim() || null).send(), 'Price sent. The job is yours if the advertiser pays it.')
   }
 
   return (
     <Section title={offer ? 'Your price' : 'Send your price'}>
       {offer?.status === 'pending' ? <Text variant="muted">{formatMoney(offer.amountMinor, offer.currency)} is with the advertiser. The job is yours if they pay it.</Text> : null}
-      <Field label="Price in naira">
+      <Field label={`Price in ${currencySymbol(job.currency)}`}>
         <Input value={amount} onChangeText={setAmount} keyboardType="numeric" placeholder="175000" />
       </Field>
       <Field label="Note for the advertiser" hint="Optional, such as the material.">

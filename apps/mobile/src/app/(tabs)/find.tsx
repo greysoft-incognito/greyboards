@@ -3,13 +3,14 @@ import { ActivityIndicator, FlatList, Pressable, StyleSheet, View, useWindowDime
 import * as Location from 'expo-location'
 import { router } from 'expo-router'
 import { ChevronRight, LocateFixed, MapPin as MapPinIcon, SearchX, SlidersHorizontal, UsersRound } from 'lucide-react-native'
-import type { Board, BoardKind, BoardKindDefinition } from '@greyboards/types'
+import { type Board, type BoardKind, type BoardKindDefinition, currencySymbol } from '@greyboards/types'
 import { BoardResult } from '@/components/boards/BoardResult'
 import { EmptyState } from '@/components/EmptyState'
 import { useTabBarInset } from '@/components/GlassTabBar'
 import { MapBackdrop, MapPin } from '@/components/MapBackdrop'
-import { Button, Callout, Chip, Select, Sheet, Text } from '@/components/ui'
+import { Button, Callout, Chip, Input, Select, Sheet, Text } from '@/components/ui'
 import { api } from '@/lib/api'
+import { useCurrency } from '@/lib/currency'
 import { FormProblem } from '@/lib/forms'
 import { formatCompactMoney } from '@/lib/format'
 import { currentSpot } from '@/lib/location'
@@ -20,9 +21,6 @@ const KADUNA = { latitude: 10.5222, longitude: 7.4383, label: 'Kaduna' }
 
 /** How far around the centre to look, in kilometres. */
 const RADIUS_KM = 50
-
-/** Price limits offered, in kobo. */
-const PRICE_LIMITS = [25_000_000, 50_000_000, 100_000_000, 250_000_000, 500_000_000]
 
 const MAP_HEIGHT = 300
 
@@ -61,6 +59,8 @@ export default function Find() {
   const list = useRef<FlatList<Board>>(null)
   const [centre, setCentre] = useState<Centre>(KADUNA)
   const [filters, setFilters] = useState<Filters>({ kind: null, lit: null, maxRateMinor: null })
+  const currency = useCurrency().currency
+  const [maxPrice, setMaxPrice] = useState('')
   const [kinds, setKinds] = useState<BoardKindDefinition[]>([])
   const [boards, setBoards] = useState<Board[]>([])
   const [loading, setLoading] = useState(true)
@@ -84,7 +84,7 @@ export default function Find() {
           per_page: 30,
           ...(filters.kind ? { kind: filters.kind } : {}),
           ...(filters.lit !== null ? { lit: filters.lit } : {}),
-          ...(filters.maxRateMinor ? { maxRateMinor: filters.maxRateMinor } : {}),
+          ...(filters.maxRateMinor ? { maxRateMinor: filters.maxRateMinor, currency } : {}),
         })
         .send()
 
@@ -95,7 +95,7 @@ export default function Find() {
     } finally {
       setLoading(false)
     }
-  }, [centre, filters])
+  }, [centre, filters, currency])
 
   useEffect(() => {
     load()
@@ -215,7 +215,10 @@ export default function Find() {
             <ActivityIndicator color={colors.brand600} style={styles.loading} />
           ) : (
             <EmptyState icon={SearchX} title="No boards here yet" text="Try fewer filters, or look somewhere else. New boards go up every week.">
-              {activeFilters ? <Button title="Clear filters" variant="secondary" onPress={() => setFilters({ kind: null, lit: null, maxRateMinor: null })} /> : null}
+              {activeFilters ? <Button title="Clear filters" variant="secondary" onPress={() => {
+                    setMaxPrice('')
+                    setFilters({ kind: null, lit: null, maxRateMinor: null })
+                  }} /> : null}
             </EmptyState>
           )
         }
@@ -241,13 +244,18 @@ export default function Find() {
             <Chip key={label} label={label} selected={filters.lit === value} onPress={() => setFilters((current) => ({ ...current, lit: value }))} />
           ))}
         </View>
-        <Text variant="label">Price up to</Text>
-        <View style={styles.chips}>
-          <Chip label="Any price" selected={filters.maxRateMinor === null} onPress={() => setFilters((current) => ({ ...current, maxRateMinor: null }))} />
-          {PRICE_LIMITS.map((limit) => (
-            <Chip key={limit} label={formatCompactMoney(limit)} selected={filters.maxRateMinor === limit} onPress={() => setFilters((current) => ({ ...current, maxRateMinor: limit }))} />
-          ))}
-        </View>
+        <Text variant="label">Price up to, in {currencySymbol(currency)}</Text>
+        <Input
+          value={maxPrice}
+          onChangeText={setMaxPrice}
+          onEndEditing={() => {
+            const amount = Number(maxPrice.replace(/[^\d.]/g, ''))
+
+            setFilters((current) => ({ ...current, maxRateMinor: amount > 0 ? Math.round(amount * 100) : null }))
+          }}
+          keyboardType="number-pad"
+          placeholder="Any price"
+        />
         <Button title={loading ? 'Looking…' : `Show ${boards.length === 1 ? '1 board' : `${boards.length} boards`}`} onPress={() => setShowFilters(false)} />
       </Sheet>
     </>
