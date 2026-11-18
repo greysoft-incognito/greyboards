@@ -18,34 +18,38 @@ export const DOCUMENTS: DocumentSeed[] = [
     slug: 'about',
     type: 'page',
     title: 'About Greyboards',
-    summary: 'Billboards anywhere, booked online. Book it, see it, pay only when it is up.',
+    summary: 'Your brand, on billboards anywhere.',
     sort: 0,
     body: `
-Greyboards is a marketplace for outdoor advertising that works entirely online. Find a billboard anywhere in the world, book it, upload your artwork and see photo proof that it went up, without ever visiting the site. New cities and countries are added as scouts bring their boards in.
+Greyboards puts your brand on billboards anywhere in the world, without you ever leaving your desk. Explore real boards on a live map, book the one that fits, and watch your ad go up through photos taken right at the board.
+
+We're starting with a few cities and growing every week as scouts bring new boards on.
 
 ## For advertisers
 
-Search a live map of boards and screens, check each board's photos, size, facing direction and traffic, pick your dates and pay. Book a board on your own, share it with other advertisers for the same dates, bid on it, or make the owner an offer. We hold your payment until geotagged photos show your ad on the board, and you can share a campaign report with anyone.
+Browse boards and digital screens on the map. Every one has real photos, its size, which way it faces and how many people pass it. Pick your dates and book it yourself, share it with other brands, bid on it or make the owner an offer.
+
+Once your ad is up, you'll see photos of it on the board, and you can share a campaign report with your team or clients. The owner only gets paid once your ad is live.
 
 ## For board owners
 
-Scouts sign you up in person and run your board for you. You agree by text, get a message when your board is booked, and are paid to your bank once the ad is up. Larger owners can list and manage their boards themselves.
+Keep your boards busy without chasing clients. A scout can list and run your board for you. You sign up by text, we let you know whenever it's booked, and we pay you straight to your bank. Bigger owners can manage their boards themselves.
 
 ## For scouts
 
-Find boards, sign their owners and put the boards on the map. You earn a share of every booking on the boards you bring in.
+Spot boards, sign up their owners and put them on the map. You earn a share of every booking they get.
 
-## For dispatch
+## For dispatchers
 
-Set your own prices to print and post. Take jobs near you, print the artwork, put it up and send the proof photos. You are paid once the advertiser accepts the proof.
+Print and put up ads near you, at your own prices. Pick up jobs, put the ad up, take a few photos and get paid.
 
 ## For agencies and developers
 
-Search boards and book them from your own systems with the [Greyboards API](/developers).
+Plug Greyboards into your own tools with the [Greyboards API](/developers).
 
-## Trust
+## Built on trust
 
-Every board and proof photo is taken on site with its location and direction. Partners are checked before they take on work, and each role earns a reputation from finished work. See [how badges work](/reputation).
+Every board and every photo is taken on site, with its location. Scouts and dispatchers are verified before they start, and everyone builds a reputation from real work. [Here's how badges work](/reputation).
 
 Greyboards is made by [Greysoft](https://greysoft.ng).
 `,
@@ -54,35 +58,35 @@ Greyboards is made by [Greysoft](https://greysoft.ng).
     slug: 'fees',
     type: 'page',
     title: 'Fees and payouts',
-    summary: 'How a booking’s money is shared, and when everyone is paid.',
+    summary: 'What you pay, who gets what, and when.',
     sort: 1,
     body: `
-Advertisers pay the board's rent, plus the printing and posting price of the dispatcher who takes the job. There are no other charges for advertisers.
+Advertisers pay the board's listed price, plus the dispatcher's price for printing and putting up the ad. That's it. No hidden fees.
 
-## How the rent is shared
+## Where the money goes
 
-| Who | Share of the rent |
+| Who | Share |
 | --- | --- |
 | Board owner | {{revenue.owner_percent}}% |
 | Greyboards | {{revenue.platform_percent}}% |
-| Scout who brought the board in | {{revenue.scout_percent}}% |
-| With no scout, the scout's share goes to | {{revenue.unscouted_to}} |
+| Scout who brought the board on | {{revenue.scout_percent}}% |
+| If there's no scout, their share goes to | {{revenue.unscouted_to}} |
 
-A board's listed rent already includes everyone's share. When a scout agrees a fixed amount with an owner, the listed rent is set so the owner receives that amount in full.
+The listed price already includes everyone's share. If a scout has agreed a fixed amount with an owner, we set the listed price so the owner gets exactly that.
 
-An owner's agreement keeps the share it was signed at, and a paid booking keeps the split it was paid with, even if these figures change later.
+Shares are locked in when an owner signs and when a booking is paid, so later changes don't affect them.
 
-## Printing and posting
+## Printing
 
-Dispatchers set their own price for printing and posting. It is paid on top of the rent and goes to the dispatcher in full.
+Dispatchers set their own prices. You pay this on top of the board price, and it all goes to the dispatcher.
 
-## When money moves
+## When everyone gets paid
 
-- Your payment is held by Greyboards from the moment you pay.
-- Once the ad is up, the advertiser has {{proofs.accept_hours}} hours to check the proof photos. After that, the proof counts as accepted.
-- Payouts go out {{payouts.hold_days}} days after the proof is accepted, to the bank account each person added in Settings.
+- We hold your payment safely from the moment you book.
+- Once your ad is up, you have {{proofs.accept_hours}} hours to check the photos. If you don't reply, we accept them for you.
+- Everyone is paid {{payouts.hold_days}} days later, straight to the bank account they added in Settings.
 
-See [cancellations and refunds](/pages/refunds) for what happens when a booking is cancelled.
+Need to cancel? See [cancellations and refunds](/pages/refunds).
 `,
   },
   {
@@ -105,29 +109,29 @@ Some roles have their own terms as well: [board owner terms](/pages/owner-terms)
 
 ## What Greyboards does
 
-Greyboards is a marketplace. Owners list boards, advertisers book them, and dispatchers print and post the ads. We run the listings, hold payments, check proof of posting and pay everyone out. We are not the owner of the boards listed, unless a listing says so.
+Greyboards is a marketplace. Owners list boards, advertisers book them, and dispatchers print and put up the ads. We run the listings, hold payments, check that ads went up and pay everyone. We don't own the boards listed unless a listing says so.
 
 ## Boards and bookings
 
 - Only list boards you own or have a signed agreement to market.
 - Board photos and locations must be real and taken on site.
-- A booking holds the board for its dates once paid. Unpaid dates are held for {{bookings.hold_minutes}} minutes while you check out.
+- Once paid, a booking reserves the board for its dates. While you check out, we hold the dates for {{bookings.hold_minutes}} minutes.
 - Advertisers are responsible for their artwork and for meeting our [advertising standards](/pages/advertising-standards).
-- Payments are held until proof of posting is accepted, then paid out as shown on [fees and payouts](/pages/fees).
+- We hold payments until the advertiser accepts the photos of their ad, then pay everyone as shown on [fees and payouts](/pages/fees).
 
 ## Bids, offers and shared bookings
 
 - A winning bid or an accepted offer must be paid within {{bids.pay_hours}} hours, or the dates go to the next bidder.
-- In a shared booking, each person pays their own share. If shares are still unpaid when the booking locks, the board can go up for bids and anyone who paid is refunded.
+- In a shared booking, each person pays their own share. If some shares are still unpaid when time runs out, the board can go up for bids and anyone who paid gets a refund.
 
 ## Cancellations and disputes
 
-Cancelling a booking is covered by our [cancellations and refunds](/pages/refunds) policy. If something goes wrong with a booking, you can raise a dispute up to {{disputes.window_days}} days after its last day, and our staff will decide it.
+Cancelling a booking is covered by our [cancellations and refunds](/pages/refunds) policy. If something goes wrong with a booking, you can report a problem up to {{disputes.window_days}} days after its last day, and our team will sort it out.
 
 ## What's not allowed
 
 - Anything illegal or misleading, or that breaks our advertising standards or a board owner's rules.
-- Fake boards, fake proof, or getting around our payments.
+- Fake boards, fake photos, or paying outside Greyboards.
 - Contacting people you met on Greyboards to book or pay outside it.
 - Disrupting the service, sending it automated traffic outside the API, or breaking into accounts.
 
@@ -157,13 +161,13 @@ This policy explains what Greyboards collects when you use it, why, and what you
 
 **Your account.** Your name, email address, phone number, profile photo, and the roles you hold (advertiser, owner, scout or dispatch). Your password is stored scrambled, so nobody can read it, us included.
 
-**Checks for partners.** Scouts and dispatchers may send a photo of a government ID and bank details, so we can confirm who they are before they take on work.
+**Checks for scouts and dispatchers.** They may send a photo of a government ID and bank details, so we can confirm who they are before they start.
 
 **Board owners.** An owner's name and phone number, the agreement they signed by text, and the boards it covers.
 
-**Boards and bookings.** Board photos, locations and details, the bookings you make or take, artwork, messages on a booking, reviews, and proof photos.
+**Boards and bookings.** Board photos, locations and details, the bookings you make or take, artwork, messages, reviews, and photos of ads on boards.
 
-**Location.** The mobile app reads your location and compass only while you take a board or proof photo. We don't track you otherwise.
+**Location.** The mobile app only uses your location and compass while you're taking a photo of a board. We don't track you otherwise.
 
 **Payments.** Our payment provider handles card details; we only keep a record of each payment. We keep the bank details you add for payouts.
 
@@ -239,31 +243,31 @@ Read our [privacy policy](/privacy) for more on how we handle your information.
     summary: 'When you can cancel a booking, and how much comes back.',
     sort: 13,
     body: `
-Your payment is held by Greyboards until your ad is up and the proof is accepted, so money can come back to you if a booking doesn't go ahead.
+We hold your payment until your ad is up, so you can get your money back if a booking doesn't go ahead.
 
 ## Cancelling a booking
 
-- **Up to {{bookings.full_refund_days}} days before it starts**, cancel for all your money back.
-- **Later, before it starts**, you get {{bookings.late_refund_percent}}% of the rent back. The printing and posting price comes back too if nothing was printed yet. The rest of the rent goes to the owner and Greyboards.
-- **Once the ad is up**, the booking can't be cancelled. If something is wrong, raise a dispute.
+- **Up to {{bookings.full_refund_days}} days before it starts**, you get a full refund.
+- **Closer to the start date**, you get {{bookings.late_refund_percent}}% of the board price back, plus the printing price if nothing has been printed yet. The rest goes to the owner and Greyboards.
+- **Once the ad is up**, you can't cancel. If something's wrong, report a problem instead.
 
-Cancel from the booking's page. You'll see what comes back before you confirm.
+Cancel from the booking's page. You'll see exactly how much you'll get back before you confirm.
 
 ## When we cancel
 
-You get all your money back if:
+You get a full refund if:
 
 - the owner or Greyboards cancels the booking,
 - the board can't be used for your dates, or
 - your shared booking or winning bid falls through and you had already paid.
 
-## Disputes
+## Problems with a booking
 
-If the ad wasn't put up as booked, was put up late or wrongly, or the board was damaged, raise a dispute from the booking up to {{disputes.window_days}} days after its last day. While a dispute is open, the money stays held. Our staff can refund you in full or in part, or release the money to the owner.
+If your ad wasn't put up, went up late or wrong, or the board was damaged, report it from the booking up to {{disputes.window_days}} days after its last day. We'll hold the payment while we look into it. Our team can refund you in full or in part, or pay the owner.
 
 ## How refunds are paid
 
-Refunds go back to the card or account you paid with, in the currency you paid in, through our payment provider. Most arrive within 5 to 10 working days, depending on your bank and country.
+Refunds go back to the card or account you paid with, in the same currency. Most arrive within 5 to 10 working days, depending on your bank.
 `,
   },
   {
@@ -293,7 +297,7 @@ Billboards are seen by everyone who passes, children included. Every ad booked t
 
 ## Checking artwork
 
-The board's owner, or the scout who runs it, checks the artwork before it is printed and can ask for changes. We may also review any ad. Artwork that breaks these standards can be refused, or taken down if it is already up. If an ad is refused or removed because it breaks these standards, our [refund rules](/pages/refunds) for late cancellations apply.
+The board's owner, or the scout who runs it, checks every design before it's printed and can ask for changes. We may also review any ad. Artwork that breaks these standards can be refused, or taken down if it is already up. If an ad is refused or removed because it breaks these standards, our [refund rules](/pages/refunds) for late cancellations apply.
 
 ## Reporting an ad
 
@@ -311,7 +315,7 @@ These terms apply to everyone whose board is listed on Greyboards, whether they 
 
 ## Your agreement
 
-A scout who signs you up sends you an agreement by text. The link works for {{agreements.link_days}} days, and you agree by confirming the code we send to your phone. Your agreement states your share of the rent, and keeps that share for as long as it lasts.
+If a scout signs you up, you'll get the agreement by text. The link works for {{agreements.link_days}} days, and you sign by entering a code we send to your phone. Your agreement shows your share, and that share stays the same for as long as the agreement lasts.
 
 ## What you promise
 
@@ -322,15 +326,15 @@ A scout who signs you up sends you an agreement by text. The link works for {{ag
 
 ## Bookings and artwork
 
-You get a text when your board is booked. You, or the scout who runs your board, check each ad's artwork before it is printed and can refuse artwork that breaks our [advertising standards](/pages/advertising-standards).
+We'll text you whenever your board is booked. You, or your scout, check each design before it's printed and can turn down anything that breaks our [advertising standards](/pages/advertising-standards).
 
 ## Getting paid
 
-You are paid your share of the rent, {{revenue.owner_percent}}% unless your agreement says otherwise, to your bank account after the proof is accepted. See [fees and payouts](/pages/fees).
+We pay your share ({{revenue.owner_percent}}% unless your agreement says otherwise) straight to your bank once the advertiser accepts the photos of their ad. See [fees and payouts](/pages/fees).
 
 ## Ending your listing
 
-You can ask us to stop taking new bookings for your board at any time. Bookings already paid for still go ahead.
+You can ask us to stop taking new bookings for your board at any time. Bookings that are already paid will still go ahead.
 `,
   },
   {
@@ -344,22 +348,22 @@ These terms apply to scouts and dispatchers. They add to our [terms of use](/ter
 
 ## Getting approved
 
-Before you take on work, we check who you are. We may ask for a photo of a government ID and a bank account in your own name. We can turn down or suspend a partner account at any time, for example after fraud, missed jobs or repeated complaints.
+Before you start, we check who you are. We may ask for a photo of a government ID and a bank account in your own name. We can decline or suspend an account at any time, for example after fraud, missed jobs or repeated complaints.
 
 ## For scouts
 
 - Only sign owners who agree freely, and explain the agreement and their share honestly.
 - Take every board photo on site, with your phone's location turned on. We check for duplicates and may reject boards.
-- You earn {{revenue.scout_percent}}% of the rent on every paid booking for the boards you bring in, while their agreement lasts.
+- You earn {{revenue.scout_percent}}% of every booking on the boards you bring in, for as long as their agreement lasts.
 
 ## For dispatch
 
-- Set your own price for printing and posting, and only reserve jobs you can do.
+- Set your own prices, and only take jobs you can do.
 - Follow local rules for posting, including any permits or safety requirements where the board stands.
-- Print the artwork as approved, and show the finished print {{printing.print_by_days}} days before the ad goes live.
-- Post the ad by the start date, and send at least {{proofs.min_photos}} proof photos taken within {{proofs.max_distance_m}} metres of the board.
-- Missing a deadline loses you the job, and repeated misses can suspend your account.
-- You are paid your price once the advertiser accepts the proof.
+- Print the design as approved, and upload a photo of the print {{printing.print_by_days}} days before the ad goes live.
+- Put the ad up by the start date, and send at least {{proofs.min_photos}} photos taken within {{proofs.max_distance_m}} metres of the board.
+- If you miss a deadline you lose the job, and repeated misses can get your account suspended.
+- You're paid once the advertiser accepts your photos.
 
 ## Safety
 
@@ -367,7 +371,7 @@ Work at height is dangerous. Use proper equipment, follow the law and the owner'
 
 ## Reputation
 
-Finished work earns you reputation, and missed work lowers it. See [how badges work](/reputation).
+Good work builds your reputation, and missed jobs lower it. See [how badges work](/reputation).
 `,
   },
   {
