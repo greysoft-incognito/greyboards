@@ -38,7 +38,7 @@ export default function Boards({ loaderData }: Route.ComponentProps) {
 			<div className="flex flex-wrap items-end justify-between gap-4">
 				<div>
 					<h1 className="font-display text-3xl font-extrabold tracking-[-0.03em] text-ink-900 sm:text-4xl">My boards</h1>
-					<p className="mt-1 text-ink-500">Boards you own or tagged. Each one is checked before advertisers can find it.</p>
+					<p className="mt-1 text-ink-500">Boards you own or have added.</p>
 					{params.get("imported") && (
 						<p className="mt-2 text-sm font-semibold text-available" role="status">
 							{params.get("imported")} boards imported. We'll check them before they go on the map.
@@ -91,7 +91,7 @@ export default function Boards({ loaderData }: Route.ComponentProps) {
 					<div>
 						<h2 className="font-display text-xl font-extrabold tracking-tight text-ink-900">{params.get("status") ? "No boards like that yet" : "No boards yet"}</h2>
 						<p className="mt-1 max-w-md text-sm text-ink-500">
-							{canTag ? "Stand by a board, tap Tag a board and we'll take its location from your phone." : "Take on the owner or scout role to start tagging boards."}
+							{canTag ? "Stand next to a board and tap Tag a board. We'll use your location to place it." : "Become an owner or scout to start adding boards."}
 						</p>
 					</div>
 					<Link prefetch="intent" to={canTag ? "/boards/new" : "/settings/roles"} className={buttonClass("primary")}>

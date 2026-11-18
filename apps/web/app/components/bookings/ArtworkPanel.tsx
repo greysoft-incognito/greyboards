@@ -7,26 +7,26 @@ import { formatDay } from "./BookingBits";
 
 /** On a shared booking, each advertiser sends a design and the print merges them. */
 const SHARED_NOTES = {
-	none: "Each advertiser sends their own design. Once everyone has, they're merged into one print for checking.",
-	submitted: "Everyone's designs are merged. Waiting for the board's owner or scout to check the print.",
-	approved: "Approved. Dispatchers near the board send their prices to print and put it up.",
-	rejected: "Sent back with a note. Anyone can upload a new design, and the print is merged again.",
+	none: "Each advertiser uploads their own design. Once everyone has, we combine them into one print.",
+	submitted: "All designs are in. We're checking the print with the board's owner.",
+	approved: "Approved! Local dispatchers will now send quotes to print and put it up.",
+	rejected: "Changes requested. Check the note and upload a new design.",
 } as const;
 
 const ARTWORK_NOTES = {
-	none: "Upload the design to print. Match the board's shape so nothing gets cropped.",
-	submitted: "Waiting for the board's owner or scout to check it fits.",
-	approved: "Approved. Dispatchers near the board send their prices to print and put it up.",
-	rejected: "Sent back. Change it as the note asks and upload it again.",
+	none: "Upload your design. Match the board's shape so nothing gets cut off.",
+	submitted: "We're checking it fits the board.",
+	approved: "Approved! Local dispatchers will now send quotes to print and put it up.",
+	rejected: "Changes requested. Check the note and upload a new version.",
 } as const;
 
 const JOB_LABELS: Record<PrintJobStatus, string> = {
 	open: "Waiting for a dispatcher",
-	reserved: "A dispatcher is checking the date",
-	confirmed: "A dispatcher has the job",
-	printed: "Printed, going up next",
+	reserved: "A dispatcher is confirming the date",
+	confirmed: "A dispatcher is on it",
+	printed: "Printed, going up soon",
 	posted: "Up on the board",
-	cancelled: "Handled by the board's owner or scout",
+	cancelled: "The board's owner is handling it",
 };
 
 /**
@@ -39,7 +39,7 @@ export function ArtworkPanel({ booking, isAdvertiser }: { booking: Booking; isAd
 	const canUpload = isAdvertiser && !booking.shared && booking.status === "paid" && artwork.status !== "approved";
 	const notes = booking.shared ? SHARED_NOTES : ARTWORK_NOTES;
 	const ownersPrint = booking.printedBy === "owner" && booking.printFeeMinor > 0;
-	const note = artwork.status === "approved" && ownersPrint ? (isAdvertiser ? "Approved. The board's owner prints it and puts it up." : "Approved. Download it full size, print it and put it up by the start date, then add the proof photos.") : notes[artwork.status];
+	const note = artwork.status === "approved" && ownersPrint ? (isAdvertiser ? "Approved! The board's owner will print it and put it up." : "Approved! Download it, print it and put it up by the start date. Then add your photos.") : notes[artwork.status];
 
 	return (
 		<div className="panel space-y-4 p-5 sm:p-6">
@@ -166,7 +166,7 @@ function ReviewArtwork() {
 						Send it back
 					</Button>
 					<Button variant="ghost" onClick={() => setRejecting(false)}>
-						Keep checking
+						Cancel
 					</Button>
 				</div>
 			</Form>

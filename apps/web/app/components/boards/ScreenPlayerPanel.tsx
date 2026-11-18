@@ -33,16 +33,16 @@ export function ScreenPlayerPanel({ board, token, apiUrl }: { board: BoardDetail
 					Screen player
 				</h2>
 				<span className={`rounded-full px-2.5 py-1 text-xs font-bold ${player.connected ? "bg-emerald-50 text-emerald-800" : "bg-surface-100 text-ink-700"}`}>
-					{player.connected ? (player.seenAt ? `Last seen ${new Date(player.seenAt).toLocaleString("en-NG", { dateStyle: "medium", timeStyle: "short" })}` : "Waiting for the player") : "Not connected"}
+					{player.connected ? (player.seenAt ? `Last seen ${new Date(player.seenAt).toLocaleString("en-NG", { dateStyle: "medium", timeStyle: "short" })}` : "Waiting to connect") : "Not connected"}
 				</span>
 			</div>
 			<p className="text-sm text-ink-500">
-				The software on the screen signs in with a token, fetches what to play each day and reports each play. Advertisers see the plays on their booking.
+				Connect your screen's player so it knows what to play. Advertisers can see each time their ad plays.
 			</p>
 
 			{token && (
 				<div className="space-y-2 rounded-2xl border-[1.5px] border-brand-200 bg-brand-50 p-4">
-					<p className="text-sm font-semibold text-ink-900">Copy this token into the player now. It won't show again.</p>
+					<p className="text-sm font-semibold text-ink-900">Copy this into your player now. You won't see it again.</p>
 					<div className="flex items-center gap-2">
 						<code className="min-w-0 flex-1 truncate rounded-xl bg-white px-3 py-2 text-xs text-ink-900">{token}</code>
 						<Button type="button" variant="secondary" onClick={copy}>
@@ -54,7 +54,7 @@ export function ScreenPlayerPanel({ board, token, apiUrl }: { board: BoardDetail
 			)}
 
 			<details className="rounded-2xl bg-canvas p-4 text-sm text-ink-700">
-				<summary className="cursor-pointer font-semibold text-ink-900">How the player talks to Greyboards</summary>
+				<summary className="cursor-pointer font-semibold text-ink-900">Setup details for your player</summary>
 				<ul className="mt-3 space-y-2">
 					<li>
 						Send <code className="rounded bg-white px-1">Authorization: Bearer &lt;token&gt;</code> with each request.
@@ -74,7 +74,7 @@ export function ScreenPlayerPanel({ board, token, apiUrl }: { board: BoardDetail
 					<input type="hidden" name="intent" value="player-token" />
 					<Button type="submit" variant={player.connected ? "secondary" : "primary"} disabled={busy("player-token")}>
 						{busy("player-token") ? <Spinner /> : <KeyRound className="h-4 w-4" aria-hidden />}
-						{player.connected ? "Make a new token" : "Make a player token"}
+						{player.connected ? "Create a new token" : "Connect a player"}
 					</Button>
 				</Form>
 				{player.connected && (

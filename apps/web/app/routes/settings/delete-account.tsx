@@ -37,7 +37,7 @@ export default function DeleteAccount({ actionData }: Route.ComponentProps) {
 		<>
 			<PageHeader title="Delete account" />
 			<Section tone="danger">
-				<p className="text-ink-700">This deletes your account and signs you out everywhere, for good.</p>
+				<p className="text-ink-700">This permanently deletes your account. You can't undo it.</p>
 				<Form method="post" className="mt-6 max-w-md space-y-4">
 					{actionData?.error && !Object.keys(actionData.fieldErrors).length && <Alert>{actionData.error}</Alert>}
 					<Field label="Enter your password to confirm" error={actionData?.fieldErrors.password}>

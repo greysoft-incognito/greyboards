@@ -46,7 +46,7 @@ export function PayOrCancel({ booking, onChange }: { booking: Booking; onChange:
 
   return (
     <View style={styles.stack}>
-      <Text variant="muted">{left > 0 ? `We're holding these dates for you for ${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}.` : 'The hold ran out. Book the dates again.'}</Text>
+      <Text variant="muted">{left > 0 ? `We're holding these dates for you for ${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}.` : 'Your hold expired. Book the dates again.'}</Text>
       <Button title={`Pay ${formatMoney(booking.amountMinor, booking.currency)}`} size="lg" loading={action.busy} disabled={left <= 0} onPress={() => action.run(() => pay(() => api.checkout(booking.id).send(), onChange))} />
       <Button title="Cancel" variant="ghost" disabled={action.busy} onPress={() => action.run(async () => { const { message } = await api.cancelBooking(booking.id).send(); onChange(); return message ?? 'Booking cancelled. The dates are free again.' })} />
       {action.problem.message ? <Callout>{action.problem.message}</Callout> : null}
@@ -55,8 +55,8 @@ export function PayOrCancel({ booking, onChange }: { booking: Booking; onChange:
 }
 
 const SHARE_LOOKS: Record<ShareStatus, PillLook> = {
-  open: { label: 'Waiting for someone', background: colors.surface100, color: colors.ink500 },
-  claimed: { label: 'Not paid yet', background: colors.amber50, color: colors.held },
+  open: { label: 'Open', background: colors.surface100, color: colors.ink500 },
+  claimed: { label: 'Unpaid', background: colors.amber50, color: colors.held },
   paid: { label: 'Paid', background: colors.emerald50, color: colors.available },
   refunded: { label: 'Refunded', background: colors.surface100, color: colors.ink500 },
 }
@@ -85,8 +85,8 @@ export function SharesSection({ booking, isOrganiser, onChange }: { booking: Boo
       {held && (booking.sharing?.auction || booking.sharing?.takeoverOpen) ? (
         <Callout tone="warning">
           {booking.sharing.auction
-            ? `Someone is bidding for the whole board (${booking.sharing.auction.bidCount} ${booking.sharing.auction.bidCount === 1 ? 'bid' : 'bids'}). Pay every share before the winner pays to keep it; otherwise everyone who paid gets their money back.`
-            : 'The lock has ended, so anyone can now bid for the whole board. Pay every share to keep it.'}
+            ? `Someone is bidding on the whole board (${booking.sharing.auction.bidCount} ${booking.sharing.auction.bidCount === 1 ? 'bid' : 'bids'}). Pay all the shares before the winner pays to keep it. Otherwise, everyone gets a refund.`
+            : 'Anyone can now bid on the whole board. Pay the remaining shares to keep it.'}
         </Callout>
       ) : null}
       {held && due > 0 ? <Button title={`Pay ${mineDue.length > 1 ? 'my shares' : 'my share'}, ${formatMoney(due, booking.currency)}`} loading={action.busy} onPress={() => action.run(() => pay(() => api.checkout(booking.id).send(), onChange))} /> : null}
@@ -95,7 +95,7 @@ export function SharesSection({ booking, isOrganiser, onChange }: { booking: Boo
           title={`Cover the ${unpaid === 1 ? 'unpaid share' : `${unpaid} unpaid shares`}`}
           variant="secondary"
           disabled={action.busy}
-          onPress={() => action.run(async () => { const { message } = await api.coverShares(booking.id).send(); onChange(); return message ?? 'The unpaid shares are yours to pay.' })}
+          onPress={() => action.run(async () => { const { message } = await api.coverShares(booking.id).send(); onChange(); return message ?? 'You’re now covering the unpaid shares.' })}
         />
       ) : null}
       {held && isOrganiser ? <Button title="Let it go" variant="ghost" disabled={action.busy} onPress={() => action.run(async () => { const { message } = await api.cancelBooking(booking.id).send(); onChange(); return message ?? 'Booking cancelled.' })} /> : null}
@@ -137,7 +137,7 @@ export function Split({ booking }: { booking: Booking }) {
   const rows = [
     { label: `Owner (${split.ownerSharePercent}%)`, value: formatMoney(split.ownerAmountMinor, booking.currency) },
     ...(split.scoutAmountMinor ? [{ label: 'Scout', value: formatMoney(split.scoutAmountMinor, booking.currency) }] : []),
-    ...(booking.printFeeMinor ? [{ label: booking.printedBy === 'owner' ? "Printing, by the owner's side" : 'Dispatcher, for printing', value: formatMoney(booking.printFeeMinor, booking.currency) }] : []),
+    ...(booking.printFeeMinor ? [{ label: booking.printedBy === 'owner' ? "Printing (owner)" : 'Printing (dispatcher)', value: formatMoney(booking.printFeeMinor, booking.currency) }] : []),
     { label: 'Greyboards', value: formatMoney(split.platformAmountMinor, booking.currency) },
   ]
 
@@ -145,7 +145,7 @@ export function Split({ booking }: { booking: Booking }) {
     <View style={styles.stack}>
       <View style={styles.line}>
         <ShieldCheck size={16} color={colors.available} />
-        <Text style={styles.strong}>{booking.releasedAt ? 'Released from escrow' : 'Paid out once the ad is up'}</Text>
+        <Text style={styles.strong}>{booking.releasedAt ? 'Released from escrow' : 'Paid once the ad is up'}</Text>
       </View>
       <Summary rows={rows} />
     </View>
@@ -153,26 +153,26 @@ export function Split({ booking }: { booking: Booking }) {
 }
 
 const ARTWORK_NOTES = {
-  none: 'Upload the design to print. Match the board’s shape so nothing gets cropped.',
-  submitted: 'Waiting for the board’s owner or scout to check it fits.',
-  approved: 'Approved. Dispatchers near the board send their prices to print and put it up.',
-  rejected: 'Sent back. Change it as the note asks and upload it again.',
+  none: 'Upload your design. Match the board’s shape so nothing gets cut off.',
+  submitted: 'We’re checking it fits the board.',
+  approved: 'Approved! Local dispatchers will now send quotes to print and put it up.',
+  rejected: 'Changes requested. Check the note and upload a new version.',
 } as const
 
 const SHARED_NOTES = {
-  none: 'Each advertiser sends their own design. Once everyone has, they’re merged into one print for checking.',
-  submitted: 'Everyone’s designs are merged. Waiting for the board’s owner or scout to check the print.',
-  approved: 'Approved. Dispatchers near the board send their prices to print and put it up.',
-  rejected: 'Sent back with a note. Anyone can upload a new design, and the print is merged again.',
+  none: 'Each advertiser uploads their own design. Once everyone has, we combine them into one print.',
+  submitted: 'All designs are in. We’re checking the print with the board’s owner.',
+  approved: 'Approved! Local dispatchers will now send quotes to print and put it up.',
+  rejected: 'Changes requested. Check the note and upload a new design.',
 } as const
 
 const JOB_LABELS: Record<PrintJobStatus, string> = {
   open: 'Waiting for a dispatcher',
-  reserved: 'A dispatcher is checking the date',
-  confirmed: 'A dispatcher has the job',
-  printed: 'Printed, going up next',
+  reserved: 'A dispatcher is confirming the date',
+  confirmed: 'A dispatcher is on it',
+  printed: 'Printed, going up soon',
   posted: 'Up on the board',
-  cancelled: 'Handled by the board’s owner or scout',
+  cancelled: 'The board’s owner is handling it',
 }
 
 /** The artwork for a paid booking: the advertiser sends it, whoever looks after the board approves it or sends it back. */
@@ -189,7 +189,7 @@ export function ArtworkSection({ booking, isAdvertiser, onChange }: { booking: B
     ? 'Check the design fits the board before it’s printed.'
     : artwork.status === 'approved' && ownersPrint
       ? isAdvertiser
-        ? 'Approved. The board’s owner prints it and puts it up.'
+        ? 'Approved! The board’s owner will print it and put it up.'
         : 'Approved. Print it and put it up by the start date, then add the proof photos.'
       : (booking.shared ? SHARED_NOTES : ARTWORK_NOTES)[artwork.status]
 
@@ -210,7 +210,7 @@ export function ArtworkSection({ booking, isAdvertiser, onChange }: { booking: B
       await api.uploadArtwork(booking.id, uploadFile(asset)).send()
       onChange()
 
-      return 'Artwork sent for checking.'
+      return 'Design sent for review.'
     })
 
   const review = (decision: 'approve' | 'reject') =>
@@ -219,7 +219,7 @@ export function ArtworkSection({ booking, isAdvertiser, onChange }: { booking: B
       setRejecting(false)
       onChange()
 
-      return decision === 'approve' ? 'Approved. Dispatchers near the board send their prices next.' : 'Sent back with your note.'
+      return decision === 'approve' ? 'Approved! Local dispatchers will send their quotes next.' : 'Changes requested.'
     })
 
   return (
@@ -269,7 +269,7 @@ export function ArtworkSection({ booking, isAdvertiser, onChange }: { booking: B
           </Field>
           <View style={styles.row}>
             <Button title="Send it back" variant="danger" loading={action.busy} disabled={!note.trim()} onPress={() => review('reject')} />
-            <Button title="Keep checking" variant="ghost" onPress={() => setRejecting(false)} />
+            <Button title="Cancel" variant="ghost" onPress={() => setRejecting(false)} />
           </View>
         </View>
       ) : null}
@@ -302,7 +302,7 @@ export function PrintOffersSection({ bookingId, options, currency, onChange }: {
   }
 
   return (
-    <Section title="Pick who prints it" description="Dispatchers near the board send their prices, or ask one at their own rate. Pay the price you pick and the job is theirs. It's held with your booking until the ad is up.">
+    <Section title="Choose who prints it" description="Local dispatchers will send you quotes, or you can ask one directly. Pick a quote and pay, and they’ll print and put up your ad.">
       <Text style={styles.strong}>Prices</Text>
       {options.offers.length ? (
         <View style={styles.list}>
@@ -316,20 +316,20 @@ export function PrintOffersSection({ bookingId, options, currency, onChange }: {
                 <Standing standing={offer.dispatcher?.standing} compact />
                 {offer.note ? <Text variant="muted">{offer.note}</Text> : null}
                 <Text variant="small">
-                  {offer.kind === 'request' ? (offer.status === 'requested' ? 'You asked them. ' : 'They accepted your request. ') : ''}
+                  {offer.kind === 'request' ? (offer.status === 'requested' ? 'You asked them directly. ' : 'They accepted your request. ') : ''}
                   {until(offer.expiresAt, offer.status === 'requested')}
                 </Text>
                 {offer.status === 'pending' ? (
                   <Button title={`Pay ${formatMoney(offer.amountMinor, currency)}`} loading={busyId === offer.id} disabled={action.busy} onPress={() => run(offer.id, () => pay(() => api.payPrintOffer(bookingId, offer.id).send(), onChange))} />
                 ) : (
-                  <Pill label="Waiting for their answer" background={colors.amber50} color={colors.held} />
+                  <Pill label="Waiting for a reply" background={colors.amber50} color={colors.held} />
                 )}
               </View>
             </View>
           ))}
         </View>
       ) : (
-        <Text variant="muted">No prices yet. Dispatchers nearby see the job now, or you can ask one below.</Text>
+        <Text variant="muted">No quotes yet. Local dispatchers can see your job, or you can ask one below.</Text>
       )}
 
       {options.dispatchers.length ? (
@@ -372,12 +372,12 @@ export function PlaysSection({ plays }: { plays: PlaySummary }) {
   const minutes = Math.round(plays.seconds / 60)
 
   return (
-    <Section title="Plays on the screen">
+    <Section title="Plays">
       {plays.total === 0 ? (
         <View style={styles.line}>
           <MonitorPlay size={18} color={colors.brand600} />
           <Text variant="muted" style={styles.flex}>
-            No plays reported yet. They show here as the screen’s player sends them in.
+            No plays yet. They’ll show here as your ad runs.
           </Text>
         </View>
       ) : (
@@ -409,10 +409,10 @@ export function CancelPaid({ booking, onChange }: { booking: Booking; onChange: 
     <Section title="Change of plans?">
       <Text variant="muted">
         {booking.shared
-          ? `Cancel now and ${formatMoney(quote.refundMinor, booking.currency)} goes back, split between everyone who paid by what they paid.`
+          ? `Cancel now and ${formatMoney(quote.refundMinor, booking.currency)} is refunded, split among everyone who paid.`
           : quote.full
-            ? `Cancel now and you get all ${formatMoney(quote.refundMinor, booking.currency)} back.`
-            : `It’s close to the start, so cancelling now gives back ${formatMoney(quote.refundMinor, booking.currency)} of the ${formatMoney(booking.amountMinor, booking.currency)} you paid. The rest goes to the owner.`}
+            ? `Cancel now for a full refund of ${formatMoney(quote.refundMinor, booking.currency)}.`
+            : `Since it’s close to the start date, you’ll get ${formatMoney(quote.refundMinor, booking.currency)} of your ${formatMoney(booking.amountMinor, booking.currency)} back. The rest goes to the owner.`}
       </Text>
       {sure ? (
         <View style={styles.stack}>
@@ -427,7 +427,7 @@ export function CancelPaid({ booking, onChange }: { booking: Booking; onChange: 
   )
 }
 
-const REFUND_STATUS = { processing: 'On its way back', refunded: 'Refunded', failed: 'Refund failed, our team is on it' } as const
+const REFUND_STATUS = { processing: 'Refund on the way', refunded: 'Refunded', failed: 'Refund failed, our team is on it' } as const
 
 export function Refunds({ booking }: { booking: Booking }) {
   return (
@@ -440,16 +440,16 @@ export function Refunds({ booking }: { booking: Booking }) {
 /** What happens between payment and everyone being paid. Each step lights up once the booking gets there. */
 export function Steps({ booking }: { booking: Booking }) {
   const steps = [
-    { label: 'Paid', detail: 'Your money waits in escrow.', icon: CreditCard, done: isPaid(booking) },
-    { label: 'Artwork approved', detail: 'The owner checks your design fits the board.', icon: ImageIcon, done: booking.artwork?.status === 'approved' || isLive(booking) },
+    { label: 'Paid', detail: 'We hold your payment safely.', icon: CreditCard, done: isPaid(booking) },
+    { label: 'Artwork approved', detail: 'The owner checks your design fits.', icon: ImageIcon, done: booking.artwork?.status === 'approved' || isLive(booking) },
     {
       label: 'Printed and posted',
       detail: booking.printedBy === 'owner' ? 'The board’s owner prints it and puts it up.' : 'A dispatcher prints it and puts it up.',
       icon: Printer,
       done: booking.printJob?.status === 'posted' || (!!booking.proof && booking.proof.status !== 'none') || isLive(booking),
     },
-    { label: 'Proof accepted', detail: 'Geotagged photos show your ad on the board.', icon: Camera, done: booking.proof?.status === 'accepted' || isLive(booking) },
-    { label: 'Everyone paid', detail: 'Only then does the money leave escrow.', icon: Wallet, done: !!booking.releasedAt },
+    { label: 'Proof accepted', detail: 'You get photos of your ad on the board.', icon: Camera, done: booking.proof?.status === 'accepted' || isLive(booking) },
+    { label: 'Everyone paid', detail: 'Only then is the owner paid.', icon: Wallet, done: !!booking.releasedAt },
   ]
 
   return (

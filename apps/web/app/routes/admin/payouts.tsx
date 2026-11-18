@@ -14,7 +14,7 @@ export const meta = () => [{ title: "Payouts · Admin · Greyboards" }];
 
 const STATUSES: { value: PayoutStatus; label: string }[] = [
 	{ value: "failed", label: "Failed" },
-	{ value: "processing", label: "On their way" },
+	{ value: "processing", label: "On the way" },
 	{ value: "paid", label: "Paid" },
 ];
 
@@ -52,7 +52,7 @@ export default function AdminPayouts({ loaderData, actionData }: Route.Component
 
 	return (
 		<>
-			<AdminHeader title="Payouts" description="Money sent to owners, scouts and dispatchers once the hold days pass. Failed transfers wait here to be sent again." />
+			<AdminHeader title="Payouts" description="Payments to owners, scouts and dispatchers. Failed transfers wait here to be retried." />
 			<div className="space-y-6 px-4 py-8 sm:px-8">
 				<Form method="get" className="flex flex-wrap items-center gap-3">
 					<Select name="status" defaultValue={status} aria-label="Status" className="w-auto">
@@ -108,7 +108,7 @@ export default function AdminPayouts({ loaderData, actionData }: Route.Component
 													<input type="hidden" name="id" value={payout.id} />
 													<Button type="submit" variant="secondary" disabled={!!retrying} className="!py-2">
 														{retrying === payout.id ? <Spinner /> : <RotateCw className="h-4 w-4" aria-hidden />}
-														Send again
+														Retry
 													</Button>
 												</Form>
 											)}

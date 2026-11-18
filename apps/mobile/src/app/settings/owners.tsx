@@ -56,7 +56,7 @@ export default function Owners() {
     })
 
   return (
-    <SettingsPage title="Board owners" description="The owners whose boards you look after. An agency can manage several, and each board belongs to one.">
+    <SettingsPage title="Board owners" description="Owners whose boards you manage.">
       <Section>
         {problem ? <Callout>{problem}</Callout> : null}
         {!profiles ? (
@@ -64,12 +64,12 @@ export default function Owners() {
         ) : profiles.length ? (
           profiles.map((profile) => <OwnerRow key={profile.id} profile={profile} onChange={load} />)
         ) : (
-          <Text variant="muted">You don’t manage any owners yet. Tag your own board, or claim boards a scout listed under your number below.</Text>
+          <Text variant="muted">You’re not managing any owners yet.</Text>
         )}
         {page.current < page.last ? <Button title="Show more" variant="ghost" loading={more.busy} onPress={loadMore} /> : null}
         {isOwner ? (
           <View style={styles.add}>
-            <Field label="Add an owner you manage" error={add.problem.fields.name ?? add.problem.summary ?? undefined} hint="Such as a client whose boards your agency runs.">
+            <Field label="Add an owner" error={add.problem.fields.name ?? add.problem.summary ?? undefined} hint="For example, a client whose boards you look after.">
               <Input value={name} onChangeText={setName} maxLength={120} placeholder="Client Ltd" />
             </Field>
             <Button title="Add owner" variant="secondary" loading={add.busy} disabled={name.trim().length < 2} onPress={create} />
@@ -140,7 +140,7 @@ function ClaimSection({ onClaimed }: { onClaimed: () => void }) {
       await api.account.claimOwnerProfile({ phone: phone.trim() }).send()
       setSentTo(phone.trim())
 
-      return 'We’ve texted a code to that number.'
+      return 'We’ve sent a code to that number.'
     })
 
   const verify = (entered = code) =>
@@ -156,7 +156,7 @@ function ClaimSection({ onClaimed }: { onClaimed: () => void }) {
     })
 
   return (
-    <Section title="Claim your boards" description="If a scout listed your boards under your phone number, prove it’s yours and you’ll manage them here.">
+    <Section title="Claim your boards" description="Did a scout list your boards with your phone number? Confirm it’s you and manage them here.">
       {sentTo ? (
         <>
           <Text variant="label">Code we texted to {sentTo}</Text>

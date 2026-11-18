@@ -29,7 +29,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 			return settingsAction(intent, async () => {
 				await api.account.claimOwnerProfile({ phone });
 
-				return { message: "We've texted a code to that number.", phone };
+				return { message: "We've sent a code to that number.", phone };
 			}, { phone: null });
 		case "verify":
 			return settingsAction(intent, async () => {
@@ -66,7 +66,7 @@ export default function Owners({ loaderData, actionData }: Route.ComponentProps)
 
 	return (
 		<>
-			<PageHeader title="Board owners" description="The owners whose boards you look after. An agency can manage several, and each board belongs to one." />
+			<PageHeader title="Board owners" description="Owners whose boards you manage." />
 			<div className="space-y-6">
 				<Section>
 					{profiles.length ? (
@@ -76,13 +76,13 @@ export default function Owners({ loaderData, actionData }: Route.ComponentProps)
 							))}
 						</ul>
 					) : (
-						<p className="text-sm text-ink-500">You don't manage any owners yet. Tag your own board, or claim boards a scout listed under your number below.</p>
+						<p className="text-sm text-ink-500">You're not managing any owners yet.</p>
 					)}
 					{isOwner && (
 						<Form method="post" className="mt-6 flex flex-wrap items-end gap-2 border-t border-surface-200 pt-6">
 							<input type="hidden" name="intent" value="add" />
 							<div className="min-w-0 flex-1 basis-60">
-								<Field label="Add an owner you manage" error={add?.fieldErrors?.name ?? add?.error ?? undefined} hint="Such as a client whose boards your agency runs.">
+								<Field label="Add an owner" error={add?.fieldErrors?.name ?? add?.error ?? undefined} hint="For example, a client whose boards you look after.">
 									<Input name="name" required minLength={2} maxLength={120} placeholder="Client Ltd" />
 								</Field>
 							</div>
@@ -94,7 +94,7 @@ export default function Owners({ loaderData, actionData }: Route.ComponentProps)
 					)}
 				</Section>
 
-				<Section title="Claim your boards" description="If a scout listed your boards under your phone number, prove it's yours and you'll manage them here.">
+				<Section title="Claim your boards" description="Did a scout list your boards with your phone number? Confirm it's you and manage them here.">
 					{claimingPhone ? (
 						<Form method="post" className="space-y-4">
 							<input type="hidden" name="intent" value="verify" />

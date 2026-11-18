@@ -5,11 +5,11 @@ import { BoardCover } from "~/components/boards/BoardBits";
 
 const STATUS_LABELS: Record<BookingStatus, string> = {
 	held: "Waiting for payment",
-	paid: "Paid, held in escrow",
+	paid: "Paid",
 	live: "Up on the board",
 	completed: "Finished",
 	cancelled: "Cancelled",
-	expired: "Hold ran out",
+	expired: "Expired",
 };
 
 const STATUS_STYLES: Record<BookingStatus, string> = {

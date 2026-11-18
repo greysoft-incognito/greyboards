@@ -16,8 +16,8 @@ import { brandSweep, colors, fonts, radius, shadows, surfaces } from '@/theme'
 const EMPTY: Record<AccountRoleKind, string> = {
   advertiser: 'Your campaigns will show here once you book a board.',
   owner: 'Your boards and their bookings will show here once you list one.',
-  scout: 'Boards you tag and owners you sign will show here.',
-  dispatch: 'Print-and-post jobs near you will show here.',
+  scout: 'Boards you tag and owners you sign up will show here.',
+  dispatch: 'Print jobs near you will show here.',
 }
 
 /** The drawn board on each role's card, as on the web. */
@@ -33,7 +33,6 @@ export default function Dashboard() {
   const user = useUser()
   const inset = useTabBarInset()
   const firstName = user.name.split(/\s+/)[0]
-  const active = user.accountRoles.filter((role) => role.status === 'active').length
   const pending = user.accountRoles.filter((role) => role.status === 'pending').length
 
   const refresh = useCallback(() => {
@@ -56,8 +55,7 @@ export default function Dashboard() {
         <Text style={styles.heroKicker}>Your Greyboards</Text>
         <Text style={styles.heroTitle}>Hello, {firstName}</Text>
         <Text style={styles.heroText}>
-          {active === 1 ? 'You have 1 role' : `You have ${active} roles`}
-          {pending ? `, and ${pending === 1 ? '1 application is' : `${pending} applications are`} being checked.` : '.'}
+          {pending ? 'We’re reviewing your application and will email you soon.' : 'Good to see you again.'}
         </Text>
       </LinearGradient>
 
@@ -79,7 +77,7 @@ export default function Dashboard() {
                 {role.status === 'active'
                   ? EMPTY[role.kind]
                   : role.status === 'pending'
-                    ? "We're checking your application. We'll email you when it's done."
+                    ? "We’re reviewing your application and will email you soon."
                     : (role.note ?? "This role isn't active. Contact support if you think that's a mistake.")}
               </Text>
             </View>

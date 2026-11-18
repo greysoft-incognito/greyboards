@@ -70,7 +70,7 @@ export default function Prices({ loaderData, actionData }: Route.ComponentProps)
 				My boards
 			</Link>
 			<h1 className="mt-3 font-display text-3xl font-extrabold tracking-[-0.03em] text-ink-900 sm:text-4xl">Change rates</h1>
-			<p className="mt-1 mb-6 text-ink-500">Raise or lower many boards at once. Preview the new rates before you save them.</p>
+			<p className="mt-1 mb-6 text-ink-500">Update rates for many boards at once. You'll see a preview before saving.</p>
 
 			<Form method="post" className="space-y-6">
 				<section className="panel space-y-4 p-5 sm:p-6">
@@ -81,9 +81,9 @@ export default function Prices({ loaderData, actionData }: Route.ComponentProps)
 					<div className="grid gap-4 sm:grid-cols-3">
 						<Field label="How">
 							<Select name="change" value={change} onChange={(event) => setChange(event.target.value as PriceChange)}>
-								<option value="percent">By a percent</option>
+								<option value="percent">By percentage</option>
 								<option value="amount">By an amount</option>
-								<option value="set">To one rate</option>
+								<option value="set">Set one rate</option>
 							</Select>
 						</Field>
 						{change !== "set" && (
@@ -114,7 +114,7 @@ export default function Prices({ loaderData, actionData }: Route.ComponentProps)
 							</Select>
 						</Field>
 					</div>
-					<p className="text-xs text-ink-500">On boards where the owner gets a fixed amount, the change applies to that amount and the listed rate follows.</p>
+					<p className="text-xs text-ink-500">For boards with a guaranteed owner amount, we'll update that amount and adjust the listed rate to match.</p>
 				</section>
 
 				<section className="panel space-y-3 p-5 sm:p-6">

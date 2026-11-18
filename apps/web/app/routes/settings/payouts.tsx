@@ -29,7 +29,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 	return settingsAction(intent, async () => {
 		const { data } = profileId ? await api.account.saveOwnerPayoutAccount(profileId, details) : await api.account.savePayoutAccount(details);
 
-		return { message: `Payouts go to ${data.accountName}.` };
+		return { message: `We'll pay you at ${data.accountName}.` };
 	});
 }
 
@@ -43,24 +43,24 @@ export default function Payouts({ loaderData, actionData }: Route.ComponentProps
 
 	return (
 		<>
-			<PageHeader title="Payouts" description="Where we send what you earn from bookings, scouting and printing. We check every account with the bank first." />
+			<PageHeader title="Payouts" description="Where we send your earnings." />
 			<div className="space-y-6">
 				<div className="grid gap-3 sm:grid-cols-2">
 					{(summary.totals.length ? summary.totals : [summary]).map((total) => (
 						<Fragment key={total.currency}>
-							<Total label="Owed to you" amount={total.owedMinor} currency={total.currency} hint="Released from bookings, not sent yet" />
-							<Total label="Paid out" amount={total.paidMinor} currency={total.currency} hint="Sent to your bank accounts" />
+							<Total label="Coming to you" amount={total.owedMinor} currency={total.currency} hint="Ready to send to your bank" />
+							<Total label="Paid out" amount={total.paidMinor} currency={total.currency} hint="Paid to you" />
 						</Fragment>
 					))}
 				</div>
-				{!summary.enabled && <Notice>Payouts start soon. Add your bank details now and what you're owed goes out once they do.</Notice>}
+				{!summary.enabled && <Notice>Add your bank details so we can pay you.</Notice>}
 
-				<Section title="Your bank account" description="For what you earn from scouting and print jobs.">
+				<Section title="Your bank account" description="Where we pay you for scouting and print jobs.">
 					<AccountForm intent="own" account={summary.account} banks={banks} result={resultFor(actionData, "own")} />
 				</Section>
 
 				{summary.owners.map((owner) => (
-					<Section key={owner.profileId} title={owner.name} description="Where this owner's share of each booking goes.">
+					<Section key={owner.profileId} title={owner.name} description="Where we pay this owner for bookings.">
 						<AccountForm intent={`owner-${owner.profileId}`} profileId={owner.profileId} account={owner.account} banks={banks} result={resultFor(actionData, `owner-${owner.profileId}`)} />
 					</Section>
 				))}
@@ -73,7 +73,7 @@ export default function Payouts({ loaderData, actionData }: Route.ComponentProps
 							))}
 						</ul>
 					) : (
-						<p className="text-sm text-ink-500">Nothing sent yet. Money is released once an advertiser accepts the photos of their ad, then sent a couple of days later.</p>
+						<p className="text-sm text-ink-500">No payouts yet. You'll be paid a couple of days after an advertiser approves the photos of their ad.</p>
 					)}
 				</Section>
 			</div>
@@ -106,7 +106,7 @@ function AccountForm({ intent, profileId, account, banks, result }: { intent: st
 							{account.bankName} · {account.accountNumber}
 						</p>
 					</div>
-					<BadgeCheck className="h-5 w-5 shrink-0 text-emerald-600" aria-label="Checked with the bank" />
+					<BadgeCheck className="h-5 w-5 shrink-0 text-emerald-600" aria-label="Verified" />
 				</div>
 			)}
 			<Form method="post" className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end" key={account?.updatedAt ?? intent}>
@@ -114,7 +114,7 @@ function AccountForm({ intent, profileId, account, banks, result }: { intent: st
 				<Field label="Bank" error={result?.fieldErrors?.bankCode}>
 					<Select name="bankCode" required defaultValue={account?.bankCode ?? ""}>
 						<option value="" disabled>
-							Pick your bank
+							Select your bank
 						</option>
 						{banks.map((bank) => (
 							<option key={bank.code} value={bank.code}>

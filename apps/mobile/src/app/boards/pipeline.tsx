@@ -54,7 +54,7 @@ export default function Pipeline() {
 
   const submit = () =>
     add.run(async () => {
-      if (!form.name.trim()) throw new PlainProblem('Say what the board is and where, so you can find it again.')
+      if (!form.name.trim()) throw new PlainProblem('Describe the board and where it is.')
 
       const spot = await currentSpot()
       const text = (value: string) => value.trim() || null
@@ -63,7 +63,7 @@ export default function Pipeline() {
       setForm(EMPTY)
       await refresh()
 
-      return 'Added to your pipeline.'
+      return 'Added.'
     })
 
   const setStage = (prospect: Prospect, stage: ProspectStage) =>
@@ -74,7 +74,7 @@ export default function Pipeline() {
     })
 
   return (
-    <SettingsPage title="Pipeline" description="Every board you spot, from first sighting to first booking. Once you tag one, its stage updates on its own.">
+    <SettingsPage title="Pipeline" description="Keep track of boards you’ve spotted, from first sighting to first booking.">
       <Section title="To do">
         {tasks.length ? (
           tasks.slice(0, 8).map((task, index) => (
@@ -89,7 +89,7 @@ export default function Pipeline() {
         {load.problem.message ? <Callout>{load.problem.message}</Callout> : null}
       </Section>
 
-      <Section title="Note a board here" description="Stand by it. We keep where you are, so two scouts don’t chase the same owner.">
+      <Section title="Save a board" description="Stand next to it so we can save the location.">
         <Field label="What and where" error={add.problem.fields.name}>
           <Input value={form.name} onChangeText={set('name')} maxLength={120} placeholder="Unipole at the roundabout" />
         </Field>
@@ -125,7 +125,7 @@ export default function Pipeline() {
             </View>
           ))
         ) : (
-          <Text variant="muted">{load.busy ? 'Loading…' : 'Note the first board you spot.'}</Text>
+          <Text variant="muted">{load.busy ? 'Loading…' : 'Save the first board you spot.'}</Text>
         )}
       </Section>
     </SettingsPage>

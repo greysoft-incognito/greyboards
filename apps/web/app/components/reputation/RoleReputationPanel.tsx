@@ -29,7 +29,7 @@ export function RoleReputationPanel({ reputation, history }: { reputation: RoleR
 	return (
 		<div className="mt-5 rounded-[1.25rem] bg-surface-100/60 p-4 sm:p-5">
 			<div className="flex flex-wrap items-center justify-between gap-2">
-				<h3 className="text-sm font-bold text-ink-900">Reputation in this role</h3>
+				<h3 className="text-sm font-bold text-ink-900">Reputation</h3>
 				<Score value={reputation.score} />
 			</div>
 			{reputation.verifiedAt && <p className="mt-2 text-xs text-ink-500">Verified by Greyboards staff on {day(reputation.verifiedAt)}.</p>}
@@ -39,7 +39,7 @@ export function RoleReputationPanel({ reputation, history }: { reputation: RoleR
 				<div className="mt-4 grid gap-3 sm:grid-cols-3">
 					<Progress label="Score" have={progress.score.have} need={progress.score.need} unit="points" />
 					<Progress label="Checked actions" have={progress.actions.have} need={progress.actions.need} unit="" />
-					<Progress label="Days in role" have={progress.days.have} need={progress.days.need} unit="days" />
+					<Progress label="Days active" have={progress.days.have} need={progress.days.need} unit="days" />
 				</div>
 			)}
 			{history.length > 0 && (
@@ -59,7 +59,7 @@ export function RoleReputationPanel({ reputation, history }: { reputation: RoleR
 			<p className="mt-4 text-xs text-ink-500">
 				Points only come from work Greyboards could check.{" "}
 				<Link to="/reputation" className="font-semibold text-brand-600 hover:underline">
-					See what earns them and what the badges mean
+					How badges work
 				</Link>
 			</p>
 		</div>

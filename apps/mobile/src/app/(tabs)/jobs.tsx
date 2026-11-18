@@ -85,19 +85,19 @@ export default function Jobs() {
     <EmptyState
       icon={Printer}
       title={role?.status === 'pending' ? 'Being checked' : 'For dispatchers'}
-      text={role?.status === 'pending' ? 'Your dispatcher application is being checked. Jobs show here once it’s approved.' : 'Print jobs are for dispatchers. Apply for the role and we’ll check your details.'}
+      text={role?.status === 'pending' ? 'We’re reviewing your dispatcher application. Jobs will show up here once you’re approved.' : 'Become a dispatcher to print and put up ads near you.'}
     >
       {role?.status !== 'pending' ? <Button title="Become a dispatcher" variant="secondary" onPress={() => router.push('/settings/roles')} /> : null}
     </EmptyState>
   ) : view === 'near' && !spot ? (
-    <EmptyState icon={Printer} title="Jobs close to you" text="We show boards with approved artwork near where you are, nearest first. Your location is only used for this search.">
-      <Button title={loading ? 'Finding you…' : 'Find jobs near me'} loading={loading} onPress={findMe} />
+    <EmptyState icon={Printer} title="Jobs near you" text="Print jobs near you, closest first. We only use your location for this search.">
+      <Button title={loading ? 'Finding your location…' : 'Find jobs near me'} loading={loading} onPress={findMe} />
     </EmptyState>
   ) : loading ? undefined : (
     <EmptyState
       icon={Printer}
       title={view === 'mine' ? 'No jobs yet' : 'Nothing nearby'}
-      text={view === 'mine' ? 'Jobs you reserve show here, with the artwork to print.' : 'No open jobs within reach right now. New ones appear as advertisers’ artwork is approved.'}
+      text={view === 'mine' ? 'Jobs you reserve will show up here.' : 'No jobs near you right now. Check back soon.'}
     />
   )
 
@@ -115,7 +115,7 @@ export default function Jobs() {
         <View style={styles.header}>
           <View style={styles.flex}>
             <Text variant="display">Print jobs</Text>
-            <Text variant="muted">{view === 'mine' ? 'Jobs you hold or took, the soonest due first.' : 'Approved artwork waiting to be printed and put up near you.'}</Text>
+            <Text variant="muted">{view === 'mine' ? 'Your jobs, soonest first.' : 'Ads near you that need printing and putting up.'}</Text>
           </View>
           {active ? (
             <Segmented<View_>
@@ -131,7 +131,7 @@ export default function Jobs() {
             />
           ) : null}
           {active && view === 'near' && spot ? <Button title="Search from where I am now" variant="secondary" loading={loading} onPress={findMe} /> : null}
-          {active ? <Button title="Your prices and area" variant="ghost" onPress={() => router.push('/jobs/prices')} /> : null}
+          {active ? <Button title="Your rates" variant="ghost" onPress={() => router.push('/jobs/prices')} /> : null}
           {problem ? <Callout>{problem}</Callout> : null}
         </View>
       }

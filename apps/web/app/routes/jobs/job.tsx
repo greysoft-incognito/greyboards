@@ -37,30 +37,30 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 
 			await api.printJobs.sendPrice(params.id, Math.round(amount * 100), String(form.get("note") ?? "").trim() || null);
 
-			return { error: null, message: "Price sent. The job is yours if the advertiser pays it." };
+			return { error: null, message: "Quote sent. The job is yours if the advertiser accepts." };
 		}
 
 		if (intent === "withdraw-price" || intent === "accept-request" || intent === "decline-request") {
 			const { data: job } = await api.printJobs.show(params.id);
 
-			if (!job.myOffer) return { error: "That price or request isn't open any more.", message: null };
+			if (!job.myOffer) return { error: "That quote or request is no longer available.", message: null };
 			if (intent === "withdraw-price") await api.printJobs.withdrawPrice(job.myOffer.id);
 			if (intent === "accept-request") await api.printJobs.acceptRequest(job.myOffer.id);
 			if (intent === "decline-request") await api.printJobs.declineRequest(job.myOffer.id);
 
-			return { error: null, message: intent === "withdraw-price" ? "Price taken back." : intent === "accept-request" ? "Accepted. The job is yours once the advertiser pays." : "Request declined." };
+			return { error: null, message: intent === "withdraw-price" ? "Price taken back." : intent === "accept-request" ? "Accepted! The job is yours once the advertiser pays." : "Request declined." };
 		}
 
 		if (intent === "reserve") {
 			await api.printJobs.reserve(params.id);
 
-			return { error: null, message: "Held for you. Confirm once you know you can make the date." };
+			return { error: null, message: "We're holding it for you. Confirm once you're sure you can make the date." };
 		}
 
 		if (intent === "confirm") {
 			await api.printJobs.confirm(params.id);
 
-			return { error: null, message: "The job is yours." };
+			return { error: null, message: "The job is yours!" };
 		}
 
 		if (intent === "release") {
@@ -72,7 +72,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 		if (isProofIntent(intent)) {
 			const { data: job } = await api.printJobs.show(params.id);
 
-			if (!job.bookingId) return { error: "This job isn't yours any more.", message: null };
+			if (!job.bookingId) return { error: "This job is no longer yours.", message: null };
 
 			return await proofAction(api, job.bookingId, intent, form);
 		}
@@ -80,7 +80,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 		if (intent === "print-photo") {
 			const photo = postedPhoto(form);
 
-			if (!photo) return { error: "Choose a photo first.", message: null };
+			if (!photo) return { error: "Add a photo first.", message: null };
 
 			await api.printJobs.printPhoto(params.id, photo);
 
@@ -177,7 +177,7 @@ export default function JobPage({ loaderData, actionData }: Route.ComponentProps
 					{job.printPhotoUrl && (
 						<figure className="panel space-y-2 p-3">
 							<img src={job.printPhotoUrl} alt="The finished print" className="w-full rounded-2xl object-cover" />
-							<figcaption className="px-1 pb-1 text-sm text-ink-500">Your photo of the finished print.</figcaption>
+							<figcaption className="px-1 pb-1 text-sm text-ink-500">A photo of the finished print.</figcaption>
 						</figure>
 					)}
 				</section>
@@ -203,7 +203,7 @@ function NextStep({ job, fieldError }: { job: PrintJob; fieldError?: string }) {
 						Reserve this job
 					</Button>
 				</Form>
-				<p className="text-xs text-ink-500">The last dispatcher missed this job, so it's open again at the price already paid. Reserve it and we'll hold it for you for a few hours while you check the date and materials. Miss the print or go-live date and you lose the job. Repeated misses suspend your dispatcher role.</p>
+				<p className="text-xs text-ink-500">This job is available again. Reserve it and we'll hold it for a few hours while you check the date and materials. If you miss the deadline you'll lose the job, and repeated misses can suspend your account.</p>
 			</div>
 		);
 	}
@@ -242,7 +242,7 @@ function NextStep({ job, fieldError }: { job: PrintJob; fieldError?: string }) {
 
 	if (job.status === "printed") return <p className="text-sm text-ink-700">Printed. Put it up by {formatDay(job.dueOn)}, then take the proof photos below while you're at the board.</p>;
 
-	if (job.status === "posted") return <p className="text-sm text-ink-700">Posted. You're paid once the advertiser accepts your photos.</p>;
+	if (job.status === "posted") return <p className="text-sm text-ink-700">Posted! You'll be paid once the advertiser accepts your photos.</p>;
 
 	return null;
 }
@@ -258,7 +258,7 @@ function HoldLeft({ until }: { until: string }) {
 
 	const hours = Math.floor(left / 60);
 
-	return <p className="text-sm text-ink-700">{left > 0 ? `Held for you for ${hours ? `${hours} h ` : ""}${left % 60} min more. Confirm to keep it.` : "Your hold ran out. Anyone can take it now."}</p>;
+	return <p className="text-sm text-ink-700">{left > 0 ? `Held for you for ${hours ? `${hours} h ` : ""}${left % 60} min more. Confirm to keep it.` : "Your hold expired. The job is open to others now."}</p>;
 }
 
 function GiveBack({ busy, disabled }: { busy: boolean; disabled: boolean }) {
@@ -267,7 +267,7 @@ function GiveBack({ busy, disabled }: { busy: boolean; disabled: boolean }) {
 			<input type="hidden" name="intent" value="release" />
 			<Button type="submit" variant="ghost" disabled={disabled}>
 				{busy ? <Spinner /> : <Undo2 className="h-4 w-4" aria-hidden />}
-				Give it back
+				Release job
 			</Button>
 		</Form>
 	);

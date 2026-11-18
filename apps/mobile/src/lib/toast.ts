@@ -46,7 +46,7 @@ export class Toasts {
 
       this.show(confirmation)
     } catch {
-      this.show("Couldn't copy. Select the text and copy it yourself.", 'error')
+      this.show("Couldn’t copy. Try selecting the text and copying it.", 'error')
     }
   }
 

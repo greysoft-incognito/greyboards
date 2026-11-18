@@ -61,16 +61,16 @@ export default function Boards() {
         <View style={styles.header}>
           <View style={styles.flex}>
             <Text variant="display">Boards</Text>
-            <Text variant="muted">Boards you tagged. New ones go on the map once a reviewer checks them.</Text>
+            <Text variant="muted">Boards you’ve added.</Text>
           </View>
           <Button title="Tag a board" onPress={() => router.push('/boards/new')} />
-          {scouts ? <Button title="Pipeline and to do" variant="secondary" onPress={() => router.push('/boards/pipeline')} /> : null}
+          {scouts ? <Button title="Pipeline" variant="secondary" onPress={() => router.push('/boards/pipeline')} /> : null}
           {problem ? <Callout>{problem}</Callout> : null}
         </View>
       }
       ListEmptyComponent={
         loading ? undefined : (
-          <EmptyState icon={Presentation} title="No boards yet" text="Stand at a board, tap Tag a board, and we'll place it from your phone's location.">
+          <EmptyState icon={Presentation} title="No boards yet" text="Stand next to a board and tap Tag a board. We’ll use your location to place it.">
             <Button title="Tag your first board" variant="secondary" onPress={() => router.push('/boards/new')} />
           </EmptyState>
         )

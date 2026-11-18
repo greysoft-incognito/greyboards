@@ -27,7 +27,7 @@ export default function VerifyEmail() {
 
   if (error || !data) {
     return (
-      <AuthFrame title="We couldn't confirm it" subtitle={FormProblem.from(error).message ?? undefined}>
+      <AuthFrame title="We couldn’t confirm your email" subtitle={FormProblem.from(error).message ?? undefined}>
         <Text variant="muted">
           The link may have expired. You can send a new one from your account.
         </Text>

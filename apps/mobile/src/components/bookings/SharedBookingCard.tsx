@@ -23,12 +23,12 @@ function biddingNote(shared: SharedBooking) {
   const highest = auction.highestMinor !== null ? `Highest bid ${formatMoney(auction.highestMinor, auction.currency)}` : 'Bids stay hidden until bidding ends'
 
   if (auction.status === 'awarded') {
-    return mine?.status === 'won' ? `You won the whole board. Pay by ${auction.payBy ? formatMoment(auction.payBy) : 'the deadline'} to take it.` : 'Bidding closed. The winner is paying for the whole board.'
+    return mine?.status === 'won' ? `You won the whole board! Pay by ${auction.payBy ? formatMoment(auction.payBy) : 'the deadline'} to keep it.` : 'Bidding closed. The winner is paying for the whole board.'
   }
 
-  const yours = mine ? (mine.leading ? ' You’re the highest bidder.' : auction.format === 'open' ? ' Someone bid more than you.' : '') : ''
+  const yours = mine ? (mine.leading ? ' You’re the highest bidder.' : auction.format === 'open' ? ' You’ve been outbid.' : '') : ''
 
-  return `The whole board is up for bids. ${highest} from ${auction.bidCount} ${auction.bidCount === 1 ? 'bid' : 'bids'}, closing ${formatMoment(auction.closesAt)}.${yours} The sharers keep it if they pay every share first.`
+  return `The whole board is up for bids: ${highest} from ${auction.bidCount} ${auction.bidCount === 1 ? 'bid' : 'bids'}, closing ${formatMoment(auction.closesAt)}.${yours} If every share gets paid first, the sharers keep it.`
 }
 
 /**

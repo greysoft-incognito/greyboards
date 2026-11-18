@@ -6,8 +6,8 @@ import { formatMoney } from "./BookingBits";
 import { Button, Spinner } from "~/components/ui";
 
 const STATUS: Record<ShareStatus, { label: string; tone: string }> = {
-	open: { label: "Waiting for someone", tone: "bg-surface-100 text-ink-500" },
-	claimed: { label: "Not paid yet", tone: "bg-amber-50 text-held" },
+	open: { label: "Open", tone: "bg-surface-100 text-ink-500" },
+	claimed: { label: "Unpaid", tone: "bg-amber-50 text-held" },
 	paid: { label: "Paid", tone: "bg-emerald-50 text-available" },
 	refunded: { label: "Refunded", tone: "bg-surface-100 text-ink-500" },
 };
@@ -54,8 +54,8 @@ export function SharesPanel({ booking, isOrganiser }: { booking: Booking; isOrga
 				<p className="flex items-start gap-2 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-held">
 					<Gavel className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
 					{booking.sharing.auction
-						? `Someone is bidding for the whole board (${booking.sharing.auction.bidCount} ${booking.sharing.auction.bidCount === 1 ? "bid" : "bids"}). Pay every share before the winner pays to keep it; otherwise everyone who paid gets their money back.`
-						: "The lock has ended, so anyone can now bid for the whole board. Pay every share to keep it."}
+						? `Someone is bidding on the whole board (${booking.sharing.auction.bidCount} ${booking.sharing.auction.bidCount === 1 ? "bid" : "bids"}). Pay all the shares before the winner pays to keep it. Otherwise, everyone gets a refund.`
+						: "Anyone can now bid on the whole board. Pay the remaining shares to keep it."}
 				</p>
 			)}
 			{held && (

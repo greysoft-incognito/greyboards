@@ -18,7 +18,7 @@ export default function Email() {
     verify.run(async () => {
       await api.account.sendVerification().send()
 
-      return 'Sent. Open the link in the email to confirm.'
+      return 'Check your inbox for the link.'
     })
 
   const save = () =>
@@ -29,11 +29,11 @@ export default function Email() {
       setEmail('')
       setPassword('')
 
-      return `Email changed. We sent a confirmation link to ${data.email}.`
+      return `Email updated. Check ${data.email} for a link to confirm it.`
     })
 
   return (
-    <SettingsPage title="Email" description="You sign in with this address, and it's where we send security emails.">
+    <SettingsPage title="Email" description="You use this email to sign in.">
       <Section>
         <View style={styles.status}>
           <Text style={styles.address} numberOfLines={1}>
@@ -42,14 +42,14 @@ export default function Email() {
           {user.emailVerified ? (
             <Text style={styles.good}>Confirmed</Text>
           ) : (
-            <Text style={styles.warn}>Not confirmed yet. Check your inbox for our email.</Text>
+            <Text style={styles.warn}>Not confirmed yet. Check your inbox.</Text>
           )}
         </View>
-        {!user.emailVerified ? <Button title={verify.busy ? 'Sending…' : 'Send the link again'} variant="secondary" loading={verify.busy} onPress={resend} /> : null}
+        {!user.emailVerified ? <Button title={verify.busy ? 'Sending…' : 'Resend link'} variant="secondary" loading={verify.busy} onPress={resend} /> : null}
         {verify.problem.message ? <Callout>{verify.problem.message}</Callout> : null}
       </Section>
 
-      <Section title="Use a different address" description="We'll tell your old address, and ask you to confirm the new one.">
+      <Section title="Change email" description="We’ll send a link to your new address to confirm it.">
         <Field label="New email" error={change.problem.fields.email}>
           <Input value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoComplete="email" textContentType="emailAddress" />
         </Field>

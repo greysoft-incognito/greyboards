@@ -25,14 +25,14 @@ export function ProofPanel({ proof }: { proof: BookingProof }) {
 					{proof.status === "accepted" ? <BadgeCheck className="h-5 w-5" aria-hidden /> : <Camera className="h-5 w-5" aria-hidden />}
 				</span>
 				<div>
-					<h2 className="font-display text-xl font-extrabold tracking-tight text-ink-900">Proof it's up</h2>
+					<h2 className="font-display text-xl font-extrabold tracking-tight text-ink-900">Photos of your ad</h2>
 					<p className="mt-0.5 text-sm text-ink-500">{explain(proof)}</p>
 				</div>
 			</div>
 
 			{proof.status === "disputed" && proof.note && (
 				<p className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-					<span className="font-semibold">The advertiser said: </span>
+					<span className="font-semibold">Advertiser's note: </span>
 					{proof.note}
 				</p>
 			)}
@@ -70,7 +70,7 @@ export function ProofPanel({ proof }: { proof: BookingProof }) {
 							<input type="hidden" name="intent" value="submit-proof" />
 							<Button type="submit" disabled={!!intent}>
 								{intent === "submit-proof" ? <Spinner /> : <Send className="h-4 w-4" aria-hidden />}
-								Send to the advertiser
+								Send to advertiser
 							</Button>
 						</Form>
 					)}
@@ -86,14 +86,14 @@ export function ProofPanel({ proof }: { proof: BookingProof }) {
 }
 
 function explain(proof: BookingProof) {
-	if (proof.status === "accepted") return `Accepted${proof.acceptedAt ? ` ${formatMoment(proof.acceptedAt)}` : ""}. The money left escrow and everyone is paid.`;
+	if (proof.status === "accepted") return `Accepted${proof.acceptedAt ? ` ${formatMoment(proof.acceptedAt)}` : ""}. Everyone has been paid.`;
 	if (proof.status === "submitted" && proof.canReview) {
-		return `Check the photos. Accepting puts your ad live and pays everyone.${proof.acceptsAt ? ` If you don't answer by ${formatMoment(proof.acceptsAt)}, it counts as accepted.` : ""}`;
+		return `Take a look at the photos. Once you accept, your ad is live and everyone gets paid.${proof.acceptsAt ? ` If you don't reply by ${formatMoment(proof.acceptsAt)}, we'll accept them for you.` : ""}`;
 	}
-	if (proof.status === "submitted") return `With the advertiser to check.${proof.acceptsAt ? ` It counts as accepted at ${formatMoment(proof.acceptsAt)} if they don't answer.` : ""}`;
-	if (proof.canAdd) return `Once it's up, take at least ${proof.minPhotos} photos showing the whole ad, standing within ${proof.maxDistanceM} m of the board with location on.`;
+	if (proof.status === "submitted") return `Waiting for the advertiser to review.${proof.acceptsAt ? ` We'll accept them automatically on ${formatMoment(proof.acceptsAt)} if they don't reply.` : ""}`;
+	if (proof.canAdd) return `Once it's up, take at least ${proof.minPhotos} photos of the whole ad from within ${proof.maxDistanceM} m of the board, with location turned on.`;
 
-	return "Once the ad is up, photos taken at the board show here for you to check. Nobody is paid until then.";
+	return "Once your ad is up, you'll see photos of it here.";
 }
 
 /** Takes a photo and sends it with where the phone is. Proof without a location isn't accepted. */
@@ -166,7 +166,7 @@ function ReviewProof() {
 						Send it back
 					</Button>
 					<Button variant="ghost" onClick={() => setDisputing(false)}>
-						Keep checking
+						Cancel
 					</Button>
 				</div>
 			</Form>
@@ -179,7 +179,7 @@ function ReviewProof() {
 				<input type="hidden" name="intent" value="accept-proof" />
 				<Button type="submit" disabled={!!intent}>
 					{intent === "accept-proof" ? <Spinner /> : <Check className="h-4 w-4" aria-hidden />}
-					It's up, accept
+					Looks good, accept
 				</Button>
 			</Form>
 			<Button variant="ghost" onClick={() => setDisputing(true)}>

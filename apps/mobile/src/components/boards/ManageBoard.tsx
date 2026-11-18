@@ -67,7 +67,7 @@ export function RateCard({ board, onChange }: { board: BoardDetail; onChange: On
 
   return (
     <Section>
-      <Heading icon={Layers} title="Faces and rates" text="Each face is booked on its own. Leave a rate empty to use the board's." />
+      <Heading icon={Layers} title="Sides and rates" text="Each side is booked separately. Leave a rate empty to use the board’s main rate." />
       {board.rateCard.map((face) => (
         <FaceForm key={face.id} boardId={board.id} face={face} unit={unit} currency={board.currency} onChange={onChange} />
       ))}
@@ -149,12 +149,12 @@ export function BlockedDays({ board, onChange }: { board: BoardDetail; onChange:
       await api.account.unblockDays(board.id, id).send()
       onChange()
 
-      return 'Days open for booking again.'
+      return 'Those days can be booked again.'
     })
 
   return (
     <Section>
-      <Heading icon={CalendarOff} title="Blocked days" text="Keep days for your own clients. Advertisers can't book them." />
+      <Heading icon={CalendarOff} title="Blocked days" text="Save days for your own clients. Advertisers won’t be able to book them." />
       {blocks.length ? (
         <View style={styles.list}>
           {blocks.map((entry) => (
@@ -172,8 +172,8 @@ export function BlockedDays({ board, onChange }: { board: BoardDetail; onChange:
       ) : null}
       <View style={styles.pair}>
         <View style={styles.flex}>
-          <Field label="First day">
-            <DateField label="First day" value={startsOn} min={today()} onChange={(day) => (setStartsOn(day), day > endsOn && setEndsOn(day))} />
+          <Field label="Start date">
+            <DateField label="Start date" value={startsOn} min={today()} onChange={(day) => (setStartsOn(day), day > endsOn && setEndsOn(day))} />
           </Field>
         </View>
         <View style={styles.flex}>
@@ -183,7 +183,7 @@ export function BlockedDays({ board, onChange }: { board: BoardDetail; onChange:
         </View>
       </View>
       <FacePick board={board} value={faceId} onChange={setFaceId} whole />
-      <Field label="Note for yourself">
+      <Field label="Private note">
         <Input value={note} onChangeText={setNote} maxLength={191} placeholder="Such as: our own client" />
       </Field>
       {action.problem.message ? <Callout>{action.problem.message}</Callout> : null}
@@ -215,7 +215,7 @@ export function AuctionsManager({ board, auctions, onChange }: { board: BoardDet
       setReserve('')
       onChange()
 
-      return 'Dates open for bids.'
+      return 'Bidding is open.'
     })
 
   const cancel = (id: string) =>
@@ -223,12 +223,12 @@ export function AuctionsManager({ board, auctions, onChange }: { board: BoardDet
       await api.account.cancelAuction(id).send()
       onChange()
 
-      return 'Bidding closed. The dates are free to book again.'
+      return 'Bidding closed. The dates can be booked again.'
     })
 
   return (
     <Section>
-      <Heading icon={Gavel} title="Bids" text="Let advertisers bid for some dates instead of paying the fixed price. The highest bid at or above your reserve wins." />
+      <Heading icon={Gavel} title="Bids" text="Let advertisers bid on some dates. The highest bid above your minimum wins." />
       {auctions.length ? (
         <View style={styles.list}>
           {auctions.map((auction) => (
@@ -240,7 +240,7 @@ export function AuctionsManager({ board, auctions, onChange }: { board: BoardDet
                   {auction.face && board.rateCard.length > 1 ? ` · ${auction.face.label}` : ''}
                 </Text>
                 <Text variant="small">
-                  {auction.highestMinor !== null ? `Highest ${formatMoney(auction.highestMinor, auction.currency)}` : 'No amount shown yet'} · {plural(auction.bidCount, 'bid')} · {auction.open ? 'closes' : 'closed'}{' '}
+                  {auction.highestMinor !== null ? `Highest ${formatMoney(auction.highestMinor, auction.currency)}` : 'No minimum set'} · {plural(auction.bidCount, 'bid')} · {auction.open ? 'closes' : 'closed'}{' '}
                   {formatMoment(auction.closesAt)}
                 </Text>
               </View>
@@ -256,8 +256,8 @@ export function AuctionsManager({ board, auctions, onChange }: { board: BoardDet
       <FacePick board={board} value={faceId} onChange={setFaceId} />
       <View style={styles.pair}>
         <View style={styles.flex}>
-          <Field label="First day" error={errors.startsOn}>
-            <DateField label="First day" value={startsOn} min={board.booking.earliestStart} onChange={setStartsOn} />
+          <Field label="Start date" error={errors.startsOn}>
+            <DateField label="Start date" value={startsOn} min={board.booking.earliestStart} onChange={setStartsOn} />
           </Field>
         </View>
         <View style={styles.flex}>
@@ -266,7 +266,7 @@ export function AuctionsManager({ board, auctions, onChange }: { board: BoardDet
           </Field>
         </View>
       </View>
-      <Field label="Reserve" error={errors.reserveMinor} hint={`The least you'll take for the whole run, in ${currencySymbol(board.currency)}.`}>
+      <Field label="Reserve" error={errors.reserveMinor} hint={`Minimum price for the whole period, in ${currencySymbol(board.currency)}.`}>
         <Input value={reserve} onChangeText={setReserve} keyboardType="number-pad" placeholder="500000" />
       </Field>
       <View style={styles.pair}>

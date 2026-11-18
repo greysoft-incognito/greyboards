@@ -15,9 +15,9 @@ export async function proofAction(api: ServerApi, bookingId: string, intent: (ty
 		const latitude = Number(form.get("latitude"));
 		const longitude = Number(form.get("longitude"));
 
-		if (!photo) return { error: "Choose a photo first.", message: null };
+		if (!photo) return { error: "Add a photo first.", message: null };
 		if (!form.get("latitude") || !Number.isFinite(latitude) || !Number.isFinite(longitude)) {
-			return { error: "We couldn't tell where you are. Allow location for this site, stand at the board and try again.", message: null };
+			return { error: "We couldn't find your location. Allow location access, stand by the board and try again.", message: null };
 		}
 
 		await api.proofs.add(bookingId, photo, { latitude, longitude, accuracyM: Number(form.get("accuracyM")) || null, takenAt: new Date().toISOString() });
@@ -34,16 +34,16 @@ export async function proofAction(api: ServerApi, bookingId: string, intent: (ty
 	if (intent === "submit-proof") {
 		await api.proofs.submit(bookingId);
 
-		return { error: null, message: "Sent to the advertiser to check." };
+		return { error: null, message: "Sent to the advertiser." };
 	}
 
 	if (intent === "accept-proof") {
 		await api.proofs.accept(bookingId);
 
-		return { error: null, message: "Accepted. Your ad is live and everyone is paid." };
+		return { error: null, message: "Accepted! Your ad is live." };
 	}
 
 	await api.proofs.dispute(bookingId, String(form.get("note") ?? ""));
 
-	return { error: null, message: "Sent back with your note." };
+	return { error: null, message: "Changes requested." };
 }

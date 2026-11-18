@@ -80,16 +80,16 @@ export default function ShareInviteScreen() {
             <View style={styles.line}>
               <ShieldCheck size={16} color={colors.available} />
               <Text variant="small" style={styles.flex}>
-                Everyone has {formatWait(left)} to pay. If the booking doesn’t go ahead, you get your money back. Once it does, it waits in escrow until there’s a photo of the ad on the board.
+                Everyone has {formatWait(left)} to pay. If the booking doesn’t go ahead, you’ll get a full refund.
               </Text>
             </View>
           </>
         ) : payable ? (
-          <Button title="Add the advertiser role to join" onPress={() => router.push('/settings/roles')} />
+          <Button title="Become an advertiser to join" onPress={() => router.push('/settings/roles')} />
         ) : (
           <>
             <Text>
-              {invite.mine && invite.status === 'paid' ? 'Your share is paid.' : !invite.mine && invite.status !== 'open' ? 'Someone already took this share.' : 'This booking is no longer waiting for payments.'}
+              {invite.mine && invite.status === 'paid' ? 'Your share is paid.' : !invite.mine && invite.status !== 'open' ? 'Someone already took this share.' : 'This booking is already closed.'}
             </Text>
             {invite.mine ? <Button title="See the booking" variant="ghost" onPress={seeBooking} /> : null}
           </>

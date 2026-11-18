@@ -10,7 +10,7 @@ import { Standing } from "~/components/reputation/Badges";
 
 const AUCTION_LABELS: Record<AuctionStatus, { label: string; tone: string }> = {
 	open: { label: "Taking bids", tone: "bg-brand-50 text-brand-700" },
-	awarded: { label: "Won, waiting for payment", tone: "bg-amber-50 text-held" },
+	awarded: { label: "Won, not paid yet", tone: "bg-amber-50 text-held" },
 	sold: { label: "Sold", tone: "bg-emerald-50 text-available" },
 	unsold: { label: "Not sold", tone: "bg-surface-100 text-ink-500" },
 	cancelled: { label: "Closed early", tone: "bg-surface-100 text-ink-500" },
@@ -98,15 +98,15 @@ export function AuctionCard({ auction, canBid, error }: { auction: Auction; canB
 						<>
 							. You won.{" "}
 							<Link to={`/bookings/${mine.bookingId}`} className="font-semibold text-brand-700 hover:underline">
-								Pay to book the dates
+								Pay to confirm
 							</Link>
 						</>
 					) : mine.status === "lapsed" ? (
-						". It wasn't paid in time, so the dates went to the next bid."
+						". It wasn't paid in time, so the next bidder got the dates."
 					) : mine.leading ? (
 						". You're the highest bidder."
 					) : auction.open && auction.format === "open" ? (
-						". Someone bid more."
+						". You've been outbid."
 					) : (
 						"."
 					)}
@@ -127,12 +127,12 @@ export function AuctionCard({ auction, canBid, error }: { auction: Auction; canB
 							{mine ? "Raise my bid" : "Place bid"}
 						</Button>
 						<p className="flex items-start gap-2 text-xs text-ink-500">
-							<Timer className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />A bid in the last few minutes keeps bidding open a little longer. The winner has a day to pay.
+							<Timer className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />Late bids extend the auction a little. The winner has a day to pay.
 						</p>
 					</Form>
 				) : (
 					<Link prefetch="intent" to="/settings/roles" className={buttonClass("secondary", "w-full")}>
-						Add the advertiser role to bid
+						Become an advertiser to bid
 					</Link>
 				))}
 		</div>
@@ -152,7 +152,7 @@ export function AuctionsManager({ board, auctions, today }: { board: BoardDetail
 					<Gavel className="h-5 w-5 text-brand-600" aria-hidden />
 					Bids
 				</h2>
-				<p className="mt-1 text-sm text-ink-500">Let advertisers bid for some dates instead of paying the fixed price. The highest bid at or above your reserve wins.</p>
+				<p className="mt-1 text-sm text-ink-500">Let advertisers bid on some dates. The highest bid above your minimum wins.</p>
 			</div>
 
 			{auctions.length > 0 && (
@@ -166,7 +166,7 @@ export function AuctionsManager({ board, auctions, today }: { board: BoardDetail
 									{auction.face && board.rateCard.length > 1 ? ` · ${auction.face.label}` : ""}
 								</span>
 								<span className="block text-ink-500 tabular-nums">
-									{auction.highestMinor !== null ? `Highest ${formatMoney(auction.highestMinor, auction.currency)}` : "No amount shown yet"} · {auction.bidCount} {auction.bidCount === 1 ? "bid" : "bids"} ·{" "}
+									{auction.highestMinor !== null ? `Highest ${formatMoney(auction.highestMinor, auction.currency)}` : "No minimum set"} · {auction.bidCount} {auction.bidCount === 1 ? "bid" : "bids"} ·{" "}
 									{auction.open ? "closes" : "closed"} {formatMoment(auction.closesAt)}
 								</span>
 							</span>
@@ -199,7 +199,7 @@ export function AuctionsManager({ board, auctions, today }: { board: BoardDetail
 							</Select>
 						</Field>
 					)}
-					<Field label="First day">
+					<Field label="Start date">
 						<Input type="date" name="startsOn" min={board.booking.earliestStart} required />
 					</Field>
 					<Field label="How long">
@@ -212,7 +212,7 @@ export function AuctionsManager({ board, auctions, today }: { board: BoardDetail
 							))}
 						</Select>
 					</Field>
-					<Field label="Reserve" hint="The least you'll take for the whole run">
+					<Field label="Reserve" hint="Minimum price for the whole period">
 						<Input type="number" name="reserve" min="1" step="1000" required />
 					</Field>
 					<Field label="Bidding closes">
@@ -298,7 +298,7 @@ export function OfferRow({ offer, onBoards }: { offer: Offer; onBoards: boolean 
 				<Form method="post" preventScrollReset className="flex flex-wrap items-end gap-2" onSubmit={() => setCountering(false)}>
 					<input type="hidden" name="intent" value="counter-offer" />
 					<input type="hidden" name="id" value={offer.id} />
-					<Field label="What you'd take">
+					<Field label="Your price">
 						<Input name="amount" type="number" min={offer.amountMinor / 100 + 1} max={offer.listMinor / 100 - 1} step="1000" required />
 					</Field>
 					<Button type="submit">Send counter</Button>

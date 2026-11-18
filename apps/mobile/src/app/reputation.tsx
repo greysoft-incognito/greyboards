@@ -29,7 +29,7 @@ export default function ReputationScreen() {
         <Gauge size={30} color={colors.brand100} />
         <Text style={styles.heroTitle}>Reputation and badges</Text>
         <Text style={styles.heroText}>
-          A reputation score shows how much you can trust someone in a role. Each role has its own score, and it only moves for real work we could confirm.
+          Your reputation shows people they can trust you. Each role has its own score, and it grows with the real work you do on Greyboards.
         </Text>
       </LinearGradient>
 
@@ -47,7 +47,7 @@ export default function ReputationScreen() {
 
       {disclosure ? (
         <View style={styles.rules}>
-          <Text style={styles.rulesTitle}>What moves a score</Text>
+          <Text style={styles.rulesTitle}>What changes your score</Text>
           {disclosure.rules.map((rule) => {
             const down = rule.points < 0
 
@@ -74,7 +74,7 @@ export default function ReputationScreen() {
             )
           })}
           <Text variant="muted" style={styles.ruleFoot}>
-            Greyboards staff can also correct a score by hand, and always record why.
+            Our team can also adjust a score, and they always note why.
           </Text>
         </View>
       ) : null}

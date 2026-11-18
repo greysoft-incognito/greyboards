@@ -58,7 +58,7 @@ export default function NewBoard({ loaderData, actionData }: Route.ComponentProp
 				My boards
 			</Link>
 			<h1 className="mt-3 font-display text-3xl font-extrabold tracking-[-0.03em] text-ink-900 sm:text-4xl">Tag a board</h1>
-			<p className="mt-1 mb-6 text-ink-500">We check every board before advertisers can find it, usually within a day.</p>
+			<p className="mt-1 mb-6 text-ink-500">We review every board before it goes live, usually within a day.</p>
 			<BoardForm kinds={loaderData.kinds} tagAs={loaderData.tagAs} ownerProfiles={loaderData.ownerProfiles} ownerPercents={loaderData.ownerPercents} error={actionData?.error} fieldErrors={actionData?.fieldErrors} />
 		</main>
 	);

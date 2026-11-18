@@ -23,7 +23,7 @@ export default function TwoStep() {
   const show = (next: TwoFactorStatus) => status.update({ data: { ...status.data, data: next } })
 
   return (
-    <SettingsPage title="Two-step sign-in" description="After your password, ask for a code from an authenticator app like Google Authenticator or 1Password.">
+    <SettingsPage title="Two-step sign-in" description="Add a second step when you sign in, using a code from an app like Google Authenticator or 1Password.">
       <Section>
         {!current ? (
           status.error ? <Callout>{FormProblem.from(status.error).message}</Callout> : <ActivityIndicator color={colors.ink500} />
@@ -35,7 +35,7 @@ export default function TwoStep() {
             onCodes={(next, list) => {
               show(next)
               setCodes(list)
-              toast.show('Your old recovery codes no longer work.')
+              toast.show('New codes ready. Your old ones won’t work anymore.')
             }}
             onOff={(next) => {
               show(next)
@@ -74,7 +74,7 @@ function Off({ onStarted }: { onStarted: (setup: TwoFactorSetup) => void }) {
     <>
       <View style={styles.state}>
         <View style={[styles.dot, styles.dotOff]} />
-        <Text variant="muted">Off. Anyone with your password can sign in.</Text>
+        <Text variant="muted">Off. Turn it on to protect your account.</Text>
       </View>
       {start.problem.message ? <Callout>{start.problem.message}</Callout> : null}
       <Button title={start.busy ? 'Starting…' : 'Turn on two-step sign-in'} loading={start.busy} onPress={begin} />
@@ -102,7 +102,7 @@ function SetupSteps({ setup, onEnabled }: { setup: TwoFactorSetup; onEnabled: (s
       <View style={styles.qr}>
         <QrCode value={setup.otpauthUrl} size={168} />
       </View>
-      <Text variant="muted">Using another device? Scan the code. Or enter this key:</Text>
+      <Text variant="muted">On another device? Scan the code or enter this key:</Text>
       <View style={styles.keyRow}>
         <Text selectable style={styles.key}>
           {key}
@@ -159,9 +159,9 @@ function On({
         <Text style={styles.onText}>{status.recoveryCodesRemaining} recovery codes left</Text>
       </View>
       {regenerate.problem.message ? <Callout>{regenerate.problem.message}</Callout> : null}
-      <Button title="Make new recovery codes" variant="secondary" loading={regenerate.busy} onPress={newCodes} />
+      <Button title="Get new recovery codes" variant="secondary" loading={regenerate.busy} onPress={newCodes} />
       <View style={styles.divider} />
-      <Field label="Password to turn it off" error={disable.problem.fields.password}>
+      <Field label="Enter your password to turn it off" error={disable.problem.fields.password}>
         <Input value={password} onChangeText={setPassword} secureTextEntry autoComplete="current-password" textContentType="password" />
       </Field>
       {disable.problem.summary ? <Callout>{disable.problem.summary}</Callout> : null}
@@ -175,7 +175,7 @@ function RecoveryCodes({ codes, onDone }: { codes: string[]; onDone: () => void 
 
   return (
     <>
-      <Text>Save these recovery codes somewhere safe. Each one signs you in once if you lose your phone. You won't see them again.</Text>
+      <Text>Keep these somewhere safe. If you lose your phone, each code lets you sign in once. You won’t see them again.</Text>
       <View style={styles.codes}>
         {codes.map((code) => (
           <Text key={code} selectable style={styles.code}>

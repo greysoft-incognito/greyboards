@@ -8,7 +8,7 @@ export const SETTINGS_GROUPS: { label: string; pages: { to: Href; label: string;
       { to: '/settings/profile', label: 'Profile', hint: 'Your name and photo' },
       { to: '/settings/email', label: 'Email', hint: 'Change or confirm your email' },
       { to: '/settings/roles', label: 'Roles', hint: 'Advertiser, owner, scout or dispatcher' },
-      { to: '/settings/owners', label: 'Board owners', hint: 'Owners you manage and boards listed under your number' },
+      { to: '/settings/owners', label: 'Board owners', hint: 'Owners you manage' },
       { to: '/settings/payouts', label: 'Payouts', hint: 'Bank details, and what you’ve earned and been sent' },
     ],
   },
@@ -16,7 +16,7 @@ export const SETTINGS_GROUPS: { label: string; pages: { to: Href; label: string;
     label: 'Security',
     pages: [
       { to: '/settings/password', label: 'Password', hint: 'Change your password' },
-      { to: '/settings/two-step', label: 'Two-step sign-in', hint: 'A code from your phone after your password' },
+      { to: '/settings/two-step', label: 'Two-step sign-in', hint: 'Extra security when you sign in' },
       { to: '/settings/devices', label: 'Devices', hint: "Where you're signed in" },
     ],
   },

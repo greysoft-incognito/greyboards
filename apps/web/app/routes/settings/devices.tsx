@@ -25,14 +25,14 @@ export async function action({ request, context }: Route.ActionArgs) {
 		return settingsAction("revoke-others", async () => {
 			const { data } = await api.account.revokeOtherSessions();
 
-			return { message: data.revoked === 1 ? "1 device was signed out." : `${data.revoked} devices were signed out.` };
+			return { message: data.revoked === 1 ? "1 device was signed out." : `Signed out of ${data.revoked} devices.` };
 		});
 	}
 
 	return settingsAction("revoke", async () => {
 		const { data: session } = await api.account.revokeSession(String(form.get("session") ?? ""));
 
-		return { message: `${session.name} was signed out.` };
+		return { message: `Signed out of ${session.name}.` };
 	});
 }
 
@@ -44,7 +44,7 @@ export default function DevicesPage({ loaderData, actionData }: Route.ComponentP
 
 	return (
 		<>
-			<PageHeader title="Devices" description="Where you're signed in. Sign out of any device you don't recognise, then change your password." />
+			<PageHeader title="Devices" description="Don't recognise a device? Sign it out and change your password." />
 			<Devices sessions={loaderData.sessions} result={resultFor(actionData ?? undefined, "revoke") ?? resultFor(actionData ?? undefined, "revoke-others")} busy={busy} />
 		</>
 	);

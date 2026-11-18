@@ -19,14 +19,14 @@ export function EmailBanner() {
     <View style={styles.banner}>
       <Text style={styles.text}>
         {sent
-          ? `We sent a new link to ${user.email}.`
+          ? `New link sent to ${user.email}.`
           : resend.error
             ? FormProblem.from(resend.error).message
-            : 'Confirm your email so you can always get back into your account.'}
+            : 'Confirm your email so you never lose access to your account.'}
       </Text>
       {!sent && (
         <Pressable accessibilityRole="button" disabled={resend.loading} onPress={() => resend.send().catch(() => undefined)} hitSlop={8}>
-          <Text style={[styles.text, styles.action]}>{resend.loading ? 'Sending…' : 'Resend the link'}</Text>
+          <Text style={[styles.text, styles.action]}>{resend.loading ? 'Sending…' : 'Resend link'}</Text>
         </Pressable>
       )}
     </View>

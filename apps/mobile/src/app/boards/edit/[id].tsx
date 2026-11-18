@@ -55,7 +55,7 @@ function EditBoardForm({ board }: { board: BoardDetail }) {
     locate.run(async () => {
       setSpot(await currentSpot())
 
-      return 'Placed where you are.'
+      return 'Location updated.'
     })
 
   const submit = () =>
@@ -68,7 +68,7 @@ function EditBoardForm({ board }: { board: BoardDetail }) {
     })
 
   return (
-    <SettingsPage title="Edit board" description={board.status === 'listed' ? 'Moving or resizing it takes it off the map until we check it again.' : 'Changes go to review with the board.'}>
+    <SettingsPage title="Edit board" description={board.status === 'listed' ? 'If you move or resize it, we’ll review it again before it goes back live.' : 'We’ll review your changes.'}>
       <Section title="Where it is">
         <View style={styles.spot}>
           <MapPin size={20} color={colors.brand600} />
@@ -76,11 +76,11 @@ function EditBoardForm({ board }: { board: BoardDetail }) {
             <Text variant="label">
               {spot.latitude.toFixed(6)}, {spot.longitude.toFixed(6)}
             </Text>
-            <Text variant="small">{spot.accuracyM ? `Accurate to about ${spot.accuracyM} m.` : 'Where it was tagged. Stand at the board to place it again.'}</Text>
+            <Text variant="small">{spot.accuracyM ? `Accurate to about ${spot.accuracyM} m.` : 'Stand next to the board to update its location.'}</Text>
           </View>
         </View>
         {locate.problem.message ? <Callout>{locate.problem.message}</Callout> : null}
-        <Button title={locate.busy ? 'Finding you…' : 'Place it where I am'} variant="secondary" loading={locate.busy} onPress={placeAgain} />
+        <Button title={locate.busy ? 'Finding your location…' : 'Use my location'} variant="secondary" loading={locate.busy} onPress={placeAgain} />
         <Field label="Street address" error={errors.address}>
           <Input value={fields.address} onChangeText={set('address')} maxLength={191} placeholder="Admiralty Way, by the roundabout" />
         </Field>

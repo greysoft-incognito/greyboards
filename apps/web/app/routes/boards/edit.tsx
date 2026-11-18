@@ -40,7 +40,7 @@ export default function EditBoard({ loaderData, actionData }: Route.ComponentPro
 				{board.name}
 			</Link>
 			<h1 className="mt-3 font-display text-3xl font-extrabold tracking-[-0.03em] text-ink-900 sm:text-4xl">Edit board</h1>
-			<p className="mt-1 mb-6 text-ink-500">{board.status === "listed" ? "Moving or resizing it takes it off the map until we check it again." : "Changes go to review with the board."}</p>
+			<p className="mt-1 mb-6 text-ink-500">{board.status === "listed" ? "If you move or resize it, we'll review it again before it goes back live." : "We'll review your changes."}</p>
 			<BoardForm kinds={kinds} board={board} error={actionData?.error} fieldErrors={actionData?.fieldErrors} />
 		</main>
 	);

@@ -78,7 +78,7 @@ export function JobRow({ job }: { job: PrintJob }) {
 			</div>
 			<div className="flex flex-col items-end justify-center gap-0.5 pr-2 text-right max-sm:hidden">
 				<span className="font-display text-lg font-extrabold text-ink-900 tabular-nums">{job.priced ? formatMoney(job.feeMinor, job.currency) : yourPrice(job)}</span>
-				<span className="text-xs text-ink-500">{!job.priced ? (job.myOffer?.status === "requested" ? "Asked at your rate" : job.myOffer ? "Your price" : "Send a price") : job.bonusMinor > 0 ? "With rush bonus" : "You earn"}</span>
+				<span className="text-xs text-ink-500">{!job.priced ? (job.myOffer?.status === "requested" ? "Requested at your rate" : job.myOffer ? "Your price" : "Send a price") : job.bonusMinor > 0 ? "With rush bonus" : "You earn"}</span>
 			</div>
 		</Link>
 	);
