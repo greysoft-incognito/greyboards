@@ -1,6 +1,7 @@
 import * as WebBrowser from 'expo-web-browser'
 import type { Payment } from '@greyboards/types'
 import { api } from './api'
+import { PlainProblem } from './forms'
 
 export type PaymentOutcome = 'paid' | 'failed' | 'pending'
 
@@ -30,4 +31,16 @@ export const OUTCOME_MESSAGES: Record<PaymentOutcome, string> = {
   paid: 'Payment received.',
   failed: "The payment didn't go through, so nothing was charged.",
   pending: "Your payment is still being confirmed. We'll update the booking once it is.",
+}
+
+/** Starts a payment, pays it in the browser, then calls `onDone`. Returns the message to show, or throws when it failed. */
+export async function payAndReport(start: () => Promise<{ data: Payment }>, onDone: () => void) {
+  const { data } = await start()
+  const outcome = await payInBrowser(data)
+
+  onDone()
+
+  if (outcome === 'failed') throw new PlainProblem("The payment didn't go through, so nothing was charged. Try again while your dates are held.")
+
+  return outcome === 'paid' ? OUTCOME_MESSAGES.paid : 'Your payment is still being confirmed. Pull down to refresh in a moment.'
 }

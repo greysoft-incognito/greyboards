@@ -9,8 +9,7 @@ import { Standing } from '@/components/reputation/Badges'
 import { Section } from '@/components/settings/SettingsPage'
 import { Button, Callout, Field, Input, Pill, type PillLook, Text } from '@/components/ui'
 import { api } from '@/lib/api'
-import { payInBrowser } from '@/lib/checkout'
-import { PlainProblem } from '@/lib/forms'
+import { payAndReport as pay } from '@/lib/checkout'
 import { formatDay, formatDistance, formatMoment, formatMoney, formatWait } from '@/lib/format'
 import { useLimits } from '@/lib/limits'
 import { pickImage } from '@/lib/pick-image'
@@ -24,18 +23,6 @@ type OnChange = () => void
 
 const isPaid = (booking: Booking) => ['paid', 'live', 'completed'].includes(booking.status)
 const isLive = (booking: Booking) => booking.status === 'live' || booking.status === 'completed'
-
-/** Pays through the provider and reports the outcome as the action's message. */
-async function pay(start: () => Promise<{ data: Parameters<typeof payInBrowser>[0] }>, onChange: OnChange) {
-  const { data } = await start()
-  const outcome = await payInBrowser(data)
-
-  onChange()
-
-  if (outcome === 'failed') throw new PlainProblem("The payment didn't go through, so nothing was charged. Try again while your dates are held.")
-
-  return outcome === 'paid' ? 'Payment received.' : 'Your payment is still being confirmed. Pull down to refresh in a moment.'
-}
 
 /** Seconds left on a hold, counting down. */
 function useCountdown(seconds: number) {
