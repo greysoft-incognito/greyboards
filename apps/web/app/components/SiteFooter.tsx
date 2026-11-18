@@ -15,6 +15,9 @@ export function SiteFooter() {
 							{document.title}
 						</Link>
 					))}
+					<Link prefetch="intent" to="/developers" className="font-medium hover:text-ink-900">
+						Developers
+					</Link>
 				</nav>
 			</div>
 		</footer>

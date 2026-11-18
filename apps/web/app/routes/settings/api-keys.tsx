@@ -1,5 +1,5 @@
 import { BookOpen, KeyRound } from "lucide-react";
-import { Form, useNavigation } from "react-router";
+import { Form, Link, useNavigation } from "react-router";
 import type { ApiKey, ApiKeyAbility, NewApiKey } from "@greyboards/types";
 import { requireSignIn } from "~/lib/session.server";
 import { settingsAction } from "~/lib/settings.server";
@@ -95,11 +95,10 @@ export default function ApiKeysPage({ loaderData, actionData }: Route.ComponentP
 					</Form>
 				</Section>
 				<Keys keys={loaderData.keys} result={resultFor(actionData ?? undefined, "remove")} />
-				<p className="flex items-center gap-2 text-sm text-ink-500">
+				<Link prefetch="intent" to="/developers" className="flex items-center gap-2 text-sm font-semibold text-brand-700 hover:underline">
 					<BookOpen className="h-4 w-4 shrink-0" aria-hidden />
-					Send the key as <code className="rounded bg-surface-100 px-1.5 py-0.5 font-mono text-xs text-ink-900">Authorization: Bearer gbk_…</code> to
-					<code className="rounded bg-surface-100 px-1.5 py-0.5 font-mono text-xs text-ink-900">/api/v1</code>.
-				</p>
+					Read the developer docs: endpoints, examples and limits
+				</Link>
 			</div>
 		</>
 	);

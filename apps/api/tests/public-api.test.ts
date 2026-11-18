@@ -77,6 +77,7 @@ describe('Public API', () => {
     expect((await v1('get', `/boards/${boardId}`, readKey)).body.data).toMatchObject({ id: boardId, name: 'API board' })
     expect((await v1('get', `/boards/${boardId}/availability`, readKey)).status).toBe(200)
     expect((await v1('get', '/boards?kind=billboard', readKey)).status).toBe(200)
+    expect((await v1('get', `/boards/${boardId}/slots`, readKey)).status).toBe(422)
     expect((await v1('get', '/me', 'gbk_nope')).status).toBe(401)
     expect((await request(app).get('/api/v1/me').set({ Accept: 'application/json', Authorization: `Bearer ${tokens.agency}` })).status).toBe(401)
   })

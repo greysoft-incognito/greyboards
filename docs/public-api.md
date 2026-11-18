@@ -1,5 +1,7 @@
 # Greyboards public API
 
+The public developer pages at `/developers` on the web app document this API for outside developers, with examples. Keep the two in step: the pages read from `apps/web/app/lib/developer-docs.ts`.
+
 Agencies and advertisers can search boards, check free dates, hold dates and start payment from their own tools. Every call acts as the account that made the key.
 
 ## Keys
@@ -40,7 +42,8 @@ All paths start with `/api/v1`.
 | GET | `/boards` | read | Listed boards, a page at a time. Filter with `kind`, `lit`, `maxRateMinor`; near a point with `lat`, `lng`, `radiusKm`; or inside `west`, `south`, `east`, `north`. `page` and `perPage` (up to 100). |
 | GET | `/boards/{id}` | read | One board, with its rate card, booking terms and traffic. |
 | GET | `/boards/{id}/availability` | read | Days already taken on each face. |
-| POST | `/boards/{id}/bookings` | book | Hold dates. Body: `startsOn` (`YYYY-MM-DD`), `periods`, and optionally `faceId` and `shares`. The account needs the advertiser role. |
+| GET | `/boards/{id}/slots` | read | On a digital screen: its loop, the price of a slot in each part of the day, and free slots for given dates. |
+| POST | `/boards/{id}/bookings` | book | Hold dates. Body: `startsOn` (`YYYY-MM-DD`), `periods`, and optionally `faceId`, `shares`, and on digital screens `slots` and `daypart`. The account needs the advertiser role. |
 | GET | `/bookings` | read | The account's bookings. |
 | GET | `/bookings/{id}` | read | One booking. |
 | POST | `/bookings/{id}/checkout` | book | Start payment. Returns `checkoutUrl` to send the payer to. |
