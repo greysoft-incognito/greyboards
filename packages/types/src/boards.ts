@@ -126,6 +126,8 @@ export interface AgreementOffer {
   /** Mostly hidden, such as +234••••••0000. */
   ownerPhone: string
   ownerSharePercent: number
+  /** What the owner reads, filled in and kept from when it was sent. Admins set the wording. */
+  wording: { headline: string; shareLine: string; terms: string[] }
   rate: BoardRate | null
   expiresAt: string
   signedName: string | null

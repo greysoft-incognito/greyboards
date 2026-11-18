@@ -1,6 +1,7 @@
 import { Model } from '@arkstack/database'
 import { abortIf } from '@arkstack/common'
 import { createHash, randomBytes } from 'node:crypto'
+import { AgreementWording, type AgreementTerms, type AgreementValues } from '@app/support/AgreementWording'
 import { PhoneCode } from '@app/support/PhoneCode'
 import { Settings } from '@app/support/Settings'
 import { Sms } from '@app/support/Sms'
@@ -19,8 +20,8 @@ export interface SigningContext {
 /**
  * The agreement a board owner signs when a scout runs their board for them. Most owners
  * are offline, so it reaches them by SMS: a link to read the terms, then a code to sign.
- * The terms (owner share and rate) are copied in when it is sent, so later changes to
- * the board or the share setting don't change what was signed.
+ * The terms (owner share, rate and the wording) are copied in when it is sent, so later
+ * changes to the board, the share setting or the wording don't change what was signed.
  */
 export class BoardAgreement extends Model {
   declare id: string
@@ -43,6 +44,8 @@ export class BoardAgreement extends Model {
   declare signedIp: string | null
   declare signedUserAgent: string | null
   declare declinedAt: Date | null
+  /** The wording the owner reads, as it was when the agreement was sent. Older agreements have none. */
+  declare terms: AgreementTerms | null
   declare createdAt: Date
   declare updatedAt: Date
 
@@ -81,6 +84,10 @@ export class BoardAgreement extends Model {
 
   protected override hidden = ['tokenHash']
 
+  protected override casts = {
+    terms: 'json',
+  } as never
+
   private static hash(value: string): string {
     return createHash('sha256').update(value).digest('hex')
   }
@@ -113,14 +120,23 @@ export class BoardAgreement extends Model {
 
     if (open) await open.update({ status: BoardAgreement.CANCELLED })
 
+    const ownerSharePercent = await Settings.number('revenue.owner_percent')
+    const rateMinor = board.rate()
+    const terms = await AgreementWording.terms({
+      owner: profile!.name,
+      scout: sender.name,
+      board: board.name,
+      share: ownerSharePercent,
+      rate: rateMinor === null ? null : { amountMinor: Number(rateMinor), currency: board.currency, period: board.ratePeriod },
+    })
     const agreement = await BoardAgreement.query().create({
       boardId: board.id,
       sentById: sender.id,
       ownerProfileId: profile!.id,
       ownerName: profile!.name,
       ownerPhone: profile!.phone!,
-      ownerSharePercent: await Settings.number('revenue.owner_percent'),
-      rateMinor: board.rate(),
+      ownerSharePercent,
+      rateMinor,
       currency: board.currency,
       ratePeriod: board.ratePeriod,
       status: BoardAgreement.SENT,
@@ -128,6 +144,7 @@ export class BoardAgreement extends Model {
       expiresAt,
       sendCount: 1,
       lastSentAt: new Date(),
+      terms,
     })
 
     await agreement.text(board, sender, token)
@@ -215,10 +232,27 @@ export class BoardAgreement extends Model {
     abortIf(!this.isOpen(), 'This link no longer works. Ask the scout to send a new one.', 410)
   }
 
-  private text(board: Board, sender: User, token: string): Promise<void> {
-    const greeting = this.ownerName ? `Hello ${this.ownerName.split(/\s+/)[0]}, ` : 'Hello, '
+  /** What the placeholders in the wording are filled with for this agreement. */
+  values(board: Board, sender: User | null): AgreementValues {
+    const rate = this.rate()
+
+    return {
+      owner: this.ownerName,
+      scout: sender?.name ?? null,
+      board: board.name,
+      share: this.ownerSharePercent,
+      rate: rate === null ? null : { amountMinor: rate, currency: this.currency, period: this.ratePeriod },
+    }
+  }
+
+  /** The wording the owner reads: what was sent, or for older agreements, today's wording. */
+  async wording(board: Board, sender: User | null): Promise<AgreementTerms> {
+    return this.terms ?? AgreementWording.terms(this.values(board, sender))
+  }
+
+  private async text(board: Board, sender: User, token: string): Promise<void> {
     const link = `${config('app.frontend_url')}/agreements/${token}`
 
-    return Sms.send(this.ownerPhone, `${greeting}${sender.name} wants to list your board "${board.name}" on Greyboards and find advertisers for it. Read and sign here: ${link}`)
+    await Sms.send(this.ownerPhone, await AgreementWording.sms(this.values(board, sender), link))
   }
 }

@@ -101,10 +101,10 @@ export default function Agreement({ loaderData, actionData }: Route.ComponentPro
 				<section className="space-y-4">
 					<div className="bg-brand-sweep rounded-[1.75rem] p-6 text-white shadow-[0_16px_36px_rgba(88,38,52,0.35)] sm:p-7">
 						<p className="text-sm text-brand-100">{offer.ownerName ? `For ${offer.ownerName}` : "For the board's owner"}</p>
-						<h2 className="mt-1 font-display text-3xl font-extrabold tracking-[-0.03em]">Let Greyboards find advertisers for your board</h2>
+						<h2 className="mt-1 font-display text-3xl font-extrabold tracking-[-0.03em]">{offer.wording.headline}</h2>
 						<div className="mt-5 flex items-end gap-3">
 							<span className="font-display text-6xl leading-none font-extrabold tabular-nums">{offer.ownerSharePercent}%</span>
-							<span className="pb-1 text-brand-100">of the rent is yours</span>
+							<span className="pb-1 text-brand-100">{offer.wording.shareLine}</span>
 						</div>
 						{rate && (
 							<p className="mt-4 flex items-center gap-2 text-sm text-brand-100">
@@ -117,9 +117,9 @@ export default function Agreement({ loaderData, actionData }: Route.ComponentPro
 					<div className="panel space-y-3 p-5 text-sm text-ink-700 sm:p-6">
 						<h3 className="font-display text-lg font-extrabold tracking-tight text-ink-900">What you agree to</h3>
 						<ul className="list-disc space-y-1.5 pl-5">
-							<li>{offer.scout?.name ?? "The scout"} looks after bookings, printing and posting on this board for you.</li>
-							<li>You get {offer.ownerSharePercent}% of the rent each advertiser pays, sent to you after the ad goes up. Printing and posting is paid for separately, so it never comes out of your share.</li>
-							<li>You can stop at any time once current bookings end. Text or call us and we'll take the board off Greyboards.</li>
+							{offer.wording.terms.map((term) => (
+								<li key={term}>{term}</li>
+							))}
 						</ul>
 					</div>
 

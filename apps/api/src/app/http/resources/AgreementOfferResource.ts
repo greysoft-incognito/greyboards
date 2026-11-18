@@ -17,6 +17,7 @@ export class AgreementOfferResource extends Resource {
       ownerName: agreement.ownerName,
       ownerPhone: Sms.mask(agreement.ownerPhone),
       ownerSharePercent: agreement.ownerSharePercent,
+      wording: await agreement.wording(board, sender ?? null),
       rate: rate === null ? null : { amountMinor: rate, currency: agreement.currency, period: agreement.ratePeriod },
       expiresAt: agreement.expiresAt,
       signedName: agreement.signedName,

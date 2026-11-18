@@ -29,7 +29,7 @@ describe('Owner agreements', () => {
   let boardId = ''
 
   beforeAll(async () => {
-    for (const who of ['scout', 'reviewer', 'owner']) {
+    for (const who of ['scout', 'reviewer', 'owner', 'admin']) {
       const email = `agreements-${who}-${Date.now()}@greyboards.test`
       const roles = who === 'owner' ? ['owner'] : ['scout']
       const register = await api('post', '/auth/register', { name: `Agreements ${who}`, email, password: 'password123', roles }, null)
@@ -37,6 +37,7 @@ describe('Owner agreements', () => {
       tokens[who] = register.body.data.token
 
       if (who === 'reviewer') ark('users:role', email, 'reviewer')
+      if (who === 'admin') ark('users:role', email, 'admin')
     }
 
     const scoutRole = (await api('get', '/account/roles')).body.data[0]
@@ -94,6 +95,34 @@ describe('Owner agreements', () => {
     expect(offer.body.data).toMatchObject({ status: 'sent', ownerSharePercent: 70, scout: { name: 'Agreements scout' }, board: { name: 'Third Mainland exit' } })
     expect(offer.body.data.ownerPhone).toMatch(/^\+234•+\d{4}$/)
     expect(JSON.stringify(offer.body.data)).not.toContain(phone)
+    expect(offer.body.data.wording).toMatchObject({ headline: 'Let Greyboards find advertisers for your board', shareLine: 'of the rent is yours' })
+    expect(offer.body.data.wording.terms).toEqual([
+      'Agreements scout looks after bookings, printing and posting on this board for you.',
+      expect.stringContaining('You get 70% of the rent each advertiser pays'),
+      expect.stringContaining('You can stop at any time'),
+    ])
+  })
+
+  it('uses the wording admins set for new texts, while the agreement keeps the wording it was sent with', async () => {
+    const saved = await api(
+      'put',
+      '/admin/settings/agreements',
+      { sms_text: '{scout} asks to run "{board}" for {share}% of the rent ({rate}).', term_2: 'Changed wording, {share}% to you.', term_4: 'An extra point for {owner}.' },
+      'admin',
+    )
+
+    expect(saved.status).toBe(200)
+    skipWait((await api('get', `/boards/${boardId}`)).body.data.agreement.id)
+    await api('post', `/account/boards/${boardId}/agreement`)
+
+    expect(lastText(phone)).toMatch(/^Hello Mr, Agreements scout asks to run "Third Mainland exit" for 70% of the rent \(₦1,000,000 a month\)\. https?:\/\/\S+\/agreements\//)
+
+    const offer = (await api('get', `/agreements/${linkToken(phone)}`, undefined, null)).body.data
+
+    expect(offer.wording.terms).toHaveLength(3)
+    expect(offer.wording.terms[1]).toContain('You get 70% of the rent')
+
+    await api('put', '/admin/settings/agreements', { sms_text: null, term_2: null, term_4: null }, 'admin')
   })
 
   it('signs with the texted code and puts the signed name on the board', async () => {
