@@ -53,6 +53,16 @@ pnpm test
 pnpm build
 ```
 
+## Web deploys (Cloudflare Workers)
+
+Cloudflare builds and deploys `apps/web` from GitHub. In the Cloudflare dashboard, Workers & Pages → Create → Import a repository, pick this repository, and set:
+
+- Root directory: `apps/web`
+- Build command: `CLOUDFLARE_ENV=production pnpm run build`
+- Deploy command: `npx wrangler deploy`
+
+Then, under the `greyboards-web` Worker's Settings → Variables and secrets, add `API_URL` (the public API address, such as `https://api.example.com/api`) and, optionally, `MAP_STYLE_URL`. The production build leaves out the local defaults in `wrangler.jsonc` and keeps the dashboard values on every deploy.
+
 ## Mobile builds (EAS)
 
 The Android app builds on [EAS](https://expo.dev/eas) from the **Deploy apps** workflow: a push to the `deploy` branch, or a manual run from the Actions tab. The bundle id is `com.greysoft.greyboards.app` on both iOS and Android.

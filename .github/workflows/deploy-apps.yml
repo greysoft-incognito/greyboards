@@ -5,10 +5,6 @@ on:
     branches: [deploy]
   workflow_dispatch:
     inputs:
-      deploy_web:
-        description: Deploy the web app to Cloudflare Workers
-        type: boolean
-        default: true
       build_apk:
         description: Build an Android APK (attached to the run as an artifact)
         type: boolean
@@ -45,35 +41,6 @@ env:
   ANDROID_BUILDER: ${{ inputs.android_builder || vars.ANDROID_BUILDER || 'eas' }}
 
 jobs:
-  web:
-    if: github.event_name == 'push' || inputs.deploy_web
-    runs-on: ubuntu-latest
-    environment: web-production
-    steps:
-      - uses: actions/checkout@v7
-      - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile --filter '@greyboards/web...'
-      - run: pnpm --filter @greyboards/web typecheck
-      - run: pnpm --filter @greyboards/web build
-
-      - name: Deploy to Cloudflare Workers
-        working-directory: apps/web
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          API_URL: ${{ vars.API_URL }}
-        run: |
-          if [ -z "$API_URL" ]; then
-            echo "Set the API_URL repository variable to the public API address." >&2
-            exit 1
-          fi
-
-          pnpm exec wrangler deploy --var "API_URL:$API_URL"
-
   android-apk:
     if: github.event_name == 'push' || inputs.build_apk
     runs-on: ubuntu-latest
