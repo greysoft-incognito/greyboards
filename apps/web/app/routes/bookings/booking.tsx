@@ -9,6 +9,7 @@ import { MessagesPanel } from "~/components/bookings/MessagesPanel";
 import { ReviewPanel } from "~/components/reviews/ReviewBits";
 import { DisputePanel } from "~/components/disputes/DisputeBits";
 import { SharesPanel } from "~/components/bookings/SharesPanel";
+import { PrintOffersPanel } from "~/components/jobs/PrintOffers";
 import { BookingStatusBadge, formatDays, formatMoney } from "~/components/bookings/BookingBits";
 import { Alert, Button, Input, Spinner } from "~/components/ui";
 import { formError } from "~/lib/api.server";
@@ -24,8 +25,10 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
 	const { api, user } = await requireUser(request, context);
 	const { data: booking } = await api.booking(params.id);
 	const messages = await api.messages(params.id, { per_page: 30 }).catch(() => null);
+	const isAdvertiser = booking.advertiserId === user.id;
+	const printOptions = isAdvertiser && booking.printJob?.status === "open" && !booking.printJob.priced ? ((await api.printOptions(params.id).catch(() => null))?.data ?? null) : null;
 
-	return { booking, messages: messages?.data ?? [], moreMessages: (messages?.meta.last_page ?? 1) > 1, isAdvertiser: booking.advertiserId === user.id, canRefund: user.permissions.includes("payouts.manage") };
+	return { booking, messages: messages?.data ?? [], moreMessages: (messages?.meta.last_page ?? 1) > 1, isAdvertiser, printOptions, canRefund: user.permissions.includes("payouts.manage") };
 }
 
 export async function action({ request, context, params }: Route.ActionArgs) {
@@ -38,6 +41,18 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 			const { data: payment } = await api.checkout(params.id);
 
 			throw redirect(payment.checkoutUrl ?? `/bookings/${params.id}`);
+		}
+
+		if (intent === "pay-print") {
+			const { data: payment } = await api.payPrintOffer(params.id, String(form.get("offerId")));
+
+			throw redirect(payment.checkoutUrl ?? `/bookings/${params.id}`);
+		}
+
+		if (intent === "ask-dispatcher") {
+			const response = await api.requestDispatcher(params.id, String(form.get("dispatcherId")));
+
+			return { error: null, message: response.message ?? "Request sent. You can pay once they accept." };
 		}
 
 		if (intent === "review") {
@@ -104,7 +119,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 		if (intent === "approve" || intent === "reject") {
 			await api.reviewArtwork(params.id, { decision: intent, note: String(form.get("note") ?? "") || undefined });
 
-			return { error: null, message: intent === "approve" ? "Approved. It goes to a dispatcher next." : "Sent back with your note." };
+			return { error: null, message: intent === "approve" ? "Approved. Dispatchers near the board send their prices next." : "Sent back with your note." };
 		}
 
 		if (isProofIntent(intent)) return await proofAction(api, params.id, intent, form);
@@ -134,7 +149,7 @@ function isLive(booking: Booking) {
 export default function BookingPage({ loaderData, actionData }: Route.ComponentProps) {
 	useToastMessage(actionData);
 
-	const { booking, messages, moreMessages, isAdvertiser, canRefund } = loaderData;
+	const { booking, messages, moreMessages, isAdvertiser, printOptions, canRefund } = loaderData;
 	const [params] = useSearchParams();
 	const outcome = params.get("payment");
 
@@ -189,6 +204,7 @@ export default function BookingPage({ loaderData, actionData }: Route.ComponentP
 						{booking.split && <Split booking={booking} />}
 					</div>
 					{booking.artwork && ["paid", "live", "completed"].includes(booking.status) && <ArtworkPanel booking={booking} isAdvertiser={isAdvertiser} />}
+					{printOptions?.open && <PrintOffersPanel options={printOptions} currency={booking.currency} />}
 					{booking.proof && booking.artwork?.status === "approved" && <ProofPanel proof={booking.proof} />}
 					{booking.cancellation?.allowed && <CancelPaid booking={booking} />}
 					{canRefund && booking.status === "paid" && <StaffRefund booking={booking} />}

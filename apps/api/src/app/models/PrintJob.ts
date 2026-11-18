@@ -6,18 +6,19 @@ import { Settings } from '@app/support/Settings'
 import { StoredImage } from '@app/support/StoredImage'
 import { Board } from './Board'
 import { Booking } from './Booking'
+import { PrintOffer } from './PrintOffer'
 import type { UploadedFile, User } from './User'
 
 /**
- * `open` for any dispatcher nearby, `reserved` while one decides, `confirmed` once it's
- * theirs, `printed` when the finished print is photographed, `posted` once it's up.
+ * `open` for dispatchers nearby to price, `reserved` while one decides on a job that went
+ * back at its paid price, `confirmed` once it's theirs, `printed` when the finished print is photographed, `posted` once it's up.
  */
 export type PrintJobStatus = 'open' | 'reserved' | 'confirmed' | 'printed' | 'posted' | 'cancelled'
 
 /**
  * Printing a booking's approved artwork and putting it up on the board. Dispatchers find
- * jobs near them, reserve one while they check they can make the date, then confirm it.
- * The fee comes from the advertiser's payment and is paid out once the ad is up.
+ * jobs near them and send their prices (see `DispatchOffers`); the job is theirs once the
+ * advertiser pays one. The fee is held with the booking and paid out once the ad is up.
  */
 export class PrintJob extends Model {
   declare id: string
@@ -79,19 +80,30 @@ export class PrintJob extends Model {
     bonusMinor: 'number',
   } as never
 
-  /** What printing and posting `board`'s face costs, in minor units: the owner's own price when they print, else the standard one. Digital boards need none. */
+  /**
+   * What printing and posting `board`'s face adds to a booking, in minor units. Only an owner
+   * who prints their own boards prices it up front: their own price, else the starting rate.
+   * Otherwise dispatchers price the job once the artwork is approved, so it starts at 0.
+   */
   static async feeFor(board: Board): Promise<number> {
-    if (board.kind === 'digital') return 0
-    if (board.printsOwn && board.printFeeMinor !== null && board.printFeeMinor !== undefined) return Number(board.printFeeMinor)
+    if (board.kind === 'digital' || !board.printsOwn) return 0
+    if (board.printFeeMinor !== null && board.printFeeMinor !== undefined) return Number(board.printFeeMinor)
 
     const perSqm = await Settings.number('printing.price_per_sqm')
 
     return Math.round(Number(board.widthM) * Number(board.heightM) * perSqm) * 100
   }
 
-  /** Put a booking's job up for dispatchers, once its artwork is approved. Owners who print their own boards need no job. */
+  /**
+   * Put a booking's job up for dispatchers once its artwork is approved, to send their prices.
+   * Owners who print their own boards, and digital boards, need no job.
+   */
   static async open(booking: Booking): Promise<PrintJob | null> {
-    if (booking.printFeeMinor <= 0 || booking.printedBy === 'owner') return null
+    if (booking.printedBy === 'owner') return null
+
+    const board = await Board.query().find(booking.boardId)
+
+    if (!board || board.kind === 'digital') return null
 
     const existing = await PrintJob.query().where({ bookingId: booking.id }).first()
 
@@ -101,7 +113,7 @@ export class PrintJob extends Model {
       bookingId: booking.id,
       boardId: booking.boardId,
       status: PrintJob.OPEN,
-      feeMinor: booking.printFeeMinor,
+      feeMinor: 0,
       currency: booking.currency,
       dueOn: Day.of(booking.startsOn),
     })
@@ -138,6 +150,14 @@ export class PrintJob extends Model {
     return this.belongsTo(Board, 'boardId')
   }
 
+  /**
+   * Whether the advertiser paid a price for the job. An open job without one takes prices
+   * from dispatchers; a priced one that went back after a miss is taken as it stands.
+   */
+  isPriced(): boolean {
+    return Number(this.feeMinor) > 0
+  }
+
   /** What the dispatcher earns: the fee plus any rush bonus. */
   payMinor(): number {
     return Number(this.feeMinor) + Number(this.bonusMinor ?? 0)
@@ -146,6 +166,7 @@ export class PrintJob extends Model {
   /** Whoever looks after the board does it themselves, so dispatchers no longer see the job. */
   async stepIn(): Promise<void> {
     await this.update({ status: PrintJob.CANCELLED, dispatcherId: null, reservedUntil: null })
+    await PrintOffer.query().where({ printJobId: this.id }).whereIn('status', PrintOffer.LIVE).updateFrom({ status: 'closed' })
   }
 
   isAvailable(): boolean {
@@ -171,6 +192,7 @@ export class PrintJob extends Model {
   /** Hold the job for `user` while they check they can print and post it in time. */
   async reserve(user: User): Promise<PrintJob> {
     abortIf(!this.isAvailable(), 'Someone else has this job.', 409)
+    abortIf(!this.isPriced(), 'Send your price for this job. The advertiser picks who prints it.', 422)
 
     const holding = await PrintJob.query().where({ dispatcherId: user.id, status: PrintJob.RESERVED }).whereRaw('reserved_until > now()').count()
 

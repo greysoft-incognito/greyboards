@@ -122,11 +122,18 @@ export function BookPanel({ board, taken, canBook, error }: { board: BoardDetail
 							</dt>
 							<dd className="text-ink-900 tabular-nums">{formatMoney(rate.amountMinor * periods, rate.currency)}</dd>
 						</div>
-						{terms.printFeeMinor > 0 && (
+						{terms.printFeeMinor > 0 ? (
 							<div className="flex justify-between gap-4">
-								<dt className="text-ink-700">{board.printsOwn ? "Printing and posting by the owner" : "Printing and posting"}</dt>
+								<dt className="text-ink-700">Printing and posting by the owner</dt>
 								<dd className="text-ink-900 tabular-nums">{formatMoney(terms.printFeeMinor, rate.currency)}</dd>
 							</div>
+						) : (
+							board.kind !== "digital" && (
+								<div className="flex justify-between gap-4">
+									<dt className="text-ink-700">Printing and posting</dt>
+									<dd className="text-right text-ink-500">Priced by dispatchers once your artwork is approved</dd>
+								</div>
+							)
 						)}
 						{splitting && (
 							<div className="flex justify-between gap-4">

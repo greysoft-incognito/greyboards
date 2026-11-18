@@ -4,6 +4,7 @@ import { app } from '../src/core/bootstrap'
 import request from 'parasito'
 import { passChecks } from './support/partner'
 import { ark } from './support/ark'
+import { takeJob } from './support/dispatch'
 
 const tokens: Record<string, string> = {}
 
@@ -84,8 +85,7 @@ describe('Proof of posting', () => {
     jobId = booking.printJob.id
     digital = (await approvedBooking('digital', '2027-09-01', 0.05)).id
 
-    await api('post', `/print-jobs/${jobId}/reserve`, undefined, 'poster')
-    await api('post', `/print-jobs/${jobId}/confirm`, undefined, 'poster')
+    await takeJob(api, jobId, printed, 'poster')
     await upload(`/print-jobs/${jobId}/print-photo`, 'photo', 'poster')
   }, 120_000)
 
@@ -132,7 +132,7 @@ describe('Proof of posting', () => {
 
     expect(disputed.body.data.proof).toMatchObject({ status: 'disputed', note: 'A tree hides the left side.', canReview: false })
     expect(disputed.body.data.printJob.status).toBe('printed')
-    expect(ledger(printed)).toEqual(['escrow 67500000'])
+    expect(ledger(printed).sort()).toEqual(['escrow 17500000', 'escrow 50000000'])
   })
 
   it('releases escrow to everyone when the advertiser accepts', async () => {
@@ -146,7 +146,7 @@ describe('Proof of posting', () => {
     expect((await api('post', `/bookings/${printed}/proof/accept`)).status).toBe(422)
 
     // ₦500,000 rent at 85/15, and ₦175,000 to print 10 × 5 m.
-    expect(ledger(printed).sort()).toEqual(['dispatch 17500000', 'escrow -67500000', 'escrow 67500000', 'owner 40000000', 'platform 10000000'].sort())
+    expect(ledger(printed).sort()).toEqual(['dispatch 17500000', 'escrow -67500000', 'escrow 50000000', 'escrow 17500000', 'owner 40000000', 'platform 10000000'].sort())
   })
 
   it('lets the owner prove a digital board, and accepts an unchecked proof after the deadline', async () => {

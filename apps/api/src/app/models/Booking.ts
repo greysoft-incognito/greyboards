@@ -299,7 +299,7 @@ export class Booking extends Model {
         ratePeriod: board.ratePeriod,
         rateMinor: terms.rateMinor,
         printFeeMinor,
-        printedBy: printFeeMinor > 0 && board.printsOwn ? 'owner' : 'dispatch',
+        printedBy: printFeeMinor > 0 ? 'owner' : 'dispatch',
         amountMinor: terms.rentMinor + printFeeMinor,
         currency: board.currency,
         status: Booking.HELD,

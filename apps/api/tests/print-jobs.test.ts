@@ -6,10 +6,11 @@ import { passChecks } from './support/partner'
 import { ark } from './support/ark'
 
 const tokens: Record<string, string> = {}
+const ids: Record<string, string> = {}
 
 const pixel = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64')
 
-const api = (method: 'get' | 'post' | 'put', path: string, body?: Record<string, unknown>, as: string | null = 'advertiser') => {
+const api = (method: 'get' | 'post' | 'put' | 'delete', path: string, body?: Record<string, unknown>, as: string | null = 'advertiser') => {
   const call = request(app)[method](`/api${path}`).set({ Accept: 'application/json' })
 
   if (as && tokens[as]) call.set('Authorization', `Bearer ${tokens[as]}`)
@@ -40,6 +41,7 @@ describe('Artwork and print jobs', () => {
       const register = await api('post', '/auth/register', { name: `Print ${who}`, email, password: 'password123', roles }, null)
 
       tokens[who] = register.body.data.token
+      ids[who] = register.body.data.user.id
 
       if (who === 'reviewer') ark('users:role', email, 'reviewer')
     }
@@ -80,42 +82,72 @@ describe('Artwork and print jobs', () => {
 
     const approved = await api('post', `/bookings/${bookingId}/artwork/review`, { decision: 'approve' }, 'owner')
 
-    // 10 × 5 m at ₦3,500 per m².
-    expect(approved.body.data.printJob).toMatchObject({ status: 'open', dueOn: '2027-08-01' })
+    // No price yet: dispatchers send theirs.
+    expect(approved.body.data).toMatchObject({ printFeeMinor: 0, amountMinor: 50_000_000, printJob: { status: 'open', priced: false, dueOn: '2027-08-01' } })
     expect((await upload(`/bookings/${bookingId}/artwork`, 'artwork', 'advertiser')).status).toBe(422)
 
     jobId = approved.body.data.printJob.id
   })
 
-  it('shows dispatchers nearby jobs, and the artwork only once they reserve one', async () => {
+  it('lets dispatchers send prices on nearby jobs, and the advertiser ask one at their rate', async () => {
     const near = await api('get', `/print-jobs?lat=${latitude + 0.01}&lng=${longitude}`, undefined, 'poster')
     const job = near.body.data.find((entry: { id: string }) => entry.id === jobId)
 
-    expect(job).toMatchObject({ status: 'open', feeMinor: 17_500_000, mine: false, artworkUrl: null, board: { name: 'Aba Road' } })
+    expect(job).toMatchObject({ status: 'open', priced: false, feeMinor: 0, mine: false, myOffer: null, artworkUrl: null, board: { name: 'Aba Road' } })
     expect(job.distanceM).toBeGreaterThan(1000)
     expect((await api('get', `/print-jobs?lat=${latitude + 2}&lng=${longitude}`, undefined, 'poster')).body.data.map((entry: { id: string }) => entry.id)).not.toContain(jobId)
     expect((await api('get', `/print-jobs?lat=${latitude}&lng=${longitude}`)).status).toBe(403)
+    expect((await api('post', `/print-jobs/${jobId}/reserve`, undefined, 'poster')).status).toBe(422)
 
-    const reserved = await api('post', `/print-jobs/${jobId}/reserve`, undefined, 'poster')
+    const bid = await api('post', `/print-jobs/${jobId}/offers`, { amountMinor: 16_000_000, note: 'Flex, printed in Port Harcourt' }, 'poster')
 
-    expect(reserved.body.data).toMatchObject({ status: 'reserved', mine: true, bookedDays: { startsOn: '2027-08-01', endsOn: '2027-08-31' } })
-    expect(reserved.body.data.artworkUrl).toBeTruthy()
-    expect((await api('post', `/print-jobs/${jobId}/reserve`, undefined, 'rival')).status).toBe(409)
-    expect((await api('get', `/print-jobs?lat=${latitude}&lng=${longitude}`, undefined, 'rival')).body.data.map((entry: { id: string }) => entry.id)).not.toContain(jobId)
+    expect(bid.status).toBe(201)
+    expect(bid.body.data).toMatchObject({ kind: 'bid', status: 'pending', amountMinor: 16_000_000 })
+    expect((await api('post', `/print-jobs/${jobId}/offers`, { amountMinor: 15_000_000 }, 'poster')).body.data).toMatchObject({ id: bid.body.data.id, amountMinor: 15_000_000 })
+    expect((await api('get', `/print-jobs/${jobId}`, undefined, 'poster')).body.data.myOffer).toMatchObject({ amountMinor: 15_000_000 })
+
+    // The rival works within 30 km of a base near the board, at ₦3,000 per m² with a ₦200,000 minimum.
+    expect((await api('get', '/account/dispatch-rate', undefined, 'rival')).body.data).toMatchObject({ saved: false, pricePerSqmMinor: 350_000 })
+    expect((await api('put', '/account/dispatch-rate', { pricePerSqmMinor: 300_000, minFeeMinor: 20_000_000, latitude: latitude + 0.05, longitude, radiusKm: 30 }, 'rival')).body.data).toMatchObject({ saved: true, radiusKm: 30 })
+
+    const options = (await api('get', `/bookings/${bookingId}/print-offers`)).body.data
+    const rival = options.dispatchers.find((entry: { id: string }) => entry.id === ids.rival)
+
+    expect(options).toMatchObject({ open: true, offers: [{ amountMinor: 15_000_000, dispatcher: { id: ids.poster } }] })
+    expect(rival).toMatchObject({ quoteMinor: 20_000_000, asked: false })
+    expect((await api('get', `/bookings/${bookingId}/print-offers`, undefined, 'owner')).status).toBe(403)
+
+    const asked = await api('post', `/bookings/${bookingId}/print-requests`, { dispatcherId: rival.id })
+
+    expect(asked.body.data).toMatchObject({ kind: 'request', status: 'requested', amountMinor: 20_000_000 })
+    expect((await api('post', `/bookings/${bookingId}/print-requests`, { dispatcherId: rival.id })).status).toBe(409)
+    expect((await api('post', `/bookings/${bookingId}/print-offers/${asked.body.data.id}/checkout`)).status).toBe(422)
+    expect((await api('post', `/print-offers/${asked.body.data.id}/accept`, undefined, 'poster')).status).toBe(404)
+    expect((await api('post', `/print-offers/${asked.body.data.id}/accept`, undefined, 'rival')).body.data.status).toBe('pending')
+    expect((await api('get', '/account/print-offers', undefined, 'rival')).body.data[0]).toMatchObject({ kind: 'request', job: { boardName: 'Aba Road', dueOn: '2027-08-01' } })
   })
 
-  it('lets the job go back when a hold runs out', async () => {
-    sql(`update print_jobs set reserved_until = now() - interval '1 minute' where id = '${jobId}'`)
+  it('gives the job to the dispatcher whose price the advertiser pays', async () => {
+    const offers = (await api('get', `/bookings/${bookingId}/print-offers`)).body.data.offers
 
-    expect((await api('post', `/print-jobs/${jobId}/confirm`, undefined, 'poster')).status).toBe(422)
-    expect((await api('post', `/print-jobs/${jobId}/reserve`, undefined, 'rival')).body.data.mine).toBe(true)
-    expect((await api('post', `/print-jobs/${jobId}/release`, undefined, 'rival')).body.data.status).toBe('open')
+    expect(offers.map((offer: { amountMinor: number }) => offer.amountMinor)).toEqual([15_000_000, 20_000_000])
+
+    const payment = (await api('post', `/bookings/${bookingId}/print-offers/${offers[0].id}/checkout`)).body.data
+
+    expect(payment.amountMinor).toBe(15_000_000)
+    await api('post', `/payments/${payment.reference}/verify`)
+
+    const booking = (await api('get', `/bookings/${bookingId}`)).body.data
+
+    expect(booking).toMatchObject({ printFeeMinor: 15_000_000, amountMinor: 65_000_000, printJob: { status: 'confirmed', priced: true } })
+    expect(sql(`select sum(amount_minor) from ledger_entries where booking_id = '${bookingId}' and account = 'escrow'`)).toContain('65000000')
+    expect((await api('get', `/print-jobs/${jobId}`, undefined, 'poster')).body.data).toMatchObject({ status: 'confirmed', mine: true, feeMinor: 15_000_000 })
+    expect((await api('get', '/account/print-offers', undefined, 'rival')).body.data[0].status).toBe('closed')
+    expect((await api('get', `/bookings/${bookingId}/print-offers`)).body.data).toMatchObject({ open: false, offers: [], dispatchers: [] })
+    expect((await api('post', `/bookings/${bookingId}/print-offers/${offers[1].id}/checkout`)).status).toBe(422)
   })
 
-  it('makes the job the dispatcher’s once confirmed, then takes a photo of the print', async () => {
-    await api('post', `/print-jobs/${jobId}/reserve`, undefined, 'poster')
-
-    expect((await api('post', `/print-jobs/${jobId}/confirm`, undefined, 'poster')).body.data.status).toBe('confirmed')
+  it('takes a photo of the print from the dispatcher on the job', async () => {
     expect((await api('get', `/print-jobs/${jobId}`, undefined, 'rival')).status).toBe(404)
     expect((await upload(`/print-jobs/${jobId}/print-photo`, 'photo', 'rival')).status).toBe(422)
 

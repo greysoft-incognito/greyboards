@@ -1,10 +1,12 @@
 import type { PrintJob } from '@app/models/PrintJob'
+import { PrintOffer } from '@app/models/PrintOffer'
 import type { User } from '@app/models/User'
 import { Day } from '@app/support/Day'
 import { Settings } from '@app/support/Settings'
 import { Messages } from '@app/services/Messages'
 import { Resource } from 'resora'
 import { BoardResource } from './BoardResource'
+import { PrintOfferResource } from './PrintOfferResource'
 import { ProofSummary } from './ProofSummary'
 
 /**
@@ -12,6 +14,12 @@ import { ProofSummary } from './ProofSummary'
  * and the booking's days show only to the dispatcher who holds the job.
  */
 export class PrintJobResource extends Resource {
+  static async offerOf(job: PrintJob, viewer: User) {
+    const offer = await PrintOffer.query().where({ printJobId: job.id, dispatcherId: viewer.id }).whereIn('status', PrintOffer.LIVE).latest('updatedAt').first()
+
+    return offer ? new PrintOfferResource(offer).data() : null
+  }
+
   private viewer: User | null = null
 
   for(viewer: User): this {
@@ -30,6 +38,8 @@ export class PrintJobResource extends Resource {
     return {
       id: job.id,
       status: job.displayStatus(),
+      /** Whether the advertiser paid a price. Open jobs without one take prices from dispatchers. */
+      priced: job.isPriced(),
       feeMinor: job.payMinor(),
       bonusMinor: Number(job.bonusMinor ?? 0),
       currency: job.currency,
@@ -47,6 +57,8 @@ export class PrintJobResource extends Resource {
       proof: booking ? await new ProofSummary(booking).for(this.viewer!).data() : null,
       /** Messages about the booking, for the dispatcher holding the job. */
       messages: booking ? await Messages.counts(booking, this.viewer!) : null,
+      /** The viewing dispatcher's own price or request on this job, while it is open. */
+      myOffer: this.viewer && !job.isPriced() ? await PrintJobResource.offerOf(job, this.viewer) : null,
       createdAt: job.createdAt,
     }
   }

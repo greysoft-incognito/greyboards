@@ -1,4 +1,5 @@
 import type { PageQuery } from './api'
+import type { Auction } from './bids'
 import type { Board, BoardRate } from './boards'
 import type { ID } from './models'
 import type { BookingReviews } from './reviews'
@@ -60,6 +61,9 @@ export interface Booking {
   refunds?: BookingRefund[]
   /** On a shared booking's own page: each share and who holds it. */
   shares?: BookingShare[] | null
+  /** On a shared booking: when its lock for the sharers ends, and whether someone can now take the whole board. */
+  /** On a shared booking: the lock for the sharers, and the bidding for the whole board once it ends. */
+  sharing?: { lockedUntil: string; takeoverOpen: boolean; bidsCloseAt: string; auction: Auction | null } | null
   /** On the booking's own page: how many messages, and how many the viewer hasn't read. */
   messages?: MessageCounts
   /** On the booking's own page: the viewer's review and whether they can write it. */
@@ -269,6 +273,8 @@ export interface BookingArtwork {
 export interface BookingPrintJob {
   id: ID
   status: PrintJobStatus
+  /** Whether a price was paid. An open job without one takes prices from dispatchers. */
+  priced: boolean
   dueOn: string
   printPhotoUrl: string | null
 }
@@ -283,6 +289,8 @@ export type PrintJobStatus = 'open' | 'reserved' | 'confirmed' | 'printed' | 'po
 export interface PrintJob {
   id: ID
   status: PrintJobStatus
+  /** Whether the advertiser paid a price. Open jobs without one take prices from dispatchers. */
+  priced: boolean
   /** What the dispatcher earns, any rush bonus included. */
   feeMinor: number
   /** Extra pay because the job went back close to go-live. */
@@ -307,7 +315,76 @@ export interface PrintJob {
   proof: BookingProof | null
   /** Messages about the booking, for the dispatcher holding the job. */
   messages: MessageCounts | null
+  /** The viewing dispatcher's own price or request on this job, while it is open. */
+  myOffer: PrintOffer | null
   createdAt: string
+}
+
+/**
+ * `requested` while a dispatcher decides on a request, `pending` while the advertiser can
+ * pay it, `paid` once they did. `declined`, `withdrawn` and `closed` end it.
+ */
+export type PrintOfferStatus = 'requested' | 'pending' | 'paid' | 'declined' | 'withdrawn' | 'closed'
+
+/** `bid` when the dispatcher sent the price; `request` when the advertiser asked them at their rate. */
+export type PrintOfferKind = 'bid' | 'request'
+
+/** One dispatcher's price to print and post a job. */
+export interface PrintOffer {
+  id: ID
+  kind: PrintOfferKind
+  status: PrintOfferStatus
+  amountMinor: number
+  currency: string
+  note: string | null
+  /** Until when the advertiser can pay it, or the dispatcher can answer the request. */
+  expiresAt: string
+  dispatcher: { id: ID; name: string; avatarUrl: string | null } | null
+  /** On the dispatcher's own list: the job it is for. */
+  job: { id: ID; boardName: string; city: string | null; widthM: number; heightM: number; dueOn: string } | null
+  createdAt: string
+}
+
+/** A dispatcher an advertiser can ask, with their price for the board. */
+export interface DispatcherOption {
+  id: ID
+  name: string
+  avatarUrl: string | null
+  quoteMinor: number
+  distanceM: number
+  note: string | null
+  /** Whether they already have a price or a request on this job. */
+  asked: boolean
+}
+
+/** The prices on a booking's print job, and dispatchers nearby to ask. */
+export interface PrintOptions {
+  /** Whether the job still takes prices. */
+  open: boolean
+  offers: PrintOffer[]
+  dispatchers: DispatcherOption[]
+  maxRequests: number
+}
+
+/** What a dispatcher charges, and the area they cover from their base. */
+export interface DispatchRate {
+  /** False until they save their own; the values are then the starting ones. */
+  saved: boolean
+  pricePerSqmMinor: number
+  minFeeMinor: number
+  latitude: number | null
+  longitude: number | null
+  radiusKm: number
+  note: string | null
+}
+
+export interface DispatchRateInput {
+  pricePerSqmMinor: number
+  minFeeMinor?: number | null
+  latitude: number
+  longitude: number
+  radiusKm: number
+  note?: string | null
 }
 
 export interface PrintJobSearch {
@@ -381,4 +458,40 @@ export interface Payment {
 
 export interface BookingQuery extends PageQuery {
   status?: BookingStatus
+}
+
+/** A shared booking anyone can find and join, or take whole once its lock ends. */
+export interface SharedBooking {
+  id: ID
+  board: Board | null
+  startsOn: string
+  endsOn: string
+  currency: string
+  /** The whole board for the days. */
+  amountMinor: number
+  count: number
+  openCount: number
+  paidCount: number
+  /** What one open share costs. */
+  shareAmountMinor: number | null
+  organiser: string | null
+  /** When the dates are let go if shares are still unpaid. */
+  payBy: string | null
+  /** Until then the board is kept for the sharers. */
+  lockedUntil: string
+  /** Whether anyone can bid for the whole board now. */
+  takeoverOpen: boolean
+  /** When bidding for the whole board closes, or would once someone bids. */
+  bidsCloseAt: string
+  /** The bidding for the whole board, once someone bid. */
+  auction: Auction | null
+  /** Whether the viewer is already sharing it. */
+  joined: boolean
+}
+
+export interface SharedBookingQuery {
+  boardId?: ID
+  lat?: number
+  lng?: number
+  radiusKm?: number
 }

@@ -1,13 +1,15 @@
 import { Booking } from '@app/models/Booking'
 import { Payment } from '@app/models/Payment'
+import { DispatchOffers } from '@app/services/DispatchOffers'
 import { Shares } from '@app/services/Shares'
+import type { PrintOffer } from '@app/models/PrintOffer'
 import type { User } from '@app/models/User'
 import { abortIf } from '@arkstack/common'
 import { randomBytes } from 'node:crypto'
 import { Gateways } from './Gateways'
 import type { PaymentGateway, PaymentResult } from './PaymentGateway'
 
-/** Sends an advertiser to the provider to pay for a held booking, and puts the money in escrow once it's paid. */
+/** Sends an advertiser to the provider to pay for a held booking, or a dispatcher's price on a paid one, and puts the money in escrow once it's paid. */
 export class Checkout {
   constructor(readonly gateway: PaymentGateway = Gateways.current()) {}
 
@@ -22,6 +24,26 @@ export class Checkout {
 
     const amountMinor = due ? due.amountMinor : booking.amountMinor
 
+    return this.charge(booking, user, amountMinor, due ? ', your share' : '', { shareIds: due ? due.shares.map((share) => share.id) : null })
+  }
+
+  /** A pending payment for a whole shared board, from whoever won the bidding for it, at their bid. */
+  async startTakeover(booking: Booking, user: User): Promise<{ payment: Payment; url: string }> {
+    abortIf(!this.gateway.enabled(), 'Payments are not available right now.', 503)
+
+    const due = await Shares.takeoverDue(booking, user)
+
+    return this.charge(booking, user, due.amountMinor, ', the whole board', { takeover: true })
+  }
+
+  /** A pending payment for a dispatcher's price to print and post a paid booking. */
+  async startPrint(booking: Booking, offer: PrintOffer, user: User): Promise<{ payment: Payment; url: string }> {
+    abortIf(!this.gateway.enabled(), 'Payments are not available right now.', 503)
+
+    return this.charge(booking, user, offer.amountMinor, ', printing and posting', { printOfferId: offer.id })
+  }
+
+  private async charge(booking: Booking, user: User, amountMinor: number, suffix: string, link: Pick<Payment, 'shareIds'> | Pick<Payment, 'printOfferId'> | Pick<Payment, 'takeover'>): Promise<{ payment: Payment; url: string }> {
     const board = await booking.board().firstOrFail()
     const { startsOn, endsOn } = booking.days()
     const reference = `${config('payments.reference_prefix')}${randomBytes(10).toString('hex').toUpperCase()}`
@@ -34,7 +56,7 @@ export class Checkout {
       currency: booking.currency,
       email: user.email,
       name: user.name,
-      title: `${board.name}, ${startsOn} to ${endsOn}${due ? ', your share' : ''}`,
+      title: `${board.name}, ${startsOn} to ${endsOn}${suffix}`,
       returnUrl,
     })
     const payment = await Payment.query().create({
@@ -45,7 +67,7 @@ export class Checkout {
       status: 'pending',
       amountMinor,
       currency: booking.currency,
-      shareIds: due ? due.shares.map((share) => share.id) : null,
+      ...link,
     })
 
     return { payment, url: session.url }
@@ -77,7 +99,11 @@ export class Checkout {
 
       if (!claimed || status !== 'complete') return
 
+      if (payment.printOfferId) return DispatchOffers.paid(payment)
+
       const booking = await Booking.query().findOrFail(payment.bookingId)
+
+      if (payment.takeover) return Shares.takeOver(booking, payment)
 
       await booking.markPaid(payment)
     })

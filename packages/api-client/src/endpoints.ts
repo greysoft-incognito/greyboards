@@ -71,8 +71,14 @@ import type {
   PageQuery,
   PaginatedResponse,
   Payment,
+  DispatchRate,
+  DispatchRateInput,
   PrintJob,
   PrintJobSearch,
+  PrintOffer,
+  PrintOptions,
+  SharedBooking,
+  SharedBookingQuery,
   ProofPhoto,
   ProofPhotoLocation,
   BookingProof,
@@ -133,6 +139,12 @@ export function createEndpoints(alova: GreyboardsAlova) {
     booking: (id: ID) => alova.Get<ApiResponse<Booking>>(`/bookings/${id}`, { cacheFor: null }),
     /** Start paying for held dates. Send the payer to `checkoutUrl`. */
     checkout: (id: ID) => alova.Post<ApiResponse<Payment>>(`/bookings/${id}/checkout`),
+    /** The prices on a paid booking's print job, and dispatchers nearby to ask. */
+    printOptions: (id: ID) => alova.Get<ApiResponse<PrintOptions>>(`/bookings/${id}/print-offers`, { cacheFor: null }),
+    /** Ask one dispatcher to print and post at their rate. */
+    requestDispatcher: (id: ID, dispatcherId: ID) => alova.Post<ApiResponse<PrintOffer>>(`/bookings/${id}/print-requests`, { dispatcherId }),
+    /** Pay a dispatcher's price. The job is theirs once it's paid. */
+    payPrintOffer: (id: ID, offerId: ID) => alova.Post<ApiResponse<Payment>>(`/bookings/${id}/print-offers/${offerId}/checkout`),
     cancelBooking: (id: ID) => alova.Post<ApiResponse<Booking>>(`/bookings/${id}/cancel`),
     /** A board's reviews, newest first, with its average under `summary`. */
     boardReviews: (id: ID, params: PageQuery = {}) => alova.Get<PaginatedResponse<PublishedReview> & { summary: RatingSummary }>(`/boards/${id}/reviews`, { params, cacheFor: null }),
@@ -181,6 +193,15 @@ export function createEndpoints(alova: GreyboardsAlova) {
     claimShare: (token: string) => alova.Post<ApiResponse<Booking>>(`/shares/${token}/claim`),
     /** The organiser takes every unpaid share, to pay the rest themselves. */
     coverShares: (id: ID) => alova.Post<ApiResponse<Booking>>(`/bookings/${id}/shares/cover`),
+    /** Shared bookings with shares left, for anyone to find and join. */
+    openShares: (params: SharedBookingQuery = {}) => alova.Get<ApiResponse<SharedBooking[]>>('/shares/open', { params, cacheFor: null }),
+    /** Join a listed shared booking: its first open share is yours to pay. */
+    joinShare: (id: ID) => alova.Post<ApiResponse<Booking>>(`/bookings/${id}/shares/join`),
+    /** Pay for the whole of a shared board once its lock ended. The sharers get their money back. */
+    /** Bid for a whole shared board once its lock ended. The first bid opens the bidding. */
+    bidToTake: (id: ID, amountMinor: number) => alova.Post<ApiResponse<Auction>>(`/bookings/${id}/takeover`, { amountMinor }),
+    /** The winning bidder pays for the whole shared board. */
+    payTakeover: (id: ID) => alova.Post<ApiResponse<Payment>>(`/bookings/${id}/takeover/checkout`),
     /** Send the design for a share you hold. Once everyone has, they're merged into the print. */
     sendShareDesign: (id: ID, shareId: ID, file: Blob | { uri: string; name: string; type: string }) => alova.Post<ApiResponse<Booking>>(`/bookings/${id}/shares/${shareId}/design`, upload('design', file)),
     /** A board's auctions: the running ones, and recent ones for whoever looks after it. */
@@ -229,6 +250,16 @@ export function createEndpoints(alova: GreyboardsAlova) {
       release: (id: ID) => alova.Post<ApiResponse<PrintJob>>(`/print-jobs/${id}/release`),
       /** A photo of the finished print before it goes up. */
       printPhoto: (id: ID, file: Blob | { uri: string; name: string; type: string }) => alova.Post<ApiResponse<PrintJob>>(`/print-jobs/${id}/print-photo`, upload('photo', file)),
+      /** Send a price for a job. A new price replaces your earlier one. */
+      sendPrice: (id: ID, amountMinor: number, note?: string | null) => alova.Post<ApiResponse<PrintOffer>>(`/print-jobs/${id}/offers`, { amountMinor, note }),
+      /** Your prices and the requests made to you, newest first. */
+      offers: (params: PageQuery = {}) => alova.Get<PaginatedResponse<PrintOffer>>('/account/print-offers', { params, cacheFor: null }),
+      acceptRequest: (offerId: ID) => alova.Post<ApiResponse<PrintOffer>>(`/print-offers/${offerId}/accept`),
+      declineRequest: (offerId: ID) => alova.Post<ApiResponse<PrintOffer>>(`/print-offers/${offerId}/decline`),
+      withdrawPrice: (offerId: ID) => alova.Delete<ApiResponse<PrintOffer>>(`/print-offers/${offerId}`),
+      /** What you charge, and the area you cover. */
+      rate: () => alova.Get<ApiResponse<DispatchRate>>('/account/dispatch-rate', { cacheFor: null }),
+      saveRate: (input: DispatchRateInput) => alova.Put<ApiResponse<DispatchRate>>('/account/dispatch-rate', input),
     },
     /** Check a payment when the payer comes back from the checkout. */
     verifyPayment: (reference: string) => alova.Post<ApiResponse<Payment>>(`/payments/${encodeURIComponent(reference)}/verify`),
