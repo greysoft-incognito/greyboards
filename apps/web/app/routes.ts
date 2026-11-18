@@ -20,6 +20,7 @@ export default [
 		route("boards/new", "routes/boards/new.tsx"),
 		route("boards/owners", "routes/boards/owners.ts"),
 		route("boards/nearby", "routes/boards/nearby.ts"),
+		route("boards/price-guide", "routes/boards/price-guide.ts"),
 		route("boards/:id", "routes/boards/board.tsx"),
 		route("boards/:id/edit", "routes/boards/edit.tsx"),
 		route("bookings", "routes/bookings/index.tsx"),

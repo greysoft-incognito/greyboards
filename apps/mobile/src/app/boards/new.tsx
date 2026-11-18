@@ -4,7 +4,7 @@ import { Image } from 'expo-image'
 import * as ImagePicker from 'expo-image-picker'
 import { router } from 'expo-router'
 import { Binoculars, Camera, HandCoins, LocateFixed, MapPin, Presentation, X } from 'lucide-react-native'
-import type { BoardKind, BoardKindDefinition, BoardOwnerChoice, BoardRatePeriod, NearbyBoard } from '@greyboards/types'
+import type { BoardKind, BoardKindDefinition, BoardOwnerChoice, BoardRatePeriod, NearbyBoard, RoadClass } from '@greyboards/types'
 import { HeadingPicker } from '@/components/boards/HeadingPicker'
 import { OwnerPicker } from '@/components/boards/OwnerPicker'
 import { taggingRoles } from '@/components/boards/BoardBits'
@@ -51,7 +51,7 @@ export default function TagBoard() {
   const [nearby, setNearby] = useState<NearbyBoard[]>([])
   const [ownerNet, setOwnerNet] = useState(false)
   const [ownerPercents, setOwnerPercents] = useState<{ owner: number; scout: number } | null>(null)
-  const [form, setForm] = useState({ name: '', kind: 'billboard' as BoardKind, widthM: '', heightM: '', faces: '1', lit: '0', facing: '', address: '', city: '', rate: '', ratePeriod: 'month' as BoardRatePeriod })
+  const [form, setForm] = useState({ name: '', kind: 'billboard' as BoardKind, widthM: '', heightM: '', faces: '1', lit: '0', roadClass: '', facing: '', address: '', city: '', rate: '', ratePeriod: 'month' as BoardRatePeriod })
   const errors = save.problem.fields
   const set = (key: keyof typeof form) => (value: string) => setForm((current) => ({ ...current, [key]: value }))
 
@@ -130,6 +130,7 @@ export default function TagBoard() {
           heightM: decimal(form.heightM) ?? 0,
           faces: Number(form.faces),
           lit: form.lit === '1',
+          roadClass: (form.roadClass || null) as RoadClass | null,
           facing: form.facing.trim() || null,
           headingDeg: heading,
           address: form.address.trim() || null,
@@ -257,6 +258,20 @@ export default function TagBoard() {
             </Field>
           </View>
         </View>
+        <Field label="The road it faces" error={errors.roadClass} hint="Gives advertisers a traffic estimate.">
+          <Select
+            label="The road it faces"
+            value={form.roadClass}
+            onChange={set('roadClass')}
+            options={[
+              { value: '', label: 'Not sure' },
+              { value: 'expressway', label: 'Expressway or highway' },
+              { value: 'major', label: 'Major road' },
+              { value: 'street', label: 'Busy street' },
+              { value: 'local', label: 'Quiet street' },
+            ]}
+          />
+        </Field>
         <Field label="Direction it faces" error={errors.headingDeg}>
           <HeadingPicker value={heading} onChange={setHeading} />
         </Field>

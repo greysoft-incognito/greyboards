@@ -47,6 +47,12 @@ export interface Board {
   rate: BoardRate | null
   /** The owner, or their scout, prints and puts up booked ads instead of a dispatcher. */
   printsOwn: boolean
+  /** The kind of road it faces. */
+  roadClass?: RoadClass | null
+  /** About how many people pass each day, or null when nobody knows. */
+  traffic?: TrafficEstimate | null
+  /** What the rate costs for each 1,000 people passing. */
+  costPerThousandMinor?: number | null
   /** On a digital screen: its loop. The rate is then for one slot, all day. */
   loop?: ScreenLoop | null
   status: BoardStatus
@@ -149,6 +155,8 @@ export interface BoardDetail extends Board {
   taggedById?: ID | null
   /** What the owner charges to print and put up an ad, when they do it. Null uses the standard price. */
   ownPrintFeeMinor?: number | null
+  /** People passing each day, when someone counted them. */
+  measuredTraffic?: number | null
   /** On a digital screen: the loop the owner set, or null for the standard one. */
   ownLoopSlots?: number | null
   ownSlotSeconds?: number | null
@@ -199,9 +207,46 @@ export interface BoardInput {
   printFeeMinor?: number | null
   /** `rateMinor` is what the owner receives; the listed rate adds the other shares on top. */
   ownerNet?: boolean
+  roadClass?: RoadClass | null
+  /** People passing each day, when someone counted them. */
+  dailyTraffic?: number | null
   /** On a digital screen: slots in its loop and seconds each. Empty uses the standard loop. */
   loopSlots?: number | null
   slotSeconds?: number | null
+}
+
+/** The kind of road a board faces, for its traffic estimate. */
+export type RoadClass = 'expressway' | 'major' | 'street' | 'local'
+
+/** How many people pass a board each day: counted, or from the kind of road. */
+export interface TrafficEstimate {
+  daily: number
+  source: 'measured' | 'road'
+}
+
+/** A suggested rate for a board being tagged, and what it's based on. */
+export interface PriceGuide {
+  period: BoardRatePeriod
+  traffic: TrafficEstimate | null
+  /** Listed boards of the same kind nearby, scaled to this board's size. */
+  comparables: { count: number; radiusKm: number; lowMinor: number | null; medianMinor: number | null; highMinor: number | null } | null
+  /** What the traffic is worth at the admin-set value of 1,000 views. */
+  fromTrafficMinor: number | null
+  suggestedMinor: number | null
+  basis: 'comparables' | 'traffic' | null
+}
+
+export interface PriceGuideQuery {
+  lat: number
+  lng: number
+  kind: BoardKind
+  widthM: number
+  heightM: number
+  period?: BoardRatePeriod
+  roadClass?: RoadClass | null
+  dailyTraffic?: number | null
+  /** The board being edited, to leave it out of the comparison. */
+  except?: ID
 }
 
 /** A digital screen's loop: how many slots, and seconds each. */
