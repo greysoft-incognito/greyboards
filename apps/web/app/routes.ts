@@ -45,6 +45,7 @@ export default [
 			route("password", "routes/settings/password.tsx"),
 			route("two-step", "routes/settings/two-step.tsx"),
 			route("devices", "routes/settings/devices.tsx"),
+			route("api-keys", "routes/settings/api-keys.tsx"),
 			route("delete-account", "routes/settings/delete-account.tsx"),
 		]),
 	]),
@@ -71,6 +72,12 @@ export default [
 	layout("routes/site-layout.tsx", [
 		route("pages/:slug", "routes/document.tsx"),
 		route("agreements/:token", "routes/agreement.tsx"),
+		route("developers", "routes/developers/layout.tsx", [
+			index("routes/developers/index.tsx"),
+			route("authentication", "routes/developers/authentication.tsx"),
+			route("reference", "routes/developers/reference.tsx"),
+			route("errors", "routes/developers/errors.tsx"),
+		]),
 		route("reports/:token", "routes/reports/shared.tsx"),
 		...(["privacy", "terms", "about"] as const).map((slug) => route(slug, "routes/document.tsx", { id: `document-${slug}` })),
 	]),
