@@ -1,5 +1,6 @@
 import type { Board, BoardRatePeriod } from './boards'
 import type { ID } from './models'
+import type { RatingSummary } from './reviews'
 
 /**
  * `open` while bids come in, `awarded` while the winner pays, `sold` once they paid,
@@ -82,7 +83,8 @@ export interface Offer {
   /** The held booking, once accepted. */
   bookingId: ID | null
   face: { id: ID; label: string } | null
-  advertiser: { id: ID; name: string } | null
+  /** Who made it, with their rating from boards' sides. */
+  advertiser: { id: ID; name: string; rating: RatingSummary } | null
   board: Board | null
   /** What the viewer can do now. */
   can: { accept: boolean; decline: boolean; counter: boolean; withdraw: boolean }

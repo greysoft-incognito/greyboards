@@ -15,6 +15,7 @@ import { Settings } from '@app/support/Settings'
 import { Sms } from '@app/support/Sms'
 import { StoredImage, type SavedImage } from '@app/support/StoredImage'
 import { Board, type BoardRatePeriod } from './Board'
+import { Dispute } from './Dispute'
 import { LedgerEntry } from './LedgerEntry'
 import { OwnerProfile } from './OwnerProfile'
 import { Payment } from './Payment'
@@ -363,13 +364,16 @@ export class Booking extends Model {
 
   /**
    * Accept every proof the advertiser left unchecked past the deadline, and pay it out.
+   * An open dispute holds the money, when the settings say so.
    * Runs on the schedule, a page at a time.
    */
   static async acceptOverdueProofs(): Promise<number> {
     const hours = await Settings.number('proofs.accept_hours')
+    const paused = !!(await Settings.get('disputes.pause_auto_accept'))
     const due = await Booking.query()
       .where({ proofStatus: 'submitted' })
       .whereRaw('proof_submitted_at < now() - make_interval(hours => ?)', [hours])
+      .when(paused, (query) => query.whereRaw("not exists (select 1 from disputes where disputes.booking_id = bookings.id and disputes.status = 'open')"))
       .oldest('proofSubmittedAt')
       .limit(100)
       .get()
@@ -594,13 +598,14 @@ export class Booking extends Model {
 
   /**
    * The ad is up: the booking goes live and its money leaves escrow. Called by the
-   * advertiser, or for them once the time to check has passed. Returns false when someone
-   * else accepted it first.
+   * advertiser, for them once the time to check has passed, or by staff deciding a dispute
+   * from any proof state. Returns false when someone else accepted it first.
    */
-  async acceptProof(): Promise<boolean> {
+  async acceptProof(from: ProofStatus[] = ['submitted']): Promise<boolean> {
     const now = new Date()
     const accepted = await Booking.query()
-      .where({ id: this.id, status: Booking.PAID, proofStatus: 'submitted' })
+      .where({ id: this.id, status: Booking.PAID })
+      .whereIn('proofStatus', from)
       .updateFrom({ status: Booking.LIVE, proofStatus: 'accepted', proofAcceptedAt: now, releasedAt: now, proofNote: null })
 
     if (!accepted) return false
@@ -625,6 +630,7 @@ export class Booking extends Model {
   /** When an unchecked proof counts as accepted. */
   async proofDeadline(): Promise<Date | null> {
     if (this.proofStatus !== 'submitted' || !this.proofSubmittedAt) return null
+    if ((await Settings.get('disputes.pause_auto_accept')) && (await Dispute.isOpenOn(this.id))) return null
 
     return new Date(this.proofSubmittedAt.getTime() + (await Settings.number('proofs.accept_hours')) * 3_600_000)
   }

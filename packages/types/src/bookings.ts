@@ -1,6 +1,7 @@
 import type { PageQuery } from './api'
 import type { Board, BoardRate } from './boards'
 import type { ID } from './models'
+import type { BookingReviews } from './reviews'
 
 /**
  * `held` while the advertiser pays, `paid` once the money waits in escrow, `live` once
@@ -61,6 +62,70 @@ export interface Booking {
   shares?: BookingShare[] | null
   /** On the booking's own page: how many messages, and how many the viewer hasn't read. */
   messages?: MessageCounts
+  /** On the booking's own page: the viewer's review and whether they can write it. */
+  reviews?: BookingReviews
+  /** On the booking's own page: its latest dispute and whether the viewer can raise one. */
+  dispute?: BookingDisputes
+}
+
+export type DisputeReason = 'not_up' | 'wrong_ad' | 'damaged' | 'taken_down' | 'payment' | 'other'
+
+/** `refund_full` and `refund_part` cancel the booking and send money back, `release` pays the board's side, `dismiss` changes nothing. */
+export type DisputeDecision = 'refund_full' | 'refund_part' | 'release' | 'dismiss'
+
+/** A problem with a booking for staff to decide. */
+export interface Dispute {
+  id: ID
+  side: Exclude<MessageSide, 'staff'>
+  reason: DisputeReason
+  reasonLabel: string
+  details: string
+  status: 'open' | 'resolved'
+  decision: DisputeDecision | null
+  decisionLabel: string | null
+  /** What went back to the advertiser. */
+  refundMinor: number | null
+  /** Why staff decided as they did. */
+  resolution: string | null
+  openedBy: string | null
+  resolvedBy: string | null
+  resolvedAt: string | null
+  createdAt: string
+}
+
+export interface BookingDisputes {
+  latest: Dispute | null
+  canOpen: boolean
+  /** Hours staff aim to decide in. */
+  answerHours: number
+}
+
+export interface DisputeInput {
+  reason: DisputeReason
+  details: string
+}
+
+/** A dispute as staff see it, with its booking. */
+export interface AdminDispute extends Dispute {
+  booking: {
+    id: ID
+    status: BookingStatus
+    startsOn: string
+    endsOn: string
+    amountMinor: number
+    currency: string
+    proofStatus: ProofStatus
+    /** The money is still held, so it can be refunded or released. */
+    inEscrow: boolean
+    board: { id: ID; name: string } | null
+  } | null
+}
+
+export interface DisputeResolution {
+  decision: DisputeDecision
+  resolution: string
+  /** In major units, for `refund_part`. */
+  refund?: number
 }
 
 export interface MessageCounts {

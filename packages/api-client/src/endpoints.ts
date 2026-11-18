@@ -1,4 +1,11 @@
 import type {
+  PublishedReview,
+  RatingSummary,
+  ReviewInput,
+  AdminDispute,
+  Dispute,
+  DisputeInput,
+  DisputeResolution,
   BookingMessage,
   ShareInvite,
   Auction,
@@ -117,6 +124,12 @@ export function createEndpoints(alova: GreyboardsAlova) {
     /** Start paying for held dates. Send the payer to `checkoutUrl`. */
     checkout: (id: ID) => alova.Post<ApiResponse<Payment>>(`/bookings/${id}/checkout`),
     cancelBooking: (id: ID) => alova.Post<ApiResponse<Booking>>(`/bookings/${id}/cancel`),
+    /** A board's reviews, newest first, with its average under `summary`. */
+    boardReviews: (id: ID, params: PageQuery = {}) => alova.Get<PaginatedResponse<PublishedReview> & { summary: RatingSummary }>(`/boards/${id}/reviews`, { params, cacheFor: null }),
+    /** Write or change the viewer's review of a booking. */
+    review: (id: ID, data: ReviewInput) => alova.Post<ApiResponse<{ id: ID; rating: number; body: string | null }>>(`/bookings/${id}/review`, data),
+    /** Raise a dispute about a booking, for staff to decide. */
+    dispute: (id: ID, data: DisputeInput) => alova.Post<ApiResponse<Dispute>>(`/bookings/${id}/disputes`, data),
     /** A page of a booking's messages, newest first. Reading marks them read. */
     messages: (id: ID, params: PageQuery = {}) => alova.Get<PaginatedResponse<BookingMessage>>(`/bookings/${id}/messages`, { params, cacheFor: null }),
     /** Send a message, a photo, or both. `photo` is a File/Blob on web, or an RN `{ uri, name, type }` object. */
@@ -341,6 +354,9 @@ export function createEndpoints(alova: GreyboardsAlova) {
       payouts: (params: PageQuery & { status?: PayoutStatus | null } = {}) => alova.Get<PaginatedResponse<Payout>>('/admin/payouts', { params, cacheFor: null }),
       retryPayout: (id: ID) => alova.Post<ApiResponse<Payout>>(`/admin/payouts/${id}/retry`),
       refundBooking: (id: ID, data: { reason: string }) => alova.Post<ApiResponse<Booking>>(`/admin/bookings/${id}/refund`, data),
+      /** Open disputes oldest first, or decided ones newest first. */
+      disputes: (params: PageQuery & { status?: 'open' | 'resolved' } = {}) => alova.Get<PaginatedResponse<AdminDispute>>('/admin/disputes', { params, cacheFor: null }),
+      resolveDispute: (id: ID, data: DisputeResolution) => alova.Post<ApiResponse<Dispute>>(`/admin/disputes/${id}/resolve`, data),
       overview: () => alova.Get<ApiResponse<AdminOverview>>('/admin/overview', { cacheFor: null }),
       users: (params: AdminUserQuery = {}) => alova.Get<PaginatedResponse<AdminUser>>('/admin/users', { params, cacheFor: null }),
       /** One account with the marketplace roles it holds. */

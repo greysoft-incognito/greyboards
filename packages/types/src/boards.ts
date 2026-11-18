@@ -3,6 +3,7 @@ import type { PageQuery } from './api'
 import type { BoardBookingTerms } from './bookings'
 import type { DuplicateBoard } from './partners'
 import type { ID } from './models'
+import type { RatingSummary } from './reviews'
 
 /** The kinds of board the map knows. */
 export type BoardKind = 'billboard' | 'unipole' | 'gantry' | 'wall' | 'digital' | 'street_pole' | 'bus_shelter'
@@ -50,6 +51,8 @@ export interface Board {
   /** Metres from the search point, on a nearby search. */
   distanceM: number | null
   coverUrl: string | null
+  /** Advertisers' average rating, once enough are in. */
+  rating: RatingSummary
   createdAt: string
 }
 

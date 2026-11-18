@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { Form, Link, redirect, useNavigation, useSearchParams } from "react-router";
 import { ArrowLeft, BadgeCheck, CalendarDays, Camera, CreditCard, Image, Printer, ShieldCheck, Undo2, Wallet, X } from "lucide-react";
-import type { Booking } from "@greyboards/types";
+import type { Booking, DisputeReason } from "@greyboards/types";
 import { BoardCover, formatRate } from "~/components/boards/BoardBits";
 import { ArtworkPanel } from "~/components/bookings/ArtworkPanel";
 import { ProofPanel } from "~/components/proofs/ProofPanel";
 import { MessagesPanel } from "~/components/bookings/MessagesPanel";
+import { ReviewPanel } from "~/components/reviews/ReviewBits";
+import { DisputePanel } from "~/components/disputes/DisputeBits";
 import { SharesPanel } from "~/components/bookings/SharesPanel";
 import { BookingStatusBadge, formatDays, formatMoney } from "~/components/bookings/BookingBits";
 import { Alert, Button, Input, Spinner } from "~/components/ui";
@@ -36,6 +38,18 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 			const { data: payment } = await api.checkout(params.id);
 
 			throw redirect(payment.checkoutUrl ?? `/bookings/${params.id}`);
+		}
+
+		if (intent === "review") {
+			await api.review(params.id, { rating: Number(form.get("rating")), body: String(form.get("body") ?? "") || null });
+
+			return { error: null, message: "Thanks for your review." };
+		}
+
+		if (intent === "dispute") {
+			await api.dispute(params.id, { reason: String(form.get("reason")) as DisputeReason, details: String(form.get("details") ?? "") });
+
+			return { error: null, message: "Dispute raised. Staff will look into it." };
 		}
 
 		if (intent === "message") {
@@ -179,6 +193,8 @@ export default function BookingPage({ loaderData, actionData }: Route.ComponentP
 					{booking.cancellation?.allowed && <CancelPaid booking={booking} />}
 					{canRefund && booking.status === "paid" && <StaffRefund booking={booking} />}
 					{!!booking.refunds?.length && <Refunds booking={booking} />}
+					{booking.reviews && <ReviewPanel reviews={booking.reviews} />}
+					{booking.dispute && <DisputePanel disputes={booking.dispute} currency={booking.currency} />}
 				</section>
 
 				<section className="space-y-4">
