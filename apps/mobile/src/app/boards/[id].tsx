@@ -5,8 +5,11 @@ import * as ImagePicker from 'expo-image-picker'
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { CarFront, ChevronLeft, Compass, ExternalLink, FileSignature, Layers, Lightbulb, MapPin, Ruler, User } from 'lucide-react-native'
-import type { BoardAgreement, BoardDetail, PublishedReview } from '@greyboards/types'
+import type { Auction, BoardAgreement, BoardDetail, BookedDays, PublishedReview, SharedBooking, SlotQuote } from '@greyboards/types'
+import { AuctionCard } from '@/components/bids/BidBits'
 import { BoardCover, BoardStatusBadge, boardPlace, formatHeading, formatRate, formatSize } from '@/components/boards/BoardBits'
+import { BookPanel } from '@/components/bookings/BookPanel'
+import { SharedBookingCard } from '@/components/bookings/SharedBookingCard'
 import { BoardStewards } from '@/components/reputation/RoleReputation'
 import { BoardReviews, RatingLine } from '@/components/reviews/ReviewBits'
 import { Section } from '@/components/settings/SettingsPage'
@@ -38,6 +41,28 @@ const AGREEMENT_NOTES: Record<BoardAgreement['status'], string> = {
 
 const HERO_HEIGHT = 280
 
+/** What an advertiser can take on a listed board: the days already gone on each face, its auctions, its open shares and, on a screen, its slots. */
+interface Market {
+  taken: Record<string, BookedDays[]>
+  auctions: Auction[]
+  shared: SharedBooking[]
+  slotQuote: SlotQuote | null
+}
+
+const EMPTY_MARKET: Market = { taken: {}, auctions: [], shared: [], slotQuote: null }
+
+async function loadMarket(board: BoardDetail): Promise<Market> {
+  const faces = board.booking.open ? board.rateCard : []
+  const [taken, auctions, shared, slotQuote] = await Promise.all([
+    Promise.all(faces.map(async (face) => [face.id, await api.boardAvailability(board.id, { faceId: face.id }).send().then(({ data }) => data, () => [])] as const)).then(Object.fromEntries),
+    api.boardAuctions(board.id).send().then(({ data }) => data, () => []),
+    api.openShares({ boardId: board.id }).send().then(({ data }) => data, () => []),
+    board.loop ? api.boardSlots(board.id).send().then(({ data }) => data, () => null) : Promise.resolve(null),
+  ])
+
+  return { taken, auctions, shared, slotQuote }
+}
+
 /** A board's photos and details. Advertisers see what they'd book; whoever looks after it also sees its review, photos to add and the owner's agreement. */
 export default function BoardScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
@@ -45,7 +70,9 @@ export default function BoardScreen() {
   const insets = useSafeAreaInsets()
   const [board, setBoard] = useState<BoardDetail | null>(null)
   const [reviews, setReviews] = useState<PublishedReview[]>([])
+  const [market, setMarket] = useState<Market>(EMPTY_MARKET)
   const [problem, setProblem] = useState<string | null>(null)
+  const canBook = user.accountRoles.some((role) => role.kind === 'advertiser' && role.status === 'active')
 
   const load = useCallback(() => {
     api
@@ -61,9 +88,15 @@ export default function BoardScreen() {
             .then((result) => setReviews(result.data))
             .catch(() => undefined)
         }
+
+        if (data.status === 'listed' && data.owner?.userId !== user.id && data.taggedById !== user.id) {
+          loadMarket(data)
+            .then(setMarket)
+            .catch(() => undefined)
+        }
       })
       .catch((error) => setProblem(FormProblem.from(error).message))
-  }, [id])
+  }, [id, user.id])
 
   useFocusEffect(load)
 
@@ -91,6 +124,17 @@ export default function BoardScreen() {
         <View style={styles.sections}>
           <Facts board={board} manages={manages} />
           {manages ? <Manage board={board} onChange={load} /> : null}
+          {!manages && board.status === 'listed' ? (
+            <>
+              <BookPanel key={board.id} board={board} taken={market.taken} canBook={canBook} slotQuote={market.slotQuote} />
+              {market.shared.map((entry) => (
+                <SharedBookingCard key={entry.id} shared={entry} canJoin={canBook} onChange={load} />
+              ))}
+              {market.auctions.map((auction) => (
+                <AuctionCard key={auction.id} auction={auction} canBid={canBook} onChange={load} />
+              ))}
+            </>
+          ) : null}
           <BoardReviews reviews={reviews} summary={board.rating} />
         </View>
       </ScrollView>

@@ -1,15 +1,17 @@
 import { useState } from 'react'
 import { StyleSheet, View } from 'react-native'
 import { router } from 'expo-router'
+import { Gavel, Timer } from 'lucide-react-native'
 import type { Auction, AuctionStatus, Offer, OfferStatus } from '@greyboards/types'
 import { ListRow } from '@/components/bookings/BookingBits'
 import { Standing } from '@/components/reputation/Badges'
 import { RatingLine } from '@/components/reviews/ReviewBits'
+import { Section } from '@/components/settings/SettingsPage'
 import { Button, Callout, Field, Input, Pill, type PillLook, Text } from '@/components/ui'
 import { api } from '@/lib/api'
 import { formatDays, formatMoment, formatMoney, toMinor } from '@/lib/format'
 import { useAction } from '@/lib/use-action'
-import { colors } from '@/theme'
+import { colors, fonts } from '@/theme'
 
 export const AUCTION_LOOKS: Record<AuctionStatus, PillLook> = {
   open: { label: 'Taking bids', background: colors.brand50, color: colors.brand700 },
@@ -126,7 +128,89 @@ export function BidRow({ auction }: { auction: Auction }) {
   )
 }
 
+/** Dates a board's owner opened for bids: the highest bid, the viewer's own, and a field to bid or raise. */
+export function AuctionCard({ auction, canBid, onChange }: { auction: Auction; canBid: boolean; onChange: () => void }) {
+  const action = useAction()
+  const minimum = auction.nextMinimumMinor ?? auction.reserveMinor
+  const [amount, setAmount] = useState(String(minimum / 100))
+  const mine = auction.myBid
+  const facts = [
+    { label: `Dates${auction.face ? ` on ${auction.face.label}` : ''}`, value: formatDays(auction) },
+    { label: auction.open ? 'Closes' : 'Closed', value: formatMoment(auction.closesAt) },
+    { label: 'Highest bid', value: auction.highestMinor !== null ? formatMoney(auction.highestMinor, auction.currency) : auction.format === 'sealed' ? 'Sealed until the close' : 'No bids yet' },
+    { label: 'Reserve', value: `${formatMoney(auction.reserveMinor, auction.currency)} · ${auction.bidCount} ${auction.bidCount === 1 ? 'bid' : 'bids'}` },
+  ]
+
+  const bid = () =>
+    action.run(async () => {
+      const { message } = await api.bid(auction.id, toMinor(amount)).send()
+
+      onChange()
+
+      return message ?? 'Bid placed.'
+    })
+
+  return (
+    <Section>
+      <View style={styles.head}>
+        <View style={styles.title}>
+          <Gavel size={20} color={colors.brand600} />
+          <Text style={styles.heading}>Open for bids</Text>
+        </View>
+        <Pill {...AUCTION_LOOKS[auction.status]} />
+      </View>
+      <View style={styles.facts}>
+        {facts.map((fact) => (
+          <View key={fact.label} style={styles.fact}>
+            <Text variant="small">{fact.label}</Text>
+            <Text style={styles.factValue}>{fact.value}</Text>
+          </View>
+        ))}
+      </View>
+
+      {mine ? (
+        <View style={styles.mine}>
+          <Text>
+            Your bid: <Text style={styles.factValue}>{formatMoney(mine.amountMinor, auction.currency)}</Text>
+            {mine.status === 'won' ? '. You won.' : mine.status === 'lapsed' ? '. It wasn’t paid in time, so the dates went to the next bid.' : mine.leading ? '. You’re the highest bidder.' : auction.open && auction.format === 'open' ? '. Someone bid more.' : '.'}
+          </Text>
+          {mine.status === 'won' && mine.bookingId ? <Button title="Pay to book the dates" onPress={() => router.push({ pathname: '/bookings/[id]', params: { id: mine.bookingId! } })} /> : null}
+        </View>
+      ) : null}
+
+      {auction.open ? (
+        canBid ? (
+          <>
+            <Field label="Your bid" hint={`At least ${formatMoney(minimum, auction.currency)}`}>
+              <Input value={amount} onChangeText={setAmount} keyboardType="number-pad" />
+            </Field>
+            {action.problem.message ? <Callout>{action.problem.message}</Callout> : null}
+            <Button title={mine ? 'Raise my bid' : 'Place bid'} loading={action.busy} disabled={toMinor(amount) < minimum} onPress={bid} />
+            <View style={styles.note}>
+              <Timer size={16} color={colors.ink500} />
+              <Text variant="small" style={styles.flex}>
+                A bid in the last few minutes keeps bidding open a little longer. The winner has a day to pay.
+              </Text>
+            </View>
+          </>
+        ) : (
+          <Button title="Add the advertiser role to bid" variant="secondary" onPress={() => router.push('/settings/roles')} />
+        )
+      ) : null}
+    </Section>
+  )
+}
+
 const styles = StyleSheet.create({
+  head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+  title: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  heading: { fontFamily: fonts.display, fontSize: 18, color: colors.ink900 },
+  facts: { flexDirection: 'row', flexWrap: 'wrap', rowGap: 10 },
+  fact: { width: '50%', gap: 2, paddingRight: 8 },
+  factValue: { fontFamily: fonts.semibold, color: colors.ink900 },
+  mine: { gap: 10, padding: 14, borderRadius: 16, backgroundColor: colors.surface100 },
+  note: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
+  flex: { flex: 1 },
   from: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   counter: { gap: 10 },
