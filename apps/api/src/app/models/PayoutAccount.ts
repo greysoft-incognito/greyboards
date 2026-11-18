@@ -1,6 +1,7 @@
 import { Model } from '@arkstack/database'
 import { abortIf } from '@arkstack/common'
 import { Gateways } from '@app/services/payments/Gateways'
+import { PaymentRegions } from '@app/services/payments/PaymentRegions'
 import { Settings } from '@app/support/Settings'
 import type { OwnerProfile } from './OwnerProfile'
 import type { User } from './User'
@@ -51,8 +52,9 @@ export class PayoutAccount extends Model {
 
   /** Check the account with the bank and save it as where `holder` is paid. */
   static async save(holder: PayoutHolder, editor: User, bankCode: string, accountNumber: string): Promise<PayoutAccount> {
-    const gateway = Gateways.payouts()
-    const banks = await gateway.banks(String(await Settings.get('payouts.country')))
+    const gateway = await Gateways.payouts()
+    const country = String(await Settings.get('payouts.country'))
+    const banks = await gateway.banks(country)
     const bank = banks.find((candidate) => candidate.code === bankCode)
 
     abortIf(!bank, 'Pick your bank from the list.', 422)
@@ -61,7 +63,7 @@ export class PayoutAccount extends Model {
 
     abortIf(!accountName, 'The bank doesn’t recognise that account number. Check it and try again.', 422)
 
-    const details = { bankCode, bankName: bank!.name, accountNumber, accountName: accountName!, currency: 'NGN', updatedById: editor.id }
+    const details = { bankCode, bankName: bank!.name, accountNumber, accountName: accountName!, currency: await PaymentRegions.currencyFor(country), updatedById: editor.id }
     const existing = await PayoutAccount.find(holder)
 
     if (existing) {

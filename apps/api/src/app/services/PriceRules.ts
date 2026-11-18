@@ -12,9 +12,9 @@ export type PriceChange = 'percent' | 'amount' | 'set'
 export interface PriceRuleInput {
   boardIds: string[]
   change: PriceChange
-  /** A percent for `percent` (−90 to 500); kobo for `amount` (may be negative) and `set`. */
+  /** A percent for `percent` (−90 to 500); minor units for `amount` (may be negative) and `set`. */
   value: number
-  /** Round each new rate to this many kobo. ₦1,000 by default. */
+  /** Round each new rate to this many minor units. 1,000 of the currency by default. */
   roundToMinor?: number
   /** Also change the faces that have their own rate. On by default. */
   faces?: boolean

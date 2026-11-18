@@ -26,7 +26,9 @@ const COLUMNS: Record<string, string[]> = {
   heightM: ['height', 'height_m', 'heightm', 'height_metres', 'height_meters'],
   latitude: ['latitude', 'lat'],
   longitude: ['longitude', 'lng', 'lon', 'long'],
-  rate: ['rate', 'price', 'rate_naira', 'price_naira'],
+  rate: ['rate', 'price', 'rate_naira', 'price_naira', 'amount'],
+  currency: ['currency', 'rate_currency'],
+  country: ['country', 'country_code'],
   ratePeriod: ['period', 'rate_period', 'per'],
   faces: ['faces', 'sides'],
   lit: ['lit', 'lighting', 'lit_at_night'],
@@ -37,7 +39,7 @@ const COLUMNS: Record<string, string[]> = {
 }
 
 /** The heading row of the template owners download. */
-export const TEMPLATE_HEADINGS = ['name', 'kind', 'width_m', 'height_m', 'latitude', 'longitude', 'rate', 'period', 'faces', 'lit', 'address', 'city', 'facing', 'description']
+export const TEMPLATE_HEADINGS = ['name', 'kind', 'width_m', 'height_m', 'latitude', 'longitude', 'rate', 'currency', 'period', 'faces', 'lit', 'address', 'city', 'country', 'facing', 'description']
 
 /**
  * Owners with many boards add them from a spreadsheet saved as CSV. Every row is checked
@@ -115,7 +117,7 @@ export class BoardImport {
     const cell = (column: string) => (columns[column] === undefined ? '' : (cells[columns[column]!] ?? '').trim())
     const errors: string[] = []
     const number = (column: string, label: string, min: number, max: number, required = true): number | null => {
-      const raw = cell(column).replace(/[₦,\s]/g, '')
+      const raw = cell(column).replace(/[,\s\p{Sc}]/gu, '')
 
       if (raw === '') {
         if (required) errors.push(`${label} is missing.`)
@@ -155,6 +157,13 @@ export class BoardImport {
 
     if (!Board.PERIODS.includes(ratePeriod)) errors.push('Period must be week or month.')
 
+    const code = (column: string, label: string, length: number): string | null => {
+      const value = cell(column).toUpperCase()
+
+      if (value && !new RegExp(`^[A-Z]{${length}}$`).test(value)) errors.push(`${label} must be a ${length}-letter code.`)
+
+      return value || null
+    }
     const litCell = cell('lit').toLowerCase()
     const rate = number('rate', 'Rate', 0, 1_000_000_000, false)
     const details: BoardDetails = {
@@ -172,7 +181,8 @@ export class BoardImport {
       city: text('city', 'City', 80),
       facing: text('facing', 'Facing', 60),
       description: text('description', 'Description', 1000),
-      country: 'NG',
+      country: code('country', 'Country', 2),
+      currency: code('currency', 'Currency', 3) ?? undefined,
     } as BoardDetails
 
     if (details.faces !== null && details.faces !== undefined && !Number.isInteger(details.faces)) errors.push('Faces must be a whole number.')

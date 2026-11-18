@@ -13,5 +13,8 @@
   },
   "devDependencies": {
     "typescript": "^6.0.0"
+  },
+  "dependencies": {
+    "@toneflix/money": "^1.0.2"
   }
 }

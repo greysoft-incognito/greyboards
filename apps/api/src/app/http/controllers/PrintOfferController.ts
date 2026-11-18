@@ -135,7 +135,7 @@ export default class PrintOfferController extends BaseController {
   async checkout() {
     const booking = await this.booking()
     const offer = await DispatchOffers.payable(booking, String(this.params.offer))
-    const { payment, url } = await new Checkout().startPrint(booking, offer, this.user)
+    const { payment, url } = await new Checkout(this.country()).startPrint(booking, offer, this.user)
 
     return new PaymentResource(payment).withCheckout(url).additional({ status: 'success', message: 'Payment started', code: 201 }).response().setStatusCode(201)
   }
