@@ -131,6 +131,7 @@ export default function Jobs() {
             />
           ) : null}
           {active && view === 'near' && spot ? <Button title="Search from where I am now" variant="secondary" loading={loading} onPress={findMe} /> : null}
+          {active ? <Button title="Your prices and area" variant="ghost" onPress={() => router.push('/jobs/prices')} /> : null}
           {problem ? <Callout>{problem}</Callout> : null}
         </View>
       }

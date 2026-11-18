@@ -4,10 +4,11 @@ import { Image } from 'expo-image'
 import * as ImagePicker from 'expo-image-picker'
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { CarFront, ChevronLeft, Compass, ExternalLink, FileSignature, Layers, Lightbulb, MapPin, Ruler, User } from 'lucide-react-native'
+import { CarFront, ChevronLeft, Compass, ExternalLink, FileSignature, Layers, Lightbulb, MapPin, Ruler, Trash2, User } from 'lucide-react-native'
 import type { Auction, BoardAgreement, BoardDetail, BookedDays, PublishedReview, SharedBooking, SlotQuote } from '@greyboards/types'
 import { AuctionCard } from '@/components/bids/BidBits'
 import { BoardCover, BoardStatusBadge, boardPlace, formatHeading, formatRate, formatSize } from '@/components/boards/BoardBits'
+import { AuctionsManager, BlockedDays, BoardActions, RateCard } from '@/components/boards/ManageBoard'
 import { BookPanel } from '@/components/bookings/BookPanel'
 import { SharedBookingCard } from '@/components/bookings/SharedBookingCard'
 import { BoardStewards } from '@/components/reputation/RoleReputation'
@@ -89,7 +90,13 @@ export default function BoardScreen() {
             .catch(() => undefined)
         }
 
-        if (data.status === 'listed' && data.owner?.userId !== user.id && data.taggedById !== user.id) {
+        if (data.owner?.userId === user.id || data.taggedById === user.id) {
+          api
+            .boardAuctions(id)
+            .send()
+            .then((result) => setMarket({ ...EMPTY_MARKET, auctions: result.data }))
+            .catch(() => undefined)
+        } else if (data.status === 'listed') {
           loadMarket(data)
             .then(setMarket)
             .catch(() => undefined)
@@ -120,10 +127,17 @@ export default function BoardScreen() {
   return (
     <View style={styles.screen}>
       <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}>
-        <Gallery board={board} manages={manages} />
+        <Gallery board={board} manages={manages} onChange={load} />
         <View style={styles.sections}>
           <Facts board={board} manages={manages} />
-          {manages ? <Manage board={board} onChange={load} /> : null}
+          {manages ? (
+            <>
+              <Manage board={board} onChange={load} />
+              {board.rateCard.length ? <RateCard board={board} onChange={load} /> : null}
+              <BlockedDays board={board} onChange={load} />
+              {board.status === 'listed' ? <AuctionsManager board={board} auctions={market.auctions} onChange={load} /> : null}
+            </>
+          ) : null}
           {!manages && board.status === 'listed' ? (
             <>
               <BookPanel key={board.id} board={board} taken={market.taken} canBook={canBook} slotQuote={market.slotQuote} />
@@ -144,9 +158,19 @@ export default function BoardScreen() {
 }
 
 /** The board's photos, side by side, or a drawn board while it has none. */
-function Gallery({ board, manages }: { board: BoardDetail; manages: boolean }) {
+function Gallery({ board, manages, onChange }: { board: BoardDetail; manages: boolean; onChange: () => void }) {
   const { width } = useWindowDimensions()
   const [shown, setShown] = useState(0)
+  const removing = useAction()
+
+  const remove = (photoId: string) =>
+    removing.run(async () => {
+      await api.account.removeBoardPhoto(board.id, photoId).send()
+      setShown(0)
+      onChange()
+
+      return 'Photo removed.'
+    })
 
   if (!board.photos.length) return <BoardCover board={board} style={[styles.hero, { width }]} />
 
@@ -157,6 +181,11 @@ function Gallery({ board, manages }: { board: BoardDetail; manages: boolean }) {
           <View key={photo.id} style={[styles.hero, { width }]}>
             <Image source={{ uri: photo.url }} style={StyleSheet.absoluteFill} contentFit="cover" transition={150} />
             {manages && photo.distanceM !== null ? <Text style={styles.distance}>Taken {photo.distanceM} m from the board</Text> : null}
+            {manages ? (
+              <Pressable accessibilityRole="button" accessibilityLabel="Remove this photo" hitSlop={6} disabled={removing.busy} onPress={() => remove(photo.id)} style={styles.removePhoto}>
+                <Trash2 size={18} color={colors.red700} />
+              </Pressable>
+            ) : null}
           </View>
         ))}
       </ScrollView>
@@ -268,6 +297,7 @@ function Manage({ board, onChange }: { board: BoardDetail; onChange: () => void 
         {board.reviewNote ? <Callout>{board.reviewNote}</Callout> : null}
         <Button title={photo.busy ? 'Uploading…' : 'Add a photo'} variant="secondary" loading={photo.busy} disabled={board.photos.length >= 12} onPress={addPhoto} />
         {photo.problem.message ? <Callout>{photo.problem.message}</Callout> : null}
+        <BoardActions board={board} />
       </Section>
 
       {board.owner ? (
@@ -312,6 +342,7 @@ const styles = StyleSheet.create({
   back: { position: 'absolute', left: 14, width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.88)', boxShadow: shadows.card },
   hero: { height: HERO_HEIGHT, aspectRatio: undefined, borderRadius: 0, backgroundColor: colors.ink900 },
   distance: { position: 'absolute', bottom: 28, left: 14, fontSize: 12, fontFamily: fonts.semibold, color: colors.ink900, backgroundColor: 'rgba(255,255,255,0.88)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: radius.full, overflow: 'hidden' },
+  removePhoto: { position: 'absolute', bottom: 28, right: 14, width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.9)' },
   dots: { position: 'absolute', bottom: 34, alignSelf: 'center', flexDirection: 'row', gap: 6 },
   dot: { width: 7, height: 7, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.55)' },
   dotOn: { width: 18, backgroundColor: colors.white },
