@@ -1,5 +1,5 @@
 import { Form, useNavigation } from "react-router";
-import type { AccountRoleKind, IdentityDocument } from "@greyboards/types";
+import type { AccountRoleKind, IdentityDocument, ReputationEvent } from "@greyboards/types";
 import { requireSignIn, requireUser } from "~/lib/session.server";
 import { settingsAction } from "~/lib/settings.server";
 import { useToastMessage } from "~/lib/toast";
@@ -7,6 +7,8 @@ import { Alert, Button } from "~/components/ui";
 import { ROLE_ICONS, RoleStatus, heldRole } from "~/components/AccountRoles";
 import { PageHeader, resultFor } from "~/components/settings/Section";
 import { PartnerChecksPanel } from "~/components/settings/PartnerChecksPanel";
+import { Standing } from "~/components/reputation/Badges";
+import { RoleReputationPanel } from "~/components/reputation/RoleReputationPanel";
 import { postedPhoto } from "~/lib/boards.server";
 import type { Route } from "./+types/roles";
 
@@ -18,8 +20,18 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 	const reviewed = roles.definitions.filter((definition) => definition.needsReview).map((definition) => definition.kind);
 	const applying = roles.data.some((role) => reviewed.includes(role.kind));
 	const checks = applying ? await api.account.partnerChecks().catch(() => null) : null;
+	const histories = await Promise.all(
+		roles.data.map(async (role) => [role.kind, (await api.account.reputation(role.kind, { per_page: 5 }).catch(() => null))?.data ?? []] as const),
+	);
 
-	return { roles: roles.data, definitions: roles.definitions, name: user.name, checks: checks?.data ?? null, documents: checks?.documents ?? [] };
+	return {
+		roles: roles.data,
+		definitions: roles.definitions,
+		name: user.name,
+		checks: checks?.data ?? null,
+		documents: checks?.documents ?? [],
+		histories: Object.fromEntries(histories) as Partial<Record<AccountRoleKind, ReputationEvent[]>>,
+	};
 }
 
 export async function action({ request, context }: Route.ActionArgs) {
@@ -54,7 +66,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 export default function Roles({ loaderData, actionData }: Route.ComponentProps) {
 	useToastMessage(actionData);
 
-	const { roles, definitions, checks, documents } = loaderData;
+	const { roles, definitions, checks, documents, histories } = loaderData;
 	const idResult = resultFor(actionData, "send-id");
 	const navigation = useNavigation();
 
@@ -78,6 +90,7 @@ export default function Roles({ loaderData, actionData }: Route.ComponentProps) 
 									<div className="flex flex-wrap items-center gap-2">
 										<h2 className="font-display text-xl font-bold text-ink-900">{definition.label}</h2>
 										{held && <RoleStatus status={held.status} />}
+										{held && <Standing standing={held.reputation} showScore={false} />}
 									</div>
 									<p className="mt-1 text-sm text-ink-500">{definition.description}</p>
 									{held?.note && <p className="mt-2 text-sm text-ink-700">Reviewer's note: {held.note}</p>}
@@ -95,6 +108,7 @@ export default function Roles({ loaderData, actionData }: Route.ComponentProps) 
 									) : null}
 								</Form>
 							</div>
+							{held && (held.status === "active" || held.status === "suspended") && <RoleReputationPanel reputation={held.reputation} history={histories[held.kind] ?? []} />}
 							{result?.error && (
 								<div className="mt-4">
 									<Alert>{result.error}</Alert>

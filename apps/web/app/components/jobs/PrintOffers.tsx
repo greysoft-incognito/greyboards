@@ -5,6 +5,7 @@ import { Avatar } from "~/components/Avatar";
 import { formatDay, formatMoney } from "~/components/bookings/BookingBits";
 import { Button, Field, Input, Spinner } from "~/components/ui";
 import { formatDistance } from "./JobBits";
+import { Standing } from "~/components/reputation/Badges";
 
 /** "Open until 21 Nov, 4 PM", for a price or a request. */
 function until(offer: PrintOffer) {
@@ -46,6 +47,7 @@ export function PrintOffersPanel({ options, currency }: { options: PrintOptions;
 									<span className="block font-semibold text-ink-900">
 										{offer.dispatcher?.name ?? "A dispatcher"} · <span className="tabular-nums">{formatMoney(offer.amountMinor, currency)}</span>
 									</span>
+									<Standing standing={offer.dispatcher?.standing} compact className="my-1" />
 									{offer.note && <span className="block text-ink-700">{offer.note}</span>}
 									<span className="block text-xs text-ink-500">
 										{offer.kind === "request" ? (offer.status === "requested" ? "You asked them. " : "They accepted your request. ") : ""}
@@ -83,6 +85,7 @@ export function PrintOffersPanel({ options, currency }: { options: PrintOptions;
 									<span className="block font-semibold text-ink-900">
 										{dispatcher.name} · <span className="tabular-nums">{formatMoney(dispatcher.quoteMinor, currency)}</span>
 									</span>
+									<Standing standing={dispatcher.standing} compact className="my-1" />
 									<span className="block text-xs text-ink-500">
 										Based {formatDistance(dispatcher.distanceM)} away{dispatcher.note ? `. ${dispatcher.note}` : ""}
 									</span>
