@@ -18,6 +18,8 @@ export default [
 		route("dashboard", "routes/dashboard.tsx"),
 		route("boards", "routes/boards/index.tsx"),
 		route("boards/new", "routes/boards/new.tsx"),
+		route("boards/import", "routes/boards/import.tsx"),
+		route("boards/prices", "routes/boards/prices.tsx"),
 		route("boards/owners", "routes/boards/owners.ts"),
 		route("boards/nearby", "routes/boards/nearby.ts"),
 		route("boards/:id", "routes/boards/board.tsx"),

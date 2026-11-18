@@ -1,5 +1,7 @@
 import { Pipeline } from '@app/services/Pipeline'
 import { OwnerPricing } from '@app/services/OwnerPricing'
+import { BoardImport } from '@app/services/BoardImport'
+import { PriceRules, type PriceChange } from '@app/services/PriceRules'
 import { Board, type BoardDetails, type BoardOwnerChoice, type BoardStatus } from '@app/models/Board'
 import { BoardAgreement } from '@app/models/BoardAgreement'
 import { BoardAgreementResource } from '@app/http/resources/BoardAgreementResource'
@@ -121,6 +123,45 @@ export default class AccountBoardController extends BaseController {
     const amount = query.amountMinor === undefined || query.amountMinor === null || query.amountMinor === '' ? null : Number(query.amountMinor)
 
     return new GenericResource(await OwnerPricing.quote(query.as === 'scout', amount)).additional({ status: 'success', message: 'OK', code: 200 })
+  }
+
+  /**
+   * Add boards from a spreadsheet saved as CSV. `dryRun` checks every row without saving, so
+   * the owner can fix the file; otherwise the rows that pass become boards waiting for review.
+   */
+  async import() {
+    const data = await this.validate({
+      csv: 'required|string|max:2000000',
+      dryRun: 'nullable|boolean',
+      ownerProfileId: ['nullable', UUID],
+    })
+    const dryRun = data.dryRun === true || data.dryRun === 'true' || data.dryRun === '1' || data.dryRun === 1
+    const result = await BoardImport.run(this.user, String(data.csv), { dryRun, ownerProfileId: data.ownerProfileId ?? null })
+    const message = dryRun ? `${result.ok} of ${result.total} rows are ready to import.` : `${result.imported} boards imported. We’ll check them before they go on the map.`
+
+    return new GenericResource(result).additional({ status: 'success', message, code: dryRun ? 200 : 201 }).response().setStatusCode(dryRun ? 200 : 201)
+  }
+
+  /** Change several boards' rates at once, by a percent or an amount, or to one amount. `dryRun` previews it. */
+  async priceRule() {
+    const data = await this.validate({
+      boardIds: 'required|array|min:1',
+      change: 'required|in:percent,amount,set',
+      value: 'required|numeric',
+      roundToMinor: 'nullable|integer|min:1|max:100000000',
+      faces: 'nullable|boolean',
+      dryRun: 'nullable|boolean',
+    })
+    const result = await PriceRules.apply(this.user, {
+      boardIds: (data.boardIds as unknown[]).map(String),
+      change: data.change as PriceChange,
+      value: Number(data.value),
+      roundToMinor: data.roundToMinor ? Number(data.roundToMinor) : undefined,
+      faces: data.faces === undefined || data.faces === null ? true : !!data.faces,
+      dryRun: !!data.dryRun,
+    })
+
+    return new GenericResource(result).additional({ status: 'success', message: result.dryRun ? 'Preview' : `${result.changed} boards repriced`, code: 200 })
   }
 
   /** Tag a board. `as` says whether the user owns it or scouted it. */
