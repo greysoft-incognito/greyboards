@@ -34,7 +34,7 @@ const sql = (statement: string) => ark('db', statement)
 const check = () => ark('print-jobs:check')
 
 const ledger = (bookingId: string) =>
-  sql(`select account || ' ' || amount_minor as line from ledger_entries where booking_id = '${bookingId}' order by \"createdAt\", account`)
+  sql(`select account || ' ' || amount_minor as line from ledger_entries where booking_id = '${bookingId}' and kind <> 'paid_out' order by \"createdAt\", account`)
     .split('\n')
     .map((row) => row.replace(/\|/g, '').trim())
     .filter((row) => /^[a-z]+ -?\d+$/.test(row))
