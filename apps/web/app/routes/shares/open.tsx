@@ -46,14 +46,14 @@ export default function OpenShares({ loaderData, actionData }: Route.ComponentPr
 				<UsersRound className="h-8 w-8 text-brand-600" aria-hidden />
 				Shared boards
 			</h1>
-			<p className="mt-1 max-w-2xl text-ink-500">Share a board with other advertisers for the same days and pay only your part. If shares are still unpaid when the lock ends, the whole board goes up for bids.</p>
+			<p className="mt-1 max-w-2xl text-ink-500">Split a board with other advertisers and only pay your share.</p>
 			{actionData?.error && (
 				<div className="mt-4">
 					<Alert>{actionData.error}</Alert>
 				</div>
 			)}
 			{shared === null ? (
-				<p className="panel mt-6 px-6 py-8 text-center text-ink-700">Shared boards aren't listed right now.</p>
+				<p className="panel mt-6 px-6 py-8 text-center text-ink-700">Shared boards aren't available right now.</p>
 			) : shared.length ? (
 				<div className="mt-6 grid gap-4 md:grid-cols-2">
 					{shared.map((entry) => (
@@ -65,7 +65,7 @@ export default function OpenShares({ loaderData, actionData }: Route.ComponentPr
 					<div className="h-44 sm:h-56">
 						<BoardScene time="dusk" art="empty" headline="Nothing shared yet" />
 					</div>
-					<p className="px-6 py-8 text-center text-ink-700">When someone shares a board, it shows here until every share is taken.</p>
+					<p className="px-6 py-8 text-center text-ink-700">No shared boards right now. Check back soon.</p>
 				</div>
 			)}
 		</main>

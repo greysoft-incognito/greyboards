@@ -17,7 +17,7 @@ import type { Route } from "./+types/index";
 
 export const meta = () => [
 	{ title: "Find a board · Greyboards" },
-	{ name: "description", content: "Every listed billboard on one map. Filter by type, lighting and price, and book without visiting the site." },
+	{ name: "description", content: "Explore billboards on a live map. Filter by type, lighting and price, and book from anywhere." },
 ];
 
 export const links: Route.LinksFunction = () => [{ rel: "stylesheet", href: mapStyles }];
@@ -130,7 +130,7 @@ export default function MapPage({ loaderData }: Route.ComponentProps) {
 				{result?.truncated && (
 					<p className="flex items-center gap-2 bg-amber-50 px-4 py-2 text-sm text-amber-900">
 						<ZoomIn className="h-4 w-4 shrink-0" aria-hidden />
-						Lots of boards here. Zoom in to see every one.
+						Lots of boards here. Zoom in to see them all.
 					</p>
 				)}
 
@@ -146,7 +146,7 @@ export default function MapPage({ loaderData }: Route.ComponentProps) {
 					) : result ? (
 						<div className="flex flex-col items-center gap-2 px-4 py-8 text-center">
 							<SearchX className="h-8 w-8 text-ink-500" aria-hidden />
-							<p className="font-semibold text-ink-900">No boards in this part of the map</p>
+							<p className="font-semibold text-ink-900">No boards here yet</p>
 							<p className="text-sm text-ink-500">{activeFilters ? "Try fewer filters, or move the map." : "Move the map or zoom out to look further."}</p>
 						</div>
 					) : null}
@@ -186,7 +186,7 @@ function Filters({ kinds, filters, onChange }: { kinds: BoardKindDefinition[]; f
 				</Select>
 			</label>
 			<label className="text-sm font-semibold text-ink-700">
-				Price up to
+				Max price
 				<Select value={filters.maxRateMinor ?? ""} onChange={(event) => onChange({ ...filters, maxRateMinor: Number(event.target.value) || null })} className="mt-1">
 					<option value="">Any price</option>
 					{PRICE_LIMITS.map((limit) => (

@@ -36,7 +36,7 @@ export default function CheckoutComplete() {
   return (
     <View style={styles.screen}>
       <ActivityIndicator color={colors.brand600} />
-      <Text variant="muted">Checking your payment…</Text>
+      <Text variant="muted">Confirming your payment…</Text>
     </View>
   )
 }

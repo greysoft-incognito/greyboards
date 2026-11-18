@@ -16,7 +16,7 @@ import { colors, radius } from '@/theme'
 
 const SIDES: Record<MessageSide, string> = {
   advertiser: 'Advertiser',
-  board: "Board owner's side",
+  board: "Board owner",
   dispatch: 'Dispatch',
   staff: 'Greyboards',
 }
@@ -63,7 +63,7 @@ export function MessagesSection({ bookingId }: { bookingId: string }) {
 
       const asset = result.assets[0]!
 
-      if (asset.fileSize && asset.fileSize > megabytes(maxImageMb)) throw new PlainProblem(`That photo is larger than ${maxImageMb} MB.`)
+      if (asset.fileSize && asset.fileSize > megabytes(maxImageMb)) throw new PlainProblem(`That photo is over ${maxImageMb} MB.`)
 
       await api.sendMessage(bookingId, body.trim() || null, uploadFile(asset)).send()
       setBody('')

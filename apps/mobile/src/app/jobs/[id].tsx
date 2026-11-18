@@ -35,9 +35,9 @@ function SendPrice({ job, onChange }: { job: PrintJob; onChange: () => void }) {
 
   if (offer?.status === 'requested') {
     return (
-      <Section title="Asked at your rate">
+      <Section title="Requested at your rate">
         <Text>The advertiser asked you to do this job for {formatMoney(offer.amountMinor, offer.currency)}. The job is yours once they pay.</Text>
-        <Button title="Accept" loading={action.busy} onPress={() => act(() => api.printJobs.acceptRequest(offer.id).send(), 'Accepted. The job is yours once the advertiser pays.')} />
+        <Button title="Accept" loading={action.busy} onPress={() => act(() => api.printJobs.acceptRequest(offer.id).send(), 'Accepted! The job is yours once the advertiser pays.')} />
         <Button title="Decline" variant="ghost" disabled={action.busy} onPress={() => act(() => api.printJobs.declineRequest(offer.id).send(), 'Request declined.')} />
       </Section>
     )
@@ -48,7 +48,7 @@ function SendPrice({ job, onChange }: { job: PrintJob; onChange: () => void }) {
 
     if (!naira) return action.run(async () => { throw new PlainProblem('Enter your price in naira.') })
 
-    return act(() => api.printJobs.sendPrice(job.id, Math.round(naira * 100), note.trim() || null).send(), 'Price sent. The job is yours if the advertiser pays it.')
+    return act(() => api.printJobs.sendPrice(job.id, Math.round(naira * 100), note.trim() || null).send(), 'Quote sent. The job is yours if the advertiser accepts.')
   }
 
   return (
@@ -57,11 +57,11 @@ function SendPrice({ job, onChange }: { job: PrintJob; onChange: () => void }) {
       <Field label="Price in naira">
         <Input value={amount} onChangeText={setAmount} keyboardType="numeric" placeholder="175000" />
       </Field>
-      <Field label="Note for the advertiser" hint="Optional, such as the material.">
+      <Field label="Note for the advertiser" hint="Optional. For example, the material.">
         <Input value={note} onChangeText={setNote} maxLength={200} />
       </Field>
       <Button title={offer ? 'Change price' : 'Send price'} loading={action.busy} onPress={send} />
-      {offer?.status === 'pending' ? <Button title="Take it back" variant="ghost" disabled={action.busy} onPress={() => act(() => api.printJobs.withdrawPrice(offer.id).send(), 'Price taken back.')} /> : null}
+      {offer?.status === 'pending' ? <Button title="Withdraw" variant="ghost" disabled={action.busy} onPress={() => act(() => api.printJobs.withdrawPrice(offer.id).send(), 'Price taken back.')} /> : null}
       <Text variant="small">Include printing, transport and putting it up by {formatDay(job.dueOn)}. Set your rate on the web under Print jobs › Prices so advertisers can ask you.</Text>
     </Section>
   )
@@ -167,7 +167,7 @@ function NextStep({ job, onChange }: { job: PrintJob; onChange: () => void }) {
     action.run(async () => {
       const permission = await ImagePicker.requestCameraPermissionsAsync()
 
-      if (!permission.granted) throw new PlainProblem('Allow the camera for Greyboards in your phone settings to photograph the print.')
+      if (!permission.granted) throw new PlainProblem('Allow camera access in your phone settings to take a photo.')
 
       const result = await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], quality: 0.85 })
 
@@ -175,7 +175,7 @@ function NextStep({ job, onChange }: { job: PrintJob; onChange: () => void }) {
 
       const asset = result.assets[0]!
 
-      if (asset.fileSize && asset.fileSize > megabytes(maxImageMb)) throw new PlainProblem(`That photo is larger than ${maxImageMb} MB.`)
+      if (asset.fileSize && asset.fileSize > megabytes(maxImageMb)) throw new PlainProblem(`That photo is over ${maxImageMb} MB.`)
 
       await api.printJobs.printPhoto(job.id, uploadFile(asset)).send()
       onChange()
@@ -183,7 +183,7 @@ function NextStep({ job, onChange }: { job: PrintJob; onChange: () => void }) {
       return 'Print photo added.'
     })
 
-  const giveBack = <Button title="Give it back" variant="ghost" disabled={action.busy} onPress={() => act(() => api.printJobs.release(job.id).send(), 'Job given back.')} />
+  const giveBack = <Button title="Release job" variant="ghost" disabled={action.busy} onPress={() => act(() => api.printJobs.release(job.id).send(), 'Job given back.')} />
 
   let body: ReactNode = null
 
@@ -192,30 +192,30 @@ function NextStep({ job, onChange }: { job: PrintJob; onChange: () => void }) {
   if (job.status === 'open') {
     body = (
       <>
-        <Button title={action.busy ? 'Reserving…' : 'Reserve this job'} loading={action.busy} onPress={() => act(() => api.printJobs.reserve(job.id).send(), 'Held for you. Confirm once you know you can make the date.')} />
-        <Text variant="small">The last dispatcher missed this job, so it’s open again at the price already paid. Reserve it and we’ll hold it for you for a few hours while you check the date.</Text>
+        <Button title={action.busy ? 'Reserving…' : 'Reserve this job'} loading={action.busy} onPress={() => act(() => api.printJobs.reserve(job.id).send(), 'We’re holding it for you. Confirm once you’re sure you can make the date.')} />
+        <Text variant="small">This job is available again. Reserve it and we’ll hold it for a few hours while you check the date.</Text>
       </>
     )
   } else if (job.mine && job.status === 'reserved') {
     body = (
       <>
         {job.reservedUntil ? <HoldLeft until={job.reservedUntil} /> : null}
-        <Button title={action.busy ? 'Confirming…' : 'I can do it'} loading={action.busy} onPress={() => act(() => api.printJobs.confirm(job.id).send(), 'The job is yours.')} />
+        <Button title={action.busy ? 'Confirming…' : 'I can do it'} loading={action.busy} onPress={() => act(() => api.printJobs.confirm(job.id).send(), 'The job is yours!')} />
         {giveBack}
       </>
     )
   } else if (job.mine && job.status === 'confirmed') {
     body = (
       <>
-        <Text variant="muted">Print the artwork, then photograph the finished print before you put it up.</Text>
-        <Button title={action.busy ? 'Uploading…' : 'Take the print photo'} loading={action.busy} onPress={printPhoto} />
+        <Text variant="muted">Print the design, then take a photo of it before you put it up.</Text>
+        <Button title={action.busy ? 'Uploading…' : 'Take a photo'} loading={action.busy} onPress={printPhoto} />
         {giveBack}
       </>
     )
   } else if (job.mine && job.status === 'printed') {
     body = <Text variant="muted">Printed. Put it up by {formatDay(job.dueOn)}, then take the proof photos below while you’re at the board.</Text>
   } else if (job.mine && job.status === 'posted') {
-    body = <Text variant="muted">Posted. You’re paid once the advertiser accepts your photos.</Text>
+    body = <Text variant="muted">Posted! You’ll be paid once the advertiser accepts your photos.</Text>
   }
 
   if (!body) return null
@@ -241,7 +241,7 @@ function HoldLeft({ until }: { until: string }) {
 
   const hours = Math.floor(left / 60)
 
-  return <Text variant="muted">{left > 0 ? `Held for you for ${hours ? `${hours} h ` : ''}${left % 60} min more. Confirm to keep it.` : 'Your hold ran out. Anyone can take it now.'}</Text>
+  return <Text variant="muted">{left > 0 ? `Held for you for ${hours ? `${hours} h ` : ''}${left % 60} min more. Confirm to keep it.` : 'Your hold expired. The job is open to others now.'}</Text>
 }
 
 function Line({ icon: Icon, text }: { icon: typeof MapPin; text: string }) {

@@ -89,7 +89,7 @@ export function MarkdownEditor({ value, onChange, invalid }: { value: string; on
 					value={value}
 					onChange={(event) => onChange(event.target.value)}
 					rows={24}
-					placeholder={"## A heading\n\nWrite in Markdown. Use Preview to see the page."}
+					placeholder={"## A heading\n\nWrite in Markdown and use Preview to check it."}
 					className="field-input min-h-96 resize-y px-4 py-3 font-mono text-sm leading-6 text-ink-900"
 				/>
 			) : (

@@ -62,7 +62,7 @@ export function OwnerPicker({ errors = {} }: { errors?: Record<string, string> }
 	return (
 		<div className="grid gap-4 sm:grid-cols-2">
 			<div className="relative">
-				<Field label="Owner's name" error={errors.ownerName ?? errors.ownerProfileId} hint="Owners already on Greyboards show as you type.">
+				<Field label="Owner's name" error={errors.ownerName ?? errors.ownerProfileId} hint="Start typing to find owners already on Greyboards.">
 					<Input
 						name="ownerName"
 						value={name}
@@ -110,12 +110,12 @@ export function OwnerPicker({ errors = {} }: { errors?: Record<string, string> }
 						))}
 						<li className={`flex items-center gap-3 px-3.5 py-2.5 text-sm text-ink-500 ${owners.length ? "border-t border-surface-100" : ""}`}>
 							{fetcher.state === "loading" ? <Search className="h-4 w-4 animate-pulse" aria-hidden /> : <UserPlus className="h-4 w-4" aria-hidden />}
-							{fetcher.state === "loading" ? "Looking…" : owners.length ? "Someone else? Add their phone and we’ll add them." : `New owner. Add ${name.trim().split(/\s+/)[0]}’s phone and we’ll add them.`}
+							{fetcher.state === "loading" ? "Looking…" : owners.length ? "Not listed? Add their phone number." : `New owner. Add ${name.trim().split(/\s+/)[0]}’s phone number.`}
 						</li>
 					</ul>
 				)}
 			</div>
-			<Field label="Owner's phone" error={errors.ownerPhone} hint="We'll text them to sign the board up.">
+			<Field label="Owner's phone" error={errors.ownerPhone} hint="We'll text them to sign up the board.">
 				<Input name="ownerPhone" type="tel" required maxLength={20} placeholder="+234 803 000 0000" />
 			</Field>
 		</div>
@@ -127,7 +127,7 @@ export function ManagedOwnerSelect({ profiles, error }: { profiles: OwnerProfile
 	if (profiles.length < 2) return null;
 
 	return (
-		<Field label="Owner" error={error} hint="You manage these owners. Add more in settings.">
+		<Field label="Owner" error={error} hint="Owners you manage. You can add more in settings.">
 			<Select name="ownerProfileId" defaultValue={profiles[0].id}>
 				{profiles.map((profile) => (
 					<option key={profile.id} value={profile.id}>

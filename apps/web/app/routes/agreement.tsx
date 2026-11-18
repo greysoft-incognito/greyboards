@@ -144,14 +144,14 @@ function Signing({ offer, result }: { offer: AgreementOffer; result: SigningResu
 				<BadgeCheck className="mt-0.5 h-6 w-6 shrink-0 text-available" aria-hidden />
 				<div>
 					<p className="font-display text-lg font-extrabold text-ink-900">Signed{offer.signedName ? ` by ${offer.signedName}` : ""}</p>
-					<p className="text-sm text-ink-500">Thank you. We'll text you when your board gets its first booking.</p>
+					<p className="text-sm text-ink-500">Thank you! We'll text you when your board gets its first booking.</p>
 				</div>
 			</div>
 		);
 	}
 
 	if (offer.status !== "sent") {
-		const notes = { declined: "You declined, so we won't list this board.", cancelled: "A newer link replaced this one. Use the latest text we sent.", expired: "This link ran out. Ask the scout to send a new one." };
+		const notes = { declined: "You declined, so we won't list this board.", cancelled: "This link has been replaced. Use the most recent one we texted you.", expired: "This link has expired. Ask your scout to send a new one." };
 
 		return (
 			<div className="panel flex items-start gap-3 p-5 sm:p-6">
@@ -178,7 +178,7 @@ function Signing({ offer, result }: { offer: AgreementOffer; result: SigningResu
 			) : (
 				<Form method="post" className="space-y-4">
 					<input type="hidden" name="intent" value="sign" />
-					<Field label="Your full name" error={result?.fieldErrors.name} hint="As you'd sign it.">
+					<Field label="Your full name" error={result?.fieldErrors.name} hint="As you'd normally sign it.">
 						<Input name="name" required minLength={2} maxLength={120} value={name} onChange={(event) => setName(event.target.value)} autoComplete="name" />
 					</Field>
 					<div>

@@ -43,7 +43,7 @@ export default function OpenShares() {
   return (
     <SettingsPage
       title="Shared boards"
-      description="Share a board with other advertisers for the same days and pay only your part. If shares are still unpaid when the lock ends, the whole board goes up for bids."
+      description="Split a board with other advertisers and only pay your share."
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}
     >
       {problem ? <Callout>{problem}</Callout> : null}
@@ -52,7 +52,7 @@ export default function OpenShares() {
       ) : shared.length ? (
         shared.map((entry) => <SharedBookingCard key={entry.id} shared={entry} showBoard canJoin={canJoin} onChange={load} />)
       ) : (
-        <EmptyState icon={UsersRound} title="Nothing shared yet" text="When someone shares a board, it shows here until every share is taken." />
+        <EmptyState icon={UsersRound} title="Nothing shared yet" text="No shared boards right now. Check back soon." />
       )}
     </SettingsPage>
   )

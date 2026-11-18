@@ -58,7 +58,7 @@ export default function Reports() {
   return (
     <SettingsPage
       title="Campaign reports"
-      description="Group bookings into one page with every board, its dates and the proof photos. Share the link, or save it as a PDF from the page."
+      description="Put your bookings together in one shareable page, with every board, date and photo."
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}
     >
       {problem ? <Callout>{problem}</Callout> : null}
@@ -69,7 +69,7 @@ export default function Reports() {
           {reports.length ? (
             reports.map((report) => <ReportCard key={report.id} report={report} onChange={load} />)
           ) : (
-            <EmptyState icon={FileChartColumn} title="No reports yet" text="Make one from your bookings below once their ads are up." />
+            <EmptyState icon={FileChartColumn} title="No reports yet" text="Create one once your ads are up." />
           )}
           {page.current < page.last ? <Button title="Show more" variant="ghost" loading={more.busy} onPress={loadMore} /> : null}
           <NewReport bookings={bookings} onCreated={load} />
@@ -89,7 +89,7 @@ function ReportCard({ report, onChange }: { report: CampaignReportSummary; onCha
       await api.reports.relink(report.id).send()
       onChange()
 
-      return 'New link made. The old one no longer works.'
+      return 'New link created. The old one won’t work anymore.'
     })
 
   const remove = () =>
@@ -172,10 +172,10 @@ function NewReport({ bookings, onCreated }: { bookings: Booking[]; onCreated: ()
             <CheckOption key={booking.id} label={booking.board?.name ?? 'Board'} description={formatDays(booking)} checked={picked.includes(booking.id)} onPress={() => toggle(booking.id)} />
           ))}
           {action.problem.message && !action.problem.fields.title ? <Callout>{action.problem.message}</Callout> : null}
-          <Button title="Make report" loading={action.busy} disabled={title.trim().length < 3 || !picked.length} onPress={create} />
+          <Button title="Create report" loading={action.busy} disabled={title.trim().length < 3 || !picked.length} onPress={create} />
         </>
       ) : (
-        <Text variant="muted">Reports hold bookings whose ads went up. Once a proof is accepted, the booking shows here.</Text>
+        <Text variant="muted">Only bookings with ads that are live can be added.</Text>
       )}
     </Section>
   )

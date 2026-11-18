@@ -66,7 +66,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 		if (intent === "dispute") {
 			await api.dispute(params.id, { reason: String(form.get("reason")) as DisputeReason, details: String(form.get("details") ?? "") });
 
-			return { error: null, message: "Dispute raised. Staff will look into it." };
+			return { error: null, message: "Problem reported. Our team will look into it." };
 		}
 
 		if (intent === "message") {
@@ -83,7 +83,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 		if (intent === "cover-shares") {
 			const response = await api.coverShares(params.id);
 
-			return { error: null, message: response.message ?? "The unpaid shares are yours to pay." };
+			return { error: null, message: response.message ?? "You're now covering the unpaid shares." };
 		}
 
 		if (intent === "cancel") {
@@ -101,17 +101,17 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 		if (intent === "artwork") {
 			const artwork = postedPhoto(form, "artwork");
 
-			if (!artwork) return { error: "Choose the artwork first.", message: null };
+			if (!artwork) return { error: "Add your design first.", message: null };
 
 			await api.uploadArtwork(params.id, artwork);
 
-			return { error: null, message: "Artwork sent for checking." };
+			return { error: null, message: "Design sent for review." };
 		}
 
 		if (intent === "design") {
 			const design = postedPhoto(form, "design");
 
-			if (!design) return { error: "Choose your design first.", message: null };
+			if (!design) return { error: "Add your design first.", message: null };
 
 			const { message } = await api.sendShareDesign(params.id, String(form.get("shareId")), design);
 
@@ -121,7 +121,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 		if (intent === "approve" || intent === "reject") {
 			await api.reviewArtwork(params.id, { decision: intent, note: String(form.get("note") ?? "") || undefined });
 
-			return { error: null, message: intent === "approve" ? "Approved. Dispatchers near the board send their prices next." : "Sent back with your note." };
+			return { error: null, message: intent === "approve" ? "Approved! Local dispatchers will send their quotes next." : "Changes requested." };
 		}
 
 		if (isProofIntent(intent)) return await proofAction(api, params.id, intent, form);
@@ -136,11 +136,11 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 
 /** The steps from payment to the owner being paid. Each lights up once the booking gets there. */
 const STEPS: { label: string; detail: string | ((booking: Booking) => string); icon: typeof CreditCard; done: (booking: Booking) => boolean }[] = [
-	{ label: "Paid", detail: "Your money waits in escrow.", icon: CreditCard, done: (booking) => ["paid", "live", "completed"].includes(booking.status) },
-	{ label: "Artwork approved", detail: "The owner checks your design fits the board.", icon: Image, done: (booking) => booking.artwork?.status === "approved" || isLive(booking) },
+	{ label: "Paid", detail: "We hold your payment safely.", icon: CreditCard, done: (booking) => ["paid", "live", "completed"].includes(booking.status) },
+	{ label: "Artwork approved", detail: "The owner checks your design fits.", icon: Image, done: (booking) => booking.artwork?.status === "approved" || isLive(booking) },
 	{ label: "Printed and posted", detail: (booking) => (booking.printedBy === "owner" ? "The board's owner prints it and puts it up." : "A dispatcher prints it and puts it up."), icon: Printer, done: (booking) => booking.printJob?.status === "posted" || (!!booking.proof && booking.proof.status !== "none") || isLive(booking) },
-	{ label: "Proof accepted", detail: "Geotagged photos show your ad on the board.", icon: Camera, done: (booking) => booking.proof?.status === "accepted" || isLive(booking) },
-	{ label: "Everyone paid", detail: "Only then does the money leave escrow.", icon: Wallet, done: (booking) => !!booking.releasedAt },
+	{ label: "Proof accepted", detail: "You get photos of your ad on the board.", icon: Camera, done: (booking) => booking.proof?.status === "accepted" || isLive(booking) },
+	{ label: "Everyone paid", detail: "Only then is the owner paid.", icon: Wallet, done: (booking) => !!booking.releasedAt },
 ];
 
 function isLive(booking: Booking) {
@@ -156,7 +156,7 @@ export default function BookingPage({ loaderData, actionData }: Route.ComponentP
 	const outcome = params.get("payment");
 
 	useEffect(() => {
-		if (outcome === "paid") toast.success("Payment received. Your dates are booked.", { id: "paid" });
+		if (outcome === "paid") toast.success("Payment received. You're booked!", { id: "paid" });
 	}, [outcome]);
 
 	return (
@@ -206,8 +206,8 @@ export default function BookingPage({ loaderData, actionData }: Route.ComponentP
 								<dd className="font-display text-lg font-extrabold text-ink-900 tabular-nums">{formatMoney(booking.amountMinor, booking.currency)}</dd>
 							</div>
 						</dl>
-						{outcome === "failed" && <Alert>The payment didn't go through, so nothing was charged. Try again while your dates are held.</Alert>}
-						{outcome === "pending" && <Alert>Your payment is still being confirmed. Refresh in a moment.</Alert>}
+						{outcome === "failed" && <Alert>Your payment didn't go through and you weren't charged. Try again while we hold your dates.</Alert>}
+						{outcome === "pending" && <Alert>Still confirming your payment. Refresh in a moment.</Alert>}
 						{actionData?.error && <Alert>{actionData.error}</Alert>}
 						{isAdvertiser && booking.status === "held" && !booking.shared && <PayOrCancel booking={booking} />}
 						{booking.shared && booking.shares && <SharesPanel booking={booking} isOrganiser={isAdvertiser} />}
@@ -257,7 +257,7 @@ function PayOrCancel({ booking }: { booking: Booking }) {
 	return (
 		<div className="space-y-3">
 			<p className="text-sm text-ink-700" aria-live="polite">
-				{left > 0 ? `We're holding these dates for you for ${minutes}:${seconds}.` : "The hold ran out. Book the dates again."}
+				{left > 0 ? `We're holding these dates for you for ${minutes}:${seconds}.` : "Your hold expired. Book the dates again."}
 			</p>
 			<div className="flex flex-wrap gap-2">
 				<Form method="post">
@@ -290,10 +290,10 @@ function CancelPaid({ booking }: { booking: Booking }) {
 			<h2 className="font-display text-xl font-extrabold tracking-tight text-ink-900">Change of plans?</h2>
 			<p className="text-sm text-ink-700">
 				{booking.shared
-					? `Cancel now and ${formatMoney(quote.refundMinor, booking.currency)} goes back, split between everyone who paid by what they paid.`
+					? `Cancel now and ${formatMoney(quote.refundMinor, booking.currency)} is refunded, split among everyone who paid.`
 					: quote.full
-					? `Cancel now and you get all ${formatMoney(quote.refundMinor, booking.currency)} back.`
-					: `It's close to the start, so cancelling now gives back ${formatMoney(quote.refundMinor, booking.currency)} of the ${formatMoney(booking.amountMinor, booking.currency)} you paid. The rest goes to the owner.`}
+					? `Cancel now for a full refund of ${formatMoney(quote.refundMinor, booking.currency)}.`
+					: `Since it's close to the start date, you'll get ${formatMoney(quote.refundMinor, booking.currency)} of your ${formatMoney(booking.amountMinor, booking.currency)} back. The rest goes to the owner.`}
 			</p>
 			{open ? (
 				<Form method="post" className="flex flex-wrap gap-2">
@@ -333,7 +333,7 @@ function StaffRefund({ booking }: { booking: Booking }) {
 	);
 }
 
-const REFUND_STATUS = { processing: "On its way back", refunded: "Refunded", failed: "Refund failed, our team is on it" } as const;
+const REFUND_STATUS = { processing: "Refund on the way", refunded: "Refunded", failed: "Refund failed, our team is on it" } as const;
 
 function Refunds({ booking }: { booking: Booking }) {
 	return (
@@ -360,7 +360,7 @@ function Split({ booking }: { booking: Booking }) {
 	const rows = [
 		{ label: `Owner (${split.ownerSharePercent}%)`, amount: split.ownerAmountMinor },
 		...(split.scoutAmountMinor ? [{ label: "Scout", amount: split.scoutAmountMinor }] : []),
-		...(booking.printFeeMinor ? [{ label: booking.printedBy === "owner" ? "Printing, by the owner's side" : "Dispatcher, for printing", amount: booking.printFeeMinor }] : []),
+		...(booking.printFeeMinor ? [{ label: booking.printedBy === "owner" ? "Printing (owner)" : "Printing (dispatcher)", amount: booking.printFeeMinor }] : []),
 		{ label: "Greyboards", amount: split.platformAmountMinor },
 	];
 
@@ -368,7 +368,7 @@ function Split({ booking }: { booking: Booking }) {
 		<div className="border-t border-surface-200 pt-4">
 			<p className="flex items-center gap-2 text-sm font-semibold text-ink-900">
 				<ShieldCheck className="h-4 w-4 text-available" aria-hidden />
-				{booking.releasedAt ? "Released from escrow" : "Paid out once the ad is up"}
+				{booking.releasedAt ? "Released from escrow" : "Paid once the ad is up"}
 			</p>
 			<dl className="mt-2 space-y-1 text-sm">
 				{rows.map((row) => (

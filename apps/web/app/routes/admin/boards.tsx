@@ -20,7 +20,7 @@ const STATUSES: { value: BoardStatus; label: string }[] = [
 	{ value: "unlisted", label: "Off the map" },
 ];
 
-const AGREEMENT_LABELS = { sent: "Owner hasn't signed yet", signed: "Owner signed", declined: "Owner declined", cancelled: "Agreement replaced", expired: "Owner's link ran out" } as const;
+const AGREEMENT_LABELS = { sent: "Owner hasn't signed yet", signed: "Owner signed", declined: "Owner declined", cancelled: "Agreement replaced", expired: "Owner's link expired" } as const;
 
 /** Photos taken farther than this from the board are flagged. */
 const FAR_M = 150;
@@ -57,7 +57,7 @@ export default function AdminBoards({ loaderData, actionData }: Route.ComponentP
 
 	return (
 		<>
-			<AdminHeader title="Boards" description="Check that each board is where it says, the photos were taken there, and the owner can be reached." />
+			<AdminHeader title="Boards" description="Make sure each board is in the right place, the photos were taken there and the owner can be reached." />
 			<div className="space-y-6 px-4 py-8 sm:px-8">
 				<Form method="get" className="flex flex-wrap items-center gap-3">
 					<Select name="status" defaultValue={status} aria-label="Status" className="w-auto">

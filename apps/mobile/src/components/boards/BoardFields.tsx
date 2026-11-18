@@ -96,7 +96,7 @@ type FieldsProps = { fields: BoardFieldValues; set: ReturnType<typeof useBoardFi
 export function BoardDetailsSection({ fields, set, errors, kinds, board }: FieldsProps & { kinds: BoardKindDefinition[]; board?: BoardDetail }) {
   return (
     <Section title="The board">
-      <Field label="Name" error={errors.name} hint="What advertisers see first. A landmark helps.">
+      <Field label="Name" error={errors.name} hint="Name it after a landmark so advertisers can picture it.">
         <Input value={fields.name} onChangeText={set('name')} maxLength={120} placeholder="Ahmadu Bello Way, facing Murtala Square" />
       </Field>
       <Field label="Kind" error={errors.kind}>
@@ -126,7 +126,7 @@ export function BoardDetailsSection({ fields, set, errors, kinds, board }: Field
           </Field>
         </View>
       </View>
-      <Field label="The road it faces" error={errors.roadClass} hint="Gives advertisers a traffic estimate.">
+      <Field label="The road it faces" error={errors.roadClass} hint="Helps us estimate how many people see it.">
         <Select
           label="The road it faces"
           value={fields.roadClass}
@@ -160,11 +160,11 @@ export function BoardDetailsSection({ fields, set, errors, kinds, board }: Field
       <Field label="Direction it faces" error={errors.headingDeg}>
         <HeadingPicker value={fields.heading} onChange={set('heading')} />
       </Field>
-      <Field label="Facing" error={errors.facing} hint="Which traffic sees it.">
+      <Field label="Facing" error={errors.facing} hint="Which way traffic sees it.">
         <Input value={fields.facing} onChangeText={set('facing')} maxLength={60} placeholder="Traffic to Ajah" />
       </Field>
       <Field label="Notes" error={errors.description}>
-        <Input value={fields.description} onChangeText={set('description')} multiline maxLength={1000} placeholder="Anything an advertiser should know, such as trees in the way or a nearby junction." />
+        <Input value={fields.description} onChangeText={set('description')} multiline maxLength={1000} placeholder="Anything advertisers should know, like trees nearby or a busy junction." />
       </Field>
     </Section>
   )
@@ -196,7 +196,7 @@ export function RateSection({
           <Field
             label={fields.ownerNet ? 'Owner gets, in naira' : digital ? 'Rate per slot, in naira' : 'Rate in naira'}
             error={errors.rateMinor}
-            hint={fields.ownerNet ? 'Each period, after every other share.' : scouting ? 'What the owner asks, if you know.' : undefined}
+            hint={fields.ownerNet ? 'Each period, after every other share.' : scouting ? 'What the owner charges, if you know.' : undefined}
           >
             <Input value={fields.rate} onChangeText={set('rate')} keyboardType="number-pad" placeholder="850000" />
           </Field>
@@ -209,14 +209,14 @@ export function RateSection({
       </View>
       <PriceGuideBox fields={fields} spot={spot} exceptId={exceptId} onUse={useGuide} />
       <OwnerNetToggle on={fields.ownerNet} onChange={set('ownerNet')} rate={fields.rate} percent={percent} />
-      <Field label="Who prints and puts up ads" error={errors.printsOwn}>
+      <Field label="Who prints and puts up the ads?" error={errors.printsOwn}>
         <Select
-          label="Who prints and puts up ads"
+          label="Who prints and puts up the ads?"
           value={fields.printsOwn ? '1' : '0'}
           onChange={(value) => set('printsOwn')(value === '1')}
           options={[
             { value: '0', label: 'A Greyboards dispatcher' },
-            { value: '1', label: scouting ? 'The owner or I do it' : 'We do it ourselves' },
+            { value: '1', label: scouting ? 'The owner or I will' : 'We’ll do it' },
           ]}
         />
       </Field>
@@ -273,8 +273,8 @@ function PriceGuideBox({ fields, spot, exceptId, onUse }: { fields: BoardFieldVa
   const comparables = guide.comparables
   const basis =
     guide.basis === 'comparables' && comparables
-      ? `${comparables.count} boards like this within ${comparables.radiusKm} km ask ${formatMoney(comparables.lowMinor ?? 0)} to ${formatMoney(comparables.highMinor ?? 0)} for this size.${guide.fromTrafficMinor !== null ? ` Its traffic alone suggests ${formatMoney(guide.fromTrafficMinor)}.` : ''}`
-      : `From about ${guide.traffic?.daily.toLocaleString('en-NG')} people passing a day${guide.traffic?.source === 'measured' ? ', as counted' : ''}.`
+      ? `${comparables.count} boards like this within ${comparables.radiusKm} km charge ${formatMoney(comparables.lowMinor ?? 0)} to ${formatMoney(comparables.highMinor ?? 0)}.${guide.fromTrafficMinor !== null ? ` Based on traffic alone, try ${formatMoney(guide.fromTrafficMinor)}.` : ''}`
+      : `From about ${guide.traffic?.daily.toLocaleString('en-NG')} people pass by each day.`
 
   return (
     <View style={styles.guide} accessibilityRole="summary">
@@ -308,10 +308,10 @@ function OwnerNetToggle({ on, onChange, rate, percent }: { on: boolean; onChange
       <View style={styles.ownerNetRow}>
         <HandCoins size={18} color={colors.brand600} />
         <View style={styles.flex}>
-          <Text variant="label">The owner gets exactly this amount</Text>
-          <Text variant="small">The platform and scout shares go on top instead of coming out of it.</Text>
+          <Text variant="label">Guarantee the owner this amount</Text>
+          <Text variant="small">We’ll add our fees on top, so the owner gets the full amount.</Text>
         </View>
-        <Switch value={on} onValueChange={onChange} trackColor={{ true: colors.brand500, false: colors.surface300 }} thumbColor={colors.white} accessibilityLabel="The owner gets exactly this amount" />
+        <Switch value={on} onValueChange={onChange} trackColor={{ true: colors.brand500, false: colors.surface300 }} thumbColor={colors.white} accessibilityLabel="Guarantee the owner this amount" />
       </View>
       {typed && percent !== null ? (
         <Text variant="small" style={styles.ownerNetPreview}>

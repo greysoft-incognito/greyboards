@@ -70,11 +70,11 @@ export async function action({ request, context }: Route.ActionArgs) {
 }
 
 const INTROS: Record<View, string> = {
-	mine: "Boards you've booked. Payments wait in escrow until your ad is up.",
-	boards: "Paid bookings on boards you look after, and what each one pays you.",
-	offers: "Offers you made below a board's price. Once accepted, the dates are held for you to pay.",
-	"board-offers": "Offers advertisers made on your boards. Accept, decline or name your price.",
-	bids: "Dates you bid for. If you win, you have a day to pay.",
+	mine: "Boards you've booked.",
+	boards: "Bookings on your boards and what you earn from each.",
+	offers: "Offers you've made. If one is accepted, we'll hold the dates for you to pay.",
+	"board-offers": "Offers on your boards. Accept, decline or suggest your own price.",
+	bids: "Your bids. If you win, you'll have a day to pay.",
 };
 
 const tab = ({ isActive }: { isActive: boolean }) =>
@@ -119,12 +119,12 @@ export default function Bookings({ loaderData, actionData }: Route.ComponentProp
 
 			{params.get("payment") === "unknown" && (
 				<div className="mt-4">
-					<Alert>We couldn't confirm that payment yet. If money left your account, it will show here shortly.</Alert>
+					<Alert>We're still confirming your payment. If you were charged, it'll show here soon.</Alert>
 				</div>
 			)}
 			{params.get("sent") === "1" && view === "offers" && (
 				<div className="mt-4">
-					<Notice>Offer sent. We'll show the owner's answer here.</Notice>
+					<Notice>Offer sent. You'll see the owner's reply here.</Notice>
 				</div>
 			)}
 			{actionData?.error && (
@@ -171,9 +171,9 @@ export default function Bookings({ loaderData, actionData }: Route.ComponentProp
 }
 
 const EMPTY: Record<View, { title: string; body: string }> = {
-	mine: { title: "No bookings yet", body: "Find a board on the map, pick your dates and pay. We hold the money until your ad is up." },
-	boards: { title: "No paid bookings yet", body: "When an advertiser pays for one of your boards, it shows here with what you'll receive." },
-	offers: { title: "No offers yet", body: "On a board's page, choose Make an offer instead to suggest your own price for the dates." },
-	"board-offers": { title: "No offers yet", body: "When an advertiser offers less than your price, it shows here for you to answer." },
-	bids: { title: "No bids yet", body: "Boards with dates open for bids show them on their page. Bid there." },
+	mine: { title: "No bookings yet", body: "Find a board you love on the map and book your first campaign." },
+	boards: { title: "No paid bookings yet", body: "When someone books one of your boards, you'll see it here." },
+	offers: { title: "No offers yet", body: "Want a different price? Make an offer on any board's page." },
+	"board-offers": { title: "No offers yet", body: "Offers from advertisers will show up here." },
+	bids: { title: "No bids yet", body: "Some boards let you bid on dates. Your bids will show up here." },
 };

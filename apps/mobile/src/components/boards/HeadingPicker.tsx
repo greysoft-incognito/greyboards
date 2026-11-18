@@ -41,7 +41,7 @@ export function HeadingPicker({ value, onChange }: { value: number | null; onCha
         </View>
         <View style={styles.flex}>
           <Text variant="label">{value !== null ? `${formatHeading(value)} (${value}°)` : shown !== null ? `${formatHeading(shown)} (${shown}°)` : 'Waiting for the compass…'}</Text>
-          <Text variant="small">{value !== null ? 'Saved. Point again and reset if it looks wrong.' : 'Face the board and point the top of your phone at it.'}</Text>
+          <Text variant="small">{value !== null ? 'Saved. If it looks wrong, point again and reset.' : 'Face the board and point the top of your phone at it.'}</Text>
         </View>
       </View>
       {problem ? <Callout>{problem}</Callout> : null}

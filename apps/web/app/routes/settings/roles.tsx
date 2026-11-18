@@ -42,7 +42,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 	if (form.get("intent") === "send-id") {
 		const photo = postedPhoto(form);
 
-		if (!photo) return { intent: "send-id", error: "Choose a photo of your ID.", message: null, fieldErrors: {} as Record<string, string> };
+		if (!photo) return { intent: "send-id", error: "Add a photo of your ID.", message: null, fieldErrors: {} as Record<string, string> };
 
 		return settingsAction("send-id", async () => {
 			const identity = {

@@ -224,7 +224,7 @@ export default function Find() {
       <Sheet visible={showFilters} title="Filter boards" onClose={() => setShowFilters(false)}>
         <Text variant="label">Kind</Text>
         <Select
-          label="Kind of board"
+          label="Board type"
           value={filters.kind ?? 'any'}
           options={[{ value: 'any', label: 'Any kind' }, ...kinds.map((kind) => ({ value: kind.kind, label: kind.label }))]}
           onChange={(value) => setFilters((current) => ({ ...current, kind: value === 'any' ? null : (value as BoardKind) }))}
@@ -241,7 +241,7 @@ export default function Find() {
             <Chip key={label} label={label} selected={filters.lit === value} onPress={() => setFilters((current) => ({ ...current, lit: value }))} />
           ))}
         </View>
-        <Text variant="label">Price up to</Text>
+        <Text variant="label">Max price</Text>
         <View style={styles.chips}>
           <Chip label="Any price" selected={filters.maxRateMinor === null} onPress={() => setFilters((current) => ({ ...current, maxRateMinor: null }))} />
           {PRICE_LIMITS.map((limit) => (

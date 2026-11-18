@@ -25,7 +25,7 @@ export function RoleReputationControls({ role, history, canManage, busy }: { rol
 				<details className="group mt-3">
 					<summary className="inline-flex cursor-pointer list-none items-center gap-1.5 text-sm font-semibold text-brand-600 hover:underline">
 						<ChevronRight className="h-4 w-4 transition group-open:rotate-90" aria-hidden />
-						Verify or correct the score
+						Verify or adjust score
 					</summary>
 					<div className="mt-3 grid gap-3 lg:grid-cols-2">
 						<Form method="post" preventScrollReset className="flex gap-2">
@@ -37,7 +37,7 @@ export function RoleReputationControls({ role, history, canManage, busy }: { rol
 								</Button>
 							) : (
 								<>
-									<Input name="note" placeholder="How you checked them (optional)" maxLength={191} className="min-w-0 flex-1 !bg-white !py-2 text-sm" aria-label="How you checked them" />
+									<Input name="note" placeholder="How did you verify them? (optional)" maxLength={191} className="min-w-0 flex-1 !bg-white !py-2 text-sm" aria-label="How you checked them" />
 									<Button type="submit" name="intent" value="verify" disabled={busy || role.status !== "active"} className="!py-2">
 										<ShieldCheck className="h-4 w-4" aria-hidden />
 										Verify

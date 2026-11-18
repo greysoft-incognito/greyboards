@@ -13,11 +13,11 @@ const REASONS: { value: DisputeReason; label: string }[] = [
   { value: 'wrong_ad', label: 'The wrong ad is up' },
   { value: 'damaged', label: 'The ad or board is damaged' },
   { value: 'taken_down', label: 'The ad came down early' },
-  { value: 'payment', label: 'A problem with the money' },
+  { value: 'payment', label: 'A payment problem' },
   { value: 'other', label: 'Something else' },
 ]
 
-const SIDES: Record<Exclude<MessageSide, 'staff'>, string> = { advertiser: 'Advertiser', board: 'Board’s side', dispatch: 'Dispatch' }
+const SIDES: Record<Exclude<MessageSide, 'staff'>, string> = { advertiser: 'Advertiser', board: 'Board owner', dispatch: 'Dispatch' }
 
 /** The booking's latest dispute and what staff decided, with a way to raise one when something went wrong. */
 export function DisputeSection({ bookingId, disputes, currency, onChange }: { bookingId: string; disputes: BookingDisputes; currency: string; onChange: () => void }) {
@@ -35,7 +35,7 @@ export function DisputeSection({ bookingId, disputes, currency, onChange }: { bo
       setRaising(false)
       onChange()
 
-      return 'Dispute raised. Staff will look into it.'
+      return 'Problem reported. Our team will look into it.'
     })
 
   return (
@@ -69,13 +69,13 @@ export function DisputeSection({ bookingId, disputes, currency, onChange }: { bo
         <View style={styles.stack}>
           <Select label="What went wrong?" value={reason || 'pick'} options={[{ value: 'pick', label: 'What went wrong?' }, ...REASONS]} onChange={(value) => setReason(value === 'pick' ? '' : (value as DisputeReason))} />
           <Input value={details} onChangeText={setDetails} multiline maxLength={1000} accessibilityLabel="Details" placeholder="What happened, and when. Add photos in the messages." />
-          <Button title="Raise dispute" loading={action.busy} disabled={!reason || details.trim().length < 10} onPress={raise} />
+          <Button title="Report problem" loading={action.busy} disabled={!reason || details.trim().length < 10} onPress={raise} />
           <Button title="Not now" variant="ghost" onPress={() => setRaising(false)} />
         </View>
       ) : canOpen ? (
         <View style={styles.stack}>
-          {!latest ? <Text variant="muted">Try the messages first. If you can’t sort it out between you, staff will look into it and decide.</Text> : null}
-          <Button title="Raise a dispute" variant="secondary" onPress={() => setRaising(true)} />
+          {!latest ? <Text variant="muted">Try sorting it out in messages first. If that doesn’t work, our team will step in.</Text> : null}
+          <Button title="Report a problem" variant="secondary" onPress={() => setRaising(true)} />
         </View>
       ) : null}
       {action.problem.message ? <Callout>{action.problem.message}</Callout> : null}

@@ -45,7 +45,7 @@ export function RoleReputationPanel({ kind, reputation }: { kind: AccountRoleKin
   return (
     <View style={styles.panel}>
       <View style={styles.head}>
-        <Text style={styles.title}>Reputation in this role</Text>
+        <Text style={styles.title}>Reputation</Text>
         <Score value={reputation.score} />
       </View>
       <Standing standing={reputation} showScore={false} />
@@ -56,7 +56,7 @@ export function RoleReputationPanel({ kind, reputation }: { kind: AccountRoleKin
         <View style={styles.bars}>
           <Progress label="Score" have={progress.score.have} need={progress.score.need} unit="points" />
           <Progress label="Checked actions" have={progress.actions.have} need={progress.actions.need} unit="" />
-          <Progress label="Days in role" have={progress.days.have} need={progress.days.need} unit="days" />
+          <Progress label="Days active" have={progress.days.have} need={progress.days.need} unit="days" />
         </View>
       )}
       {history.length ? (
@@ -77,7 +77,7 @@ export function RoleReputationPanel({ kind, reputation }: { kind: AccountRoleKin
       ) : null}
       <Pressable accessibilityRole="link" onPress={() => router.push('/reputation')}>
         <Text variant="small">
-          Points only come from work Greyboards could check. <Text style={styles.link}>See what earns them and what the badges mean</Text>
+          Points only come from work Greyboards could check. <Text style={styles.link}>How badges work</Text>
         </Text>
       </Pressable>
     </View>

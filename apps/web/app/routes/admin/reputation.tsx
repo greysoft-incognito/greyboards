@@ -49,7 +49,7 @@ export default function AdminReputation({ loaderData, actionData }: Route.Compon
 		<>
 			<AdminHeader
 				title="Reputation"
-				description="Verify people you have checked yourself, and correct scores when something went wrong. Proven badges come from the milestones in Configuration."
+				description="Verify people you've checked yourself and fix scores when needed. Proven badges are set by the milestones in Configuration."
 			/>
 			<div className="space-y-6 px-4 py-8 sm:px-8">
 				<Form method="get" className="flex flex-wrap items-center gap-3">
@@ -73,7 +73,7 @@ export default function AdminReputation({ loaderData, actionData }: Route.Compon
 						Show
 					</Button>
 					<Link to="/reputation" className="text-sm font-semibold text-brand-600 hover:underline">
-						What people see about badges
+						How badges are explained to people
 					</Link>
 				</Form>
 

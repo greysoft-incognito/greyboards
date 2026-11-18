@@ -5,9 +5,9 @@ import { Alert, Button, Field, Input, Select, Spinner } from "~/components/ui";
 import { useLimits } from "~/lib/limits";
 
 const ID_STATUS: Record<NonNullable<PartnerChecks["identity"]>["status"], string> = {
-	submitted: "Waiting for a reviewer",
+	submitted: "Being reviewed",
 	verified: "Checked",
-	rejected: "Turned down",
+	rejected: "Not approved",
 };
 
 /**
@@ -34,8 +34,8 @@ export function PartnerChecksPanel({
 	return (
 		<section className="panel space-y-5 p-5 sm:p-6">
 			<div>
-				<h2 className="font-display text-xl font-bold text-ink-900">Checks for scouts and dispatchers</h2>
-				<p className="mt-1 text-sm text-ink-500">You'll handle other people's boards and money, so we check who you are and where to pay you first.</p>
+				<h2 className="font-display text-xl font-bold text-ink-900">Verify your identity</h2>
+				<p className="mt-1 text-sm text-ink-500">Scouts and dispatchers work with other people's boards, so we need to know who you are and where to pay you.</p>
 			</div>
 
 			<div className="flex items-start gap-3">
@@ -58,7 +58,7 @@ export function PartnerChecksPanel({
 				<Form method="post" encType="multipart/form-data" className="space-y-4 rounded-2xl bg-surface-100 p-4">
 					<input type="hidden" name="intent" value="send-id" />
 					<div className="grid gap-4 sm:grid-cols-2">
-						<Field label="Kind of ID" error={fieldErrors.documentType}>
+						<Field label="ID type" error={fieldErrors.documentType}>
 							<Select name="documentType" defaultValue={identity?.documentType ?? documents[0]?.type} required>
 								{documents.map((document) => (
 									<option key={document.type} value={document.type}>
@@ -71,16 +71,16 @@ export function PartnerChecksPanel({
 							<Input name="documentNumber" required minLength={5} maxLength={30} autoComplete="off" />
 						</Field>
 					</div>
-					<Field label="Your name as it is on the ID" error={fieldErrors.fullName}>
+					<Field label="Name on your ID" error={fieldErrors.fullName}>
 						<Input name="fullName" required minLength={3} maxLength={120} defaultValue={identity?.fullName ?? ""} />
 					</Field>
-					<Field label="Photo of the ID" error={fieldErrors.photo} hint={`Every corner in view and easy to read. Up to ${maxImageMb} MB.`}>
+					<Field label="Photo of the ID" error={fieldErrors.photo} hint={`Make sure all four corners are visible. Up to ${maxImageMb} MB.`}>
 						<Input name="photo" type="file" accept="image/jpeg,image/png,image/webp" required />
 					</Field>
 					{error && <Alert>{error}</Alert>}
 					<Button type="submit" variant={identity ? "secondary" : "primary"} disabled={busy}>
 						{busy ? <Spinner /> : <Upload className="h-4 w-4" aria-hidden />}
-						{identity ? "Send a new photo" : "Send for checking"}
+						{identity ? "Upload a new photo" : "Submit"}
 					</Button>
 				</Form>
 			)}
@@ -104,7 +104,7 @@ export function PartnerChecksPanel({
 					{checks.namesMatch === false && (
 						<p className="mt-1 flex items-center gap-1.5 text-held">
 							<CircleAlert className="h-4 w-4" aria-hidden />
-							The bank's name for this account doesn't match your ID. A reviewer may ask about it.
+							The name on this bank account doesn't match your ID. We may ask you about it.
 						</p>
 					)}
 				</div>

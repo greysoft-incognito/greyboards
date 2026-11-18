@@ -73,8 +73,8 @@ export function BookPanel({
 				<h2 className="font-display text-xl font-extrabold tracking-tight text-ink-900">Book this board</h2>
 				<p className="mt-1 text-sm text-ink-500">
 					{digital
-						? `Priced per slot by the ${unit}. The loop has ${slotQuote.loop.slots} slots of ${slotQuote.loop.seconds} seconds.`
-						: `Priced by the ${unit}. Pick your first day and how long to run.`}
+						? `Priced per slot, per ${unit}. Each loop has ${slotQuote.loop.slots} slots of ${slotQuote.loop.seconds} seconds.`
+						: `Priced per ${unit}. Choose a start date and how long to run.`}
 				</p>
 			</div>
 
@@ -181,14 +181,14 @@ export function BookPanel({
 						</div>
 						{terms.printFeeMinor > 0 ? (
 							<div className="flex justify-between gap-4">
-								<dt className="text-ink-700">Printing and posting by the owner</dt>
+								<dt className="text-ink-700">The owner prints and puts it up</dt>
 								<dd className="text-ink-900 tabular-nums">{formatMoney(terms.printFeeMinor, rate.currency)}</dd>
 							</div>
 						) : (
 							board.kind !== "digital" && (
 								<div className="flex justify-between gap-4">
 									<dt className="text-ink-700">Printing and posting</dt>
-									<dd className="text-right text-ink-500">Priced by dispatchers once your artwork is approved</dd>
+									<dd className="text-right text-ink-500">Quoted by local dispatchers once your design is approved</dd>
 								</div>
 							)
 						)}
@@ -205,18 +205,18 @@ export function BookPanel({
 					</dl>
 					{offering && (
 						<div className="space-y-3 rounded-2xl border-[1.5px] border-brand-200 p-4">
-							<Field label="Your offer for the run" hint={`Listed at ${formatMoney(rate.amountMinor * periods, rate.currency)} before printing`}>
+							<Field label="Your offer" hint={`Listed price ${formatMoney(rate.amountMinor * periods, rate.currency)}, before printing`}>
 								<Input name="amount" type="number" min="1" max={(rate.amountMinor * periods) / 100 - 1} step="1000" defaultValue={Math.floor((rate.amountMinor * periods * 0.9) / 100000) * 1000} required />
 							</Field>
 							<Field label="Note for the owner">
-								<Textarea name="note" rows={2} maxLength={500} placeholder="Such as: a three-month campaign if this goes well" />
+								<Textarea name="note" rows={2} maxLength={500} placeholder="e.g. We'd like to run for three months if this goes well" />
 							</Field>
 						</div>
 					)}
 					{error && <Alert>{error}</Alert>}
 					<Button type="submit" className="w-full" disabled={busy}>
 						{busy ? <Spinner /> : offering ? <HandCoins className="h-4 w-4" aria-hidden /> : <CalendarCheck className="h-4 w-4" aria-hidden />}
-						{offering ? (busy ? "Sending your offer" : "Send offer") : busy ? "Holding your dates" : splitting ? "Hold dates and invite the others" : "Hold dates and pay"}
+						{offering ? (busy ? "Sending your offer" : "Send offer") : busy ? "Holding your dates" : splitting ? "Hold dates and invite others" : "Hold dates and pay"}
 					</Button>
 					{!digital && (
 						<button type="button" onClick={() => setOffering((current) => !current)} className="w-full text-sm font-semibold text-brand-700 hover:underline">
@@ -226,15 +226,15 @@ export function BookPanel({
 					<p className="flex items-start gap-2 text-xs text-ink-500">
 						<ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-available" aria-hidden />
 						{offering
-							? "The owner can accept, decline or counter. If they accept, the dates are held for you to pay."
+							? "The owner can accept, decline or suggest another price. If they accept, we'll hold the dates for you to pay."
 							: splitting
-								? `Everyone pays their share and sends their own design, and we merge them into one print. You'll get an invite link for each share. Everyone has ${terms.shares.payHours} hours to pay, and you can cover any unpaid share.`
-								: "We hold your payment until there's a photo of your ad on the board. Your dates are held for a few minutes while you pay."}
+								? `Each person pays their share and uploads their own design, and we combine them into one print. You'll get an invite link for each share. Everyone has ${terms.shares.payHours} hours to pay, and you can cover any unpaid shares yourself.`
+								: "We'll hold your dates for a few minutes while you pay. The owner only gets paid once your ad is up."}
 					</p>
 				</Form>
 			) : (
 				<Link prefetch="intent" to="/settings/roles" className={buttonClass("primary", "w-full")}>
-					Add the advertiser role to book
+					Become an advertiser to book
 				</Link>
 			)}
 

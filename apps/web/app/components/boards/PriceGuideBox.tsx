@@ -66,9 +66,9 @@ export function PriceGuideBox({ fields, exceptId, onUse }: { fields: GuideFields
 					</p>
 					<p className="mt-0.5">
 						{guide.basis === "comparables" && comparables
-							? `${comparables.count} boards like this within ${comparables.radiusKm} km ask ${formatMoney(comparables.lowMinor ?? 0, "NGN")} to ${formatMoney(comparables.highMinor ?? 0, "NGN")} for this size.`
-							: `From about ${guide.traffic?.daily.toLocaleString("en-NG")} people passing a day${guide.traffic?.source === "measured" ? ", as counted" : ""}.`}
-						{guide.basis === "comparables" && guide.fromTrafficMinor !== null && ` Its traffic alone suggests ${formatMoney(guide.fromTrafficMinor, "NGN")}.`}
+							? `${comparables.count} boards like this within ${comparables.radiusKm} km charge ${formatMoney(comparables.lowMinor ?? 0, "NGN")} to ${formatMoney(comparables.highMinor ?? 0, "NGN")}.`
+							: `From about ${guide.traffic?.daily.toLocaleString("en-NG")} people pass by each day.`}
+						{guide.basis === "comparables" && guide.fromTrafficMinor !== null && ` Based on traffic alone, try ${formatMoney(guide.fromTrafficMinor, "NGN")}.`}
 					</p>
 				</div>
 			</div>

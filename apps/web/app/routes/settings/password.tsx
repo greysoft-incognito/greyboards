@@ -36,7 +36,7 @@ export default function Password({ actionData }: Route.ComponentProps) {
 
 	return (
 		<>
-			<PageHeader title="Password" description="Changing it signs you out on every other device." />
+			<PageHeader title="Password" description="You'll be signed out on your other devices." />
 			<Section>
 				<Form method="post" className="max-w-md space-y-4" key={actionData?.message ?? "password"}>
 					<Field label="Current password" error={actionData?.fieldErrors.currentPassword}>

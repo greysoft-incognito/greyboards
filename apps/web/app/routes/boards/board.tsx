@@ -78,13 +78,13 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 				closesAt: new Date(String(form.get("closesAt"))).toISOString(),
 			});
 
-			return { error: null, message: "Dates open for bids.", intent, id };
+			return { error: null, message: "Bidding is open.", intent, id };
 		}
 
 		if (intent === "cancel-auction") {
 			await api.account.cancelAuction(id);
 
-			return { error: null, message: "Bidding closed. The dates are free to book again.", intent, id };
+			return { error: null, message: "Bidding closed. The dates can be booked again.", intent, id };
 		}
 
 		if (isSharedBookingIntent(intent)) return await sharedBookingAction(api, intent, String(form.get("bookingId")), form);
@@ -105,7 +105,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 		if (intent === "add-photo") {
 			const photo = postedPhoto(form);
 
-			if (!photo) return { error: "Choose a photo first.", message: null };
+			if (!photo) return { error: "Add a photo first.", message: null };
 
 			await api.account.addBoardPhoto(params.id, photo, photoLocation(form));
 
@@ -144,7 +144,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 		if (intent === "unblock") {
 			await api.account.unblockDays(params.id, String(form.get("block")));
 
-			return { error: null, message: "Days open for booking again." };
+			return { error: null, message: "Those days can be booked again." };
 		}
 
 		if (intent === "player-token") {
@@ -156,7 +156,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 		if (intent === "player-revoke") {
 			await api.account.revokePlayerToken(params.id);
 
-			return { error: null, message: "The player is disconnected." };
+			return { error: null, message: "Player disconnected." };
 		}
 
 		if (intent === "send-agreement") {
@@ -180,10 +180,10 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 }
 
 const REVIEW_NOTES: Record<BoardDetail["status"], string> = {
-	pending: "We're checking this board. It goes on the map once it's approved.",
-	listed: "Advertisers can find and book this board.",
-	rejected: "This board wasn't approved. Fix what the note says and save it to send it back.",
-	unlisted: "This board is off the map. Contact support to bring it back.",
+	pending: "We're reviewing this board. It'll go live once it's approved.",
+	listed: "Live. Advertisers can find and book it.",
+	rejected: "Not approved yet. Make the changes in the note and save to resubmit.",
+	unlisted: "This board is hidden. Contact support to bring it back.",
 };
 
 /** A board's photos and details. Whoever looks after it can add photos, edit it or remove it. */
@@ -198,9 +198,9 @@ export default function BoardPage({ loaderData, actionData }: Route.ComponentPro
 	const rate = formatRate(board.rate);
 
 	useEffect(() => {
-		if (params.has("tagged")) toast.success("Board tagged. We'll check it before it goes on the map.", { id: "tagged" });
+		if (params.has("tagged")) toast.success("Board added! We'll review it before it goes live.", { id: "tagged" });
 		if (params.has("saved")) toast.success("Board saved.", { id: "saved" });
-		if (params.get("photo") === "failed") toast.error("The board was tagged, but the photo didn't upload. Add it again below.", { id: "photo" });
+		if (params.get("photo") === "failed") toast.error("Board added, but the photo didn't upload. Try adding it again below.", { id: "photo" });
 	}, [params]);
 
 	useEffect(() => {
@@ -212,7 +212,7 @@ export default function BoardPage({ loaderData, actionData }: Route.ComponentPro
 		{ icon: Layers, label: board.faces === 1 ? "One face" : `${board.faces} faces` },
 		board.facing || board.headingDeg !== null ? { icon: Compass, label: [board.headingDeg !== null ? formatHeading(board.headingDeg) : null, board.facing].filter(Boolean).join(", ") } : null,
 		{ icon: Lightbulb, label: board.lit ? "Lit at night" : "Not lit" },
-		board.traffic ? { icon: CarFront, label: `About ${board.traffic.daily.toLocaleString("en-NG")} people pass a day${board.traffic.source === "measured" ? ", counted" : ", estimated from the road"}` } : null,
+		board.traffic ? { icon: CarFront, label: `About ${board.traffic.daily.toLocaleString("en-NG")} people pass a day${board.traffic.source === "measured" ? ", counted" : ", estimated"}` } : null,
 	].filter((fact) => fact !== null);
 
 	return (
@@ -251,7 +251,7 @@ export default function BoardPage({ loaderData, actionData }: Route.ComponentPro
 						<a href={mapLink(board.latitude, board.longitude)} target="_blank" rel="noreferrer" className="flex items-start gap-2 text-sm text-ink-500 hover:text-brand-700">
 							<MapPin className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
 							<span>
-								{[board.address, board.city].filter(Boolean).join(", ") || "No address yet"}
+								{[board.address, board.city].filter(Boolean).join(", ") || "No address"}
 								<span className="mt-0.5 flex items-center gap-1 tabular-nums">
 									{board.latitude.toFixed(5)}, {board.longitude.toFixed(5)}
 									<ExternalLink className="h-3.5 w-3.5" aria-hidden />
@@ -439,11 +439,11 @@ function OwnerLine({ owner }: { owner: OwnerProfile }) {
 }
 
 const AGREEMENT_STATES: Record<BoardAgreement["status"], { label: string; tone: string; note: string }> = {
-	sent: { label: "Waiting for the owner", tone: "bg-amber-50 text-held", note: "We texted the owner a link. They sign with a code we send to the same number." },
-	signed: { label: "Signed", tone: "bg-emerald-50 text-available", note: "The owner agreed. You can run this board for them." },
-	declined: { label: "Declined", tone: "bg-red-50 text-red-700", note: "The owner said no. Talk to them before sending it again." },
-	cancelled: { label: "Replaced", tone: "bg-surface-100 text-ink-700", note: "A newer agreement replaced this one." },
-	expired: { label: "Link ran out", tone: "bg-surface-100 text-ink-700", note: "The owner didn't sign in time. Send it again." },
+	sent: { label: "Waiting for the owner", tone: "bg-amber-50 text-held", note: "We've texted the owner a link to sign." },
+	signed: { label: "Signed", tone: "bg-emerald-50 text-available", note: "The owner signed. You can now manage this board for them." },
+	declined: { label: "Declined", tone: "bg-red-50 text-red-700", note: "The owner declined. Talk to them before sending it again." },
+	cancelled: { label: "Replaced", tone: "bg-surface-100 text-ink-700", note: "This agreement has been replaced." },
+	expired: { label: "Link ran out", tone: "bg-surface-100 text-ink-700", note: "The link expired before the owner signed. Send it again." },
 };
 
 /** Where the owner's agreement stands, with a way to text it (again). */
@@ -476,7 +476,7 @@ function AgreementPanel({ board }: { board: BoardDetail }) {
 					<input type="hidden" name="intent" value="send-agreement" />
 					<Button type="submit" variant={agreement?.status === "sent" ? "secondary" : "primary"} disabled={busy}>
 						{busy ? <Spinner /> : <Send className="h-4 w-4" aria-hidden />}
-						{agreement?.status === "sent" ? "Text the link again" : "Text the owner to sign"}
+						{agreement?.status === "sent" ? "Resend" : "Send to the owner"}
 					</Button>
 				</Form>
 			)}

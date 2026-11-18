@@ -19,19 +19,19 @@ type View_ = 'mine' | 'boards' | 'offers' | 'board-offers' | 'bids'
 type Entry = { type: 'booking'; booking: Booking } | { type: 'offer'; offer: Offer } | { type: 'bid'; auction: Auction }
 
 const INTROS: Record<View_, string> = {
-  mine: "Boards you've booked. Payments wait in escrow until your ad is up.",
-  boards: 'Paid bookings on boards you look after, and what each one pays.',
-  offers: 'Offers you made below a board’s price. Once accepted, the dates are held for you to pay.',
-  'board-offers': 'Offers advertisers made on your boards. Accept, decline or name your price.',
-  bids: 'Dates you bid for. If you win, you have a day to pay.',
+  mine: "Boards you’ve booked.",
+  boards: 'Bookings on your boards and what you earn from each.',
+  offers: 'Offers you’ve made. If one is accepted, we’ll hold the dates for you to pay.',
+  'board-offers': 'Offers on your boards. Accept, decline or suggest your own price.',
+  bids: 'Your bids. If you win, you’ll have a day to pay.',
 }
 
 const EMPTY: Record<View_, { title: string; text: string }> = {
-  mine: { title: 'No bookings yet', text: 'Find a board, pick your dates and pay. We hold the money until your ad is up.' },
-  boards: { title: 'No paid bookings yet', text: 'When an advertiser pays for one of your boards, it shows here with what it pays.' },
-  offers: { title: 'No offers yet', text: 'On a board, choose Make an offer to suggest your own price for the dates.' },
-  'board-offers': { title: 'No offers yet', text: 'When an advertiser offers less than your price, it shows here for you to answer.' },
-  bids: { title: 'No bids yet', text: 'Boards with dates open for bids show them on their page. Bid there.' },
+  mine: { title: 'No bookings yet', text: 'Find a board you love and book your first campaign.' },
+  boards: { title: 'No paid bookings yet', text: 'When someone books one of your boards, you’ll see it here.' },
+  offers: { title: 'No offers yet', text: 'Want a different price? Make an offer on any board.' },
+  'board-offers': { title: 'No offers yet', text: 'Offers from advertisers will show up here.' },
+  bids: { title: 'No bids yet', text: 'Some boards let you bid on dates. Your bids will show up here.' },
 }
 
 /** Fetches one page of a view, as list entries. */
