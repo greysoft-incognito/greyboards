@@ -15,7 +15,7 @@ const api = (method: 'get' | 'post' | 'put', path: string, body?: Record<string,
 }
 
 const ledger = (bookingId: string) =>
-  ark('db', `select account || ' ' || kind || ' ' || amount_minor as line from ledger_entries where booking_id = '${bookingId}' order by "createdAt", account`)
+  ark('db', `select account || ' ' || kind || ' ' || amount_minor as line from ledger_entries where booking_id = '${bookingId}' and kind <> 'paid_out' order by "createdAt", account`)
     .split('\n')
     .map((row) => row.replace(/\|/g, '').trim())
     .filter((row) => /^[a-z]+ [a-z_]+ -?\d+$/.test(row))
