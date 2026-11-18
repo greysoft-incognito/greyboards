@@ -1,6 +1,6 @@
 import { Form, useNavigation } from "react-router";
 import { Check, CreditCard, HandCoins, MessageSquareQuote, Send, Undo2, X } from "lucide-react";
-import type { PrintJob, PrintOffer, PrintOptions } from "@greyboards/types";
+import { type PrintJob, type PrintOffer, type PrintOptions, currencySymbol } from "@greyboards/types";
 import { Avatar } from "~/components/Avatar";
 import { formatDay, formatMoney } from "~/components/bookings/BookingBits";
 import { Button, Field, Input, Spinner } from "~/components/ui";
@@ -154,8 +154,8 @@ export function SendPrice({ job, fieldError }: { job: PrintJob; fieldError?: str
 				</p>
 			)}
 			<Form method="post" className="grid gap-3 sm:grid-cols-[1fr_1.4fr]">
-				<Field label={offer ? "New price in naira" : "Your price in naira"} error={fieldError}>
-					<Input name="amount" inputMode="numeric" required defaultValue={offer ? String(offer.amountMinor / 100) : ""} placeholder="175000" />
+				<Field label={offer ? "New price" : "Your price"} error={fieldError}>
+					<Input name="amount" inputMode="numeric" required defaultValue={offer ? String(offer.amountMinor / 100) : ""} placeholder="175000" addon={currencySymbol(job.currency)} />
 				</Field>
 				<Field label="Note for the advertiser" hint="Optional, such as the material or when you can put it up.">
 					<Input name="note" maxLength={200} defaultValue={offer?.note ?? ""} />

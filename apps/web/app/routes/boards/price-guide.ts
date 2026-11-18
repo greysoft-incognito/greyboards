@@ -16,6 +16,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 		period: params.get("period") === "week" ? "week" : "month",
 		roadClass: (params.get("roadClass") || null) as PriceGuideQuery["roadClass"],
 		dailyTraffic: params.get("dailyTraffic") ? number("dailyTraffic") : null,
+		...(params.get("currency") ? { currency: String(params.get("currency")) } : {}),
 		...(params.get("except") ? { except: String(params.get("except")) } : {}),
 	};
 

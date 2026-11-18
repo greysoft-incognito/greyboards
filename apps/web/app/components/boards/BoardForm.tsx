@@ -1,14 +1,18 @@
 import { type FormEvent, useState } from "react";
 import { Form, useNavigation } from "react-router";
 import { Binoculars, Camera, HandCoins, LocateFixed, Presentation } from "lucide-react";
-import type { BoardDetail, BoardKindDefinition, OwnerProfile } from "@greyboards/types";
+import { type BoardDetail, type BoardKindDefinition, type OwnerProfile, countryOptions, currencyOptions, currencySymbol, formatMoney } from "@greyboards/types";
 import { ManagedOwnerSelect, OwnerPicker } from "./OwnerPicker";
 import { NearbyBoards } from "./NearbyBoards";
 import { PriceGuideBox, type GuideFields } from "./PriceGuideBox";
 import { Alert, Button, Field, Input, Select, Spinner, Textarea } from "~/components/ui";
 import { useLimits } from "~/lib/limits";
+import { currencyFor, useCurrency } from "~/lib/currency";
 
 type Errors = Record<string, string>;
+
+const COUNTRIES = countryOptions();
+const CURRENCIES = currencyOptions();
 
 /** Coordinates as the form holds them, as text so a half-typed number stays put. */
 interface Spot {
@@ -43,6 +47,15 @@ export function BoardForm({
 }) {
 	const navigation = useNavigation();
 	const { maxImageMb } = useLimits();
+	const currencies = useCurrency();
+	const [country, setCountry] = useState(board?.country ?? currencies.country ?? "");
+	const [currency, setCurrency] = useState(board?.currency ?? currencyFor(currencies, board?.country ?? currencies.country));
+	const [currencyPicked, setCurrencyPicked] = useState(!!board);
+	const pickCountry = (next: string) => {
+		setCountry(next);
+
+		if (!currencyPicked) setCurrency(currencyFor(currencies, next));
+	};
 	const busy = navigation.state === "submitting";
 	const [as, setAs] = useState<"owner" | "scout">(tagAs[0] ?? "owner");
 	const [spot, setSpot] = useState<Spot>({
@@ -62,7 +75,7 @@ export function BoardForm({
 		return minor ? String(minor / 100) : "";
 	});
 	const ownerPercent = board ? (board.ownerPercent ?? null) : (ownerPercents?.[as] ?? null);
-	const [guideFields, setGuideFields] = useState<Omit<GuideFields, "latitude" | "longitude">>({
+	const [guideFields, setGuideFields] = useState<Omit<GuideFields, "latitude" | "longitude" | "currency">>({
 		kind: board?.kind ?? "billboard",
 		widthM: board ? String(board.widthM) : "",
 		heightM: board ? String(board.heightM) : "",
@@ -154,15 +167,26 @@ export function BoardForm({
 				</div>
 				<input type="hidden" name="accuracyM" value={spot.accuracyM} />
 				{!board && <NearbyBoards latitude={spot.latitude} longitude={spot.longitude} />}
-				<div className="grid gap-4 sm:grid-cols-[2fr_1fr]">
+				<div className="grid gap-4 sm:grid-cols-[2fr_1fr_1fr]">
 					<Field label="Street address" error={fieldErrors.address}>
 						<Input name="address" defaultValue={board?.address ?? ""} maxLength={191} placeholder="Admiralty Way, by the roundabout" />
 					</Field>
 					<Field label="City" error={fieldErrors.city}>
 						<Input name="city" defaultValue={board?.city ?? ""} maxLength={80} placeholder="Kaduna" />
 					</Field>
+					<Field label="Country" error={fieldErrors.country}>
+						<Select name="country" required value={country} onChange={(event) => pickCountry(event.target.value)}>
+							<option value="" disabled>
+								Pick one
+							</option>
+							{COUNTRIES.map((option) => (
+								<option key={option.value} value={option.value}>
+									{option.label}
+								</option>
+							))}
+						</Select>
+					</Field>
 				</div>
-				<input type="hidden" name="country" value={board?.country ?? "NG"} />
 			</section>
 
 			<section className="panel space-y-5 p-5 sm:p-6">
@@ -238,13 +262,29 @@ export function BoardForm({
 
 			<section className="panel space-y-5 p-5 sm:p-6">
 				<h2 className="font-display text-lg font-extrabold tracking-tight text-ink-900">{scouting ? "Owner and rate" : !board && ownerProfiles.length > 1 ? "Owner and rate" : "Rate"}</h2>
-				<div className="grid gap-4 sm:grid-cols-2">
+				<div className="grid gap-4 sm:grid-cols-[2fr_1fr_1fr]">
 					<Field
-						label={ownerNet ? (digital ? "What the owner gets per slot, in naira" : "What the owner gets, in naira") : digital ? "Rate per slot, all day, in naira" : "Rate in naira"}
+						label={ownerNet ? (digital ? "What the owner gets per slot" : "What the owner gets") : digital ? "Rate per slot, all day" : "Rate"}
 						error={fieldErrors.rateMinor}
 						hint={ownerNet ? "Each period, after every other share." : scouting ? "What the owner asks, if you know it." : undefined}
 					>
-						<Input name="rate" type="number" min="0" step="1000" value={rate} onChange={(event) => setRate(event.target.value)} placeholder="850000" />
+						<Input name="rate" type="number" min="0" step="1000" value={rate} onChange={(event) => setRate(event.target.value)} placeholder="850000" addon={currencySymbol(currency)} />
+					</Field>
+					<Field label="Currency" error={fieldErrors.currency}>
+						<Select
+							name="currency"
+							value={currency}
+							onChange={(event) => {
+								setCurrency(event.target.value);
+								setCurrencyPicked(true);
+							}}
+						>
+							{CURRENCIES.map((option) => (
+								<option key={option.value} value={option.value}>
+									{option.value}
+								</option>
+							))}
+						</Select>
 					</Field>
 					<Field label="Per" error={fieldErrors.ratePeriod}>
 						<Select name="ratePeriod" defaultValue={board?.rate?.period ?? "month"}>
@@ -253,8 +293,8 @@ export function BoardForm({
 						</Select>
 					</Field>
 				</div>
-				<PriceGuideBox fields={{ ...guideFields, latitude: spot.latitude, longitude: spot.longitude }} exceptId={board?.id} onUse={useGuide} />
-				<OwnerNetToggle on={ownerNet} onChange={setOwnerNet} rate={rate} percent={ownerPercent} />
+				<PriceGuideBox fields={{ ...guideFields, latitude: spot.latitude, longitude: spot.longitude, currency }} exceptId={board?.id} onUse={useGuide} />
+				<OwnerNetToggle on={ownerNet} onChange={setOwnerNet} rate={rate} percent={ownerPercent} currency={currency} />
 				<div className="grid gap-4 sm:grid-cols-2">
 					<Field label="Who prints and puts up ads" error={fieldErrors.printsOwn}>
 						<Select name="printsOwn" defaultValue={board?.printsOwn ? "1" : "0"}>
@@ -262,8 +302,8 @@ export function BoardForm({
 							<option value="1">{scouting ? "The owner or I do it" : "We do it ourselves"}</option>
 						</Select>
 					</Field>
-					<Field label="Your print price in naira" error={fieldErrors.printFeeMinor} hint="Only when you print. Empty uses the standard price.">
-						<Input name="printFee" type="number" min="0" step="1000" defaultValue={board?.ownPrintFeeMinor ? board.ownPrintFeeMinor / 100 : ""} placeholder="150000" />
+					<Field label="Your print price" error={fieldErrors.printFeeMinor} hint="Only when you print. Empty uses the standard price.">
+						<Input name="printFee" type="number" min="0" step="1000" defaultValue={board?.ownPrintFeeMinor ? board.ownPrintFeeMinor / 100 : ""} placeholder="150000" addon={currencySymbol(currency)} />
 					</Field>
 				</div>
 				{scouting && <OwnerPicker errors={fieldErrors} />}
@@ -292,13 +332,12 @@ export function BoardForm({
 	);
 }
 
-const naira = (amount: number) => new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 }).format(amount);
-
 /**
  * Lets the tagger fix what the owner receives. The rate typed is then the owner's amount, and
- * the listed rate adds the other shares on top: the same rounding the API uses, up to a naira.
+ * the listed rate adds the other shares on top: the same rounding the API uses, up to a whole unit.
  */
-function OwnerNetToggle({ on, onChange, rate, percent }: { on: boolean; onChange: (on: boolean) => void; rate: string; percent: number | null }) {
+function OwnerNetToggle({ on, onChange, rate, percent, currency }: { on: boolean; onChange: (on: boolean) => void; rate: string; percent: number | null; currency: string }) {
+	const money = (amount: number) => formatMoney(amount * 100, currency);
 	const amount = Number(rate);
 	const typed = rate.trim() !== "" && Number.isFinite(amount) && amount > 0;
 	const grossing = percent !== null && percent > 0 && percent < 100;
@@ -324,11 +363,11 @@ function OwnerNetToggle({ on, onChange, rate, percent }: { on: boolean; onChange
 				<p className="rounded-xl bg-surface-100 px-3 py-2 text-sm text-ink-700">
 					{on && listed !== null ? (
 						<>
-							Listed at <strong className="text-ink-900">{naira(listed)}</strong>. The owner gets {naira(amount)}, which is {percent}% of the rent.
+							Listed at <strong className="text-ink-900">{money(listed)}</strong>. The owner gets {money(amount)}, which is {percent}% of the rent.
 						</>
 					) : (
 						<>
-							Listed at <strong className="text-ink-900">{naira(amount)}</strong>. The owner gets {naira(Math.floor((amount * percent) / 100))}, which is {percent}% of the rent.
+							Listed at <strong className="text-ink-900">{money(amount)}</strong>. The owner gets {money(Math.floor((amount * percent) / 100))}, which is {percent}% of the rent.
 						</>
 					)}
 				</p>

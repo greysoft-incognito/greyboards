@@ -14,6 +14,7 @@ export interface GuideFields {
 	ratePeriod: string;
 	roadClass: string;
 	dailyTraffic: string;
+	currency: string;
 }
 
 /**
@@ -42,6 +43,7 @@ export function PriceGuideBox({ fields, exceptId, onUse }: { fields: GuideFields
 			period: fields.ratePeriod,
 			roadClass: fields.roadClass,
 			dailyTraffic: fields.dailyTraffic,
+			currency: fields.currency,
 			...(exceptId ? { except: exceptId } : {}),
 		});
 
@@ -62,13 +64,13 @@ export function PriceGuideBox({ fields, exceptId, onUse }: { fields: GuideFields
 				<Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-brand-600" aria-hidden />
 				<div>
 					<p className="font-semibold text-ink-900">
-						Suggested: {formatMoney(guide.suggestedMinor, "NGN")} a {period}
+						Suggested: {formatMoney(guide.suggestedMinor, guide.currency)} a {period}
 					</p>
 					<p className="mt-0.5">
 						{guide.basis === "comparables" && comparables
-							? `${comparables.count} boards like this within ${comparables.radiusKm} km ask ${formatMoney(comparables.lowMinor ?? 0, "NGN")} to ${formatMoney(comparables.highMinor ?? 0, "NGN")} for this size.`
+							? `${comparables.count} boards like this within ${comparables.radiusKm} km ask ${formatMoney(comparables.lowMinor ?? 0, guide.currency)} to ${formatMoney(comparables.highMinor ?? 0, guide.currency)} for this size.`
 							: `From about ${guide.traffic?.daily.toLocaleString("en-NG")} people passing a day${guide.traffic?.source === "measured" ? ", as counted" : ""}.`}
-						{guide.basis === "comparables" && guide.fromTrafficMinor !== null && ` Its traffic alone suggests ${formatMoney(guide.fromTrafficMinor, "NGN")}.`}
+						{guide.basis === "comparables" && guide.fromTrafficMinor !== null && ` Its traffic alone suggests ${formatMoney(guide.fromTrafficMinor, guide.currency)}.`}
 					</p>
 				</div>
 			</div>

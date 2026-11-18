@@ -9,6 +9,7 @@ import {
 } from "react-router";
 
 import { DEFAULT_LIMITS } from "@greyboards/types";
+import { FALLBACK_CURRENCY } from "./lib/currency";
 import type { Route } from "./+types/root";
 import { NavigationProgress } from "./components/NavigationProgress";
 import { Toaster } from "./components/Toaster";
@@ -36,7 +37,7 @@ export const links: Route.LinksFunction = () => [
 export async function loader({ request, context }: Route.LoaderArgs) {
 	const { env } = context.get(cloudflareContext);
 	const api = await getServerApi(request, env, null);
-	const [limits, documents] = await Promise.all([
+	const [limits, documents, currency] = await Promise.all([
 		api
 			.limits()
 			.then(({ data }) => data)
@@ -45,9 +46,13 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 			.documents({ per_page: 100 })
 			.then(({ data }) => data)
 			.catch(() => []),
+		api
+			.currency()
+			.then(({ data }) => data)
+			.catch(() => FALLBACK_CURRENCY),
 	]);
 
-	return { origin: new URL(request.url).origin, limits, documents };
+	return { origin: new URL(request.url).origin, limits, documents, currency };
 }
 
 export const shouldRevalidate = () => false;

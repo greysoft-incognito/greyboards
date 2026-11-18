@@ -15,10 +15,9 @@ export interface MapFilters {
 	kind: BoardKind | null;
 	lit: boolean | null;
 	maxRateMinor: number | null;
+	/** The currency `maxRateMinor` is in. Boards priced in another currency don't pass a price limit. */
+	currency: string | null;
 }
-
-/** Price limits offered on the map, in kobo. */
-export const PRICE_LIMITS = [25_000_000, 50_000_000, 100_000_000, 250_000_000, 500_000_000];
 
 /** Reads `?at=lat,lng,zoom`, falling back to the default view. */
 export function readView(params: URLSearchParams): MapView {
@@ -36,6 +35,7 @@ export function readFilters(params: URLSearchParams): MapFilters {
 		kind: (params.get("kind") as BoardKind) || null,
 		lit: lit === "true" ? true : lit === "false" ? false : null,
 		maxRateMinor: Number.isFinite(max) && max > 0 ? max : null,
+		currency: /^[A-Za-z]{3}$/.test(params.get("currency") ?? "") ? String(params.get("currency")).toUpperCase() : null,
 	};
 }
 
@@ -46,6 +46,7 @@ export function mapSearch(view: MapView, filters: MapFilters): URLSearchParams {
 	if (filters.kind) params.set("kind", filters.kind);
 	if (filters.lit !== null) params.set("lit", String(filters.lit));
 	if (filters.maxRateMinor) params.set("max", String(filters.maxRateMinor));
+	if (filters.maxRateMinor && filters.currency) params.set("currency", filters.currency);
 
 	return params;
 }

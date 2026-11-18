@@ -2,14 +2,15 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useFetcher } from "react-router";
 import { ArrowRight, Lightbulb, MapPin, Ruler, SearchX, SlidersHorizontal, X, ZoomIn } from "lucide-react";
 import mapStyles from "maplibre-gl/dist/maplibre-gl.css?url";
-import type { Board, BoardKind, BoardKindDefinition, BoardPin } from "@greyboards/types";
+import { type Board, type BoardKind, type BoardKindDefinition, type BoardPin, currencySymbol } from "@greyboards/types";
 import { AppHeader } from "~/components/AppHeader";
 import { BoardCover, formatRate, formatSize } from "~/components/boards/BoardBits";
 import { BoardMap, type MapMove } from "~/components/map/BoardMap";
-import { buttonClass, Select, Spinner } from "~/components/ui";
+import { buttonClass, Input, Select, Spinner } from "~/components/ui";
 import { getServerApi } from "~/lib/api.server";
 import { cloudflareContext } from "~/lib/cloudflare";
-import { type MapFilters, mapSearch, PRICE_LIMITS, readFilters, readView } from "~/lib/map";
+import { type MapFilters, mapSearch, readFilters, readView } from "~/lib/map";
+import { useCurrency } from "~/lib/currency";
 import { mapStyleUrl } from "~/lib/map.server";
 import { optionalUser } from "~/lib/session.server";
 import type { loader as dataLoader } from "./data";
@@ -42,8 +43,6 @@ function panelPadding() {
 
 	return { left: 0, bottom: Math.round(window.innerHeight * 0.44) };
 }
-
-const naira = (minor: number) => new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", notation: "compact", maximumFractionDigits: 1 }).format(minor / 100);
 
 /**
  * The map advertisers search: every listed board in view, clustered, with a list of the
@@ -160,6 +159,15 @@ export default function MapPage({ loaderData }: Route.ComponentProps) {
 }
 
 function Filters({ kinds, filters, onChange }: { kinds: BoardKindDefinition[]; filters: MapFilters; onChange: (filters: MapFilters) => void }) {
+	const visitor = useCurrency().currency;
+	const currency = filters.currency ?? visitor;
+	const setMax = (value: string) => {
+		const amount = Number(value);
+		const maxRateMinor = Number.isFinite(amount) && amount > 0 ? Math.round(amount * 100) : null;
+
+		if (maxRateMinor !== filters.maxRateMinor) onChange({ ...filters, maxRateMinor, currency: maxRateMinor ? currency : null });
+	};
+
 	return (
 		<div className="grid grid-cols-2 gap-2 border-b border-surface-100 px-4 py-3">
 			<label className="col-span-2 text-sm font-semibold text-ink-700">
@@ -187,17 +195,24 @@ function Filters({ kinds, filters, onChange }: { kinds: BoardKindDefinition[]; f
 			</label>
 			<label className="text-sm font-semibold text-ink-700">
 				Price up to
-				<Select value={filters.maxRateMinor ?? ""} onChange={(event) => onChange({ ...filters, maxRateMinor: Number(event.target.value) || null })} className="mt-1">
-					<option value="">Any price</option>
-					{PRICE_LIMITS.map((limit) => (
-						<option key={limit} value={limit}>
-							{naira(limit)}
-						</option>
-					))}
-				</Select>
+				<Input
+					key={filters.maxRateMinor ?? "any"}
+					type="number"
+					min="0"
+					step="1000"
+					inputMode="numeric"
+					placeholder="Any price"
+					defaultValue={filters.maxRateMinor ? filters.maxRateMinor / 100 : ""}
+					onBlur={(event) => setMax(event.target.value)}
+					onKeyDown={(event) => {
+						if (event.key === "Enter") setMax(event.currentTarget.value);
+					}}
+					addon={currencySymbol(currency)}
+					className="mt-1"
+				/>
 			</label>
 			{(filters.kind || filters.lit !== null || filters.maxRateMinor) && (
-				<button type="button" onClick={() => onChange({ kind: null, lit: null, maxRateMinor: null })} className="col-span-2 justify-self-start text-sm font-semibold text-brand-700 hover:underline">
+				<button type="button" onClick={() => onChange({ kind: null, lit: null, maxRateMinor: null, currency: null })} className="col-span-2 justify-self-start text-sm font-semibold text-brand-700 hover:underline">
 					Clear filters
 				</button>
 			)}

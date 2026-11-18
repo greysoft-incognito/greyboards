@@ -23,7 +23,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 	const form = await request.formData();
 	const change = String(form.get("change")) as PriceChange;
 	const raw = Number(form.get("value"));
-	// Percents go as they are; amounts are typed in naira and sent in kobo.
+	// Percents go as they are; amounts are typed in whole units and sent in minor units.
 	const value = change === "percent" ? raw : Math.round(raw * 100) * (change === "amount" && form.get("direction") === "down" ? -1 : 1);
 	const dryRun = form.get("intent") !== "apply";
 
@@ -94,17 +94,17 @@ export default function Prices({ loaderData, actionData }: Route.ComponentProps)
 								</Select>
 							</Field>
 						)}
-						<Field label={change === "percent" ? "Percent" : "Naira"}>
+						<Field label={change === "percent" ? "Percent" : "Amount"} hint={change === "percent" ? undefined : "In each board’s own currency."}>
 							<Input name="value" type="number" min="0" step={change === "percent" ? "0.5" : "1000"} required placeholder={change === "percent" ? "10" : "50000"} />
 						</Field>
 					</div>
 					<div className="grid gap-4 sm:grid-cols-2">
-						<Field label="Round to the nearest" hint="In naira.">
+						<Field label="Round to the nearest">
 							<Select name="roundTo" defaultValue="1000">
-								<option value="1">₦1</option>
-								<option value="1000">₦1,000</option>
-								<option value="5000">₦5,000</option>
-								<option value="10000">₦10,000</option>
+								<option value="1">1</option>
+								<option value="1000">1,000</option>
+								<option value="5000">5,000</option>
+								<option value="10000">10,000</option>
 							</Select>
 						</Field>
 						<Field label="Faces with their own rate">
@@ -137,9 +137,9 @@ export default function Prices({ loaderData, actionData }: Route.ComponentProps)
 										<span className="flex items-center gap-1.5 text-ink-700 tabular-nums">
 											{row && row.beforeMinor !== null && row.afterMinor !== null ? (
 												<>
-													<span className="text-ink-500 line-through">{formatMoney(row.beforeMinor, board.rate?.currency ?? "NGN")}</span>
+													<span className="text-ink-500 line-through">{formatMoney(row.beforeMinor, board.currency)}</span>
 													<ArrowRight className="h-3.5 w-3.5 text-ink-500" aria-hidden />
-													<strong className="text-ink-900">{formatMoney(row.afterMinor, board.rate?.currency ?? "NGN")}</strong>
+													<strong className="text-ink-900">{formatMoney(row.afterMinor, board.currency)}</strong>
 													{row.ownerNet && <span className="text-xs text-ink-500">for the owner</span>}
 												</>
 											) : row?.skipped ? (

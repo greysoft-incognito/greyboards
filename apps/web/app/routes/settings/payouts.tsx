@@ -1,4 +1,5 @@
 import { Form, useNavigation } from "react-router";
+import { Fragment } from "react";
 import { BadgeCheck, Landmark, Wallet } from "lucide-react";
 import type { Bank, Payout, PayoutAccount } from "@greyboards/types";
 import { formatDay, formatMoney } from "~/components/bookings/BookingBits";
@@ -45,8 +46,12 @@ export default function Payouts({ loaderData, actionData }: Route.ComponentProps
 			<PageHeader title="Payouts" description="Where we send what you earn from bookings, scouting and printing. We check every account with the bank first." />
 			<div className="space-y-6">
 				<div className="grid gap-3 sm:grid-cols-2">
-					<Total label="Owed to you" amount={summary.owedMinor} hint="Released from bookings, not sent yet" />
-					<Total label="Paid out" amount={summary.paidMinor} hint="Sent to your bank accounts" />
+					{(summary.totals.length ? summary.totals : [summary]).map((total) => (
+						<Fragment key={total.currency}>
+							<Total label="Owed to you" amount={total.owedMinor} currency={total.currency} hint="Released from bookings, not sent yet" />
+							<Total label="Paid out" amount={total.paidMinor} currency={total.currency} hint="Sent to your bank accounts" />
+						</Fragment>
+					))}
 				</div>
 				{!summary.enabled && <Notice>Payouts start soon. Add your bank details now and what you're owed goes out once they do.</Notice>}
 
@@ -76,11 +81,11 @@ export default function Payouts({ loaderData, actionData }: Route.ComponentProps
 	);
 }
 
-function Total({ label, amount, hint }: { label: string; amount: number; hint: string }) {
+function Total({ label, amount, currency, hint }: { label: string; amount: number; currency: string; hint: string }) {
 	return (
 		<div className="panel p-5">
 			<p className="text-sm text-ink-500">{label}</p>
-			<p className="mt-1 font-display text-2xl font-extrabold text-ink-900 tabular-nums">{formatMoney(amount, "NGN")}</p>
+			<p className="mt-1 font-display text-2xl font-extrabold text-ink-900 tabular-nums">{formatMoney(amount, currency)}</p>
 			<p className="mt-1 text-xs text-ink-500">{hint}</p>
 		</div>
 	);
