@@ -19,7 +19,7 @@ export interface BoardKindDefinition {
   label: string
 }
 
-/** What a board costs, in minor units (kobo for NGN). */
+/** What a board costs, in minor units of its currency (kobo for NGN, cents for USD). */
 export interface BoardRate {
   amountMinor: number
   currency: string
@@ -45,6 +45,8 @@ export interface Board {
   country: string | null
   latitude: number
   longitude: number
+  /** What its rate and every price on it are in. */
+  currency: string
   rate: BoardRate | null
   /** The owner, or their scout, prints and puts up booked ads instead of a dispatcher. */
   printsOwn: boolean
@@ -229,6 +231,8 @@ export interface TrafficEstimate {
 
 /** A suggested rate for a board being tagged, and what it's based on. */
 export interface PriceGuide {
+  /** The currency every amount here is in. */
+  currency: string
   period: BoardRatePeriod
   traffic: TrafficEstimate | null
   /** Listed boards of the same kind nearby, scaled to this board's size. */
@@ -248,6 +252,9 @@ export interface PriceGuideQuery {
   period?: BoardRatePeriod
   roadClass?: RoadClass | null
   dailyTraffic?: number | null
+  /** Guide in this currency, or in the currency for `country`. */
+  currency?: string
+  country?: string | null
   /** The board being edited, to leave it out of the comparison. */
   except?: ID
 }
@@ -282,8 +289,9 @@ export interface BoardSearch extends PageQuery {
   radiusKm?: number
   kind?: BoardKind
   lit?: boolean
-  /** Highest rate, in minor units. Boards without a rate are left out. */
+  /** Highest rate, in minor units of `currency`. Boards without a rate, or priced in another currency, are left out. */
   maxRateMinor?: number
+  currency?: string
 }
 
 /** The map's visible area, in degrees. */
@@ -295,7 +303,7 @@ export interface MapBounds {
 }
 
 /** What narrows the map down. */
-export type BoardPinSearch = MapBounds & Pick<BoardSearch, 'kind' | 'lit' | 'maxRateMinor'>
+export type BoardPinSearch = MapBounds & Pick<BoardSearch, 'kind' | 'lit' | 'maxRateMinor' | 'currency'>
 
 /** A listed board as a point on the map. */
 export interface BoardPin {
@@ -411,9 +419,9 @@ export type PriceChange = 'percent' | 'amount' | 'set'
 export interface PriceRuleInput {
   boardIds: ID[]
   change: PriceChange
-  /** A percent for `percent`; kobo for `amount` (may be negative) and `set`. */
+  /** A percent for `percent`; minor units for `amount` (may be negative) and `set`. */
   value: number
-  /** Round each new rate to this many kobo. ₦1,000 by default. */
+  /** Round each new rate to this many minor units. 1,000 of the currency by default. */
   roundToMinor?: number
   /** Also change faces with their own rate. On by default. */
   faces?: boolean
