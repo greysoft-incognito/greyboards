@@ -373,3 +373,61 @@ export interface NearbyBoard {
   headingDeg: number | null
   distanceM: number
 }
+
+/** What a spreadsheet import found in each row, and what it made. */
+export interface BoardImportResult {
+  dryRun: boolean
+  total: number
+  ok: number
+  failed: number
+  imported: number
+  rows: {
+    /** The row's line in the file, counting the heading as line 1. */
+    line: number
+    name: string
+    ok: boolean
+    errors: string[]
+    /** Boards already tagged near the spot. */
+    duplicates: number
+    boardId?: ID
+  }[]
+}
+
+export interface BoardImportInput {
+  /** The spreadsheet, saved as CSV. */
+  csv: string
+  /** Check every row without saving. */
+  dryRun?: boolean
+  /** Import under an owner profile the account manages, rather than its own. */
+  ownerProfileId?: ID | null
+}
+
+/** How a price rule changes each rate: by a percent, by an amount, or to an amount. */
+export type PriceChange = 'percent' | 'amount' | 'set'
+
+export interface PriceRuleInput {
+  boardIds: ID[]
+  change: PriceChange
+  /** A percent for `percent`; kobo for `amount` (may be negative) and `set`. */
+  value: number
+  /** Round each new rate to this many kobo. ₦1,000 by default. */
+  roundToMinor?: number
+  /** Also change faces with their own rate. On by default. */
+  faces?: boolean
+  dryRun?: boolean
+}
+
+export interface PriceRuleResult {
+  dryRun: boolean
+  changed: number
+  rows: {
+    boardId: ID
+    name: string
+    /** The rule changed the owner's fixed amount, and the listed rate followed. */
+    ownerNet: boolean
+    beforeMinor: number | null
+    afterMinor: number | null
+    faces: { id: ID; label: string; beforeMinor: number; afterMinor: number }[]
+    skipped: string | null
+  }[]
+}
