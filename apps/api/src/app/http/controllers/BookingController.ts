@@ -1,4 +1,5 @@
 import { Board } from '@app/models/Board'
+import { DigitalSlots, type Daypart } from '@app/services/DigitalSlots'
 import { Booking, type BookingStatus } from '@app/models/Booking'
 import { BookingCollection } from '@app/http/resources/BookingCollection'
 import { BookingResource } from '@app/http/resources/BookingResource'
@@ -30,7 +31,36 @@ export default class BookingController extends BaseController {
 
     const face = await board.faceFor(query.faceId ? String(query.faceId) : (await board.boardFaces().first())?.id)
 
-    return new GenericResource(await Booking.taken(board, face, from, to)).additional({ status: 'success', message: 'OK', code: 200 })
+    return new GenericResource(await Booking.taken(board, face, from, to, true)).additional({ status: 'success', message: 'OK', code: 200 })
+  }
+
+  /**
+   * On a digital screen: the loop, what each part of the day costs a slot, and how many slots
+   * next to each other are free for the dates asked. Works signed out.
+   */
+  async slots() {
+    const board = await Board.query().findOrFail(String(this.params.board))
+    const query = await this.validateQuery({
+      faceId: ['nullable', UUID],
+      startsOn: 'nullable|date',
+      periods: 'nullable|integer|min:1|max:52',
+      daypart: `nullable|in:${DigitalSlots.DAYPARTS.join(',')}`,
+    })
+
+    if (!board.isListed()) throw new RequestException('Board not found.', 404)
+    if (!board.isDigital()) throw new RequestException('Only digital screens sell slots.', 422)
+
+    const face = await board.faceFor(query.faceId ? String(query.faceId) : null)
+    const daypart = (query.daypart ?? 'all_day') as Daypart
+    const startsOn = query.startsOn ? Day.of(String(query.startsOn)) : null
+    const endsOn = startsOn ? Booking.endOf(startsOn, Number(query.periods ?? 1), board.ratePeriod) : null
+
+    return new GenericResource({
+      loop: await DigitalSlots.loop(board),
+      dayparts: await DigitalSlots.prices(board, face),
+      daypart,
+      freeSlots: startsOn && endsOn ? await DigitalSlots.freeRun(board, face, startsOn, endsOn, daypart) : null,
+    }).additional({ status: 'success', message: 'OK', code: 200 })
   }
 
   /** Hold the dates for the advertiser while they pay. */
@@ -41,11 +71,14 @@ export default class BookingController extends BaseController {
       periods: 'required|integer|min:1|max:52',
       faceId: ['nullable', UUID],
       shares: 'nullable|integer|min:1|max:20',
+      slots: 'nullable|integer|min:1|max:60',
+      daypart: `nullable|in:${DigitalSlots.DAYPARTS.join(',')}`,
     })
 
     const face = await board.faceFor(data.faceId ? String(data.faceId) : null)
     const shares = Number(data.shares ?? 1)
-    const booking = await Booking.hold(board, face, this.user, Day.of(String(data.startsOn)), Number(data.periods), shares)
+    const pick = { slots: Number(data.slots ?? 1), daypart: (data.daypart ?? 'all_day') as Daypart }
+    const booking = await Booking.hold(board, face, this.user, Day.of(String(data.startsOn)), Number(data.periods), shares, pick)
     const message = shares > 1 ? 'Dates held. Share the invite links, and pay your share.' : 'Dates held. Pay to book them.'
 
     return new BookingResource(booking).onBoard(board).withDetails(this.user).additional({ status: 'success', message, code: 201 }).response().setStatusCode(201)

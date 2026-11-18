@@ -5,6 +5,8 @@ import type { Booking, DisputeReason } from "@greyboards/types";
 import { BoardCover, formatRate } from "~/components/boards/BoardBits";
 import { ArtworkPanel } from "~/components/bookings/ArtworkPanel";
 import { ProofPanel } from "~/components/proofs/ProofPanel";
+import { PlaysPanel } from "~/components/bookings/PlaysPanel";
+import { DAYPART_LABELS } from "~/components/bookings/BookPanel";
 import { MessagesPanel } from "~/components/bookings/MessagesPanel";
 import { ReviewPanel } from "~/components/reviews/ReviewBits";
 import { DisputePanel } from "~/components/disputes/DisputeBits";
@@ -178,6 +180,14 @@ export default function BookingPage({ loaderData, actionData }: Route.ComponentP
 								<dt className="text-ink-500">Rate</dt>
 								<dd className="text-ink-900">{formatRate(booking.rate)}</dd>
 							</div>
+							{booking.slots && (
+								<div className="flex justify-between gap-4">
+									<dt className="text-ink-500">Slots</dt>
+									<dd className="text-right text-ink-900">
+										{booking.slots.count} {booking.slots.count === 1 ? "slot" : "slots"} · {DAYPART_LABELS[booking.slots.daypart]}
+									</dd>
+								</div>
+							)}
 							<div className="flex justify-between gap-4">
 								<dt className="text-ink-500">Length</dt>
 								<dd className="text-ink-900">
@@ -205,6 +215,7 @@ export default function BookingPage({ loaderData, actionData }: Route.ComponentP
 					</div>
 					{booking.artwork && ["paid", "live", "completed"].includes(booking.status) && <ArtworkPanel booking={booking} isAdvertiser={isAdvertiser} />}
 					{printOptions?.open && <PrintOffersPanel options={printOptions} currency={booking.currency} />}
+					{booking.plays && ["paid", "live", "completed"].includes(booking.status) && <PlaysPanel plays={booking.plays} />}
 					{booking.proof && booking.artwork?.status === "approved" && <ProofPanel proof={booking.proof} />}
 					{booking.cancellation?.allowed && <CancelPaid booking={booking} />}
 					{canRefund && booking.status === "paid" && <StaffRefund booking={booking} />}

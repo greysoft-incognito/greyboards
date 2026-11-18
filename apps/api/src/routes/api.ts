@@ -34,6 +34,7 @@ import AdminDisputeController from 'src/app/http/controllers/admin/DisputeContro
 import TerritoryController from 'src/app/http/controllers/admin/TerritoryController'
 import PayoutController from 'src/app/http/controllers/PayoutController'
 import PrintOfferController from 'src/app/http/controllers/PrintOfferController'
+import PlayerController from 'src/app/http/controllers/PlayerController'
 import { Authorize } from 'src/app/http/middlewares/Authorize'
 import { Router } from '@arkstack/driver-express'
 import { auth, limiter } from '@arkstack/driver-express/middlewares'
@@ -94,6 +95,12 @@ Router.put('/account/boards/:board/faces/:face', [AccountBoardController, 'updat
 Router.post('/account/boards/:board/blocks', [AccountBoardController, 'block'], [auth, limiter(60, 60)])
 Router.delete('/account/boards/:board/blocks/:block', [AccountBoardController, 'unblock'], [auth])
 Router.post('/account/boards/:board/agreement', [AccountBoardController, 'sendAgreement'], [auth, limiter(10, 60)])
+Router.post('/account/boards/:board/player', [AccountBoardController, 'issuePlayerToken'], [auth, limiter(10, 60)])
+Router.delete('/account/boards/:board/player', [AccountBoardController, 'revokePlayerToken'], [auth])
+
+// Digital screens' players sign in with the board's player token.
+Router.get('/player/schedule', [PlayerController, 'schedule'], [limiter(120, 60)])
+Router.post('/player/plays', [PlayerController, 'plays'], [limiter(120, 60)])
 
 // Owner profiles: suggestions while tagging, the ones an account manages, and claiming one by phone
 // The scout pipeline, their territories, and the task list for anyone who looks after boards.
@@ -138,6 +145,7 @@ Router.get('/admin/account-roles', [AdminAccountRoleController, 'index'], [auth,
 Router.put('/admin/account-roles/:role', [AdminAccountRoleController, 'update'], [auth, Authorize.to('partners.review')])
 Router.put('/admin/account-roles/:role/identity', [AdminAccountRoleController, 'reviewIdentity'], [auth, Authorize.to('partners.review')])
 // Booking boards. Dates are held while the advertiser pays; the money waits in escrow until the ad is up.
+Router.get('/boards/:board/slots', [BookingController, 'slots'], [limiter(120, 60)])
 Router.post('/boards/:board/bookings', [BookingController, 'create'], [auth, Authorize.actingAs('advertiser'), limiter(20, 60)])
 Router.get('/account/bookings', [BookingController, 'index'], [auth])
 Router.get('/account/board-bookings', [BookingController, 'onMyBoards'], [auth])

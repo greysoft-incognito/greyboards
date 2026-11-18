@@ -1,6 +1,6 @@
 import type { PageQuery } from './api'
 import type { Auction } from './bids'
-import type { Board, BoardRate } from './boards'
+import type { Board, BoardRate, ScreenLoop } from './boards'
 import type { ID } from './models'
 import type { BookingReviews } from './reviews'
 
@@ -30,6 +30,8 @@ export interface Booking {
   periods: number
   /** The face of the board it runs on. */
   face: { id: ID; label: string } | null
+  /** On a digital screen: the slots it takes. */
+  slots?: BookingSlots | null
   rate: BoardRate
   /** Everything the advertiser pays, the print fee included. */
   amountMinor: number
@@ -56,6 +58,8 @@ export interface Booking {
   artwork?: BookingArtwork
   printJob?: BookingPrintJob | null
   proof?: BookingProof
+  /** On a digital screen: how often the ad played. */
+  plays?: PlaySummary | null
   /** What the advertiser gets back if they cancel now, while it's paid. Null for anyone else. */
   cancellation?: CancellationQuote | null
   refunds?: BookingRefund[]
@@ -439,6 +443,46 @@ export interface BookingInput {
   faceId?: ID
   /** Split between this many advertisers, the organiser included. */
   shares?: number
+  /** On a digital screen: how many slots of the loop, and for which part of the day. */
+  slots?: number
+  daypart?: Daypart
+}
+
+/** The part of the day a digital booking plays in. */
+export type Daypart = 'all_day' | 'morning' | 'afternoon' | 'evening'
+
+/** The slots a digital booking takes in the screen's loop, and its hours. */
+export interface BookingSlots {
+  start: number
+  count: number
+  daypart: Daypart
+  hourFrom: number
+  hourTo: number
+}
+
+/** How often a digital booking's ad played, as the screen's player reported it. */
+export interface PlaySummary {
+  total: number
+  seconds: number
+  lastPlayedAt: string | null
+  /** Up to the last 31 days with plays, oldest first. */
+  days: { day: string; plays: number; seconds: number }[]
+}
+
+/** A digital screen's loop, what part of the day costs a slot, and how many slots are free. */
+export interface SlotQuote {
+  loop: ScreenLoop
+  dayparts: { daypart: Daypart; hours: [number, number]; percent: number; rateMinor: number }[]
+  daypart: Daypart
+  /** The most slots next to each other free for the dates asked, or null when no dates were sent. */
+  freeSlots: number | null
+}
+
+/** What a digital screen's player is told to play on a day. */
+export interface ScreenSchedule {
+  day: string
+  loop: ScreenLoop
+  bookings: (BookingSlots & { bookingId: ID; faceId: ID | null; startsOn: string; endsOn: string; artworkUrl: string | null })[]
 }
 
 export type PaymentStatus = 'pending' | 'complete' | 'rejected'

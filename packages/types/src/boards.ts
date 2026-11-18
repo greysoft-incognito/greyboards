@@ -47,6 +47,8 @@ export interface Board {
   rate: BoardRate | null
   /** The owner, or their scout, prints and puts up booked ads instead of a dispatcher. */
   printsOwn: boolean
+  /** On a digital screen: its loop. The rate is then for one slot, all day. */
+  loop?: ScreenLoop | null
   status: BoardStatus
   /** Metres from the search point, on a nearby search. */
   distanceM: number | null
@@ -147,6 +149,11 @@ export interface BoardDetail extends Board {
   taggedById?: ID | null
   /** What the owner charges to print and put up an ad, when they do it. Null uses the standard price. */
   ownPrintFeeMinor?: number | null
+  /** On a digital screen: the loop the owner set, or null for the standard one. */
+  ownLoopSlots?: number | null
+  ownSlotSeconds?: number | null
+  /** On a digital screen: whether its player has a token, and when it last checked in. */
+  player?: { connected: boolean; seenAt: string | null } | null
   /** Whether the tagger fixed what the owner receives, so the rate is listed with the other shares on top. */
   ownerNet?: boolean
   /** The owner's amount per period, when `ownerNet` is on. */
@@ -192,6 +199,15 @@ export interface BoardInput {
   printFeeMinor?: number | null
   /** `rateMinor` is what the owner receives; the listed rate adds the other shares on top. */
   ownerNet?: boolean
+  /** On a digital screen: slots in its loop and seconds each. Empty uses the standard loop. */
+  loopSlots?: number | null
+  slotSeconds?: number | null
+}
+
+/** A digital screen's loop: how many slots, and seconds each. */
+export interface ScreenLoop {
+  slots: number
+  seconds: number
 }
 
 /** What to list a board at so its owner receives a fixed amount. */

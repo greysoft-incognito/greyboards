@@ -59,6 +59,9 @@ export class ManagedBoardResource extends BoardResource {
         ? {
             owner: owner ? await new OwnerProfileResource(owner).data() : null,
             taggedById: board.taggedById,
+            ownLoopSlots: board.loopSlots,
+            ownSlotSeconds: board.slotSeconds,
+            player: board.isDigital() ? { connected: !!board.playerTokenHash, seenAt: board.playerSeenAt } : null,
             ownerNet: !!board.ownerNet,
             ownerRateMinor: board.ownerRate(),
             ownerPercent: await Commissions.ownerPercent(board),
