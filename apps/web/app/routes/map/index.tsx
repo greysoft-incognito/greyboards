@@ -180,7 +180,7 @@ function Filters({ kinds, filters, onChange }: { kinds: BoardKindDefinition[]; f
 					onChange={(event) => onChange({ ...filters, lit: event.target.value === "" ? null : event.target.value === "true" })}
 					className="mt-1"
 				>
-					<option value="">Lit or not</option>
+					<option value="">Lighting</option>
 					<option value="true">Lit at night</option>
 					<option value="false">Not lit</option>
 				</Select>

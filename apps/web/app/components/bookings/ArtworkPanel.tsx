@@ -8,14 +8,14 @@ import { formatDay } from "./BookingBits";
 /** On a shared booking, each advertiser sends a design and the print merges them. */
 const SHARED_NOTES = {
 	none: "Each advertiser sends their own design. Once everyone has, they're merged into one print for checking.",
-	submitted: "Everyone's designs are merged. Waiting for whoever looks after the board to check the print.",
+	submitted: "Everyone's designs are merged. Waiting for the board's owner or scout to check the print.",
 	approved: "Approved. Dispatchers near the board send their prices to print and put it up.",
-	rejected: "Sent back. Anyone can send a new design as the note asks, and the print is merged again.",
+	rejected: "Sent back with a note. Anyone can upload a new design, and the print is merged again.",
 } as const;
 
 const ARTWORK_NOTES = {
 	none: "Upload the design to print. Match the board's shape so nothing gets cropped.",
-	submitted: "Waiting for whoever looks after the board to check it fits.",
+	submitted: "Waiting for the board's owner or scout to check it fits.",
 	approved: "Approved. Dispatchers near the board send their prices to print and put it up.",
 	rejected: "Sent back. Change it as the note asks and upload it again.",
 } as const;
@@ -26,7 +26,7 @@ const JOB_LABELS: Record<PrintJobStatus, string> = {
 	confirmed: "A dispatcher has the job",
 	printed: "Printed, going up next",
 	posted: "Up on the board",
-	cancelled: "Done by whoever looks after the board",
+	cancelled: "Handled by the board's owner or scout",
 };
 
 /**

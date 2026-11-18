@@ -29,7 +29,7 @@ export default function ReputationScreen() {
         <Gauge size={30} color={colors.brand100} />
         <Text style={styles.heroTitle}>Reputation and badges</Text>
         <Text style={styles.heroText}>
-          A reputation score shows how far someone can be trusted in the role they hold. Each role has its own score, and it only moves for physical work Greyboards could check.
+          A reputation score shows how much you can trust someone in a role. Each role has its own score, and it only moves for real work we could confirm.
         </Text>
       </LinearGradient>
 

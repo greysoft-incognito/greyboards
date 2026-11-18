@@ -73,7 +73,7 @@ export function OfferRow({ offer, onBoards, onChange }: { offer: Offer; onBoards
 
       {offer.can.accept || offer.can.decline || offer.can.withdraw || offer.can.counter ? (
         <View style={styles.actions}>
-          {offer.can.accept ? <Button title={offer.status === 'countered' ? 'Accept the counter' : 'Accept'} loading={action.busy} onPress={accept} /> : null}
+          {offer.can.accept ? <Button title={offer.status === 'countered' ? 'Accept their price' : 'Accept'} loading={action.busy} onPress={accept} /> : null}
           {offer.can.counter && !countering ? <Button title="Counter" variant="secondary" onPress={() => setCountering(true)} /> : null}
           {offer.can.decline ? <Button title="Decline" variant="ghost" disabled={action.busy} onPress={() => answer(async () => (await api.declineOffer(offer.id).send()).message ?? 'Offer declined.')} /> : null}
           {offer.can.withdraw ? <Button title="Withdraw" variant="ghost" disabled={action.busy} onPress={() => answer(async () => (await api.withdrawOffer(offer.id).send()).message ?? 'Offer withdrawn.')} /> : null}
@@ -128,7 +128,7 @@ export function BidRow({ auction }: { auction: Auction }) {
   )
 }
 
-/** Dates a board's owner opened for bids: the highest bid, the viewer's own, and a field to bid or raise. */
+/** Dates a board’s owner opened for bids: the highest bid, the viewer's own, and a field to bid or raise. */
 export function AuctionCard({ auction, canBid, onChange }: { auction: Auction; canBid: boolean; onChange: () => void }) {
   const action = useAction()
   const minimum = auction.nextMinimumMinor ?? auction.reserveMinor
@@ -137,7 +137,7 @@ export function AuctionCard({ auction, canBid, onChange }: { auction: Auction; c
   const facts = [
     { label: `Dates${auction.face ? ` on ${auction.face.label}` : ''}`, value: formatDays(auction) },
     { label: auction.open ? 'Closes' : 'Closed', value: formatMoment(auction.closesAt) },
-    { label: 'Highest bid', value: auction.highestMinor !== null ? formatMoney(auction.highestMinor, auction.currency) : auction.format === 'sealed' ? 'Sealed until the close' : 'No bids yet' },
+    { label: 'Highest bid', value: auction.highestMinor !== null ? formatMoney(auction.highestMinor, auction.currency) : auction.format === 'sealed' ? 'Hidden until bidding ends' : 'No bids yet' },
     { label: 'Reserve', value: `${formatMoney(auction.reserveMinor, auction.currency)} · ${auction.bidCount} ${auction.bidCount === 1 ? 'bid' : 'bids'}` },
   ]
 

@@ -50,7 +50,7 @@ export default function Payouts({ loaderData, actionData }: Route.ComponentProps
 				</div>
 				{!summary.enabled && <Notice>Payouts start soon. Add your bank details now and what you're owed goes out once they do.</Notice>}
 
-				<Section title="Your bank account" description="For your scout's cut and print jobs.">
+				<Section title="Your bank account" description="For what you earn from scouting and print jobs.">
 					<AccountForm intent="own" account={summary.account} banks={banks} result={resultFor(actionData, "own")} />
 				</Section>
 

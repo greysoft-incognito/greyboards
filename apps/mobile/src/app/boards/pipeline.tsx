@@ -74,7 +74,7 @@ export default function Pipeline() {
     })
 
   return (
-    <SettingsPage title="Pipeline" description="Boards you spotted, from first sighting to earning. Once you tag one, its stage follows the board.">
+    <SettingsPage title="Pipeline" description="Every board you spot, from first sighting to first booking. Once you tag one, its stage updates on its own.">
       <Section title="To do">
         {tasks.length ? (
           tasks.slice(0, 8).map((task, index) => (

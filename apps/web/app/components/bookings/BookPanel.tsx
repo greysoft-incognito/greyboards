@@ -228,7 +228,7 @@ export function BookPanel({
 						{offering
 							? "The owner can accept, decline or counter. If they accept, the dates are held for you to pay."
 							: splitting
-								? `Each advertiser pays their share and sends their own design; the print merges them all. You get an invite link for each share, everyone has ${terms.shares.payHours} hours to pay, and you can cover any left unpaid.`
+								? `Everyone pays their share and sends their own design, and we merge them into one print. You'll get an invite link for each share. Everyone has ${terms.shares.payHours} hours to pay, and you can cover any unpaid share.`
 								: "We hold your payment until there's a photo of your ad on the board. Your dates are held for a few minutes while you pay."}
 					</p>
 				</Form>

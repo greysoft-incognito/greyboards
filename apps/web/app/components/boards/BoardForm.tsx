@@ -141,7 +141,7 @@ export function BoardForm({
 						{locating ? <Spinner /> : <LocateFixed className="h-4 w-4" aria-hidden />}
 						{locating ? "Finding you…" : "Use where I am"}
 					</Button>
-					<p className="text-sm text-ink-500">{spot.accuracyM ? `Accurate to about ${spot.accuracyM} m.` : "Stand by the board for the best fix."}</p>
+					<p className="text-sm text-ink-500">{spot.accuracyM ? `Accurate to about ${spot.accuracyM} m.` : "Stand by the board for the most accurate spot."}</p>
 				</div>
 				{locateError && <p className="text-sm text-red-700">{locateError}</p>}
 				<div className="grid gap-4 sm:grid-cols-2">
@@ -223,10 +223,10 @@ export function BoardForm({
 				</div>
 				{digital && (
 					<div className="grid gap-4 sm:grid-cols-2">
-						<Field label="Slots in the loop" error={fieldErrors.loopSlots} hint="Each booking takes one or more. Empty uses the standard loop.">
+						<Field label="Slots in the loop" error={fieldErrors.loopSlots} hint="Leave empty for the standard loop.">
 							<Input name="loopSlots" type="number" min="1" max="60" defaultValue={board?.ownLoopSlots ?? ""} placeholder={board?.loop ? String(board.loop.slots) : "6"} />
 						</Field>
-						<Field label="Seconds per slot" error={fieldErrors.slotSeconds} hint="Empty uses the standard length.">
+						<Field label="Seconds per slot" error={fieldErrors.slotSeconds} hint="Leave empty for the standard length.">
 							<Input name="slotSeconds" type="number" min="5" max="120" defaultValue={board?.ownSlotSeconds ?? ""} placeholder={board?.loop ? String(board.loop.seconds) : "10"} />
 						</Field>
 					</div>
@@ -262,7 +262,7 @@ export function BoardForm({
 							<option value="1">{scouting ? "The owner or I do it" : "We do it ourselves"}</option>
 						</Select>
 					</Field>
-					<Field label="Your print price in naira" error={fieldErrors.printFeeMinor} hint="Only when you print. Empty uses the standard price.">
+					<Field label="Your print price in naira" error={fieldErrors.printFeeMinor} hint="Only if you print. Leave empty for the standard price.">
 						<Input name="printFee" type="number" min="0" step="1000" defaultValue={board?.ownPrintFeeMinor ? board.ownPrintFeeMinor / 100 : ""} placeholder="150000" />
 					</Field>
 				</div>
@@ -273,7 +273,7 @@ export function BoardForm({
 			{!board && (
 				<section className="panel space-y-3 p-5 sm:p-6">
 					<h2 className="font-display text-lg font-extrabold tracking-tight text-ink-900">A photo</h2>
-					<p className="text-sm text-ink-500">Take it from the road, showing the whole board. We keep where it was taken so reviewers know you were there.</p>
+					<p className="text-sm text-ink-500">Take it from the road with the whole board in view. We save where it was taken so reviewers know you were there.</p>
 					<label className="flex cursor-pointer items-center gap-3 rounded-2xl border-[1.5px] border-dashed border-surface-300 px-4 py-4 text-sm text-ink-700 transition hover:border-brand-300 hover:bg-white">
 						<Camera className="h-5 w-5 text-brand-600" aria-hidden />
 						<input type="file" name="photo" accept="image/jpeg,image/png,image/webp,image/heic" capture="environment" className="min-w-0 flex-1 text-sm file:hidden" />
@@ -317,7 +317,7 @@ function OwnerNetToggle({ on, onChange, rate, percent }: { on: boolean; onChange
 						<HandCoins className="h-4 w-4 text-brand-600" aria-hidden />
 						The owner gets exactly this amount
 					</span>
-					<span className="block text-sm text-ink-500">The other shares are added on top of this amount, instead of coming out of it.</span>
+					<span className="block text-sm text-ink-500">The platform and scout shares go on top instead of coming out of it.</span>
 				</span>
 			</label>
 			{typed && percent !== null && (

@@ -80,7 +80,7 @@ export default function Pipeline({ loaderData, actionData }: Route.ComponentProp
 		<main className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
 			<div>
 				<h1 className="font-display text-3xl font-extrabold tracking-[-0.03em] text-ink-900 sm:text-4xl">Pipeline</h1>
-				<p className="mt-1 text-ink-500">Every board you spot, from first sighting to earning. Once you tag a board, its stage follows the board.</p>
+				<p className="mt-1 text-ink-500">Every board you spot, from first sighting to first booking. Once you tag a board, its stage updates on its own.</p>
 			</div>
 
 			<nav aria-label="Stages" className="glass flex max-w-full gap-1 overflow-x-auto rounded-2xl p-1">

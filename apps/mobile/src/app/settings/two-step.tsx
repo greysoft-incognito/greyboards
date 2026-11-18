@@ -111,7 +111,7 @@ function SetupSteps({ setup, onEnabled }: { setup: TwoFactorSetup; onEnabled: (s
           Copy
         </Text>
       </View>
-      <Text style={styles.step}>2. Type the 6-digit code the app shows.</Text>
+      <Text style={styles.step}>2. Enter the 6-digit code from the app.</Text>
       <Field label="Code" error={enable.problem.fields.code}>
         <OtpInput value={code} onChange={setCode} onComplete={confirm} invalid={!!enable.problem.fields.code} disabled={enable.busy} />
       </Field>

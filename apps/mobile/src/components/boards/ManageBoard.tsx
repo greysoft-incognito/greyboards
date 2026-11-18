@@ -228,7 +228,7 @@ export function AuctionsManager({ board, auctions, onChange }: { board: BoardDet
 
   return (
     <Section>
-      <Heading icon={Gavel} title="Bids" text="Open some dates to bids instead of the fixed price. The highest bid at or over your reserve wins." />
+      <Heading icon={Gavel} title="Bids" text="Let advertisers bid for some dates instead of paying the fixed price. The highest bid at or above your reserve wins." />
       {auctions.length ? (
         <View style={styles.list}>
           {auctions.map((auction) => (

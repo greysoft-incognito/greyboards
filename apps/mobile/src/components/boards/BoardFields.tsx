@@ -146,12 +146,12 @@ export function BoardDetailsSection({ fields, set, errors, kinds, board }: Field
       {fields.kind === 'digital' ? (
         <View style={styles.pair}>
           <View style={styles.flex}>
-            <Field label="Slots in the loop" error={errors.loopSlots} hint="Empty uses the standard loop.">
+            <Field label="Slots in the loop" error={errors.loopSlots} hint="Leave empty for the standard loop.">
               <Input value={fields.loopSlots} onChangeText={set('loopSlots')} keyboardType="number-pad" placeholder={board?.loop ? String(board.loop.slots) : '6'} />
             </Field>
           </View>
           <View style={styles.flex}>
-            <Field label="Seconds per slot" error={errors.slotSeconds} hint="Empty uses the standard length.">
+            <Field label="Seconds per slot" error={errors.slotSeconds} hint="Leave empty for the standard length.">
               <Input value={fields.slotSeconds} onChangeText={set('slotSeconds')} keyboardType="number-pad" placeholder={board?.loop ? String(board.loop.seconds) : '10'} />
             </Field>
           </View>
@@ -221,7 +221,7 @@ export function RateSection({
         />
       </Field>
       {fields.printsOwn ? (
-        <Field label="Your print price in naira" error={errors.printFeeMinor} hint="Empty uses the standard price.">
+        <Field label="Your print price in naira" error={errors.printFeeMinor} hint="Leave empty for the standard price.">
           <Input value={fields.printFee} onChangeText={set('printFee')} keyboardType="number-pad" placeholder="150000" />
         </Field>
       ) : null}
@@ -309,7 +309,7 @@ function OwnerNetToggle({ on, onChange, rate, percent }: { on: boolean; onChange
         <HandCoins size={18} color={colors.brand600} />
         <View style={styles.flex}>
           <Text variant="label">The owner gets exactly this amount</Text>
-          <Text variant="small">The other shares are added on top of this amount, instead of coming out of it.</Text>
+          <Text variant="small">The platform and scout shares go on top instead of coming out of it.</Text>
         </View>
         <Switch value={on} onValueChange={onChange} trackColor={{ true: colors.brand500, false: colors.surface300 }} thumbColor={colors.white} accessibilityLabel="The owner gets exactly this amount" />
       </View>

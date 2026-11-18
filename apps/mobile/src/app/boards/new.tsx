@@ -140,7 +140,7 @@ export default function TagBoard() {
   }
 
   return (
-    <SettingsPage title="Tag a board" description="Stand at the board. We place it from your phone and keep each photo with where it was taken.">
+    <SettingsPage title="Tag a board" description="Stand at the board. We’ll place it using your phone’s location.">
       {roles.length > 1 ? (
         <Section title="Whose board is it?">
           <CheckOption label="It's my board" description="You own it and set its rate." checked={as === 'owner'} onPress={() => setAs('owner')} />
@@ -160,7 +160,7 @@ export default function TagBoard() {
           </View>
           <View style={styles.flex}>
             <Text variant="label">{spot ? `${spot.latitude.toFixed(6)}, ${spot.longitude.toFixed(6)}` : locate.busy ? 'Finding you…' : 'Not placed yet'}</Text>
-            <Text variant="small">{spot?.accuracyM ? `Accurate to about ${spot.accuracyM} m.` : 'Stand by the board for the best fix.'}</Text>
+            <Text variant="small">{spot?.accuracyM ? `Accurate to about ${spot.accuracyM} m.` : 'Stand by the board for the most accurate spot.'}</Text>
           </View>
         </View>
         {locate.problem.message ? <Callout>{locate.problem.message}</Callout> : null}

@@ -46,7 +46,7 @@ export default function OpenShares({ loaderData, actionData }: Route.ComponentPr
 				<UsersRound className="h-8 w-8 text-brand-600" aria-hidden />
 				Shared boards
 			</h1>
-			<p className="mt-1 max-w-2xl text-ink-500">Join others on a board for the same days and pay only your share. Once a sharing's lock ends with shares unpaid, the whole board goes up for bids.</p>
+			<p className="mt-1 max-w-2xl text-ink-500">Share a board with other advertisers for the same days and pay only your part. If shares are still unpaid when the lock ends, the whole board goes up for bids.</p>
 			{actionData?.error && (
 				<div className="mt-4">
 					<Alert>{actionData.error}</Alert>

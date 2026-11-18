@@ -49,7 +49,7 @@ export default function AdminConfiguration({ loaderData }: Route.ComponentProps)
 
 	return (
 		<>
-			<AdminHeader title="Configuration" description="Settings for the whole app. Secrets and API keys are not here; they stay in the API's .env file." />
+			<AdminHeader title="Configuration" description="Settings for the whole app. Secrets and API keys live in the API's .env file instead." />
 			<div className="lg:grid lg:grid-cols-[22rem_1fr]">
 				<nav aria-label="Settings groups" className={`border-surface-200 p-3 lg:block lg:border-r-[1.5px] ${chosen ? "hidden" : ""}`}>
 					<ul className="space-y-1">

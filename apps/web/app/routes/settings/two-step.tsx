@@ -163,7 +163,7 @@ function SetupSteps({ setup, result, busy }: { setup: NonNullable<Result["setup"
 							{setup.secret.match(/.{1,4}/g)?.join(" ")}
 						</code>
 					</li>
-					<li>Type the 6-digit code the app shows.</li>
+					<li>Enter the 6-digit code from the app.</li>
 				</ol>
 				<div className="max-w-xs space-y-3">
 					<Field label="Code" error={result?.fieldErrors.code}>
