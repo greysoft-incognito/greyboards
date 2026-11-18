@@ -1,19 +1,24 @@
 import { StyleSheet, View } from 'react-native'
-import Svg, { Circle } from 'react-native-svg'
+import Svg, { Circle, Path } from 'react-native-svg'
 import { colors, fonts } from '@/theme'
 import { Text } from './Text'
 
-/** The Greysoft four-circle mark, the top right circle in wine. */
+/** The Greyboards G mark: a grey G with a wine dot over its crossbar. */
 export function LogoMark({ size = 32, light = false }: { size?: number; light?: boolean }) {
   const grey = light ? 'rgba(255,255,255,0.85)' : '#727376'
   const wine = light ? colors.white : '#833b4b'
 
   return (
-    <Svg width={size} height={size} viewBox="0 0 64 64">
-      <Circle cx="15.75" cy="15.75" r="13.75" fill={grey} />
-      <Circle cx="48.25" cy="15.75" r="13.75" fill={wine} />
-      <Circle cx="15.75" cy="48.25" r="13.75" fill={grey} />
-      <Circle cx="48.25" cy="48.25" r="13.75" fill={grey} />
+    <Svg width={size} height={size} viewBox="5 5 54 54">
+      <Path
+        d="M32 10A22 22 0 1 0 54 32H36"
+        fill="none"
+        stroke={grey}
+        strokeWidth={10}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Circle cx="45" cy="18.4" r="6.2" fill={wine} />
     </Svg>
   )
 }
