@@ -59,6 +59,26 @@ export interface Booking {
   refunds?: BookingRefund[]
   /** On a shared booking's own page: each share and who holds it. */
   shares?: BookingShare[] | null
+  /** On the booking's own page: how many messages, and how many the viewer hasn't read. */
+  messages?: MessageCounts
+}
+
+export interface MessageCounts {
+  total: number
+  unread: number
+}
+
+/** Which side of a booking someone is on. */
+export type MessageSide = 'advertiser' | 'board' | 'billposter' | 'staff'
+
+/** A message about a booking, with an optional photo as evidence. */
+export interface BookingMessage {
+  id: ID
+  body: string | null
+  photo: { url: string; width: number; height: number } | null
+  author: { id: ID; name: string; avatarUrl: string | null; side: MessageSide } | null
+  mine: boolean
+  createdAt: string
 }
 
 /**
@@ -220,6 +240,8 @@ export interface PrintJob {
   /** The booking and its proof, for the billposter holding the job. */
   bookingId: ID | null
   proof: BookingProof | null
+  /** Messages about the booking, for the billposter holding the job. */
+  messages: MessageCounts | null
   createdAt: string
 }
 

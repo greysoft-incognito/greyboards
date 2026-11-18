@@ -7,6 +7,7 @@ import { ProofSummary } from './ProofSummary'
 import { Day } from '@app/support/Day'
 import { Refund } from '@app/models/Refund'
 import { Refunds } from '@app/services/Refunds'
+import { Messages } from '@app/services/Messages'
 import { Shares } from '@app/services/Shares'
 import { Resource } from 'resora'
 import { BoardResource } from './BoardResource'
@@ -65,6 +66,7 @@ export class BookingResource extends Resource {
       proof: await new ProofSummary(booking).for(viewer).data(),
       cancellation: BookingPolicy.owns(viewer, booking) && booking.status === 'paid' ? await Refunds.quote(booking) : null,
       shares: booking.shared ? await BookingResource.shares(booking, viewer) : null,
+      messages: await Messages.counts(booking, viewer),
       refunds: (await Refund.query().where({ bookingId: booking.id }).oldest('createdAt').limit(10).get()).all().map((refund) => ({
         amountMinor: Number(refund.amountMinor),
         currency: refund.currency,

@@ -5,6 +5,7 @@ import type { Booking } from "@greyboards/types";
 import { BoardCover, formatRate } from "~/components/boards/BoardBits";
 import { ArtworkPanel } from "~/components/bookings/ArtworkPanel";
 import { ProofPanel } from "~/components/proofs/ProofPanel";
+import { MessagesPanel } from "~/components/bookings/MessagesPanel";
 import { SharesPanel } from "~/components/bookings/SharesPanel";
 import { BookingStatusBadge, formatDays, formatMoney } from "~/components/bookings/BookingBits";
 import { Alert, Button, Input, Spinner } from "~/components/ui";
@@ -20,8 +21,9 @@ export const meta = ({ loaderData }: Route.MetaArgs) => [{ title: `${loaderData?
 export async function loader({ request, context, params }: Route.LoaderArgs) {
 	const { api, user } = await requireUser(request, context);
 	const { data: booking } = await api.booking(params.id);
+	const messages = await api.messages(params.id, { per_page: 30 }).catch(() => null);
 
-	return { booking, isAdvertiser: booking.advertiserId === user.id, canRefund: user.permissions.includes("payouts.manage") };
+	return { booking, messages: messages?.data ?? [], moreMessages: (messages?.meta.last_page ?? 1) > 1, isAdvertiser: booking.advertiserId === user.id, canRefund: user.permissions.includes("payouts.manage") };
 }
 
 export async function action({ request, context, params }: Route.ActionArgs) {
@@ -34,6 +36,17 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 			const { data: payment } = await api.checkout(params.id);
 
 			throw redirect(payment.checkoutUrl ?? `/bookings/${params.id}`);
+		}
+
+		if (intent === "message") {
+			const body = String(form.get("body") ?? "").trim();
+			const photo = postedPhoto(form);
+
+			if (!body && !photo) return { error: "Write a message or add a photo.", message: null };
+
+			await api.sendMessage(params.id, body || null, photo);
+
+			return { error: null, message: null };
 		}
 
 		if (intent === "cover-shares") {
@@ -107,7 +120,7 @@ function isLive(booking: Booking) {
 export default function BookingPage({ loaderData, actionData }: Route.ComponentProps) {
 	useToastMessage(actionData);
 
-	const { booking, isAdvertiser, canRefund } = loaderData;
+	const { booking, messages, moreMessages, isAdvertiser, canRefund } = loaderData;
 	const [params] = useSearchParams();
 	const outcome = params.get("payment");
 
@@ -176,6 +189,7 @@ export default function BookingPage({ loaderData, actionData }: Route.ComponentP
 						</Link>
 					)}
 					{["paid", "live", "completed"].includes(booking.status) && <Steps booking={booking} />}
+					<MessagesPanel messages={messages} more={moreMessages} />
 				</section>
 			</div>
 		</main>

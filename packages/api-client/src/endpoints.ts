@@ -1,4 +1,5 @@
 import type {
+  BookingMessage,
   ShareInvite,
   Auction,
   AuctionInput,
@@ -116,6 +117,16 @@ export function createEndpoints(alova: GreyboardsAlova) {
     /** Start paying for held dates. Send the payer to `checkoutUrl`. */
     checkout: (id: ID) => alova.Post<ApiResponse<Payment>>(`/bookings/${id}/checkout`),
     cancelBooking: (id: ID) => alova.Post<ApiResponse<Booking>>(`/bookings/${id}/cancel`),
+    /** A page of a booking's messages, newest first. Reading marks them read. */
+    messages: (id: ID, params: PageQuery = {}) => alova.Get<PaginatedResponse<BookingMessage>>(`/bookings/${id}/messages`, { params, cacheFor: null }),
+    /** Send a message, a photo, or both. `photo` is a File/Blob on web, or an RN `{ uri, name, type }` object. */
+    sendMessage: (id: ID, body: string | null, photo?: Blob | { uri: string; name: string; type: string } | null) => {
+      const form = photo ? upload('photo', photo) : new FormData()
+
+      if (body) form.append('body', body)
+
+      return alova.Post<ApiResponse<BookingMessage>>(`/bookings/${id}/messages`, form)
+    },
     /** What a shared booking's invite link offers. */
     shareInvite: (token: string) => alova.Get<ApiResponse<ShareInvite>>(`/shares/${token}`, { cacheFor: null }),
     /** Take the share from an invite link, to pay it. */
