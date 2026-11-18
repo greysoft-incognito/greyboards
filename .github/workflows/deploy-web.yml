@@ -1,0 +1,86 @@
+name: Deploy web
+
+on:
+  push:
+    branches: [deploy]
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      run_checks:
+        description: Typecheck the web app before deploying
+        type: boolean
+        default: true
+
+concurrency:
+  group: deploy-web
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: web-production
+      url: ${{ vars.WEB_URL }}
+    steps:
+      - name: Check settings
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          API_URL: ${{ vars.API_URL }}
+        run: |
+          missing=()
+          [ -n "$CLOUDFLARE_API_TOKEN" ] || missing+=("secret CLOUDFLARE_API_TOKEN")
+          [ -n "$CLOUDFLARE_ACCOUNT_ID" ] || missing+=("secret CLOUDFLARE_ACCOUNT_ID")
+          [ -n "$API_URL" ] || missing+=("variable API_URL")
+
+          if [ ${#missing[@]} -gt 0 ]; then
+            printf 'Missing %s. See docs/DEPLOY-WEB.md.\n' "${missing[@]}" >&2
+            exit 1
+          fi
+
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --filter '@greyboards/web...'
+
+      - if: github.event_name != 'workflow_dispatch' || inputs.run_checks
+        run: pnpm --filter @greyboards/web typecheck
+
+      - run: pnpm --filter @greyboards/web build
+
+      - name: Deploy to Cloudflare Workers
+        working-directory: apps/web
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          API_URL: ${{ vars.API_URL }}
+          MAP_STYLE_URL: ${{ vars.MAP_STYLE_URL }}
+          WEB_DOMAINS: ${{ vars.WEB_DOMAINS }}
+          WORKER_NAME: ${{ vars.WEB_WORKER_NAME }}
+        run: |
+          args=(--var "API_URL:$API_URL" --var "MAP_STYLE_URL:$MAP_STYLE_URL")
+
+          [ -n "$WORKER_NAME" ] && args+=(--name "$WORKER_NAME")
+
+          for domain in ${WEB_DOMAINS//,/ }; do
+            args+=(--domain "$domain")
+          done
+
+          pnpm exec wrangler deploy "${args[@]}"
+
+      - name: Public check
+        if: vars.WEB_URL != ''
+        env:
+          WEB_URL: ${{ vars.WEB_URL }}
+        run: |
+          for attempt in 1 2 3 4 5; do
+            curl -fsS -o /dev/null --max-time 20 "$WEB_URL" && exit 0
+            sleep $((attempt * 5))
+          done
+
+          echo "$WEB_URL did not answer after the deploy." >&2
+          exit 1

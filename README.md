@@ -53,6 +53,11 @@ pnpm test
 pnpm build
 ```
 
+## Deploying
+
+- API: [docs/DEPLOY.md](docs/DEPLOY.md), over SSH from the **Deploy API** workflow.
+- Web: [docs/DEPLOY-WEB.md](docs/DEPLOY-WEB.md), to Cloudflare Workers from the **Deploy web** workflow.
+
 ## Mobile builds (EAS)
 
 The Android app builds on [EAS](https://expo.dev/eas) from the **Deploy apps** workflow: a push to the `deploy` branch, or a manual run from the Actions tab. The bundle id is `com.greysoft.greyboards.app` on both iOS and Android.
