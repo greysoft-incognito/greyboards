@@ -437,7 +437,7 @@ function AgreementPanel({ board }: { board: BoardDetail }) {
 			<p className="text-sm text-ink-500">{state ? state.note : `Text ${board.owner?.name ?? "the owner"} a link to agree that you run this board and they get their share of each booking.`}</p>
 			{agreement && (
 				<p className="text-sm text-ink-700">
-					Owner gets <strong>{agreement.ownerSharePercent}%</strong> of each booking{rate ? `, at ${rate}` : ""}.
+					Owner gets <strong>{agreement.ownerSharePercent}%</strong> of the rent{rate ? `, at ${rate}` : ""}.
 					{agreement.signedName && ` Signed by ${agreement.signedName}.`}
 				</p>
 			)}

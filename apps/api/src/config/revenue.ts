@@ -1,6 +1,6 @@
 /**
- * How a booking's rent is shared once printing and posting is paid for. The three percents
- * always add up to 100. Admins change them in the dashboard; these are the defaults.
+ * How a booking's rent is shared. The price for printing and posting is separate, paid on top
+ * of the rent, and isn't part of the split. The three percents always add up to 100. Admins change them in the dashboard; these are the defaults.
  */
 export default () => {
   return {

@@ -61,7 +61,7 @@ export class Commissions {
     return signed ? null : 'The owner hasn’t signed for this board yet, so it can’t be booked.'
   }
 
-  /** Share `rentMinor`, what is left once printing and posting is paid for. */
+  /** Share `rentMinor`, the booking's rent. Printing and posting is paid on top and isn't part of it. */
   static async split(board: Board, rentMinor: number): Promise<Split> {
     const revenue = await Commissions.revenue()
     const scoutId = await Commissions.scoutOf(board)

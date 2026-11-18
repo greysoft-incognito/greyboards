@@ -61,7 +61,7 @@ export default () => {
       {
         id: 'revenue',
         title: 'Revenue split',
-        description: 'How each booking’s rent is shared once printing and posting is paid for. The three parts must add up to 100%.',
+        description: 'How each booking’s rent is shared. The dispatcher’s price for printing and posting is paid separately, on top. The three parts must add up to 100%.',
         icon: 'percent',
         total: { fields: ['owner_percent', 'platform_percent', 'scout_percent'], equals: 100 },
         fields: [
