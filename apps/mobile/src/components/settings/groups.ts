@@ -8,6 +8,8 @@ export const SETTINGS_GROUPS: { label: string; pages: { to: Href; label: string;
       { to: '/settings/profile', label: 'Profile', hint: 'Your name and photo' },
       { to: '/settings/email', label: 'Email', hint: 'Your address and confirming it' },
       { to: '/settings/roles', label: 'Roles', hint: 'Advertiser, owner, scout or dispatcher' },
+      { to: '/settings/owners', label: 'Board owners', hint: 'Owners you manage, and claiming boards listed under your number' },
+      { to: '/settings/payouts', label: 'Payouts', hint: 'Bank details, and what you’ve earned and been sent' },
     ],
   },
   {
