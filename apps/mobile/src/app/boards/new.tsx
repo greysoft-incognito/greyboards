@@ -94,7 +94,7 @@ export default function TagBoard() {
     shoot.run(async () => {
       const permission = await ImagePicker.requestCameraPermissionsAsync()
 
-      if (!permission.granted) throw new PlainProblem('Allow the camera for Greyboards in your phone settings to photograph the board.')
+      if (!permission.granted) throw new PlainProblem('Allow camera access in your phone settings to take a photo.')
 
       const result = await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], quality: 0.85, exif: false })
 
@@ -102,7 +102,7 @@ export default function TagBoard() {
 
       const asset = result.assets[0]!
 
-      if (asset.fileSize && asset.fileSize > megabytes(maxImageMb)) throw new PlainProblem(`That photo is larger than ${maxImageMb} MB.`)
+      if (asset.fileSize && asset.fileSize > megabytes(maxImageMb)) throw new PlainProblem(`That photo is over ${maxImageMb} MB.`)
 
       const where = await currentSpot().catch(() => spot)
 
@@ -113,7 +113,7 @@ export default function TagBoard() {
 
   const submit = () =>
     save.run(async () => {
-      if (!spot) throw new PlainProblem('We need the board’s location. Tap “Use where I am” while standing at it.')
+      if (!spot) throw new PlainProblem('We need the board’s location. Stand next to it and tap Use my location.')
 
       const { data: board } = await api.account
         .tagBoard({ ...boardInput(form, spot), as, ...(as === 'scout' ? owner : {}) })
@@ -128,23 +128,23 @@ export default function TagBoard() {
 
       router.replace({ pathname: '/boards/[id]', params: { id: board.id } })
 
-      return as === 'scout' ? 'Board tagged. Send the owner their agreement from here.' : 'Board tagged. A reviewer checks it next.'
+      return as === 'scout' ? 'Board added! Now send the owner their sign-up link.' : 'Board added! We’ll review it soon.'
     })
 
   if (!roles.length) {
     return (
-      <SettingsPage title="Tag a board" description="Tagging boards is for owners and scouts.">
+      <SettingsPage title="Tag a board" description="Become an owner or scout to add boards.">
         <Button title="Choose a role" onPress={() => router.replace('/settings/roles')} />
       </SettingsPage>
     )
   }
 
   return (
-    <SettingsPage title="Tag a board" description="Stand at the board. We’ll place it using your phone’s location.">
+    <SettingsPage title="Tag a board" description="Stand next to the board and we’ll use your location.">
       {roles.length > 1 ? (
         <Section title="Whose board is it?">
           <CheckOption label="It's my board" description="You own it and set its rate." checked={as === 'owner'} onPress={() => setAs('owner')} />
-          <CheckOption label="I found it" description="You scouted it. We'll text the owner to sign." checked={as === 'scout'} onPress={() => setAs('scout')} />
+          <CheckOption label="I found it" description="You found it. We’ll text the owner to sign up." checked={as === 'scout'} onPress={() => setAs('scout')} />
         </Section>
       ) : (
         <View style={styles.as}>
@@ -159,8 +159,8 @@ export default function TagBoard() {
             <MapPin size={20} color={spot ? colors.brand600 : colors.ink500} />
           </View>
           <View style={styles.flex}>
-            <Text variant="label">{spot ? `${spot.latitude.toFixed(6)}, ${spot.longitude.toFixed(6)}` : locate.busy ? 'Finding you…' : 'Not placed yet'}</Text>
-            <Text variant="small">{spot?.accuracyM ? `Accurate to about ${spot.accuracyM} m.` : 'Stand by the board for the most accurate spot.'}</Text>
+            <Text variant="label">{spot ? `${spot.latitude.toFixed(6)}, ${spot.longitude.toFixed(6)}` : locate.busy ? 'Finding your location…' : 'No location yet'}</Text>
+            <Text variant="small">{spot?.accuracyM ? `Accurate to about ${spot.accuracyM} m.` : 'Stand right by the board for the best accuracy.'}</Text>
           </View>
         </View>
         {locate.problem.message ? <Callout>{locate.problem.message}</Callout> : null}
@@ -170,7 +170,7 @@ export default function TagBoard() {
             {nearby.length === 1 ? 'A board is already tagged here' : `${nearby.length} boards are already tagged here`}: {nearby.map((board) => `${board.name} (${board.distanceM} m)`).join(', ')}. Check it isn’t this one. If you tag it anyway, our reviewers will compare them.
           </Callout>
         ) : null}
-        <Button title={locate.busy ? 'Finding you…' : spot ? 'Place it again' : 'Use where I am'} variant="secondary" loading={locate.busy} onPress={findMe} />
+        <Button title={locate.busy ? 'Finding your location…' : spot ? 'Update location' : 'Use my location'} variant="secondary" loading={locate.busy} onPress={findMe} />
         <Field label="Street address" error={errors.address}>
           <Input value={form.address} onChangeText={set('address')} maxLength={191} placeholder="Admiralty Way, by the roundabout" />
         </Field>
@@ -179,7 +179,7 @@ export default function TagBoard() {
         </Field>
       </Section>
 
-      <Section title="Photos" description={`Take up to ${MAX_SHOTS}, from where traffic sees it. The first is the cover.`}>
+      <Section title="Photos" description={`Add up to ${MAX_SHOTS}, taken from where traffic sees it. The first one is the cover.`}>
         <View style={styles.shots}>
           {shots.map((shot, index) => (
             <View key={shot.asset.uri} style={styles.shot}>
@@ -208,7 +208,7 @@ export default function TagBoard() {
 
       {save.problem.summary ? <Callout>{save.problem.summary}</Callout> : null}
       <Button
-        title={save.busy ? (shots.length ? 'Tagging and uploading…' : 'Tagging…') : 'Tag this board'}
+        title={save.busy ? (shots.length ? 'Uploading…' : 'Tagging…') : 'Tag this board'}
         size="lg"
         loading={save.busy}
         disabled={!form.name.trim() || !form.widthM || !form.heightM}
@@ -217,7 +217,7 @@ export default function TagBoard() {
       <View style={styles.note}>
         <LocateFixed size={14} color={colors.ink500} />
         <Text variant="small" style={styles.flex}>
-          A reviewer checks every board before it goes on the map.
+          We review every board before it goes live.
         </Text>
       </View>
     </SettingsPage>

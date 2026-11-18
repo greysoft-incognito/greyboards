@@ -105,7 +105,7 @@ function FindMe({ compact = false }: { compact?: boolean }) {
 			},
 			() => {
 				setBusy(false);
-				setError("We couldn't get your location. Allow location for this site and try again.");
+				setError("We couldn't find your location. Allow location access and try again.");
 			},
 			{ enableHighAccuracy: false, timeout: 15_000, maximumAge: 300_000 },
 		);
@@ -126,8 +126,8 @@ function FindMe({ compact = false }: { compact?: boolean }) {
 				<Printer className="h-7 w-7" aria-hidden />
 			</span>
 			<div className="max-w-md">
-				<h2 className="font-display text-xl font-extrabold tracking-tight text-ink-900">Jobs close to you</h2>
-				<p className="mt-1 text-sm text-ink-500">We show boards with approved artwork near where you are, nearest first. Your location is only used for this search.</p>
+				<h2 className="font-display text-xl font-extrabold tracking-tight text-ink-900">Jobs near you</h2>
+				<p className="mt-1 text-sm text-ink-500">Print jobs near you, closest first. We only use your location for this search.</p>
 			</div>
 			{button}
 			{error && <Alert>{error}</Alert>}
@@ -140,8 +140,8 @@ function RoleNeeded({ status }: { status: string | null }) {
 		<div className="panel mt-6 flex flex-col items-center gap-4 px-6 py-10 text-center">
 			<p className="max-w-md text-ink-700">
 				{status === "pending"
-					? "Your dispatcher application is being checked. Jobs show here once it's approved."
-					: "Print jobs are for dispatchers. Apply for the role and we'll check your details."}
+					? "We're reviewing your dispatcher application. Jobs will show up here once you're approved."
+					: "Become a dispatcher to print and put up ads near you."}
 			</p>
 			{status !== "pending" && (
 				<Link prefetch="intent" to="/settings/roles" className={buttonClass("primary")}>
@@ -159,7 +159,7 @@ function Empty({ mine }: { mine: boolean }) {
 				<BoardScene time="dusk" art="empty" headline={mine ? "No jobs yet" : "Nothing nearby"} />
 			</div>
 			<div className="flex flex-col items-center gap-3 px-6 py-8 text-center">
-				<p className="max-w-md text-ink-700">{mine ? "Jobs you reserve show here, with the artwork to print." : "No open jobs within reach right now. New ones appear as advertisers' artwork is approved."}</p>
+				<p className="max-w-md text-ink-700">{mine ? "Jobs you reserve will show up here." : "No jobs near you right now. Check back soon."}</p>
 				{mine && (
 					<Link prefetch="intent" to="/jobs" className={buttonClass("primary")}>
 						Find jobs near me

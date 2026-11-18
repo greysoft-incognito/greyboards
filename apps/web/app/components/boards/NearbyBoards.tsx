@@ -30,7 +30,7 @@ export function NearbyBoards({ latitude, longitude }: { latitude: string; longit
 			<TriangleAlert className="mt-0.5 h-5 w-5 shrink-0 text-held" aria-hidden />
 			<div>
 				<p className="font-semibold text-ink-900">{boards.length === 1 ? "A board is already tagged here" : `${boards.length} boards are already tagged here`}</p>
-				<p className="mt-0.5">Check it isn't this one. If you tag it anyway, our reviewers will compare the two.</p>
+				<p className="mt-0.5">Is it the same board? If not, go ahead and we'll double-check.</p>
 				<ul className="mt-2 space-y-1">
 					{boards.map((board) => (
 						<li key={board.id}>

@@ -16,13 +16,13 @@ export const BADGES: Record<BadgeKey, BadgeLook> = {
 		label: "Verified",
 		icon: ShieldCheck,
 		className: "bg-gradient-to-br from-brand-500 to-brand-700 text-white shadow-[0_6px_16px_rgba(131,59,75,0.35)]",
-		summary: "Checked in person by Greyboards staff. Points can’t earn it.",
+		summary: "Our team checked this person themselves.",
 	},
 	proven: {
 		label: "Proven",
 		icon: Award,
 		className: "bg-white text-ink-900 ring-[1.5px] ring-amber-400 shadow-[0_4px_12px_rgba(178,106,0,0.18)]",
-		summary: "Earned through work we could confirm, like accepted proof photos and signed agreements. Staff haven’t checked them in person.",
+		summary: "Earned from real work on Greyboards, like approved photos and signed agreements.",
 	},
 };
 
@@ -98,7 +98,7 @@ export function Score({ value, compact = false }: { value: number; compact?: boo
 	return (
 		<span
 			className={`inline-flex items-center gap-1 rounded-full bg-surface-100 font-semibold tabular-nums ${value < 0 ? "text-red-700" : "text-ink-700"} ${compact ? "px-2 py-0.5 text-[11px]" : "px-2.5 py-1 text-xs"}`}
-			title="Reputation score in this role"
+			title="Score"
 		>
 			<Gauge className={compact ? "h-3 w-3" : "h-3.5 w-3.5"} aria-hidden />
 			{value}

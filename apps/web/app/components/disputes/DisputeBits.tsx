@@ -11,11 +11,11 @@ export const DISPUTE_REASONS: { value: DisputeReason; label: string }[] = [
 	{ value: "wrong_ad", label: "The wrong ad is up" },
 	{ value: "damaged", label: "The ad or board is damaged" },
 	{ value: "taken_down", label: "The ad came down early" },
-	{ value: "payment", label: "A problem with the money" },
+	{ value: "payment", label: "A payment problem" },
 	{ value: "other", label: "Something else" },
 ];
 
-export const DISPUTE_SIDES = { advertiser: "Advertiser", board: "Board’s side", dispatch: "Dispatch" } as const;
+export const DISPUTE_SIDES = { advertiser: "Advertiser", board: "Board owner", dispatch: "Dispatch" } as const;
 
 /** What was raised and, once decided, what staff decided and why. */
 export function DisputeSummary({ dispute, currency }: { dispute: Dispute; currency: string }) {
@@ -78,7 +78,7 @@ export function DisputePanel({ disputes, currency }: { disputes: BookingDisputes
 						<div className="flex flex-wrap gap-2">
 							<Button type="submit" disabled={busy}>
 								{busy ? <Spinner /> : <ShieldAlert className="h-4 w-4" aria-hidden />}
-								Raise dispute
+								Report problem
 							</Button>
 							<Button type="button" variant="ghost" onClick={() => setRaising(false)}>
 								Not now
@@ -87,9 +87,9 @@ export function DisputePanel({ disputes, currency }: { disputes: BookingDisputes
 					</Form>
 				) : (
 					<div className="space-y-2">
-						{!latest && <p className="text-sm text-ink-500">Try the messages first. If you can’t sort it out between you, staff will look into it and decide.</p>}
+						{!latest && <p className="text-sm text-ink-500">Try sorting it out in messages first. If that doesn’t work, our team will step in.</p>}
 						<Button variant="secondary" onClick={() => setRaising(true)}>
-							Raise a dispute
+							Report a problem
 						</Button>
 					</div>
 				))}

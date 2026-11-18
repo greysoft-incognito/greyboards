@@ -23,7 +23,7 @@ export function AccountControls({ account, roles, isMe, busy }: { account: Admin
 				method="post"
 				preventScrollReset
 				onSubmit={(event) => {
-					if (!account.suspended && !confirm(`Suspend ${account.name}? They are signed out everywhere and can't sign in until you let them back in.`))
+					if (!account.suspended && !confirm(`Suspend ${account.name}? They'll be signed out and won't be able to sign in until you unsuspend them.`))
 						event.preventDefault();
 				}}
 			>
@@ -31,7 +31,7 @@ export function AccountControls({ account, roles, isMe, busy }: { account: Admin
 				<input type="hidden" name="id" value={account.id} />
 				<input type="hidden" name="suspended" value={String(!account.suspended)} />
 				<Button type="submit" variant={account.suspended ? "secondary" : "danger"} disabled={isMe || busy} className="!py-2">
-					{account.suspended ? "Let back in" : "Suspend"}
+					{account.suspended ? "Unsuspend" : "Suspend"}
 				</Button>
 			</Form>
 		</div>

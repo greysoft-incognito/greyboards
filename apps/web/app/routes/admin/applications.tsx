@@ -56,7 +56,10 @@ export async function action({ request, context }: Route.ActionArgs) {
 	try {
 		const { data } = await api.admin.reviewAccountRole(String(form.get("id")), review);
 
-		return { error: null, message: `${data.user?.name ?? "The account"} is now ${review.status} as ${data.label.toLowerCase()}.` };
+		const name = data.user?.name ?? "This person";
+		const outcome = { active: "approved", rejected: "declined", suspended: "suspended", pending: "moved back to review" }[review.status] ?? review.status;
+
+		return { error: null, message: `${name}'s ${data.label.toLowerCase()} application was ${outcome}.` };
 	} catch (error) {
 		return { error: formError(error).error, message: null };
 	}
@@ -71,7 +74,7 @@ export default function AdminApplications({ loaderData, actionData }: Route.Comp
 
 	return (
 		<>
-			<AdminHeader title="Applications" description="Scouts and dispatchers handle other people's boards and money, so each one is checked before they start." />
+			<AdminHeader title="Applications" description="Scouts and dispatchers work with other people's boards, so we review each one before they start." />
 			<div className="space-y-6 px-4 py-8 sm:px-8">
 				<Form method="get" className="flex flex-wrap items-center gap-3">
 					<Select name="kind" defaultValue={params.get("kind") ?? ""} aria-label="Role" className="w-auto">
@@ -165,9 +168,9 @@ function ApplicationRow({ application }: { application: AdminAccountRole }) {
 }
 
 const ID_STATUS: Record<NonNullable<PartnerChecks["identity"]>["status"], string> = {
-	submitted: "Not checked yet",
+	submitted: "Not reviewed",
 	verified: "Checked",
-	rejected: "Turned down",
+	rejected: "Not approved",
 };
 
 /** The applicant's ID and bank account side by side, so the names can be compared. */
@@ -204,11 +207,11 @@ function Checks({ id, checks }: { id: string; checks: PartnerChecks }) {
 							<Form method="post" preventScrollReset className="mt-2 flex flex-wrap gap-2">
 								<input type="hidden" name="intent" value="identity" />
 								<input type="hidden" name="id" value={id} />
-								<input type="hidden" name="note" value="The photo can't be read. Send a clearer one." />
+								<input type="hidden" name="note" value="We couldn't read the photo. Please upload a clearer one." />
 								{identity.status !== "verified" && (
 									<Button type="submit" name="status" value="verified" variant="secondary" className="!min-h-9 !py-1.5">
 										<BadgeCheck className="h-4 w-4" aria-hidden />
-										ID is fine
+										Approve ID
 									</Button>
 								)}
 								<Button type="submit" name="status" value="rejected" variant="ghost" className="!min-h-9 !py-1.5">

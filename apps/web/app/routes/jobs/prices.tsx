@@ -47,11 +47,11 @@ export async function action({ request, context }: Route.ActionArgs) {
 }
 
 const OFFER_LABELS: Record<PrintOffer["status"], string> = {
-	requested: "Asked at your rate",
-	pending: "With the advertiser",
-	paid: "Paid, the job is yours",
+	requested: "Requested at your rate",
+	pending: "Waiting for advertiser",
+	paid: "Paid, it's yours",
 	declined: "Declined",
-	withdrawn: "Taken back",
+	withdrawn: "Withdrawn",
 	closed: "Closed",
 };
 
@@ -72,7 +72,7 @@ export default function Prices({ loaderData, actionData }: Route.ComponentProps)
 			<div className="flex flex-wrap items-end justify-between gap-4">
 				<div>
 					<h1 className="font-display text-3xl font-extrabold tracking-[-0.03em] text-ink-900 sm:text-4xl">Your prices</h1>
-					<p className="mt-1 text-ink-500">Advertisers near your base can ask you at this rate. On any job you can also send your own price.</p>
+					<p className="mt-1 text-ink-500">Advertisers near you can hire you at this rate. You can also send your own quote on any job.</p>
 				</div>
 				<nav aria-label="Print jobs" className="glass flex gap-1 rounded-2xl p-1">
 					<NavLink to="/jobs" end className="rounded-xl px-4 py-2 text-sm font-semibold text-ink-700 hover:bg-surface-100">
@@ -88,7 +88,7 @@ export default function Prices({ loaderData, actionData }: Route.ComponentProps)
 			<div className="mt-6 grid gap-6 lg:grid-cols-[1fr_1.1fr]">
 				<Form method="post" className="panel space-y-4 p-5 sm:p-6">
 					<h2 className="font-display text-xl font-extrabold tracking-tight text-ink-900">Your rate</h2>
-					{!rate.saved && <p className="text-sm text-ink-500">Set your rate and base so advertisers can find you. It starts at the suggested rate.</p>}
+					{!rate.saved && <p className="text-sm text-ink-500">Set your rate and location so advertisers can find you.</p>}
 					{actionData?.error && !Object.keys(errors).length && <Alert>{actionData.error}</Alert>}
 					<div className="grid gap-4 sm:grid-cols-2">
 						<Field label="Per square metre, in naira" error={errors.pricePerSqmMinor}>
@@ -106,7 +106,7 @@ export default function Prices({ loaderData, actionData }: Route.ComponentProps)
 						<Field label="How far you’ll travel, in km" error={errors.radiusKm}>
 							<Input name="radiusKm" inputMode="numeric" required defaultValue={String(rate.radiusKm)} />
 						</Field>
-						<Field label="Note for advertisers" error={errors.note} hint="Optional, such as your materials.">
+						<Field label="Note for advertisers" error={errors.note} hint="Optional. For example, the materials you use.">
 							<Input name="note" maxLength={200} defaultValue={rate.note ?? ""} />
 						</Field>
 					</div>
@@ -117,13 +117,13 @@ export default function Prices({ loaderData, actionData }: Route.ComponentProps)
 						</Button>
 						<Button variant="secondary" onClick={locate}>
 							<LocateFixed className="h-4 w-4" aria-hidden />
-							Use where I am
+							Use my location
 						</Button>
 					</div>
 				</Form>
 
 				<section className="space-y-3">
-					<h2 className="font-display text-xl font-extrabold tracking-tight text-ink-900">Prices and requests</h2>
+					<h2 className="font-display text-xl font-extrabold tracking-tight text-ink-900">Quotes and requests</h2>
 					{offers.length ? (
 						<ul className="divide-y divide-surface-200 rounded-2xl bg-surface-100">
 							{offers.map((offer) => (
@@ -142,7 +142,7 @@ export default function Prices({ loaderData, actionData }: Route.ComponentProps)
 							))}
 						</ul>
 					) : (
-						<p className="rounded-2xl bg-surface-100 px-4 py-3 text-sm text-ink-500">No prices yet. Send one on any job near you, or wait for an advertiser to ask you.</p>
+						<p className="rounded-2xl bg-surface-100 px-4 py-3 text-sm text-ink-500">No quotes yet. Send one on any job near you, or wait for an advertiser to reach out.</p>
 					)}
 					{meta && <Pager meta={meta} noun="prices" />}
 				</section>

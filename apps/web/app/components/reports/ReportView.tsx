@@ -40,7 +40,7 @@ export function ReportView({ report }: { report: CampaignReport }) {
 				<RunSection key={run.bookingId} run={run} currency={report.currency} />
 			))}
 
-			<p className="text-xs text-ink-500">Every photo was taken at the board and checked against its location. Made with Greyboards.</p>
+			<p className="text-xs text-ink-500">Every photo was taken at the board. Made with Greyboards.</p>
 		</article>
 	);
 }
@@ -93,7 +93,7 @@ function RunSection({ run, currency }: { run: CampaignRun; currency: string }) {
 			) : (
 				<p className="flex items-center gap-2 text-sm text-ink-500">
 					<Images className="h-4 w-4" aria-hidden />
-					No proof photos on this booking.
+					No photos yet.
 				</p>
 			)}
 		</section>

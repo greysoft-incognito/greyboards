@@ -41,7 +41,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 		if (intent === "add") {
 			await api.prospects.create({ ...details(form), name: String(form.get("name") ?? ""), latitude: Number(form.get("latitude")), longitude: Number(form.get("longitude")) });
 
-			return { error: null, message: "Added to your pipeline." };
+			return { error: null, message: "Added." };
 		}
 
 		if (intent === "stage") {
@@ -59,7 +59,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 		if (intent === "remove") {
 			await api.prospects.remove(id);
 
-			return { error: null, message: "Removed from your pipeline." };
+			return { error: null, message: "Removed." };
 		}
 
 		return { error: "Unknown action.", message: null };
@@ -80,7 +80,7 @@ export default function Pipeline({ loaderData, actionData }: Route.ComponentProp
 		<main className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
 			<div>
 				<h1 className="font-display text-3xl font-extrabold tracking-[-0.03em] text-ink-900 sm:text-4xl">Pipeline</h1>
-				<p className="mt-1 text-ink-500">Every board you spot, from first sighting to first booking. Once you tag a board, its stage updates on its own.</p>
+				<p className="mt-1 text-ink-500">Keep track of boards you've spotted, from first sighting to first booking.</p>
 			</div>
 
 			<nav aria-label="Stages" className="glass flex max-w-full gap-1 overflow-x-auto rounded-2xl p-1">
@@ -222,7 +222,7 @@ function AddProspect() {
 	const [problem, setProblem] = useState<string | null>(null);
 
 	const locate = () => {
-		if (!navigator.geolocation) return setProblem("This browser can't share your location. Type the coordinates instead.");
+		if (!navigator.geolocation) return setProblem("Your browser can't share your location. Enter the coordinates instead.");
 
 		setLocating(true);
 		setProblem(null);
@@ -232,7 +232,7 @@ function AddProspect() {
 				setLocating(false);
 			},
 			() => {
-				setProblem("Couldn't get your location. Allow it, or type the coordinates.");
+				setProblem("We couldn't find your location. Allow access, or enter the coordinates.");
 				setLocating(false);
 			},
 			{ enableHighAccuracy: true, timeout: 15_000 },
@@ -241,7 +241,7 @@ function AddProspect() {
 
 	return (
 		<section className="panel space-y-3 p-5">
-			<h2 className="font-display text-lg font-extrabold tracking-tight text-ink-900">Add a board you spotted</h2>
+			<h2 className="font-display text-lg font-extrabold tracking-tight text-ink-900">Add a board</h2>
 			<Form method="post" className="space-y-3">
 				<input type="hidden" name="intent" value="add" />
 				<ProspectFields />
@@ -255,7 +255,7 @@ function AddProspect() {
 				</div>
 				<Button type="button" variant="secondary" onClick={locate} disabled={locating} className="w-full">
 					{locating ? <Spinner /> : <Crosshair className="h-4 w-4" aria-hidden />}
-					Use where I am
+					Use my location
 				</Button>
 				{problem && <p className="text-sm text-red-700">{problem}</p>}
 				<Button type="submit" disabled={busy} className="w-full">

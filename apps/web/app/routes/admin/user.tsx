@@ -85,7 +85,7 @@ export default function AdminUserPage({ loaderData, actionData }: Route.Componen
 							})}
 						</ul>
 					) : (
-						<p className="px-5 py-4 text-sm text-ink-500">No marketplace roles yet.</p>
+						<p className="px-5 py-4 text-sm text-ink-500">No roles yet.</p>
 					)}
 				</section>
 			</div>

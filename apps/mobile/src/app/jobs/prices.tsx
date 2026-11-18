@@ -13,11 +13,11 @@ import { useAction } from '@/lib/use-action'
 import { colors, fonts } from '@/theme'
 
 const OFFER_LABELS: Record<PrintOffer['status'], string> = {
-  requested: 'Asked at your rate',
-  pending: 'With the advertiser',
-  paid: 'Paid, the job is yours',
+  requested: 'Requested at your rate',
+  pending: 'Waiting for advertiser',
+  paid: 'Paid, it’s yours',
   declined: 'Declined',
-  withdrawn: 'Taken back',
+  withdrawn: 'Withdrawn',
   closed: 'Closed',
 }
 
@@ -56,11 +56,11 @@ export default function Prices() {
     })
 
   return (
-    <SettingsPage title="Your prices" description="Advertisers near your base can ask you at this rate. On any job you can also send your own price.">
+    <SettingsPage title="Your prices" description="Advertisers near you can hire you at this rate. You can also send your own quote on any job.">
       {problem ? <Callout>{problem}</Callout> : null}
       {rate ? <RateForm key={String(rate.saved)} rate={rate} onSaved={setRate} /> : problem ? null : <ActivityIndicator color={colors.brand600} />}
 
-      <Section title="Prices and requests">
+      <Section title="Quotes and requests">
         {offers.length ? (
           offers.map((offer) => (
             <Pressable
@@ -83,7 +83,7 @@ export default function Prices() {
             </Pressable>
           ))
         ) : (
-          <Text variant="muted">No prices yet. Send one on any job near you, or wait for an advertiser to ask you.</Text>
+          <Text variant="muted">No quotes yet. Send one on any job near you, or wait for an advertiser to reach out.</Text>
         )}
         {page.current < page.last ? <Button title="Show more" variant="ghost" loading={more.busy} onPress={loadMore} /> : null}
       </Section>
@@ -122,7 +122,7 @@ function RateForm({ rate, onSaved }: { rate: DispatchRate; onSaved: (rate: Dispa
     })
 
   return (
-    <Section title="Your rate" description={rate.saved ? undefined : 'Set your rate and base so advertisers can find you. It starts at the suggested rate.'}>
+    <Section title="Your rate" description={rate.saved ? undefined : 'Set your rate and location so advertisers can find you.'}>
       <Field label="Per square metre, in naira" error={errors.pricePerSqmMinor}>
         <Input value={perSqm} onChangeText={setPerSqm} keyboardType="number-pad" />
       </Field>
@@ -136,11 +136,11 @@ function RateForm({ rate, onSaved }: { rate: DispatchRate; onSaved: (rate: Dispa
         </View>
       </Field>
       {locate.problem.message ? <Callout>{locate.problem.message}</Callout> : null}
-      <Button title={locate.busy ? 'Finding you…' : 'Use where I am'} variant="secondary" loading={locate.busy} onPress={findMe} />
+      <Button title={locate.busy ? 'Finding your location…' : 'Use my location'} variant="secondary" loading={locate.busy} onPress={findMe} />
       <Field label="How far you’ll travel, in km" error={errors.radiusKm}>
         <Input value={radiusKm} onChangeText={setRadiusKm} keyboardType="number-pad" />
       </Field>
-      <Field label="Note for advertisers" error={errors.note} hint="Optional, such as your materials.">
+      <Field label="Note for advertisers" error={errors.note} hint="Optional. For example, the materials you use.">
         <Input value={note} onChangeText={setNote} maxLength={200} />
       </Field>
       {action.problem.summary ? <Callout>{action.problem.summary}</Callout> : null}

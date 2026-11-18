@@ -14,9 +14,9 @@ export function RateCard({ board }: { board: BoardDetail }) {
 			<div>
 				<h2 className="flex items-center gap-2 font-display text-lg font-extrabold tracking-tight text-ink-900">
 					<Layers className="h-5 w-5 text-brand-600" aria-hidden />
-					Faces and rates
+					Sides and rates
 				</h2>
-				<p className="mt-1 text-sm text-ink-500">Each face is booked on its own. Leave a rate empty to use the board's.</p>
+				<p className="mt-1 text-sm text-ink-500">Each side is booked separately. Leave a rate empty to use the board's main rate.</p>
 			</div>
 			<ul className="space-y-3">
 				{board.rateCard.map((face) => (
@@ -77,7 +77,7 @@ export function BlockedDays({ board, today }: { board: BoardDetail; today: strin
 					<CalendarOff className="h-5 w-5 text-brand-600" aria-hidden />
 					Blocked days
 				</h2>
-				<p className="mt-1 text-sm text-ink-500">Keep days for your own clients. Advertisers can't book them.</p>
+				<p className="mt-1 text-sm text-ink-500">Save days for your own clients. Advertisers won't be able to book them.</p>
 			</div>
 
 			{blocks.length > 0 && (
@@ -103,7 +103,7 @@ export function BlockedDays({ board, today }: { board: BoardDetail; today: strin
 			<Form method="post" preventScrollReset className="space-y-3">
 				<input type="hidden" name="intent" value="block" />
 				<div className="grid grid-cols-2 gap-3">
-					<Field label="First day">
+					<Field label="Start date">
 						<Input type="date" name="startsOn" min={today} required />
 					</Field>
 					<Field label="Last day">
@@ -123,7 +123,7 @@ export function BlockedDays({ board, today }: { board: BoardDetail; today: strin
 							</Select>
 						</Field>
 					)}
-					<Field label="Note for yourself">
+					<Field label="Private note">
 						<Input name="note" maxLength={191} placeholder="Such as: our own client" />
 					</Field>
 				</div>

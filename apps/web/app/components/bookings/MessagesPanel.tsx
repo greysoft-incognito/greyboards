@@ -7,7 +7,7 @@ import { Button, Spinner, Textarea } from "~/components/ui";
 
 const SIDES: Record<MessageSide, string> = {
 	advertiser: "Advertiser",
-	board: "Board owner's side",
+	board: "Board owner",
 	dispatch: "Dispatch",
 	staff: "Greyboards",
 };
@@ -42,7 +42,7 @@ export function MessagesPanel({ messages, more }: { messages: BookingMessage[]; 
 					<MessagesSquare className="h-5 w-5 text-brand-600" aria-hidden />
 					Messages
 				</h2>
-				<p className="mt-1 text-sm text-ink-500">Agree details here so they stay with the booking. Owners without the app get these by SMS.</p>
+				<p className="mt-1 text-sm text-ink-500">Keep every conversation about this booking here. Owners without the app get messages by text.</p>
 			</div>
 
 			{more && <p className="text-center text-xs text-ink-500">Older messages aren't shown here.</p>}

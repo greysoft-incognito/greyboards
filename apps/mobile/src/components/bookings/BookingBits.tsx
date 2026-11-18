@@ -10,11 +10,11 @@ import { colors, fonts, surfaces } from '@/theme'
 
 const STATUS: Record<BookingStatus, PillLook> = {
   held: { label: 'Waiting for payment', background: colors.amber50, color: colors.held },
-  paid: { label: 'Paid, held in escrow', background: colors.brand50, color: colors.brand700 },
+  paid: { label: 'Paid', background: colors.brand50, color: colors.brand700 },
   live: { label: 'Up on the board', background: colors.emerald50, color: colors.available },
   completed: { label: 'Finished', background: colors.surface100, color: colors.ink700 },
   cancelled: { label: 'Cancelled', background: colors.surface100, color: colors.ink500 },
-  expired: { label: 'Hold ran out', background: colors.surface100, color: colors.ink500 },
+  expired: { label: 'Expired', background: colors.surface100, color: colors.ink500 },
 }
 
 export function BookingStatusBadge({ status }: { status: BookingStatus }) {

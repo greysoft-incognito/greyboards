@@ -58,7 +58,7 @@ export default function Profile({ loaderData, actionData }: Route.ComponentProps
 
 	return (
 		<>
-			<PageHeader title="Profile" description="How advertisers, owners and partners see you on bookings." />
+			<PageHeader title="Profile" description="This is how other people see you on Greyboards." />
 			<div className="space-y-6">
 				<Section title="Photo">
 					<div className="flex flex-wrap items-center gap-5">
@@ -106,7 +106,7 @@ export default function Profile({ loaderData, actionData }: Route.ComponentProps
 						<Field
 							label="Username"
 							error={profile?.fieldErrors.username}
-							hint="Use 3 to 30 lower case letters, numbers or underscores."
+							hint="3 to 30 characters: lowercase letters, numbers and underscores."
 						>
 							<Input
 								name="username"

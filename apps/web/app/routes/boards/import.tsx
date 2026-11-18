@@ -33,7 +33,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 	const dryRun = form.get("intent") !== "import";
 	const ownerProfileId = form.get("ownerProfileId") ? String(form.get("ownerProfileId")) : null;
 
-	if (!csv.trim()) return { error: "Pick the CSV file to import.", result: null, csv: "", ownerProfileId };
+	if (!csv.trim()) return { error: "Choose a CSV file to import.", result: null, csv: "", ownerProfileId };
 
 	try {
 		const { data } = await api.account.importBoards({ csv, dryRun, ownerProfileId });
@@ -61,7 +61,7 @@ export default function ImportBoards({ loaderData, actionData }: Route.Component
 				My boards
 			</Link>
 			<h1 className="mt-3 font-display text-3xl font-extrabold tracking-[-0.03em] text-ink-900 sm:text-4xl">Import boards</h1>
-			<p className="mt-1 mb-6 text-ink-500">Add many boards at once from a spreadsheet. We check each row first, and every board is reviewed before it goes on the map.</p>
+			<p className="mt-1 mb-6 text-ink-500">Add lots of boards at once from a spreadsheet. We'll review each one before it goes live.</p>
 
 			<div className="space-y-6">
 				<section className="panel space-y-4 p-5 sm:p-6">
@@ -96,7 +96,7 @@ export default function ImportBoards({ loaderData, actionData }: Route.Component
 						{actionData?.error && <Alert>{actionData.error}</Alert>}
 						<Button type="submit" variant="secondary" disabled={busy("check")}>
 							{busy("check") ? <Spinner /> : <CircleCheck className="h-4 w-4" aria-hidden />}
-							Check the rows
+							Review
 						</Button>
 					</Form>
 				</section>

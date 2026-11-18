@@ -53,7 +53,7 @@ export default function AdminTerritories({ loaderData, actionData }: Route.Compo
 
 	return (
 		<>
-			<AdminHeader title="Territories" description="Areas you give scouts, as a circle on the map. With territories enforced in the scouting settings, scouts add prospects only in their own areas or ones nobody holds." />
+			<AdminHeader title="Territories" description="Areas assigned to scouts. If territories are turned on in scouting settings, scouts can only add boards in their own area or one nobody holds." />
 			<div className="grid gap-6 px-4 py-8 sm:px-8 lg:grid-cols-[1fr_22rem]">
 				<section className="space-y-3">
 					{actionData?.error && <Alert>{actionData.error}</Alert>}
@@ -101,10 +101,10 @@ export default function AdminTerritories({ loaderData, actionData }: Route.Compo
 								<Input name="longitude" type="number" step="any" min="-180" max="180" required />
 							</Field>
 						</div>
-						<Field label="Radius" hint="In kilometres, 0.1 to 100.">
+						<Field label="Radius" hint="In km, from 0.1 to 100.">
 							<Input name="radiusKm" type="number" step="0.1" min="0.1" max="100" defaultValue="2" required />
 						</Field>
-						<Field label="Scout’s email" hint="Leave empty to keep it open to anyone.">
+						<Field label="Scout’s email" hint="Leave empty to open it to anyone.">
 							<Input name="scoutEmail" type="email" />
 						</Field>
 						<Button type="submit" className="w-full" disabled={adding}>

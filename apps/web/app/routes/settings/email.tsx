@@ -22,7 +22,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 		return settingsAction("verify", async () => {
 			await api.account.sendVerification();
 
-			return { message: "Sent. Open the link in the email to confirm." };
+			return { message: "Check your inbox for the link." };
 		});
 	}
 
@@ -32,7 +32,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 			password: String(form.get("password") ?? ""),
 		});
 
-		return { message: `Email changed. We sent a confirmation link to ${user.email}.` };
+		return { message: `Email updated. Check ${user.email} for a link to confirm it.` };
 	});
 }
 
@@ -47,7 +47,7 @@ export default function Email({ loaderData, actionData }: Route.ComponentProps) 
 
 	return (
 		<>
-			<PageHeader title="Email" description="You sign in with this address, and it's where we send security emails." />
+			<PageHeader title="Email" description="You use this email to sign in." />
 			<div className="space-y-6">
 				<Section>
 					<div className="flex flex-wrap items-center justify-between gap-4">
@@ -56,13 +56,13 @@ export default function Email({ loaderData, actionData }: Route.ComponentProps) 
 							{user.emailVerified ? (
 								<p className="mt-1 text-sm text-emerald-700">Confirmed</p>
 							) : (
-								<p className="mt-1 text-sm text-amber-700">Not confirmed yet. Check your inbox for our email.</p>
+								<p className="mt-1 text-sm text-amber-700">Not confirmed yet. Check your inbox.</p>
 							)}
 						</div>
 						{!user.emailVerified && (
 							<Form method="post">
 								<Button variant="secondary" type="submit" name="intent" value="verify" disabled={busy("verify")}>
-									{busy("verify") ? "Sending…" : "Send the link again"}
+									{busy("verify") ? "Sending…" : "Resend link"}
 								</Button>
 							</Form>
 						)}
@@ -74,7 +74,7 @@ export default function Email({ loaderData, actionData }: Route.ComponentProps) 
 					)}
 				</Section>
 
-				<Section title="Use a different address" description="We'll tell your old address, and ask you to confirm the new one.">
+				<Section title="Change email" description="We'll send a link to your new address to confirm it.">
 					<Form method="post" className="max-w-md space-y-4">
 						<input type="hidden" name="intent" value="email" />
 						<Field label="New email" error={change?.fieldErrors.email}>

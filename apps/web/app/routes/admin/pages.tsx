@@ -72,7 +72,7 @@ export default function AdminPages({ loaderData }: Route.ComponentProps) {
 
 	return (
 		<>
-			<AdminHeader title="Pages" description="The about page, policies and any other pages people can read. Written in Markdown." />
+			<AdminHeader title="Pages" description="Your about page, policies and other pages, written in Markdown." />
 			<div className="lg:grid lg:grid-cols-[22rem_1fr]">
 				<nav aria-label="Pages" className={`border-surface-200 p-3 lg:block lg:border-r-[1.5px] ${chosen ? "hidden" : ""}`}>
 					<Link prefetch="intent" to="/admin/pages/new" className={buttonClass("brand", "mb-3 w-full")}>
@@ -166,7 +166,7 @@ function PageEditor({ document }: { document: SiteDocument | null }) {
 					<div>
 						<h2 className="font-display text-2xl font-bold tracking-tight text-ink-900">{document ? document.title : "New page"}</h2>
 						<p className="mt-1 text-ink-500">
-							{builtIn ? "Built in. The apps link to this page, so it stays published at the same address." : "Drafts only show here until you publish them."}
+							{builtIn ? "Built in. The apps link here, so it always stays published." : "Drafts are only visible here until you publish them."}
 						</p>
 					</div>
 					{document?.published && (
@@ -194,7 +194,7 @@ function PageEditor({ document }: { document: SiteDocument | null }) {
 						value={form.slug}
 						disabled={builtIn}
 						onChange={(slug) => change({ slug: slug.toLowerCase() })}
-						placeholder="Made from the title"
+						placeholder="Generated from the title"
 					/>
 					<div className="sm:col-span-2">
 						<TextField
@@ -203,7 +203,7 @@ function PageEditor({ document }: { document: SiteDocument | null }) {
 							maxLength={300}
 							value={form.summary}
 							onChange={(summary) => change({ summary })}
-							placeholder="One line under the title, also used by search engines"
+							placeholder="A short line under the title, also shown in search results"
 						/>
 					</div>
 					<label className="field flex-col !items-stretch px-3.5 pt-2 pb-2.5">
@@ -246,7 +246,7 @@ function PageEditor({ document }: { document: SiteDocument | null }) {
 						<p id="page-published" className="font-semibold text-ink-900">
 							Published
 						</p>
-						<p className="text-sm text-ink-500">Published pages show in the footer on the web and under Account in the app.</p>
+						<p className="text-sm text-ink-500">Published pages appear in the website footer and under Account in the app.</p>
 						{errors.published && <p className="mt-1 text-xs text-red-700">{errors.published}</p>}
 					</div>
 				</div>

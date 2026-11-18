@@ -22,7 +22,7 @@ export default function Password() {
     })
 
   return (
-    <SettingsPage title="Password" description="Changing it signs you out on every other device.">
+    <SettingsPage title="Password" description="You’ll be signed out on your other devices.">
       <Section>
         <Field label="Current password" error={change.problem.fields.currentPassword}>
           <Input value={current} onChangeText={setCurrent} secureTextEntry autoComplete="current-password" textContentType="password" />

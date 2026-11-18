@@ -36,7 +36,7 @@ export default function AdminOverview({ loaderData }: Route.ComponentProps) {
 
 	return (
 		<>
-			<AdminHeader title="Overview" description="How Greyboards is doing at a glance." />
+			<AdminHeader title="Overview" description="How Greyboards is doing today." />
 			<div className="space-y-8 px-4 py-8 sm:px-8">
 				<StatTiles items={stats} />
 

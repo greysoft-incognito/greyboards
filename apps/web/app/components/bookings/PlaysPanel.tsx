@@ -13,10 +13,10 @@ export function PlaysPanel({ plays }: { plays: PlaySummary }) {
 		<div className="panel space-y-4 p-5 sm:p-6">
 			<h2 className="flex items-center gap-2 font-display text-lg font-extrabold tracking-tight text-ink-900">
 				<MonitorPlay className="h-5 w-5 text-brand-600" aria-hidden />
-				Plays on the screen
+				Plays
 			</h2>
 			{plays.total === 0 ? (
-				<p className="text-sm text-ink-500">No plays reported yet. They show here as the screen's player sends them in.</p>
+				<p className="text-sm text-ink-500">No plays yet. They'll show here as your ad runs.</p>
 			) : (
 				<>
 					<p className="text-sm text-ink-700">

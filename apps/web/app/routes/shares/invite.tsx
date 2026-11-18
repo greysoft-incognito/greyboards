@@ -81,12 +81,12 @@ export default function ShareInvitePage({ loaderData, actionData }: Route.Compon
 						</Button>
 						<p className="flex items-start gap-2 text-xs text-ink-500">
 							<ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-available" aria-hidden />
-							Everyone has {formatWait(left)} to pay. If the booking doesn't go ahead, you get your money back. Once it does, it waits in escrow until there's a photo of the ad on the board.
+							Everyone has {formatWait(left)} to pay. If the booking doesn't go ahead, you'll get a full refund.
 						</p>
 					</Form>
 				) : payable ? (
 					<Link prefetch="intent" to="/settings/roles" className={buttonClass("primary", "w-full")}>
-						Add the advertiser role to join
+						Become an advertiser to join
 					</Link>
 				) : (
 					<p className="text-sm text-ink-700">
@@ -94,7 +94,7 @@ export default function ShareInvitePage({ loaderData, actionData }: Route.Compon
 							? "Your share is paid."
 							: !invite.mine && invite.status !== "open"
 								? "Someone already took this share."
-								: "This booking is no longer waiting for payments."}{" "}
+								: "This booking is already closed."}{" "}
 						{invite.mine && (
 							<Link to={`/bookings/${booking.id}`} className="font-semibold text-brand-700 hover:underline">
 								See the booking

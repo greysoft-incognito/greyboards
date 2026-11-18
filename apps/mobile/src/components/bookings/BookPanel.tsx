@@ -72,7 +72,7 @@ export function BookPanel({ board, taken, canBook, slotQuote }: { board: BoardDe
         await api.makeOffer(board.id, { startsOn: firstDay, periods, faceId: face?.id, amountMinor: toMinor(amount), note: note.trim() || null }).send()
         router.push('/bookings')
 
-        return 'Offer sent. The owner’s answer shows under My offers.'
+        return 'Offer sent. You’ll see the owner’s reply under My offers.'
       }
 
       const { data: booking } = await api
@@ -82,7 +82,7 @@ export function BookPanel({ board, taken, canBook, slotQuote }: { board: BoardDe
       if (splitting) {
         router.push({ pathname: '/bookings/[id]', params: { id: booking.id } })
 
-        return 'Dates held. Send each invite link to the others.'
+        return 'Dates held. Send an invite link to each person.'
       }
 
       const { data: payment } = await api.checkout(booking.id).send()
@@ -95,15 +95,15 @@ export function BookPanel({ board, taken, canBook, slotQuote }: { board: BoardDe
   const rows = [
     { label: `${formatRate({ ...rate, amountMinor: perPeriod })} × ${periods}`, value: formatMoney(runPrice, rate.currency) },
     terms.printFeeMinor > 0
-      ? { label: 'Printing and posting by the owner', value: formatMoney(terms.printFeeMinor, rate.currency) }
+      ? { label: 'The owner prints and puts it up', value: formatMoney(terms.printFeeMinor, rate.currency) }
       : board.kind !== 'digital'
-        ? { label: 'Printing and posting', value: 'Priced by dispatchers once your artwork is approved' }
+        ? { label: 'Printing and posting', value: 'Quoted by local dispatchers once your design is approved' }
         : null,
     splitting ? { label: 'Each share, about', value: formatMoney(Math.floor((runPrice + terms.printFeeMinor) / shares), rate.currency) } : null,
   ].filter((row) => row !== null)
 
   return (
-    <Section title="Book this board" description={digital ? `Priced per slot by the ${unit}. The loop has ${slotQuote.loop.slots} slots of ${slotQuote.loop.seconds} seconds.` : `Priced by the ${unit}. Pick your first day and how long to run.`}>
+    <Section title="Book this board" description={digital ? `Priced per slot, per ${unit}. Each loop has ${slotQuote.loop.slots} slots of ${slotQuote.loop.seconds} seconds.` : `Priced per ${unit}. Choose a start date and how long to run.`}>
       {canBook ? (
         <>
           {board.rateCard.length > 1 ? (
@@ -124,8 +124,8 @@ export function BookPanel({ board, taken, canBook, slotQuote }: { board: BoardDe
             </View>
           ) : null}
 
-          <Field label="First day">
-            <DateField label="First day" value={firstDay} min={splitting ? terms.shares.earliestStart : terms.earliestStart} taken={days} onChange={setStartsOn} />
+          <Field label="Start date">
+            <DateField label="Start date" value={firstDay} min={splitting ? terms.shares.earliestStart : terms.earliestStart} taken={days} onChange={setStartsOn} />
           </Field>
           <Field label="How long">
             <Select label="How long" value={String(periods)} options={lengths.map((count) => ({ value: String(count), label: plural(count, unit) }))} onChange={(value) => setPeriods(Number(value))} />
@@ -168,18 +168,18 @@ export function BookPanel({ board, taken, canBook, slotQuote }: { board: BoardDe
 
           {offering ? (
             <View style={styles.offer}>
-              <Field label="Your offer for the run" hint={`Listed at ${formatMoney(rate.amountMinor * periods, rate.currency)} before printing`}>
+              <Field label="Your offer" hint={`Listed price ${formatMoney(rate.amountMinor * periods, rate.currency)}, before printing`}>
                 <Input value={amount} onChangeText={setAmount} keyboardType="number-pad" />
               </Field>
               <Field label="Note for the owner">
-                <Input value={note} onChangeText={setNote} multiline maxLength={500} placeholder="Such as: a three-month campaign if this goes well" />
+                <Input value={note} onChangeText={setNote} multiline maxLength={500} placeholder="e.g. We’d like to run for three months if this goes well" />
               </Field>
             </View>
           ) : null}
 
           {action.problem.message ? <Callout>{action.problem.message}</Callout> : null}
           <Button
-            title={offering ? (action.busy ? 'Sending your offer…' : 'Send offer') : action.busy ? 'Holding your dates…' : splitting ? 'Hold dates and invite the others' : 'Hold dates and pay'}
+            title={offering ? (action.busy ? 'Sending your offer…' : 'Send offer') : action.busy ? 'Holding your dates…' : splitting ? 'Hold dates and invite others' : 'Hold dates and pay'}
             size="lg"
             loading={action.busy}
             disabled={offering && !toMinor(amount)}
@@ -190,15 +190,15 @@ export function BookPanel({ board, taken, canBook, slotQuote }: { board: BoardDe
             <ShieldCheck size={16} color={colors.available} />
             <Text variant="small" style={styles.flex}>
               {offering
-                ? 'The owner can accept, decline or counter. If they accept, the dates are held for you to pay.'
+                ? 'The owner can accept, decline or suggest another price. If they accept, we’ll hold the dates for you to pay.'
                 : splitting
-                  ? `Everyone pays their share and sends their own design, and we merge them into one print. You'll get an invite link for each share. Everyone has ${terms.shares.payHours} hours to pay, and you can cover any unpaid share.`
-                  : 'We hold your payment until there’s a photo of your ad on the board. Your dates are held for a few minutes while you pay.'}
+                  ? `Each person pays their share and uploads their own design, and we combine them into one print. You’ll get an invite link for each share. Everyone has ${terms.shares.payHours} hours to pay, and you can cover any unpaid shares yourself.`
+                  : 'We’ll hold your dates for a few minutes while you pay. The owner only gets paid once your ad is up.'}
             </Text>
           </View>
         </>
       ) : (
-        <Button title="Add the advertiser role to book" onPress={() => router.push('/settings/roles')} />
+        <Button title="Become an advertiser to book" onPress={() => router.push('/settings/roles')} />
       )}
 
       {days.length ? (

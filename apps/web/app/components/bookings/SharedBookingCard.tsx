@@ -15,18 +15,18 @@ function biddingNote(shared: SharedBooking) {
 	const mine = auction?.myBid;
 
 	if (!auction) {
-		return `No longer locked. The whole board is open to bids from ${formatMoney(shared.amountMinor, shared.currency)} until ${moment(shared.bidsCloseAt)}. If the winner pays, the sharers get their money back.`;
+		return `Not every share was paid, so the whole board is open to bids from ${formatMoney(shared.amountMinor, shared.currency)} until ${moment(shared.bidsCloseAt)}. If the winner pays, everyone who shared gets a refund.`;
 	}
 
 	const highest = auction.highestMinor !== null ? `Highest bid ${formatMoney(auction.highestMinor, auction.currency)}` : "Bids stay hidden until bidding ends";
 
 	if (auction.status === "awarded") {
-		return mine?.status === "won" ? `You won the whole board. Pay by ${auction.payBy ? moment(auction.payBy) : "the deadline"} to take it.` : "Bidding closed. The winner is paying for the whole board.";
+		return mine?.status === "won" ? `You won the whole board! Pay by ${auction.payBy ? moment(auction.payBy) : "the deadline"} to keep it.` : "Bidding closed. The winner is paying for the whole board.";
 	}
 
-	const yours = mine ? (mine.leading ? " You're the highest bidder." : auction.format === "open" ? " Someone bid more than you." : "") : "";
+	const yours = mine ? (mine.leading ? " You're the highest bidder." : auction.format === "open" ? " You've been outbid." : "") : "";
 
-	return `The whole board is up for bids. ${highest} from ${auction.bidCount} ${auction.bidCount === 1 ? "bid" : "bids"}, closing ${moment(auction.closesAt)}.${yours} The sharers keep it if they pay every share first.`;
+	return `The whole board is up for bids: ${highest} from ${auction.bidCount} ${auction.bidCount === 1 ? "bid" : "bids"}, closing ${moment(auction.closesAt)}.${yours} If every share gets paid first, the sharers keep it.`;
 }
 
 /**
@@ -64,7 +64,7 @@ export function SharedBookingCard({ shared, showBoard = false, canJoin, error }:
 				{shared.takeoverOpen || auction ? <Gavel className="h-4 w-4 shrink-0 text-brand-600" aria-hidden /> : <Lock className="h-4 w-4 shrink-0 text-ink-500" aria-hidden />}
 				{shared.takeoverOpen || auction
 					? biddingNote(shared)
-					: `Kept for the sharers until ${moment(shared.lockedUntil)}. After that, the whole board goes up for bids if shares are still unpaid.`}
+					: `Reserved for sharers until ${moment(shared.lockedUntil)}. If any shares are still unpaid then, the whole board goes up for bids.`}
 			</p>
 			{shared.joined ? (
 				<Link prefetch="intent" to={`/bookings/${shared.id}`} className="inline-block text-sm font-semibold text-brand-700 hover:underline">

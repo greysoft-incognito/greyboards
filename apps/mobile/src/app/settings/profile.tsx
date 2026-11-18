@@ -27,7 +27,7 @@ export default function Profile() {
 
       const asset = result.assets[0]
 
-      if (asset.fileSize && asset.fileSize > megabytes(maxAvatarMb)) throw new PlainProblem(`That photo is larger than ${maxAvatarMb} MB.`)
+      if (asset.fileSize && asset.fileSize > megabytes(maxAvatarMb)) throw new PlainProblem(`That photo is over ${maxAvatarMb} MB.`)
 
       const { data } = await api.account.updateAvatar(uploadFile(asset)).send()
 
@@ -55,7 +55,7 @@ export default function Profile() {
     })
 
   return (
-    <SettingsPage title="Profile" description="How you appear to advertisers, owners and the Greyboards team.">
+    <SettingsPage title="Profile" description="This is how other people see you on Greyboards.">
       <Section title="Photo">
         <View style={styles.photo}>
           <Avatar user={user} size={72} />
@@ -77,7 +77,7 @@ export default function Profile() {
         <Field
           label="Username"
           error={profile.problem.fields.username}
-          hint="Use 3 to 30 lower case letters, numbers or underscores."
+          hint="3 to 30 characters: lowercase letters, numbers and underscores."
         >
           <Input
             value={username}

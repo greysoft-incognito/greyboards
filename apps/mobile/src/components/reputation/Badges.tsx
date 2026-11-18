@@ -20,13 +20,13 @@ export const BADGES: Record<BadgeKey, BadgeLook> = {
     label: 'Verified',
     title: 'Verified by Greyboards',
     icon: ShieldCheck,
-    summary: 'Checked in person by Greyboards staff. Points can’t earn it.',
+    summary: 'Our team checked this person themselves.',
   },
   proven: {
     label: 'Proven',
     title: 'Proven',
     icon: Award,
-    summary: 'Earned through work we could confirm, like accepted proof photos and signed agreements. Staff haven’t checked them in person.',
+    summary: 'Earned from real work on Greyboards, like approved photos and signed agreements.',
   },
 }
 

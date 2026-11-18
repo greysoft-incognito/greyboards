@@ -10,12 +10,12 @@ import type { Route } from "./+types/bookings";
 export const meta = () => [{ title: "Bookings · Admin · Greyboards" }];
 
 const STATUSES: { value: BookingStatus; label: string }[] = [
-	{ value: "paid", label: "Paid, in escrow" },
+	{ value: "paid", label: "Paid" },
 	{ value: "held", label: "Waiting for payment" },
 	{ value: "live", label: "Up on the board" },
 	{ value: "completed", label: "Finished" },
 	{ value: "cancelled", label: "Cancelled" },
-	{ value: "expired", label: "Hold ran out" },
+	{ value: "expired", label: "Expired" },
 ];
 
 export async function loader({ request, context }: Route.LoaderArgs) {
@@ -33,7 +33,7 @@ export default function AdminBookings({ loaderData }: Route.ComponentProps) {
 
 	return (
 		<>
-			<AdminHeader title="Bookings" description="What advertisers paid, what waits in escrow, and how each payment will be shared." />
+			<AdminHeader title="Bookings" description="Every payment, what's being held and how it'll be split." />
 			<div className="space-y-6 px-4 py-8 sm:px-8">
 				<Form method="get" className="flex flex-wrap items-center gap-3">
 					<Select name="status" defaultValue={status} aria-label="Status" className="w-auto">

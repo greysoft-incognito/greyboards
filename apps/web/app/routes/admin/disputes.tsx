@@ -17,8 +17,8 @@ export const meta = () => [{ title: "Disputes · Admin · Greyboards" }];
 const DECISIONS: { value: DisputeDecision; label: string; escrow: boolean }[] = [
 	{ value: "refund_full", label: "Cancel and refund in full", escrow: true },
 	{ value: "refund_part", label: "Cancel and refund part", escrow: true },
-	{ value: "release", label: "Pay the board’s side", escrow: true },
-	{ value: "dismiss", label: "Close without a change", escrow: false },
+	{ value: "release", label: "Pay the board owner", escrow: true },
+	{ value: "dismiss", label: "Close with no changes", escrow: false },
 ];
 
 export async function loader({ request, context }: Route.LoaderArgs) {
@@ -42,7 +42,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 			...(refund > 0 ? { refund } : {}),
 		});
 
-		return { error: null, message: "Dispute decided. Everyone on the booking can see why." };
+		return { error: null, message: "Decision saved. Everyone on the booking can see it." };
 	} catch (error) {
 		return { error: formError(error).error, message: null };
 	}
@@ -56,7 +56,7 @@ export default function AdminDisputes({ loaderData, actionData }: Route.Componen
 
 	return (
 		<>
-			<AdminHeader title="Disputes" description="Problems raised on bookings. While money is still in escrow, a decision can refund it or pay the board’s side; every decision is recorded in the booking’s ledger and posted to its messages." />
+			<AdminHeader title="Disputes" description="Problems reported on bookings. If the payment is still held, you can refund it or pay the board owner. Every decision is shared in the booking’s messages." />
 			<div className="space-y-6 px-4 py-8 sm:px-8">
 				<div className="flex gap-2" role="tablist">
 					{(["open", "resolved"] as const).map((tab) => (
@@ -120,14 +120,14 @@ function DisputeCard({ dispute }: { dispute: AdminDispute }) {
 						</Select>
 					</Field>
 					{decision === "refund_part" && booking && (
-						<Field label="Refund" hint={`Of ${formatMoney(booking.amountMinor, booking.currency)}. The rest is shared by the booking’s split.`}>
+						<Field label="Refund" hint={`Of ${formatMoney(booking.amountMinor, booking.currency)}. The rest is split as usual.`}>
 							<Input name="refund" type="number" min="1" max={booking.amountMinor / 100 - 1} step="1" required />
 						</Field>
 					)}
 					<Field label="Why" hint="Everyone on the booking sees this.">
 						<Textarea name="resolution" rows={2} minLength={5} maxLength={1000} required />
 					</Field>
-					{!booking?.inEscrow && <p className="text-xs text-ink-500">The money has left escrow, so this can only be closed. Settle anything owed outside the app.</p>}
+					{!booking?.inEscrow && <p className="text-xs text-ink-500">The payment has already gone out, so this can only be closed. Settle anything owed outside the app.</p>}
 					<Button type="submit" disabled={busy}>
 						{busy ? <Spinner /> : <Gavel className="h-4 w-4" aria-hidden />}
 						Decide

@@ -15,7 +15,7 @@ import { colors, fonts } from '@/theme'
 
 export const AUCTION_LOOKS: Record<AuctionStatus, PillLook> = {
   open: { label: 'Taking bids', background: colors.brand50, color: colors.brand700 },
-  awarded: { label: 'Won, waiting for payment', background: colors.amber50, color: colors.held },
+  awarded: { label: 'Won, not paid yet', background: colors.amber50, color: colors.held },
   sold: { label: 'Sold', background: colors.emerald50, color: colors.available },
   unsold: { label: 'Not sold', background: colors.surface100, color: colors.ink500 },
   cancelled: { label: 'Closed early', background: colors.surface100, color: colors.ink500 },
@@ -84,7 +84,7 @@ export function OfferRow({ offer, onBoards, onChange }: { offer: Offer; onBoards
 
       {countering ? (
         <View style={styles.counter}>
-          <Field label="What you'd take" hint={`Between ${formatMoney(offer.amountMinor, offer.currency)} and ${formatMoney(offer.listMinor, offer.currency)}`}>
+          <Field label="Your price" hint={`Between ${formatMoney(offer.amountMinor, offer.currency)} and ${formatMoney(offer.listMinor, offer.currency)}`}>
             <Input value={counter} onChangeText={setCounter} keyboardType="number-pad" placeholder={String(Math.round((offer.amountMinor + offer.listMinor) / 200))} />
           </Field>
           <View style={styles.actions}>
@@ -172,9 +172,9 @@ export function AuctionCard({ auction, canBid, onChange }: { auction: Auction; c
         <View style={styles.mine}>
           <Text>
             Your bid: <Text style={styles.factValue}>{formatMoney(mine.amountMinor, auction.currency)}</Text>
-            {mine.status === 'won' ? '. You won.' : mine.status === 'lapsed' ? '. It wasn’t paid in time, so the dates went to the next bid.' : mine.leading ? '. You’re the highest bidder.' : auction.open && auction.format === 'open' ? '. Someone bid more.' : '.'}
+            {mine.status === 'won' ? '. You won.' : mine.status === 'lapsed' ? '. It wasn’t paid in time, so the next bidder got the dates.' : mine.leading ? '. You’re the highest bidder.' : auction.open && auction.format === 'open' ? '. Someone bid more.' : '.'}
           </Text>
-          {mine.status === 'won' && mine.bookingId ? <Button title="Pay to book the dates" onPress={() => router.push({ pathname: '/bookings/[id]', params: { id: mine.bookingId! } })} /> : null}
+          {mine.status === 'won' && mine.bookingId ? <Button title="Pay to confirm" onPress={() => router.push({ pathname: '/bookings/[id]', params: { id: mine.bookingId! } })} /> : null}
         </View>
       ) : null}
 
@@ -189,12 +189,12 @@ export function AuctionCard({ auction, canBid, onChange }: { auction: Auction; c
             <View style={styles.note}>
               <Timer size={16} color={colors.ink500} />
               <Text variant="small" style={styles.flex}>
-                A bid in the last few minutes keeps bidding open a little longer. The winner has a day to pay.
+                Late bids extend the auction a little. The winner has a day to pay.
               </Text>
             </View>
           </>
         ) : (
-          <Button title="Add the advertiser role to bid" variant="secondary" onPress={() => router.push('/settings/roles')} />
+          <Button title="Become an advertiser to bid" variant="secondary" onPress={() => router.push('/settings/roles')} />
         )
       ) : null}
     </Section>

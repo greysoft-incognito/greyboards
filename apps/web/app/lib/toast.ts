@@ -17,6 +17,6 @@ export async function copyText(text: string, confirmation = "Copied.") {
 
 		toast.success(confirmation, { id: confirmation });
 	} catch {
-		toast.error("Couldn't copy. Select the text and copy it yourself.");
+		toast.error("Couldn't copy. Try selecting the text and copying it.");
 	}
 }

@@ -26,18 +26,18 @@ import { useAction } from '@/lib/use-action'
 import { colors, fonts, radius, shadows, surfaces } from '@/theme'
 
 const REVIEW_NOTES: Record<BoardDetail['status'], string> = {
-  pending: 'A reviewer checks the photos and location before it goes on the map.',
-  listed: 'On the map. Advertisers can find and book it.',
-  rejected: 'Not approved. Fix what the note says and it goes back for review.',
-  unlisted: 'Off the map for now. Advertisers can’t book it.',
+  pending: 'We’re reviewing this board. It’ll go live once it’s approved.',
+  listed: 'Live. Advertisers can find and book it.',
+  rejected: 'Not approved yet. Make the changes in the note and save to resubmit.',
+  unlisted: 'This board is hidden. Contact support to bring it back.',
 }
 
 const AGREEMENT_NOTES: Record<BoardAgreement['status'], string> = {
-  sent: 'Texted to the owner. Waiting for them to sign.',
-  signed: 'Signed. Bookings pay the owner their share.',
-  declined: 'The owner declined. Talk to them, then send it again.',
+  sent: 'Sent to the owner. Waiting for them to sign.',
+  signed: 'Signed. You can now manage this board for them.',
+  declined: 'The owner declined. Talk to them before sending it again.',
   cancelled: 'Cancelled. Send a new one when you’re ready.',
-  expired: 'The link ran out before they signed. Send it again.',
+  expired: 'The link expired before the owner signed. Send it again.',
 }
 
 const HERO_HEIGHT = 280
@@ -208,7 +208,7 @@ function Facts({ board, manages }: { board: BoardDetail; manages: boolean }) {
     { icon: Layers, label: board.faces === 1 ? 'One face' : `${board.faces} faces` },
     board.facing || board.headingDeg !== null ? { icon: Compass, label: [board.headingDeg !== null ? formatHeading(board.headingDeg) : null, board.facing].filter(Boolean).join(', ') } : null,
     { icon: Lightbulb, label: board.lit ? 'Lit at night' : 'Not lit' },
-    board.traffic ? { icon: CarFront, label: `About ${board.traffic.daily.toLocaleString('en-NG')} people pass a day${board.traffic.source === 'measured' ? ', counted' : ', estimated from the road'}` } : null,
+    board.traffic ? { icon: CarFront, label: `About ${board.traffic.daily.toLocaleString('en-NG')} people pass a day${board.traffic.source === 'measured' ? ', counted' : ', estimated'}` } : null,
   ].filter((fact) => fact !== null)
 
   const openMap = () => Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${board.latitude},${board.longitude}`).catch(() => undefined)
@@ -235,7 +235,7 @@ function Facts({ board, manages }: { board: BoardDetail; manages: boolean }) {
           {board.costPerThousandMinor != null && board.rate ? <Text variant="muted">About {formatMoney(board.costPerThousandMinor, board.rate.currency)} for every 1,000 people passing</Text> : null}
         </View>
       ) : manages ? (
-        <Text variant="muted">No rate yet. Add one to take bookings.</Text>
+        <Text variant="muted">Add a rate to start taking bookings.</Text>
       ) : null}
       <RatingLine rating={board.rating} />
       <BoardStewards stewards={board.stewards} />
@@ -263,7 +263,7 @@ function Manage({ board, onChange }: { board: BoardDetail; onChange: () => void 
     photo.run(async () => {
       const permission = await ImagePicker.requestCameraPermissionsAsync()
 
-      if (!permission.granted) throw new PlainProblem('Allow the camera for Greyboards in your phone settings to photograph the board.')
+      if (!permission.granted) throw new PlainProblem('Allow camera access in your phone settings to take a photo.')
 
       const result = await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], quality: 0.85 })
 
@@ -271,14 +271,14 @@ function Manage({ board, onChange }: { board: BoardDetail; onChange: () => void 
 
       const asset = result.assets[0]!
 
-      if (asset.fileSize && asset.fileSize > megabytes(maxImageMb)) throw new PlainProblem(`That photo is larger than ${maxImageMb} MB.`)
+      if (asset.fileSize && asset.fileSize > megabytes(maxImageMb)) throw new PlainProblem(`That photo is over ${maxImageMb} MB.`)
 
       const where = await currentSpot().catch(() => null)
 
       await api.account.addBoardPhoto(board.id, uploadFile(asset), { ...(where ?? {}), takenAt: new Date().toISOString() }).send()
       onChange()
 
-      return where ? 'Photo added.' : 'Photo added without a location.'
+      return where ? 'Photo added.' : 'Photo added, but we couldn’t get its location.'
     })
 
   const sendAgreement = () =>
@@ -314,12 +314,12 @@ function Manage({ board, onChange }: { board: BoardDetail; onChange: () => void 
               <View style={styles.agreement}>
                 <FileSignature size={18} color={colors.brand600} />
                 <Text variant="muted" style={styles.flex}>
-                  {board.agreement ? AGREEMENT_NOTES[board.agreement.status] : 'The owner signs an agreement by SMS before the board can be booked.'}
+                  {board.agreement ? AGREEMENT_NOTES[board.agreement.status] : 'The owner needs to sign up by text before the board can be booked.'}
                 </Text>
               </View>
               {board.agreement?.status !== 'signed' ? (
                 <Button
-                  title={agreement.busy ? 'Sending…' : board.agreement ? 'Text it again' : 'Text the owner the agreement'}
+                  title={agreement.busy ? 'Sending…' : board.agreement ? 'Resend' : 'Send to the owner'}
                   loading={agreement.busy}
                   disabled={!!board.agreement?.resendInSeconds}
                   onPress={sendAgreement}

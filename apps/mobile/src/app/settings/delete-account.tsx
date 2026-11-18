@@ -22,7 +22,7 @@ export default function DeleteAccount() {
   return (
     <SettingsPage title="Delete account">
       <Section danger>
-        <Text>This deletes your account and signs you out everywhere, for good.</Text>
+        <Text>This permanently deletes your account. You can’t undo it.</Text>
         <Field label="Enter your password to confirm" error={remove.problem.fields.password}>
           <Input value={password} onChangeText={setPassword} secureTextEntry autoComplete="current-password" textContentType="password" />
         </Field>

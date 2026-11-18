@@ -12,7 +12,7 @@ export const meta = () => [{ title: "API keys · Settings · Greyboards" }];
 
 const ABILITY_LABELS: Record<ApiKeyAbility, { label: string; hint: string }> = {
 	read: { label: "Read", hint: "Search boards, check dates and see your bookings" },
-	book: { label: "Book and pay", hint: "Hold dates and start payment for your account" },
+	book: { label: "Book and pay", hint: "Hold dates and pay for bookings" },
 };
 
 export async function loader({ request, context }: Route.LoaderArgs) {
@@ -30,7 +30,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 		return settingsAction("remove", async () => {
 			await api.account.removeApiKey(String(form.get("key") ?? ""));
 
-			return { message: "The key was removed. Anything using it stops working now." };
+			return { message: "Key deleted. Anything using it will stop working." };
 		});
 	}
 
@@ -42,7 +42,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 			abilities: abilities.includes("book") ? ["read", "book"] : ["read"],
 		});
 
-		return { message: "Key made. Copy it now.", created };
+		return { message: "Key created. Copy it now.", created };
 	});
 }
 
@@ -58,11 +58,11 @@ export default function ApiKeysPage({ loaderData, actionData }: Route.ComponentP
 		<>
 			<PageHeader
 				title="API keys"
-				description="Let your own tools search boards, check dates and book through the Greyboards API. A key acts as your account, so keep it secret."
+				description="Use the Greyboards API to search and book boards from your own tools. Keep your keys secret, since anyone with one can act as you."
 			/>
 			<div className="space-y-6">
 				{created && <NewKey created={created} />}
-				<Section title="Make a key" description="Name it after the tool that will use it, so you know which to remove later.">
+				<Section title="Make a key" description="Name it after the tool that will use it.">
 					<Form method="post" className="space-y-4">
 						<input type="hidden" name="intent" value="create" />
 						{createResult?.error && <Alert>{createResult.error}</Alert>}
@@ -97,7 +97,7 @@ export default function ApiKeysPage({ loaderData, actionData }: Route.ComponentP
 				<Keys keys={loaderData.keys} result={resultFor(actionData ?? undefined, "remove")} />
 				<Link prefetch="intent" to="/developers" className="flex items-center gap-2 text-sm font-semibold text-brand-700 hover:underline">
 					<BookOpen className="h-4 w-4 shrink-0" aria-hidden />
-					Read the developer docs: endpoints, examples and limits
+					Read the developer docs
 				</Link>
 			</div>
 		</>
@@ -106,7 +106,7 @@ export default function ApiKeysPage({ loaderData, actionData }: Route.ComponentP
 
 function NewKey({ created }: { created: NewApiKey }) {
 	return (
-		<Section title={`${created.name} is ready`} description="Copy the key now. You won't see it again; if it's lost, remove it and make another.">
+		<Section title={`${created.name} is ready`} description="Copy it now. You won't be able to see it again.">
 			<p className="break-all rounded-xl bg-surface-100 p-4 font-mono text-sm text-ink-900">{created.token}</p>
 			<Button variant="secondary" className="mt-4" onClick={() => copyText(created.token, "Key copied.")}>
 				Copy key

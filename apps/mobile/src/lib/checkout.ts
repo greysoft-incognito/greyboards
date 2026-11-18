@@ -40,7 +40,7 @@ export async function payAndReport(start: () => Promise<{ data: Payment }>, onDo
 
   onDone()
 
-  if (outcome === 'failed') throw new PlainProblem("The payment didn't go through, so nothing was charged. Try again while your dates are held.")
+  if (outcome === 'failed') throw new PlainProblem("Your payment didn’t go through and you weren’t charged. Try again while we hold your dates.")
 
   return outcome === 'paid' ? OUTCOME_MESSAGES.paid : 'Your payment is still being confirmed. Pull down to refresh in a moment.'
 }

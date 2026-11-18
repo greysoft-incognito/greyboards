@@ -47,7 +47,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 			return settingsAction(intent, async () => {
 				const { data } = await api.account.regenerateRecoveryCodes();
 
-				return { message: "Your old recovery codes no longer work.", recoveryCodes: data.recoveryCodes };
+				return { message: "New codes ready. Your old ones won't work anymore.", recoveryCodes: data.recoveryCodes };
 			});
 		case "two-factor-disable":
 			return settingsAction(intent, async () => {
@@ -79,7 +79,7 @@ export default function TwoStepPage({ loaderData, actionData }: Route.ComponentP
 		<>
 			<PageHeader
 				title="Two-step sign-in"
-				description="After your password, ask for a code from an authenticator app like Google Authenticator or 1Password."
+				description="Add a second step when you sign in, using a code from an app like Google Authenticator or 1Password."
 			/>
 			<TwoStep status={loaderData.twoFactor} result={result} busy={busy} />
 		</>
@@ -109,13 +109,13 @@ function TwoStep({ status, result, busy }: { status: TwoFactorStatus; result?: R
 					</div>
 					<Form method="post">
 						<Button variant="secondary" type="submit" name="intent" value="recovery-codes" disabled={busy("recovery-codes")}>
-							Make new recovery codes
+							Get new recovery codes
 						</Button>
 					</Form>
 					<Form method="post" className="flex max-w-xl flex-wrap items-end gap-3 border-t border-surface-200 pt-6">
 						<input type="hidden" name="intent" value="two-factor-disable" />
 						<div className="min-w-56 flex-1">
-							<Field label="Password to turn it off" error={disable?.fieldErrors.password}>
+							<Field label="Enter your password to turn it off" error={disable?.fieldErrors.password}>
 								<Input name="password" type="password" autoComplete="current-password" required />
 							</Field>
 						</div>
@@ -129,7 +129,7 @@ function TwoStep({ status, result, busy }: { status: TwoFactorStatus; result?: R
 			) : (
 				<div className="space-y-4">
 					<p className="flex items-center gap-2 text-sm text-ink-500">
-						<span className="h-2 w-2 rounded-full bg-surface-300" /> Off. Anyone with your password can sign in.
+						<span className="h-2 w-2 rounded-full bg-surface-300" /> Off. Turn it on to protect your account.
 					</p>
 					<Form method="post">
 						<Button type="submit" name="intent" value="two-factor-setup" disabled={busy("two-factor-setup")}>
@@ -184,7 +184,7 @@ function RecoveryCodes({ codes }: { codes: string[] }) {
 	return (
 		<div className="space-y-4">
 			<p className="text-sm text-ink-700">
-				Save these recovery codes somewhere safe. Each one signs you in once if you lose your phone. You won't see them again.
+				Keep these somewhere safe. If you lose your phone, each code lets you sign in once. You won't see them again.
 			</p>
 			<ul className="grid max-w-md grid-cols-2 gap-2 rounded-xl bg-surface-100 p-4 font-mono text-sm text-ink-900">
 				{codes.map((code) => (

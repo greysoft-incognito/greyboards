@@ -30,7 +30,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 		if (intent === "relink") {
 			await api.reports.relink(id);
 
-			return { error: null, message: "New link made. The old one no longer works." };
+			return { error: null, message: "New link created. The old one won't work anymore." };
 		}
 
 		if (intent === "delete") {
@@ -67,13 +67,13 @@ export default function Reports({ loaderData, actionData }: Route.ComponentProps
 					Bookings
 				</Link>
 				<h1 className="mt-2 font-display text-3xl font-extrabold tracking-[-0.03em] text-ink-900 sm:text-4xl">Campaign reports</h1>
-				<p className="mt-1 text-ink-500">Group bookings into one page with every board, its dates and the proof photos. Share the link, or save it as a PDF.</p>
+				<p className="mt-1 text-ink-500">Put your bookings together in one shareable page, with every board, date and photo.</p>
 			</div>
 			{actionData?.error && <Alert>{actionData.error}</Alert>}
 
 			<div className="grid gap-6 lg:grid-cols-[1fr_22rem]">
 				<section className="space-y-3">
-					{reports.length ? reports.map((report) => <ReportLine key={report.id} report={report} />) : <p className="panel px-5 py-10 text-center text-sm text-ink-500">No reports yet. Make one from your bookings.</p>}
+					{reports.length ? reports.map((report) => <ReportLine key={report.id} report={report} />) : <p className="panel px-5 py-10 text-center text-sm text-ink-500">No reports yet.</p>}
 					<Pager meta={meta} noun="reports" />
 				</section>
 
@@ -101,11 +101,11 @@ export default function Reports({ loaderData, actionData }: Route.ComponentProps
 							</fieldset>
 							<Button type="submit" className="w-full" disabled={creating}>
 								{creating ? <Spinner /> : <FileChartColumn className="h-4 w-4" aria-hidden />}
-								Make report
+								Create report
 							</Button>
 						</Form>
 					) : (
-						<p className="text-sm text-ink-500">Reports hold bookings whose ads went up. Once a proof is accepted, the booking shows here.</p>
+						<p className="text-sm text-ink-500">Only bookings with ads that are live can be added.</p>
 					)}
 				</section>
 			</div>
@@ -142,7 +142,7 @@ function ReportLine({ report }: { report: CampaignReportSummary }) {
 				</Button>
 				<Form method="post" preventScrollReset>
 					<input type="hidden" name="id" value={report.id} />
-					<Button type="submit" name="intent" value="relink" variant="ghost" disabled={busy} className="!py-2" title="Make a new link. The old one stops working.">
+					<Button type="submit" name="intent" value="relink" variant="ghost" disabled={busy} className="!py-2" title="Create a new link. The old one will stop working.">
 						<Link2 className="h-4 w-4" aria-hidden />
 						New link
 					</Button>

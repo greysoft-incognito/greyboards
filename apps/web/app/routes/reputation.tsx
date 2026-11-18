@@ -8,7 +8,7 @@ import type { Route } from "./+types/reputation";
 
 export const meta = () => [
 	{ title: "Reputation and badges · Greyboards" },
-	{ name: "description", content: "What the Verified and Proven badges mean on Greyboards, and how reputation is earned." },
+	{ name: "description", content: "What Verified and Proven badges mean, and how to build your reputation." },
 ];
 
 const ROLE_NAMES: Record<AccountRoleKind, string> = { advertiser: "Advertisers", owner: "Owners", scout: "Scouts", dispatch: "Dispatchers" };
@@ -30,7 +30,7 @@ export default function ReputationPage({ loaderData }: Route.ComponentProps) {
 				<Gauge className="h-8 w-8 text-brand-100" aria-hidden />
 				<h1 className="mt-4 font-display text-4xl font-extrabold tracking-tight sm:text-5xl">Reputation and badges</h1>
 				<p className="mt-3 max-w-2xl text-brand-50/90">
-					A reputation score shows how much you can trust someone in a role. Each role has its own score, and it only moves for real work we could confirm.
+					Your reputation shows people they can trust you. Each role has its own score, and it grows with the real work you do on Greyboards.
 				</p>
 			</section>
 
@@ -53,7 +53,7 @@ export default function ReputationPage({ loaderData }: Route.ComponentProps) {
 			</div>
 
 			<section className="panel mt-8 overflow-hidden">
-				<h2 className="border-b border-surface-100 px-6 py-4 font-display text-lg font-bold text-ink-900">What moves a score</h2>
+				<h2 className="border-b border-surface-100 px-6 py-4 font-display text-lg font-bold text-ink-900">What changes your score</h2>
 				<ul className="divide-y divide-surface-100">
 					{rules.map((rule) => (
 						<li key={rule.action} className="flex flex-wrap items-center gap-4 px-6 py-4">
@@ -83,7 +83,7 @@ export default function ReputationPage({ loaderData }: Route.ComponentProps) {
 							</span>
 						</li>
 					))}
-					<li className="px-6 py-4 text-sm text-ink-500">Greyboards staff can also correct a score by hand, and always record why.</li>
+					<li className="px-6 py-4 text-sm text-ink-500">Our team can also adjust a score, and they always note why.</li>
 				</ul>
 			</section>
 		</main>

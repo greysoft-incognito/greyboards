@@ -60,7 +60,7 @@ export default function Payouts() {
   return (
     <SettingsPage
       title="Payouts"
-      description="Where we send what you earn from bookings, scouting and printing. We check every account with the bank first."
+      description="Where we send your earnings."
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}
     >
       {problem ? <Callout>{problem}</Callout> : null}
@@ -69,17 +69,17 @@ export default function Payouts() {
       ) : (
         <>
           <View style={styles.totals}>
-            <Total label="Owed to you" amount={summary.owedMinor} hint="Released from bookings, not sent yet" />
-            <Total label="Paid out" amount={summary.paidMinor} hint="Sent to your bank accounts" />
+            <Total label="Coming to you" amount={summary.owedMinor} hint="Ready to send to your bank" />
+            <Total label="Paid out" amount={summary.paidMinor} hint="Paid to you" />
           </View>
-          {!summary.enabled ? <Callout tone="warning">Payouts start soon. Add your bank details now and what you’re owed goes out once they do.</Callout> : null}
+          {!summary.enabled ? <Callout tone="warning">Add your bank details so we can pay you.</Callout> : null}
 
-          <Section title="Your bank account" description="For what you earn from scouting and print jobs.">
+          <Section title="Your bank account" description="Where we pay you for scouting and print jobs.">
             <AccountForm account={summary.account} banks={banks} onSaved={load} />
           </Section>
 
           {summary.owners.map((owner) => (
-            <Section key={owner.profileId} title={owner.name} description="Where this owner’s share of each booking goes.">
+            <Section key={owner.profileId} title={owner.name} description="Where we pay this owner for bookings.">
               <AccountForm profileId={owner.profileId} account={owner.account} banks={banks} onSaved={load} />
             </Section>
           ))}
@@ -88,7 +88,7 @@ export default function Payouts() {
             {history.length ? (
               history.map((payout) => <PayoutRow key={payout.id} payout={payout} />)
             ) : (
-              <Text variant="muted">Nothing sent yet. Money is released once an advertiser accepts the photos of their ad, then sent a couple of days later.</Text>
+              <Text variant="muted">No payouts yet. You’ll be paid a couple of days after an advertiser approves the photos of their ad.</Text>
             )}
             {page.current < page.last ? <Button title="Show more" variant="ghost" loading={more.busy} onPress={loadMore} /> : null}
           </Section>
@@ -123,7 +123,7 @@ function AccountForm({ profileId, account, banks, onSaved }: { profileId?: strin
       setAccountNumber('')
       onSaved()
 
-      return `Payouts go to ${data.accountName}.`
+      return `We’ll pay you at ${data.accountName}.`
     })
 
   return (
@@ -137,11 +137,11 @@ function AccountForm({ profileId, account, banks, onSaved }: { profileId?: strin
               {account.bankName} · {account.accountNumber}
             </Text>
           </View>
-          <BadgeCheck size={20} color={colors.available} accessibilityLabel="Checked with the bank" />
+          <BadgeCheck size={20} color={colors.available} accessibilityLabel="Verified" />
         </View>
       ) : null}
       <Field label="Bank" error={errors.bankCode}>
-        <Select label="Bank" value={bankCode} onChange={setBankCode} options={[...(bankCode ? [] : [{ value: '', label: 'Pick your bank' }]), ...banks.map((bank) => ({ value: bank.code, label: bank.name }))]} />
+        <Select label="Bank" value={bankCode} onChange={setBankCode} options={[...(bankCode ? [] : [{ value: '', label: 'Select your bank' }]), ...banks.map((bank) => ({ value: bank.code, label: bank.name }))]} />
       </Field>
       <Field label="Account number" error={errors.accountNumber}>
         <Input value={accountNumber} onChangeText={setAccountNumber} keyboardType="number-pad" maxLength={13} placeholder="0123456789" autoComplete="off" />

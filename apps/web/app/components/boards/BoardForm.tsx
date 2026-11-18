@@ -99,7 +99,7 @@ export function BoardForm({
 			},
 			(failure) => {
 				setLocating(false);
-				setLocateError(failure.code === failure.PERMISSION_DENIED ? "Allow location for this site, or type the coordinates." : "We couldn't get your location. Try again outside, or type it.");
+				setLocateError(failure.code === failure.PERMISSION_DENIED ? "Allow location access, or enter the coordinates yourself." : "We couldn't find your location. Try again outside, or enter it yourself.");
 			},
 			{ enableHighAccuracy: true, timeout: 15_000, maximumAge: 0 },
 		);
@@ -111,13 +111,13 @@ export function BoardForm({
 
 			{tagAs.length > 1 && (
 				<fieldset className="panel p-5">
-					<legend className="sr-only">You are tagging as</legend>
+					<legend className="sr-only">Tagging as</legend>
 					<p className="mb-3 text-sm font-semibold text-ink-900">Whose board is it?</p>
 					<div className="grid gap-3 sm:grid-cols-2">
 						{(
 							[
 								{ value: "owner", label: "It's my board", hint: "You own it and set its rate.", icon: Presentation },
-								{ value: "scout", label: "I found it", hint: "You scouted it. We'll text the owner.", icon: Binoculars },
+								{ value: "scout", label: "I found it", hint: "You found it. We'll text the owner.", icon: Binoculars },
 							] as const
 						).map((option) => (
 							<label key={option.value} className={`flex cursor-pointer gap-3 rounded-2xl border-[1.5px] p-4 transition ${as === option.value ? "border-brand-500 bg-brand-50" : "border-surface-200 hover:border-surface-300"}`}>
@@ -139,9 +139,9 @@ export function BoardForm({
 				<div className="flex flex-wrap items-center gap-3">
 					<Button variant="secondary" onClick={locate} disabled={locating}>
 						{locating ? <Spinner /> : <LocateFixed className="h-4 w-4" aria-hidden />}
-						{locating ? "Finding you…" : "Use where I am"}
+						{locating ? "Finding your location…" : "Use my location"}
 					</Button>
-					<p className="text-sm text-ink-500">{spot.accuracyM ? `Accurate to about ${spot.accuracyM} m.` : "Stand by the board for the most accurate spot."}</p>
+					<p className="text-sm text-ink-500">{spot.accuracyM ? `Accurate to about ${spot.accuracyM} m.` : "Stand right by the board for the best accuracy."}</p>
 				</div>
 				{locateError && <p className="text-sm text-red-700">{locateError}</p>}
 				<div className="grid gap-4 sm:grid-cols-2">
@@ -167,7 +167,7 @@ export function BoardForm({
 
 			<section className="panel space-y-5 p-5 sm:p-6">
 				<h2 className="font-display text-lg font-extrabold tracking-tight text-ink-900">The board</h2>
-				<Field label="Name" error={fieldErrors.name} hint="What advertisers see first. A landmark helps.">
+				<Field label="Name" error={fieldErrors.name} hint="Name it after a landmark so advertisers can picture it.">
 					<Input name="name" required defaultValue={board?.name ?? ""} maxLength={120} placeholder="Ahmadu Bello Way, facing Murtala Square" />
 				</Field>
 				<div className="grid gap-4 sm:grid-cols-3">
@@ -197,7 +197,7 @@ export function BoardForm({
 							))}
 						</Select>
 					</Field>
-					<Field label="Facing" error={fieldErrors.facing} hint="Which traffic sees it.">
+					<Field label="Facing" error={fieldErrors.facing} hint="Which way traffic sees it.">
 						<Input name="facing" defaultValue={board?.facing ?? ""} maxLength={60} placeholder="Traffic to Ajah" />
 					</Field>
 					<Field label="Lighting">
@@ -208,7 +208,7 @@ export function BoardForm({
 					</Field>
 				</div>
 				<div className="grid gap-4 sm:grid-cols-2">
-					<Field label="The road it faces" error={fieldErrors.roadClass} hint="Gives advertisers a traffic estimate.">
+					<Field label="The road it faces" error={fieldErrors.roadClass} hint="Helps us estimate how many people see it.">
 						<Select name="roadClass" defaultValue={board?.roadClass ?? ""}>
 							<option value="">Not sure</option>
 							<option value="expressway">Expressway or highway</option>
@@ -232,7 +232,7 @@ export function BoardForm({
 					</div>
 				)}
 				<Field label="Notes" error={fieldErrors.description}>
-					<Textarea name="description" rows={3} defaultValue={board?.description ?? ""} maxLength={1000} placeholder="Anything an advertiser should know, such as trees in the way or a nearby junction." />
+					<Textarea name="description" rows={3} defaultValue={board?.description ?? ""} maxLength={1000} placeholder="Anything advertisers should know, like trees nearby or a busy junction." />
 				</Field>
 			</section>
 
@@ -242,7 +242,7 @@ export function BoardForm({
 					<Field
 						label={ownerNet ? (digital ? "What the owner gets per slot, in naira" : "What the owner gets, in naira") : digital ? "Rate per slot, all day, in naira" : "Rate in naira"}
 						error={fieldErrors.rateMinor}
-						hint={ownerNet ? "Each period, after every other share." : scouting ? "What the owner asks, if you know it." : undefined}
+						hint={ownerNet ? "Each period, after every other share." : scouting ? "What the owner charges, if you know." : undefined}
 					>
 						<Input name="rate" type="number" min="0" step="1000" value={rate} onChange={(event) => setRate(event.target.value)} placeholder="850000" />
 					</Field>
@@ -256,10 +256,10 @@ export function BoardForm({
 				<PriceGuideBox fields={{ ...guideFields, latitude: spot.latitude, longitude: spot.longitude }} exceptId={board?.id} onUse={useGuide} />
 				<OwnerNetToggle on={ownerNet} onChange={setOwnerNet} rate={rate} percent={ownerPercent} />
 				<div className="grid gap-4 sm:grid-cols-2">
-					<Field label="Who prints and puts up ads" error={fieldErrors.printsOwn}>
+					<Field label="Who prints and puts up the ads?" error={fieldErrors.printsOwn}>
 						<Select name="printsOwn" defaultValue={board?.printsOwn ? "1" : "0"}>
 							<option value="0">A Greyboards dispatcher</option>
-							<option value="1">{scouting ? "The owner or I do it" : "We do it ourselves"}</option>
+							<option value="1">{scouting ? "The owner or I will" : "We'll do it"}</option>
 						</Select>
 					</Field>
 					<Field label="Your print price in naira" error={fieldErrors.printFeeMinor} hint="Only if you print. Leave empty for the standard price.">
@@ -273,7 +273,7 @@ export function BoardForm({
 			{!board && (
 				<section className="panel space-y-3 p-5 sm:p-6">
 					<h2 className="font-display text-lg font-extrabold tracking-tight text-ink-900">A photo</h2>
-					<p className="text-sm text-ink-500">Take it from the road with the whole board in view. We save where it was taken so reviewers know you were there.</p>
+					<p className="text-sm text-ink-500">Take it from the road with the whole board in view.</p>
 					<label className="flex cursor-pointer items-center gap-3 rounded-2xl border-[1.5px] border-dashed border-surface-300 px-4 py-4 text-sm text-ink-700 transition hover:border-brand-300 hover:bg-white">
 						<Camera className="h-5 w-5 text-brand-600" aria-hidden />
 						<input type="file" name="photo" accept="image/jpeg,image/png,image/webp,image/heic" capture="environment" className="min-w-0 flex-1 text-sm file:hidden" />
@@ -315,9 +315,9 @@ function OwnerNetToggle({ on, onChange, rate, percent }: { on: boolean; onChange
 				<span>
 					<span className="flex items-center gap-1.5 text-sm font-semibold text-ink-900">
 						<HandCoins className="h-4 w-4 text-brand-600" aria-hidden />
-						The owner gets exactly this amount
+						Guarantee the owner this amount
 					</span>
-					<span className="block text-sm text-ink-500">The platform and scout shares go on top instead of coming out of it.</span>
+					<span className="block text-sm text-ink-500">We'll add our fees on top, so the owner gets the full amount.</span>
 				</span>
 			</label>
 			{typed && percent !== null && (

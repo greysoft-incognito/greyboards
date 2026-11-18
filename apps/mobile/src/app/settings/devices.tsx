@@ -38,7 +38,7 @@ export default function Devices() {
     })
 
   return (
-    <SettingsPage title="Devices" description="Where you're signed in. Sign out of any device you don't recognise, then change your password.">
+    <SettingsPage title="Devices" description="Don’t recognise a device? Sign it out and change your password.">
       <Section>
         {action.problem.message ? <Callout>{action.problem.message}</Callout> : null}
         {sessions.error ? <Callout>{FormProblem.from(sessions.error).message}</Callout> : null}

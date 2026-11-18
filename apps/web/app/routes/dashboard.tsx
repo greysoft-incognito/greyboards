@@ -21,8 +21,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 const EMPTY: Record<AccountRoleKind, string> = {
 	advertiser: "Your campaigns will show here once you book a board.",
 	owner: "Your boards and their bookings will show here once you list one.",
-	scout: "Boards you tag and owners you sign will show here.",
-	dispatch: "Print-and-post jobs near you will show here.",
+	scout: "Boards you tag and owners you sign up will show here.",
+	dispatch: "Print jobs near you will show here.",
 };
 
 /** The drawn board on each role's card. */
@@ -37,7 +37,6 @@ const SCENES: Record<AccountRoleKind, { time: SceneTime; art: SceneArt; headline
 export default function Dashboard({ loaderData }: Route.ComponentProps) {
 	const { user, tasks, welcome } = loaderData;
 	const firstName = user.name.split(/\s+/)[0];
-	const active = user.accountRoles.filter((role) => role.status === "active").length;
 	const pending = user.accountRoles.filter((role) => role.status === "pending").length;
 
 	return (
@@ -45,7 +44,7 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
 			{welcome && (
 				<div className="mb-6 flex items-center gap-3 rounded-2xl bg-brand-50 px-5 py-4 text-brand-800">
 					<PartyPopper className="h-5 w-5 shrink-0" aria-hidden />
-					<p className="text-sm font-medium">Welcome to Greyboards. Check your inbox to confirm your email.</p>
+					<p className="text-sm font-medium">Welcome to Greyboards! Check your inbox to confirm your email.</p>
 				</div>
 			)}
 
@@ -53,8 +52,7 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
 				<p className="text-sm text-brand-100">Your Greyboards</p>
 				<h1 className="mt-1 font-display text-4xl font-extrabold tracking-[-0.03em] sm:text-5xl">Hello, {firstName}</h1>
 				<p className="mt-3 max-w-lg text-brand-100">
-					{active === 1 ? "You have 1 role" : `You have ${active} roles`}
-					{pending ? `, and ${pending === 1 ? "1 application is" : `${pending} applications are`} being checked.` : "."}
+					{pending ? "We're reviewing your application and will email you soon." : "Good to see you again."}
 				</p>
 				<div className="absolute top-1/2 right-8 hidden aspect-[400/260] w-64 -translate-y-1/2 rotate-2 overflow-hidden rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.35)] ring-4 ring-white/10 md:block">
 					<BoardScene time="night" art="brand" headline={`Hi, ${firstName}`} />
@@ -87,7 +85,7 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
 									{role.status === "active"
 										? EMPTY[role.kind]
 										: role.status === "pending"
-											? "We're checking your application. We'll email you when it's done."
+											? "We're reviewing your application and will email you soon."
 											: (role.note ?? "This role isn't active. Contact support if you think that's a mistake.")}
 								</p>
 							</div>

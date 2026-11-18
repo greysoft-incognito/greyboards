@@ -47,7 +47,7 @@ export default function AdminUsers({ loaderData, actionData }: Route.ComponentPr
 
 	return (
 		<>
-			<AdminHeader title="Users" description="Find accounts, give people a role and suspend accounts that break the rules." />
+			<AdminHeader title="Users" description="Find people, change their role or suspend accounts." />
 			<div className="space-y-6 px-4 py-8 sm:px-8">
 				<Form method="get" className="flex flex-wrap items-center gap-3">
 					<Input

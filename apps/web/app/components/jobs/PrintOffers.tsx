@@ -11,7 +11,7 @@ import { Standing } from "~/components/reputation/Badges";
 function until(offer: PrintOffer) {
 	const at = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", hour: "numeric", hour12: true, timeZone: "Africa/Lagos" }).format(new Date(offer.expiresAt));
 
-	return offer.status === "requested" ? `Answer by ${at}` : `Open until ${at}`;
+	return offer.status === "requested" ? `Reply by ${at}` : `Open until ${at}`;
 }
 
 /**
@@ -31,8 +31,8 @@ export function PrintOffersPanel({ options, currency }: { options: PrintOptions;
 					<HandCoins className="h-5 w-5" aria-hidden />
 				</span>
 				<div>
-					<h2 className="font-display text-xl font-extrabold tracking-tight text-ink-900">Pick who prints it</h2>
-					<p className="mt-0.5 text-sm text-ink-500">Dispatchers near the board send their prices, or ask one at their own rate. Pay the price you pick and the job is theirs. It's held with your booking until the ad is up.</p>
+					<h2 className="font-display text-xl font-extrabold tracking-tight text-ink-900">Choose who prints it</h2>
+					<p className="mt-0.5 text-sm text-ink-500">Local dispatchers will send you quotes, or you can ask one directly. Pick a quote and pay, and they'll print and put up your ad.</p>
 				</div>
 			</div>
 
@@ -50,7 +50,7 @@ export function PrintOffersPanel({ options, currency }: { options: PrintOptions;
 									<Standing standing={offer.dispatcher?.standing} compact className="my-1" />
 									{offer.note && <span className="block text-ink-700">{offer.note}</span>}
 									<span className="block text-xs text-ink-500">
-										{offer.kind === "request" ? (offer.status === "requested" ? "You asked them. " : "They accepted your request. ") : ""}
+										{offer.kind === "request" ? (offer.status === "requested" ? "You asked them directly. " : "They accepted your request. ") : ""}
 										{until(offer)}
 									</span>
 								</span>
@@ -64,13 +64,13 @@ export function PrintOffersPanel({ options, currency }: { options: PrintOptions;
 										</Button>
 									</Form>
 								) : (
-									<span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-bold text-held">Waiting for their answer</span>
+									<span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-bold text-held">Waiting for a reply</span>
 								)}
 							</li>
 						))}
 					</ul>
 				) : (
-					<p className="rounded-2xl bg-surface-100 px-4 py-3 text-sm text-ink-500">No prices yet. Dispatchers nearby see the job now, or you can ask one below.</p>
+					<p className="rounded-2xl bg-surface-100 px-4 py-3 text-sm text-ink-500">No quotes yet. Local dispatchers can see your job, or you can ask one below.</p>
 				)}
 			</div>
 
@@ -157,7 +157,7 @@ export function SendPrice({ job, fieldError }: { job: PrintJob; fieldError?: str
 				<Field label={offer ? "New price in naira" : "Your price in naira"} error={fieldError}>
 					<Input name="amount" inputMode="numeric" required defaultValue={offer ? String(offer.amountMinor / 100) : ""} placeholder="175000" />
 				</Field>
-				<Field label="Note for the advertiser" hint="Optional, such as the material or when you can put it up.">
+				<Field label="Note for the advertiser" hint="Optional. For example, the material or when you can put it up.">
 					<Input name="note" maxLength={200} defaultValue={offer?.note ?? ""} />
 				</Field>
 				<div className="flex flex-wrap gap-2 sm:col-span-2">
@@ -168,7 +168,7 @@ export function SendPrice({ job, fieldError }: { job: PrintJob; fieldError?: str
 					{offer?.status === "pending" && (
 						<Button type="submit" variant="ghost" name="intent" value="withdraw-price" disabled={!!intent} formNoValidate>
 							<Undo2 className="h-4 w-4" aria-hidden />
-							Take it back
+							Withdraw
 						</Button>
 					)}
 				</div>

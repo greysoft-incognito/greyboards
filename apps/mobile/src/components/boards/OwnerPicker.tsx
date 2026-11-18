@@ -73,7 +73,7 @@ export function OwnerPicker({ onChange, errors = {} }: { onChange: (choice: Boar
 
   return (
     <View style={styles.box}>
-      <Field label="Owner's name" error={errors.ownerName ?? errors.ownerProfileId} hint="Owners already on Greyboards show as you type.">
+      <Field label="Owner's name" error={errors.ownerName ?? errors.ownerProfileId} hint="Start typing to find owners already on Greyboards.">
         <Input value={name} onChangeText={type} autoCapitalize="words" autoComplete="off" maxLength={120} placeholder="Mr Adeyemi" />
       </Field>
       {suggestions.length ? (
@@ -96,12 +96,12 @@ export function OwnerPicker({ onChange, errors = {} }: { onChange: (choice: Boar
           <View style={[styles.option, styles.newOwner]}>
             <UserPlus size={18} color={colors.ink500} />
             <Text variant="small" style={styles.flex}>
-              Not listed? Add their phone below and we'll set them up.
+              Not listed? Add their phone number below.
             </Text>
           </View>
         </View>
       ) : null}
-      <Field label="Owner's phone" error={errors.ownerPhone} hint="We text the owner the agreement to sign.">
+      <Field label="Owner's phone" error={errors.ownerPhone} hint="We’ll text them to sign up the board.">
         <Input value={phone} onChangeText={typePhone} keyboardType="phone-pad" textContentType="telephoneNumber" autoComplete="tel" maxLength={20} placeholder="0803 123 4567" />
       </Field>
     </View>

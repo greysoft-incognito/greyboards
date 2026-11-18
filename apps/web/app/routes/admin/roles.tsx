@@ -66,7 +66,7 @@ export default function AdminRoles({ loaderData }: Route.ComponentProps) {
 
 	return (
 		<>
-			<AdminHeader title="Roles" description="A role is a set of permissions. Give accounts a role from Users." />
+			<AdminHeader title="Roles" description="Roles control what admins can do. Assign them from Users." />
 			<div className="lg:grid lg:grid-cols-[22rem_1fr]">
 				<nav aria-label="Roles" className={`border-surface-200 p-3 lg:block lg:border-r-[1.5px] ${chosen ? "hidden" : ""}`}>
 					<Link prefetch="intent" to="/admin/roles/new" className={buttonClass("brand", "mb-3 w-full")}>
@@ -146,9 +146,9 @@ function RoleEditor({ role, permissions }: { role: Role | null; permissions: Per
 					<p className="mt-1 text-ink-500">
 						{locked
 							? role.slug === "admin"
-								? "Built in. Admins can always do everything, including anything added later."
-								: "Built in. Members use the app but have no admin access."
-							: "Choose what accounts with this role can do."}
+								? "Built in. Admins can do everything."
+								: "Built in. Members can use the app but can't access admin."
+							: "Choose what this role can do."}
 					</p>
 				</div>
 				{result?.error && <Alert>{result.error}</Alert>}
