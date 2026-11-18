@@ -46,6 +46,8 @@ import type {
   IdentityReview,
   NearbyBoard,
   OwnerPriceQuote,
+  PriceGuide,
+  PriceGuideQuery,
   Daypart,
   SlotQuote,
   PartnerChecks,
@@ -386,6 +388,8 @@ export function createEndpoints(alova: GreyboardsAlova) {
       /** Boards already tagged near a spot and facing the same way. */
       nearbyBoards: (params: { lat: number; lng: number; headingDeg?: number | null; except?: ID }) =>
         alova.Get<ApiResponse<NearbyBoard[]>>('/account/boards/nearby', { params, cacheFor: null }),
+      /** A suggested rate for a board being tagged: boards of the same kind nearby, and what its traffic is worth. */
+      priceGuide: (params: PriceGuideQuery) => alova.Get<ApiResponse<PriceGuide>>('/account/boards/price-guide', { params, cacheFor: null }),
       /** Make a token for a digital screen's player. It shows once. */
       issuePlayerToken: (id: ID) => alova.Post<ApiResponse<{ token: string }>>(`/account/boards/${id}/player`),
       revokePlayerToken: (id: ID) => alova.Delete<ApiResponse<{ id: ID }>>(`/account/boards/${id}/player`),
