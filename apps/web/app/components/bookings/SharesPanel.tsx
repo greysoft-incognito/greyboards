@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Form, useNavigation } from "react-router";
-import { Check, Copy, CreditCard, HandCoins, UsersRound, X } from "lucide-react";
+import { Check, Copy, CreditCard, Gavel, HandCoins, UsersRound, X } from "lucide-react";
 import type { Booking, BookingShare, ShareStatus } from "@greyboards/types";
 import { formatMoney } from "./BookingBits";
 import { Button, Spinner } from "~/components/ui";
@@ -48,6 +48,14 @@ export function SharesPanel({ booking, isOrganiser }: { booking: Booking; isOrga
 			{held && (
 				<p className="text-sm text-ink-700">
 					The dates stay held for {formatWait(booking.holdSecondsLeft ?? 0)}. If a share is still unpaid then, the booking lapses and everyone who paid gets their money back.
+				</p>
+			)}
+			{held && (booking.sharing?.auction || booking.sharing?.takeoverOpen) && (
+				<p className="flex items-start gap-2 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-held">
+					<Gavel className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+					{booking.sharing.auction
+						? `Someone is bidding for the whole board (${booking.sharing.auction.bidCount} ${booking.sharing.auction.bidCount === 1 ? "bid" : "bids"}). Pay every share before the winner pays to keep it; otherwise everyone who paid gets their money back.`
+						: "The lock has ended, so anyone can now bid for the whole board. Pay every share to keep it."}
 				</p>
 			)}
 			{held && (

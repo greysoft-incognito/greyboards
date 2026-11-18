@@ -51,12 +51,14 @@ export class AuctionResource extends Resource {
       highestMinor: shown ? (winner?.amountMinor ?? top?.amountMinor ?? null) : null,
       nextMinimumMinor: auction.isOpen() ? await auction.nextMinimum() : null,
       face: face ? { id: face.id, label: face.label } : null,
+      takeoverOf: auction.sharedBookingId,
+      payBy: auction.status === 'awarded' ? auction.payBy : null,
       myBid: mine
         ? {
             amountMinor: mine.amountMinor,
             status: mine.status,
             leading: shown && mine.status === 'active' && top?.id === mine.id,
-            bookingId: mine.id === auction.winningBidId ? auction.bookingId : null,
+            bookingId: mine.id === auction.winningBidId && !auction.isTakeover() ? auction.bookingId : null,
           }
         : null,
       board: this.board ? await new BoardResource(this.board).data() : undefined,
