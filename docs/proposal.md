@@ -125,6 +125,8 @@ Example with ₦1,000,000 of rent on a scouted board, and a dispatcher's price o
 | Greyboards keeps (20%) | ₦200,000 |
 | Scout receives (10%) | ₦100,000 |
 
+Whoever tags a board can instead fix what the owner receives. The rate they enter is then the owner's amount, and the board is listed with the other shares added on top: an owner's ₦100,000 on a scouted board lists at ₦142,858 (₦100,000 ÷ 70%, rounded up to a naira). The owner is never paid less than their amount, even when a lower bid or offer is accepted; the difference comes out of the Greyboards and scout shares.
+
 Shares are paid only after proof of posting is accepted. A signed agreement keeps the owner's share it was signed at, and a paid booking keeps the split it was paid with.
 
 All money moves through a ledger (escrow in, commission, scout share, owner payout), so every balance can be traced back to the booking that made it.

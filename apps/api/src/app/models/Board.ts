@@ -54,6 +54,8 @@ export interface BoardDetails {
   printsOwn?: boolean
   /** What they charge for that, in minor units. Null uses the standard print price. */
   printFeeMinor?: number | null
+  /** The rate entered is what the owner receives; the listed rate adds the other shares on top. */
+  ownerNet?: boolean
 }
 
 /** What an advertiser narrows the map down to. */
@@ -105,6 +107,10 @@ export class Board extends Model {
   declare latitude: number
   declare longitude: number
   declare accuracyM: number | null
+  /** Whether the tagger fixed what the owner receives, so the listed rate is grossed up from `ownerRateMinor`. */
+  declare ownerNet: boolean
+  /** The owner's amount per period, when `ownerNet` is on. */
+  declare ownerRateMinor: string | number | null
   declare rateMinor: string | number | null
   declare currency: string
   declare ratePeriod: BoardRatePeriod
@@ -168,6 +174,8 @@ export class Board extends Model {
     accuracyM: 'accuracy_m',
     headingDeg: 'heading_deg',
     rateMinor: 'rate_minor',
+    ownerNet: 'owner_net',
+    ownerRateMinor: 'owner_rate_minor',
     ratePeriod: 'rate_period',
     printsOwn: 'prints_own',
     ratingSum: 'rating_sum',
@@ -391,6 +399,11 @@ export class Board extends Model {
   /** The rate in minor units, as a number. Postgres hands big integers back as text. */
   rate(): number | null {
     return this.rateMinor === null || this.rateMinor === undefined ? null : Number(this.rateMinor)
+  }
+
+  /** The owner's fixed amount per period, or null when the board doesn't fix it. */
+  ownerRate(): number | null {
+    return this.ownerRateMinor === null || this.ownerRateMinor === undefined ? null : Number(this.ownerRateMinor)
   }
 
   /** Save edits from the owner or tagger. A rejected board, or a listed one whose place or size changed, goes back for review. */

@@ -14,9 +14,14 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
 	if (!tagAs.length) throw redirect("/settings/roles");
 
-	const [{ data: kinds }, profiles] = await Promise.all([api.boardKinds(), tagAs.includes("owner") ? api.account.ownerProfiles({ per_page: 100 }) : null]);
+	const [{ data: kinds }, profiles, owner, scout] = await Promise.all([
+		api.boardKinds(),
+		tagAs.includes("owner") ? api.account.ownerProfiles({ per_page: 100 }) : null,
+		api.account.ownerPrice({ as: "owner" }),
+		api.account.ownerPrice({ as: "scout" }),
+	]);
 
-	return { kinds, tagAs, ownerProfiles: profiles?.data ?? [] };
+	return { kinds, tagAs, ownerProfiles: profiles?.data ?? [], ownerPercents: { owner: owner.data.ownerPercent, scout: scout.data.ownerPercent } };
 }
 
 export async function action({ request, context }: Route.ActionArgs) {
@@ -54,7 +59,7 @@ export default function NewBoard({ loaderData, actionData }: Route.ComponentProp
 			</Link>
 			<h1 className="mt-3 font-display text-3xl font-extrabold tracking-[-0.03em] text-ink-900 sm:text-4xl">Tag a board</h1>
 			<p className="mt-1 mb-6 text-ink-500">We check every board before advertisers can find it, usually within a day.</p>
-			<BoardForm kinds={loaderData.kinds} tagAs={loaderData.tagAs} ownerProfiles={loaderData.ownerProfiles} error={actionData?.error} fieldErrors={actionData?.fieldErrors} />
+			<BoardForm kinds={loaderData.kinds} tagAs={loaderData.tagAs} ownerProfiles={loaderData.ownerProfiles} ownerPercents={loaderData.ownerPercents} error={actionData?.error} fieldErrors={actionData?.fieldErrors} />
 		</main>
 	);
 }

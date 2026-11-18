@@ -3,6 +3,7 @@ import { abortIf } from '@arkstack/common'
 import type { QueryBuilder } from 'arkormx'
 import { BoardPolicy } from '@app/policies/BoardPolicy'
 import { Commissions } from '@app/services/Commissions'
+import { OwnerPricing } from '@app/services/OwnerPricing'
 import { Refunds } from '@app/services/Refunds'
 import { Shares } from '@app/services/Shares'
 import { Payouts } from '@app/services/Payouts'
@@ -484,7 +485,7 @@ export class Booking extends Model {
    */
   async confirmPaid(): Promise<boolean> {
     const board = await this.board().firstOrFail()
-    const split = await Commissions.split(board, this.rentMinor())
+    const split = await Commissions.split(board, this.rentMinor(), await OwnerPricing.fixedFor(board, this.faceId, this.periods))
     const paidAt = new Date()
 
     try {

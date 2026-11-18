@@ -19,6 +19,8 @@ export class BoardFace extends Model {
   declare label: string
   declare headingDeg: number | null
   declare rateMinor: string | number | null
+  /** The owner's fixed amount per period for this face, on a board that fixes it. */
+  declare ownerRateMinor: string | number | null
   declare minPeriods: number
   declare createdAt: Date
   declare updatedAt: Date
@@ -29,6 +31,7 @@ export class BoardFace extends Model {
     boardId: 'board_id',
     headingDeg: 'heading_deg',
     rateMinor: 'rate_minor',
+    ownerRateMinor: 'owner_rate_minor',
     minPeriods: 'min_periods',
   }
 
@@ -49,5 +52,10 @@ export class BoardFace extends Model {
   /** The face's own rate in minor units, or null when it uses the board's. */
   ownRate(): number | null {
     return this.rateMinor === null || this.rateMinor === undefined ? null : Number(this.rateMinor)
+  }
+
+  /** The owner's fixed amount for this face, or null. */
+  ownerRate(): number | null {
+    return this.ownerRateMinor === null || this.ownerRateMinor === undefined ? null : Number(this.ownerRateMinor)
   }
 }

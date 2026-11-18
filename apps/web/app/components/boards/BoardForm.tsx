@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Form, useNavigation } from "react-router";
-import { Binoculars, Camera, LocateFixed, Presentation } from "lucide-react";
+import { Binoculars, Camera, HandCoins, LocateFixed, Presentation } from "lucide-react";
 import type { BoardDetail, BoardKindDefinition, OwnerProfile } from "@greyboards/types";
 import { ManagedOwnerSelect, OwnerPicker } from "./OwnerPicker";
 import { NearbyBoards } from "./NearbyBoards";
@@ -27,6 +27,7 @@ export function BoardForm({
 	error,
 	fieldErrors = {},
 	ownerProfiles = [],
+	ownerPercents,
 }: {
 	kinds: BoardKindDefinition[];
 	board?: BoardDetail;
@@ -36,6 +37,8 @@ export function BoardForm({
 	fieldErrors?: Errors;
 	/** The owner profiles the account manages, to tag a board under one of them. */
 	ownerProfiles?: OwnerProfile[];
+	/** The owner's percent of the rent on a board they tag and on one a scout tags, for the price preview. */
+	ownerPercents?: { owner: number; scout: number };
 }) {
 	const navigation = useNavigation();
 	const { maxImageMb } = useLimits();
@@ -49,6 +52,13 @@ export function BoardForm({
 	const [locating, setLocating] = useState(false);
 	const [locateError, setLocateError] = useState<string | null>(null);
 	const scouting = !board && as === "scout";
+	const [ownerNet, setOwnerNet] = useState(board?.ownerNet ?? false);
+	const [rate, setRate] = useState(() => {
+		const minor = board?.ownerNet && board.ownerRateMinor != null ? board.ownerRateMinor : board?.rate?.amountMinor;
+
+		return minor ? String(minor / 100) : "";
+	});
+	const ownerPercent = board ? (board.ownerPercent ?? null) : (ownerPercents?.[as] ?? null);
 
 	const locate = () => {
 		if (!("geolocation" in navigator)) return setLocateError("This browser can't tell where you are. Type the coordinates instead.");
@@ -183,8 +193,12 @@ export function BoardForm({
 			<section className="panel space-y-5 p-5 sm:p-6">
 				<h2 className="font-display text-lg font-extrabold tracking-tight text-ink-900">{scouting ? "Owner and rate" : !board && ownerProfiles.length > 1 ? "Owner and rate" : "Rate"}</h2>
 				<div className="grid gap-4 sm:grid-cols-2">
-					<Field label="Rate in naira" error={fieldErrors.rateMinor} hint={scouting ? "What the owner asks, if you know it." : undefined}>
-						<Input name="rate" type="number" min="0" step="1000" defaultValue={board?.rate ? board.rate.amountMinor / 100 : ""} placeholder="850000" />
+					<Field
+						label={ownerNet ? "What the owner gets, in naira" : "Rate in naira"}
+						error={fieldErrors.rateMinor}
+						hint={ownerNet ? "Each period, after every other share." : scouting ? "What the owner asks, if you know it." : undefined}
+					>
+						<Input name="rate" type="number" min="0" step="1000" value={rate} onChange={(event) => setRate(event.target.value)} placeholder="850000" />
 					</Field>
 					<Field label="Per" error={fieldErrors.ratePeriod}>
 						<Select name="ratePeriod" defaultValue={board?.rate?.period ?? "month"}>
@@ -193,6 +207,7 @@ export function BoardForm({
 						</Select>
 					</Field>
 				</div>
+				<OwnerNetToggle on={ownerNet} onChange={setOwnerNet} rate={rate} percent={ownerPercent} />
 				<div className="grid gap-4 sm:grid-cols-2">
 					<Field label="Who prints and puts up ads" error={fieldErrors.printsOwn}>
 						<Select name="printsOwn" defaultValue={board?.printsOwn ? "1" : "0"}>
@@ -227,5 +242,50 @@ export function BoardForm({
 				</Button>
 			</div>
 		</Form>
+	);
+}
+
+const naira = (amount: number) => new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 }).format(amount);
+
+/**
+ * Lets the tagger fix what the owner receives. The rate typed is then the owner's amount, and
+ * the listed rate adds the other shares on top: the same rounding the API uses, up to a naira.
+ */
+function OwnerNetToggle({ on, onChange, rate, percent }: { on: boolean; onChange: (on: boolean) => void; rate: string; percent: number | null }) {
+	const amount = Number(rate);
+	const typed = rate.trim() !== "" && Number.isFinite(amount) && amount > 0;
+	const grossing = percent !== null && percent > 0 && percent < 100;
+	const listed = typed && grossing ? Math.ceil((amount * 100) / percent) : null;
+
+	return (
+		<div className="space-y-3 rounded-2xl border-[1.5px] border-surface-200 p-4">
+			<label className="flex cursor-pointer items-start gap-3">
+				<input type="hidden" name="ownerNet" value={on ? "1" : "0"} />
+				<input type="checkbox" checked={on} onChange={(event) => onChange(event.target.checked)} className="peer sr-only" />
+				<span aria-hidden className={`mt-0.5 flex h-6 w-11 shrink-0 items-center rounded-full p-0.5 transition peer-focus-visible:ring-2 peer-focus-visible:ring-brand-300 ${on ? "bg-brand-500" : "bg-surface-300"}`}>
+					<span className={`h-5 w-5 rounded-full bg-white shadow transition ${on ? "translate-x-5" : ""}`} />
+				</span>
+				<span>
+					<span className="flex items-center gap-1.5 text-sm font-semibold text-ink-900">
+						<HandCoins className="h-4 w-4 text-brand-600" aria-hidden />
+						The owner gets exactly this amount
+					</span>
+					<span className="block text-sm text-ink-500">The other shares are added on top of this amount, instead of coming out of it.</span>
+				</span>
+			</label>
+			{typed && percent !== null && (
+				<p className="rounded-xl bg-surface-100 px-3 py-2 text-sm text-ink-700">
+					{on && listed !== null ? (
+						<>
+							Listed at <strong className="text-ink-900">{naira(listed)}</strong>. The owner gets {naira(amount)}, which is {percent}% of the rent.
+						</>
+					) : (
+						<>
+							Listed at <strong className="text-ink-900">{naira(amount)}</strong>. The owner gets {naira(Math.floor((amount * percent) / 100))}, which is {percent}% of the rent.
+						</>
+					)}
+				</p>
+			)}
+		</div>
 	);
 }

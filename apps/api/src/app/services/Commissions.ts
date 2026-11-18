@@ -24,10 +24,13 @@ export interface RevenueSplit {
 
 /**
  * The one place that decides who gets what from a booking. Printing and posting is paid
- * first, apart from this; the rent left is shared between the owner, Greyboards and the
- * scout who brought the board in, by the revenue split admins set. A board a scout runs
- * pays the owner the share they signed for. With no scout, the scout's part goes where
+ * on top of the rent, apart from this; the rent is shared between the owner, Greyboards
+ * and the scout who brought the board in, by the revenue split admins set. A board a scout
+ * runs pays the owner the share they signed for. With no scout, the scout's part goes where
  * the split says.
+ *
+ * On a board whose tagger fixed what the owner receives, the listed rate is grossed up so the
+ * owner's share comes to that amount, and the split never pays the owner less than it.
  */
 export class Commissions {
   static async revenue(): Promise<RevenueSplit> {
@@ -61,16 +64,41 @@ export class Commissions {
     return signed ? null : 'The owner hasn’t signed for this board yet, so it can’t be booked.'
   }
 
-  /** Share `rentMinor`, the booking's rent. Printing and posting is paid on top and isn't part of it. */
-  static async split(board: Board, rentMinor: number): Promise<Split> {
+  /**
+   * Share `rentMinor`, the booking's rent. Printing and posting is paid on top and isn't part of it.
+   * `ownerFixedMinor` is the least the owner gets, on a board whose tagger fixed it.
+   */
+  static async split(board: Board, rentMinor: number, ownerFixedMinor = 0): Promise<Split> {
     const revenue = await Commissions.revenue()
     const scoutId = await Commissions.scoutOf(board)
-    const signed = scoutId ? await board.agreements().where({ status: BoardAgreement.SIGNED }).first() : null
-    const ownerSharePercent = signed ? signed.ownerSharePercent : revenue.owner + (revenue.unscoutedTo === 'owner' ? revenue.scout : 0)
+    const ownerSharePercent = await Commissions.ownerPercent(board, revenue, scoutId)
     const scoutPercent = scoutId ? Math.min(revenue.scout, 100 - ownerSharePercent) : 0
-    const ownerAmountMinor = Money.share(rentMinor, ownerSharePercent)
-    const scoutAmountMinor = Money.share(rentMinor, scoutPercent)
+    const ownerAmountMinor = Math.max(Money.share(rentMinor, ownerSharePercent), Math.min(ownerFixedMinor, rentMinor))
+    const scoutAmountMinor = Math.min(Money.share(rentMinor, scoutPercent), rentMinor - ownerAmountMinor)
 
     return { ownerSharePercent, ownerAmountMinor, scoutAmountMinor, platformAmountMinor: rentMinor - ownerAmountMinor - scoutAmountMinor, scoutId }
+  }
+
+  /** The percent of the rent `board`'s owner gets: what they signed for, or the split's owner part (with the scout's, on boards with no scout, when the split says so). */
+  static async ownerPercent(board: Board, revenue?: RevenueSplit, scoutId?: string | null): Promise<number> {
+    const split = revenue ?? (await Commissions.revenue())
+    const scout = scoutId === undefined ? await Commissions.scoutOf(board) : scoutId
+    const signed = scout ? await board.agreements().where({ status: BoardAgreement.SIGNED }).first() : null
+
+    if (signed) return signed.ownerSharePercent
+
+    return Commissions.ownerPercentFor(!!scout, split)
+  }
+
+  /** The owner's percent on a board a scout runs, or one its owner tagged. */
+  static ownerPercentFor(scouted: boolean, revenue: RevenueSplit): number {
+    return scouted ? revenue.owner : revenue.owner + (revenue.unscoutedTo === 'owner' ? revenue.scout : 0)
+  }
+
+  /** The rate to list so that `percent` of it is at least `ownerMinor`, rounded up to a whole unit. */
+  static grossUp(ownerMinor: number, percent: number): number {
+    if (percent <= 0 || percent >= 100) return ownerMinor
+
+    return Math.ceil((ownerMinor * 100) / percent / 100) * 100
   }
 }

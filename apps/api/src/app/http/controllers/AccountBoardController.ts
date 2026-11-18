@@ -1,4 +1,5 @@
 import { Pipeline } from '@app/services/Pipeline'
+import { OwnerPricing } from '@app/services/OwnerPricing'
 import { Board, type BoardDetails, type BoardOwnerChoice, type BoardStatus } from '@app/models/Board'
 import { BoardAgreement } from '@app/models/BoardAgreement'
 import { BoardAgreementResource } from '@app/http/resources/BoardAgreementResource'
@@ -43,6 +44,7 @@ const rules = (creating: boolean) => {
     ratePeriod: `nullable|in:${Board.PERIODS.join(',')}`,
     printsOwn: 'nullable|boolean',
     printFeeMinor: 'nullable|integer|min:0',
+    ownerNet: 'nullable|boolean',
   }
 }
 
@@ -67,7 +69,7 @@ const details = (data: Record<string, any>, sent: Record<string, unknown>): Part
     picked[key] = value !== null && (NUMBERS as readonly string[]).includes(key) ? Number(value) : value
   }
 
-  for (const flag of ['lit', 'printsOwn']) if (typeof picked[flag] === 'string') picked[flag] = ['1', 'true', 'on'].includes(picked[flag] as string)
+  for (const flag of ['lit', 'printsOwn', 'ownerNet']) if (typeof picked[flag] === 'string') picked[flag] = ['1', 'true', 'on'].includes(picked[flag] as string)
 
   return picked as Partial<BoardDetails>
 }
@@ -110,6 +112,17 @@ export default class AccountBoardController extends BaseController {
     ).additional({ status: 'success', message: 'OK', code: 200 })
   }
 
+  /**
+   * What to list a board at so its owner receives `amountMinor` each period, for the tagging
+   * form's preview. `as` is whether the user owns the board or scouts it.
+   */
+  async ownerPrice() {
+    const query = await this.validateQuery({ amountMinor: 'nullable|integer|min:0', as: 'required|in:owner,scout' })
+    const amount = query.amountMinor === undefined || query.amountMinor === null || query.amountMinor === '' ? null : Number(query.amountMinor)
+
+    return new GenericResource(await OwnerPricing.quote(query.as === 'scout', amount)).additional({ status: 'success', message: 'OK', code: 200 })
+  }
+
   /** Tag a board. `as` says whether the user owns it or scouted it. */
   async create() {
     const data = await this.validate({ ...rules(true), ...ownerRules, as: 'required|in:owner,scout' })
@@ -118,7 +131,10 @@ export default class AccountBoardController extends BaseController {
     if (!(await this.user.actsAs(data.as))) throw new RequestException(`You need an active ${data.as} role to tag boards as ${data.as}.`, 403)
 
     const owner: BoardOwnerChoice = { ownerProfileId: data.ownerProfileId, ownerName: data.ownerName, ownerPhone: data.ownerPhone }
-    const board = await Board.tag(this.user, details(data, this.body) as BoardDetails, owner, asOwner)
+    const picked = details(data, this.body) as BoardDetails
+    const board = await Board.tag(this.user, picked, owner, asOwner)
+
+    await OwnerPricing.apply(board, 'rateMinor' in this.body ? (picked.rateMinor ?? null) : undefined)
 
     if (!asOwner) await Pipeline.tagged(board, this.user)
 
@@ -132,7 +148,10 @@ export default class AccountBoardController extends BaseController {
     const board = await this.managed()
     const data = await this.validate(rules(false))
 
-    await board.revise(details(data, this.body))
+    const picked = details(data, this.body)
+
+    await board.revise(picked)
+    await OwnerPricing.apply(board, 'rateMinor' in this.body ? (picked.rateMinor ?? null) : undefined)
 
     const message = board.status === Board.PENDING ? 'Saved. We’ll check the changes before it goes back on the map.' : 'Board saved'
 
@@ -213,6 +232,8 @@ export default class AccountBoardController extends BaseController {
       ...(sent('rateMinor') ? { rateMinor: number(data.rateMinor) } : {}),
       ...(sent('minPeriods') ? { minPeriods: number(data.minPeriods) ?? 1 } : {}),
     })
+
+    if (sent('rateMinor')) await OwnerPricing.applyFace(board, face, number(data.rateMinor))
 
     return new ManagedBoardResource(board).additional({ status: 'success', message: `${face.label} saved`, code: 200 })
   }
