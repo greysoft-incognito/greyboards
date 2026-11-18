@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react'
-import { Pressable, StyleSheet, Switch, View } from 'react-native'
+import { Pressable, StyleSheet, View } from 'react-native'
 import { Image } from 'expo-image'
 import * as ImagePicker from 'expo-image-picker'
 import { router } from 'expo-router'
-import { Binoculars, Camera, HandCoins, LocateFixed, MapPin, Presentation, X } from 'lucide-react-native'
-import type { BoardKind, BoardKindDefinition, BoardOwnerChoice, BoardRatePeriod, NearbyBoard, RoadClass } from '@greyboards/types'
-import { HeadingPicker } from '@/components/boards/HeadingPicker'
+import { Binoculars, Camera, LocateFixed, MapPin, Presentation, X } from 'lucide-react-native'
+import type { BoardKindDefinition, BoardOwnerChoice, NearbyBoard } from '@greyboards/types'
+import { BoardDetailsSection, RateSection, boardInput, useBoardFields } from '@/components/boards/BoardFields'
 import { OwnerPicker } from '@/components/boards/OwnerPicker'
 import { taggingRoles } from '@/components/boards/BoardBits'
 import { Section, SettingsPage } from '@/components/settings/SettingsPage'
-import { Button, Callout, CheckOption, Field, Input, Select, Text } from '@/components/ui'
+import { Button, Callout, CheckOption, Field, Input, Text } from '@/components/ui'
 import { api } from '@/lib/api'
 import { PlainProblem } from '@/lib/forms'
 import { megabytes, useLimits } from '@/lib/limits'
@@ -28,9 +28,6 @@ interface Shot {
 
 const MAX_SHOTS = 4
 
-/** "12" or "12.5" as a number, or null while it isn't one. */
-const decimal = (value: string) => (value.trim() && Number.isFinite(Number(value)) ? Number(value) : null)
-
 /**
  * Tag a board while standing at it: the phone places it, the camera takes its photos with
  * where they were taken, and a scout says who owns it so we can text them the agreement.
@@ -47,13 +44,11 @@ export default function TagBoard() {
   const [kinds, setKinds] = useState<BoardKindDefinition[]>([])
   const [shots, setShots] = useState<Shot[]>([])
   const [owner, setOwner] = useState<BoardOwnerChoice>({})
-  const [heading, setHeading] = useState<number | null>(null)
   const [nearby, setNearby] = useState<NearbyBoard[]>([])
-  const [ownerNet, setOwnerNet] = useState(false)
   const [ownerPercents, setOwnerPercents] = useState<{ owner: number; scout: number } | null>(null)
-  const [form, setForm] = useState({ name: '', kind: 'billboard' as BoardKind, widthM: '', heightM: '', faces: '1', lit: '0', roadClass: '', facing: '', address: '', city: '', rate: '', ratePeriod: 'month' as BoardRatePeriod })
+  const { fields: form, set } = useBoardFields()
   const errors = save.problem.fields
-  const set = (key: keyof typeof form) => (value: string) => setForm((current) => ({ ...current, [key]: value }))
+  const heading = form.heading
 
   // Boards already tagged here and facing the same way, so nobody tags one twice.
   useEffect(() => {
@@ -120,30 +115,8 @@ export default function TagBoard() {
     save.run(async () => {
       if (!spot) throw new PlainProblem('We need the board’s location. Tap “Use where I am” while standing at it.')
 
-      const rate = decimal(form.rate)
       const { data: board } = await api.account
-        .tagBoard({
-          as,
-          name: form.name.trim(),
-          kind: form.kind,
-          widthM: decimal(form.widthM) ?? 0,
-          heightM: decimal(form.heightM) ?? 0,
-          faces: Number(form.faces),
-          lit: form.lit === '1',
-          roadClass: (form.roadClass || null) as RoadClass | null,
-          facing: form.facing.trim() || null,
-          headingDeg: heading,
-          address: form.address.trim() || null,
-          city: form.city.trim() || null,
-          country: 'NG',
-          latitude: spot.latitude,
-          longitude: spot.longitude,
-          accuracyM: spot.accuracyM,
-          rateMinor: rate === null ? null : Math.round(rate * 100),
-          ratePeriod: form.ratePeriod,
-          ownerNet,
-          ...(as === 'scout' ? owner : {}),
-        })
+        .tagBoard({ ...boardInput(form, spot), as, ...(as === 'scout' ? owner : {}) })
         .send()
 
       for (const shot of shots) {
@@ -227,79 +200,11 @@ export default function TagBoard() {
         {shoot.problem.message ? <Callout>{shoot.problem.message}</Callout> : null}
       </Section>
 
-      <Section title="The board">
-        <Field label="Name" error={errors.name} hint="What advertisers see first. A landmark helps.">
-          <Input value={form.name} onChangeText={set('name')} maxLength={120} placeholder="Ahmadu Bello Way, facing Murtala Square" />
-        </Field>
-        <Field label="Kind" error={errors.kind}>
-          <Select label="Kind" value={form.kind} onChange={set('kind')} options={(kinds.length ? kinds : [{ kind: 'billboard' as BoardKind, label: 'Billboard' }]).map((kind) => ({ value: kind.kind, label: kind.label }))} />
-        </Field>
-        <View style={styles.pair}>
-          <View style={styles.flex}>
-            <Field label="Width (m)" error={errors.widthM}>
-              <Input value={form.widthM} onChangeText={set('widthM')} keyboardType="decimal-pad" placeholder="12" />
-            </Field>
-          </View>
-          <View style={styles.flex}>
-            <Field label="Height (m)" error={errors.heightM}>
-              <Input value={form.heightM} onChangeText={set('heightM')} keyboardType="decimal-pad" placeholder="4" />
-            </Field>
-          </View>
-        </View>
-        <View style={styles.pair}>
-          <View style={styles.flex}>
-            <Field label="Faces">
-              <Select label="Faces" value={form.faces} onChange={set('faces')} options={['1', '2', '3', '4'].map((faces) => ({ value: faces, label: faces === '1' ? 'One face' : `${faces} faces` }))} />
-            </Field>
-          </View>
-          <View style={styles.flex}>
-            <Field label="Lighting">
-              <Select label="Lighting" value={form.lit} onChange={set('lit')} options={[{ value: '0', label: 'Not lit' }, { value: '1', label: 'Lit at night' }]} />
-            </Field>
-          </View>
-        </View>
-        <Field label="The road it faces" error={errors.roadClass} hint="Gives advertisers a traffic estimate.">
-          <Select
-            label="The road it faces"
-            value={form.roadClass}
-            onChange={set('roadClass')}
-            options={[
-              { value: '', label: 'Not sure' },
-              { value: 'expressway', label: 'Expressway or highway' },
-              { value: 'major', label: 'Major road' },
-              { value: 'street', label: 'Busy street' },
-              { value: 'local', label: 'Quiet street' },
-            ]}
-          />
-        </Field>
-        <Field label="Direction it faces" error={errors.headingDeg}>
-          <HeadingPicker value={heading} onChange={setHeading} />
-        </Field>
-        <Field label="Facing" error={errors.facing} hint="Which traffic sees it.">
-          <Input value={form.facing} onChangeText={set('facing')} maxLength={60} placeholder="Traffic to Ajah" />
-        </Field>
-      </Section>
+      <BoardDetailsSection fields={form} set={set} errors={errors} kinds={kinds} />
 
-      <Section title={as === 'scout' ? 'Owner and rate' : 'Rate'}>
-        <View style={styles.pair}>
-          <View style={styles.flex}>
-            <Field
-              label={ownerNet ? 'Owner gets, in naira' : 'Rate in naira'}
-              error={errors.rateMinor}
-              hint={ownerNet ? 'Each period, after every other share.' : as === 'scout' ? 'What the owner asks, if you know.' : undefined}
-            >
-              <Input value={form.rate} onChangeText={set('rate')} keyboardType="number-pad" placeholder="850000" />
-            </Field>
-          </View>
-          <View style={styles.flex}>
-            <Field label="Per">
-              <Select label="Per" value={form.ratePeriod} onChange={set('ratePeriod')} options={[{ value: 'month', label: 'Month' }, { value: 'week', label: 'Week' }]} />
-            </Field>
-          </View>
-        </View>
-        <OwnerNetToggle on={ownerNet} onChange={setOwnerNet} rate={form.rate} percent={ownerPercents?.[as] ?? null} />
+      <RateSection fields={form} set={set} errors={errors} spot={spot} percent={ownerPercents?.[as] ?? null} scouting={as === 'scout'}>
         {as === 'scout' ? <OwnerPicker onChange={setOwner} errors={errors} /> : null}
-      </Section>
+      </RateSection>
 
       {save.problem.summary ? <Callout>{save.problem.summary}</Callout> : null}
       <Button
@@ -319,42 +224,7 @@ export default function TagBoard() {
   )
 }
 
-const naira = (amount: number) => `₦${Math.round(amount).toLocaleString('en-NG')}`
-
-/**
- * Lets the tagger fix what the owner receives. The rate typed is then the owner's amount, and
- * the listed rate adds the other shares on top: the same rounding the API uses, up to a naira.
- */
-function OwnerNetToggle({ on, onChange, rate, percent }: { on: boolean; onChange: (on: boolean) => void; rate: string; percent: number | null }) {
-  const amount = Number(rate.replace(/[^\d.]/g, ''))
-  const typed = rate.trim() !== '' && Number.isFinite(amount) && amount > 0
-  const listed = typed && percent !== null && percent > 0 && percent < 100 ? Math.ceil((amount * 100) / percent) : null
-
-  return (
-    <View style={styles.ownerNet}>
-      <View style={styles.ownerNetRow}>
-        <HandCoins size={18} color={colors.brand600} />
-        <View style={styles.flex}>
-          <Text variant="label">The owner gets exactly this amount</Text>
-          <Text variant="small">The other shares are added on top of this amount, instead of coming out of it.</Text>
-        </View>
-        <Switch value={on} onValueChange={onChange} trackColor={{ true: colors.brand500, false: colors.surface300 }} thumbColor={colors.white} accessibilityLabel="The owner gets exactly this amount" />
-      </View>
-      {typed && percent !== null ? (
-        <Text variant="small" style={styles.ownerNetPreview}>
-          {on && listed !== null
-            ? `Listed at ${naira(listed)}. The owner gets ${naira(amount)}, which is ${percent}% of the rent.`
-            : `Listed at ${naira(amount)}. The owner gets ${naira(Math.floor((amount * percent) / 100))}, which is ${percent}% of the rent.`}
-        </Text>
-      ) : null}
-    </View>
-  )
-}
-
 const styles = StyleSheet.create({
-  ownerNet: { gap: 10, borderWidth: 1.5, borderColor: colors.surface200, borderRadius: radius.lg, padding: 12 },
-  ownerNetRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  ownerNetPreview: { backgroundColor: colors.surface100, borderRadius: radius.md, paddingHorizontal: 10, paddingVertical: 8, overflow: 'hidden', color: colors.ink700 },
   flex: { flex: 1 },
   as: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 },
   spot: { flexDirection: 'row', alignItems: 'center', gap: 12 },
@@ -365,6 +235,5 @@ const styles = StyleSheet.create({
   takePressed: { borderColor: colors.brand300 },
   remove: { position: 'absolute', top: 6, right: 6, width: 24, height: 24, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.9)', alignItems: 'center', justifyContent: 'center' },
   noSpot: { position: 'absolute', bottom: 6, left: 6, fontSize: 10, fontFamily: fonts.semibold, color: colors.white, backgroundColor: 'rgba(30,31,34,0.6)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, overflow: 'hidden' },
-  pair: { flexDirection: 'row', gap: 12 },
   note: { flexDirection: 'row', alignItems: 'center', gap: 6, justifyContent: 'center' },
 })

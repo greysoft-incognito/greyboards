@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react'
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native'
+import type { ReactElement, ReactNode } from 'react'
+import { KeyboardAvoidingView, Platform, Pressable, type RefreshControlProps, ScrollView, StyleSheet, View } from 'react-native'
 import { router } from 'expo-router'
 import { ChevronLeft } from 'lucide-react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -7,12 +7,12 @@ import { Text } from '@/components/ui'
 import { colors, fonts, surfaces } from '@/theme'
 
 /** A settings screen: a way back, its title and what it's for, then its sections. */
-export function SettingsPage({ title, description, children }: { title: string; description?: string; children: ReactNode }) {
+export function SettingsPage({ title, description, refreshControl, children }: { title: string; description?: string; refreshControl?: ReactElement<RefreshControlProps>; children: ReactNode }) {
   const insets = useSafeAreaInsets()
 
   return (
     <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView contentContainerStyle={[styles.page, { paddingTop: insets.top + 8, paddingBottom: insets.bottom + 32 }]} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={[styles.page, { paddingTop: insets.top + 8, paddingBottom: insets.bottom + 32 }]} keyboardShouldPersistTaps="handled" refreshControl={refreshControl}>
         <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={() => (router.canGoBack() ? router.back() : router.replace('/account'))} hitSlop={8} style={styles.back}>
           <ChevronLeft size={24} color={colors.ink900} />
         </Pressable>
