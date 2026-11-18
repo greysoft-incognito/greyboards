@@ -37,6 +37,7 @@ export function boardInput(form: FormData): BoardInput {
 		printsOwn: form.get("printsOwn") === "1",
 		printFeeMinor: printFee === null ? null : Math.round(printFee * 100),
 		ownerNet: form.get("ownerNet") === "1",
+		...(form.get("kind") === "digital" ? { loopSlots: number(form, "loopSlots"), slotSeconds: number(form, "slotSeconds") } : {}),
 	};
 }
 
