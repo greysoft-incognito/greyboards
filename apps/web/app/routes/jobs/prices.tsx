@@ -96,7 +96,7 @@ export default function Prices({ loaderData, actionData }: Route.ComponentProps)
 						<Field label="Per square metre" error={errors.pricePerSqmMinor} hint="In the currency of the boards near your base.">
 							<Input name="perSqm" inputMode="numeric" required defaultValue={String(rate.pricePerSqmMinor / 100)} addon={symbol} />
 						</Field>
-						<Field label="Smallest job" error={errors.minFeeMinor} hint="Optional. Small boards cost at least this.">
+						<Field label="Minimum charge" error={errors.minFeeMinor} hint="Optional. The least you’ll charge for a small board.">
 							<Input name="minFee" inputMode="numeric" defaultValue={rate.minFeeMinor ? String(rate.minFeeMinor / 100) : ""} addon={symbol} />
 						</Field>
 						<Field label="Base latitude" error={errors.latitude}>
@@ -105,7 +105,7 @@ export default function Prices({ loaderData, actionData }: Route.ComponentProps)
 						<Field label="Base longitude" error={errors.longitude}>
 							<Input name="longitude" inputMode="decimal" required value={spot.longitude} onChange={(event) => setSpot({ ...spot, longitude: event.target.value })} />
 						</Field>
-						<Field label="You work within, in km" error={errors.radiusKm}>
+						<Field label="How far you’ll travel, in km" error={errors.radiusKm}>
 							<Input name="radiusKm" inputMode="numeric" required defaultValue={String(rate.radiusKm)} />
 						</Field>
 						<Field label="Note for advertisers" error={errors.note} hint="Optional, such as your materials.">

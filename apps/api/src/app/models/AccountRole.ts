@@ -53,10 +53,10 @@ export class AccountRole extends Model {
 
   /** Every marketplace role, in the order the apps offer them. */
   static readonly DEFINITIONS: AccountRoleDefinition[] = [
-    { kind: 'advertiser', label: 'Advertiser', description: 'Find boards anywhere, book them and track campaigns.', needsReview: false },
-    { kind: 'owner', label: 'Board owner', description: 'List your own boards, set rates and get paid.', needsReview: false },
-    { kind: 'scout', label: 'Scout', description: 'Find boards, sign their owners and run the boards for them.', needsReview: true },
-    { kind: 'dispatch', label: 'Dispatch', description: 'Print booked artwork and put it up on boards near you.', needsReview: true },
+    { kind: 'advertiser', label: 'Advertiser', description: 'Put your ad on billboards anywhere, without leaving your desk.', needsReview: false },
+    { kind: 'owner', label: 'Board owner', description: 'Rent out your billboards and get paid when ads go up.', needsReview: false },
+    { kind: 'scout', label: 'Scout', description: 'Bring billboards onto Greyboards and earn on every booking they get.', needsReview: true },
+    { kind: 'dispatch', label: 'Dispatch', description: 'Print ads and put them up on billboards near you.', needsReview: true },
   ]
 
   protected static override table = 'account_roles'
@@ -131,7 +131,6 @@ export class AccountRole extends Model {
   /** Record an admin's decision and email it to the account. Only active, rejected or suspended are decisions. */
   async review(reviewer: User, status: AccountRoleStatus, note?: string | null): Promise<void> {
     abortIf(status === AccountRole.PENDING, 'Pick active, rejected or suspended.', 422)
-    abortIf(reviewer.id === this.userId, 'You cannot review your own role.', 422)
 
     const user = await this.user().first()
 

@@ -15,7 +15,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
 	if (await optionalUser(request, context)) throw redirect(next);
 
-	return { next, notice: params.get("reset") ? "Your password was changed. Sign in with the new one." : null };
+	return { next, notice: params.get("reset") ? "Password changed. Sign in with your new one." : null };
 }
 
 /** Signs in with email and password, then with a two-step code when the account asks for one. */
@@ -107,8 +107,8 @@ function TwoStepForm({
 			title="Two-step sign-in"
 			subtitle={
 				recovery
-					? "Enter one of the recovery codes you saved when you turned on two-step sign-in."
-					: "Open your authenticator app and enter the 6-digit code for Greyboards."
+					? "Enter one of your saved recovery codes."
+					: "Enter the 6-digit code from your authenticator app."
 			}
 		>
 			<Form method="post" className="space-y-5">

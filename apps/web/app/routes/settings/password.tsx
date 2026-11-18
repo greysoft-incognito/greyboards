@@ -45,7 +45,7 @@ export default function Password({ actionData }: Route.ComponentProps) {
 					<Field label="New password" error={actionData?.fieldErrors.password} hint="At least 8 characters.">
 						<Input name="password" type="password" autoComplete="new-password" minLength={8} required />
 					</Field>
-					<Field label="Type it again">
+					<Field label="Confirm password">
 						<Input name="password_confirmation" type="password" autoComplete="new-password" minLength={8} required />
 					</Field>
 					<Button type="submit" disabled={busy}>

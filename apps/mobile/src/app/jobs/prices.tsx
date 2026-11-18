@@ -128,7 +128,7 @@ function RateForm({ rate, onSaved }: { rate: DispatchRate; onSaved: (rate: Dispa
       <Field label={`Per square metre, in ${symbol}`} error={errors.pricePerSqmMinor} hint="In the currency of the boards near your base.">
         <Input value={perSqm} onChangeText={setPerSqm} keyboardType="number-pad" />
       </Field>
-      <Field label={`Smallest job, in ${symbol}`} error={errors.minFeeMinor} hint="Optional. Small boards cost at least this.">
+      <Field label={`Minimum charge, in ${symbol}`} error={errors.minFeeMinor} hint="Optional. The least you’ll charge for a small board.">
         <Input value={minFee} onChangeText={setMinFee} keyboardType="number-pad" />
       </Field>
       <Field label="Your base" error={errors.latitude ?? errors.longitude}>
@@ -139,7 +139,7 @@ function RateForm({ rate, onSaved }: { rate: DispatchRate; onSaved: (rate: Dispa
       </Field>
       {locate.problem.message ? <Callout>{locate.problem.message}</Callout> : null}
       <Button title={locate.busy ? 'Finding you…' : 'Use where I am'} variant="secondary" loading={locate.busy} onPress={findMe} />
-      <Field label="You work within, in km" error={errors.radiusKm}>
+      <Field label="How far you’ll travel, in km" error={errors.radiusKm}>
         <Input value={radiusKm} onChangeText={setRadiusKm} keyboardType="number-pad" />
       </Field>
       <Field label="Note for advertisers" error={errors.note} hint="Optional, such as your materials.">

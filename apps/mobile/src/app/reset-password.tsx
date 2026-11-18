@@ -34,8 +34,8 @@ export default function ResetPassword() {
 
   if (!token) {
     return (
-      <AuthFrame title="This link is incomplete" subtitle={subtitle}>
-        <Text variant="muted">Open the reset link from your email again, or ask for a new one.</Text>
+      <AuthFrame title="This link doesn't work" subtitle={subtitle}>
+        <Text variant="muted">Open the link from your email again.</Text>
       </AuthFrame>
     )
   }
@@ -54,7 +54,7 @@ export default function ResetPassword() {
           autoFocus
         />
       </Field>
-      <Field label="Type it again">
+      <Field label="Confirm password">
         <Input value={confirmation} onChangeText={setConfirmation} secureTextEntry autoComplete="new-password" textContentType="newPassword" />
       </Field>
       <Text variant="small">Every device signed in to your account will be signed out.</Text>

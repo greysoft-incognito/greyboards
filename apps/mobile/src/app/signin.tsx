@@ -38,7 +38,7 @@ export default function SignIn() {
         </>
       }
     >
-      {reset && !login.error ? <Callout tone="notice">Your password was changed. Sign in with the new one.</Callout> : null}
+      {reset && !login.error ? <Callout tone="notice">Password changed. Sign in with your new one.</Callout> : null}
       {problem.summary ? <Callout>{problem.summary}</Callout> : null}
       <Field label="Email" error={problem.fields.email}>
         <Input
@@ -98,8 +98,8 @@ function TwoStep({ challengeToken }: { challengeToken: string }) {
       title="Two-step sign-in"
       subtitle={
         recovery
-          ? 'Enter one of the recovery codes you saved when you turned on two-step sign-in.'
-          : 'Open your authenticator app and enter the 6-digit code for Greyboards.'
+          ? 'Enter one of your saved recovery codes.'
+          : 'Enter the 6-digit code from your authenticator app.'
       }
     >
       {problem.message ? <Callout>{problem.message}</Callout> : null}

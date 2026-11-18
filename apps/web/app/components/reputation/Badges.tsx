@@ -16,13 +16,13 @@ export const BADGES: Record<BadgeKey, BadgeLook> = {
 		label: "Verified",
 		icon: ShieldCheck,
 		className: "bg-gradient-to-br from-brand-500 to-brand-700 text-white shadow-[0_6px_16px_rgba(131,59,75,0.35)]",
-		summary: "Greyboards staff checked this person for this role by hand. Points can’t earn it.",
+		summary: "Checked in person by Greyboards staff. Points can’t earn it.",
 	},
 	proven: {
 		label: "Proven",
 		icon: Award,
 		className: "bg-white text-ink-900 ring-[1.5px] ring-amber-400 shadow-[0_4px_12px_rgba(178,106,0,0.18)]",
-		summary: "Earned automatically through work Greyboards could check, such as accepted proof photos and signed agreements. It is not a staff check.",
+		summary: "Earned through work we could confirm, like accepted proof photos and signed agreements. Staff haven’t checked them in person.",
 	},
 };
 

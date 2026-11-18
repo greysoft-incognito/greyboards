@@ -203,7 +203,7 @@ function NextStep({ job, fieldError }: { job: PrintJob; fieldError?: string }) {
 						Reserve this job
 					</Button>
 				</Form>
-				<p className="text-xs text-ink-500">This job went back after a miss, at the price the advertiser already paid. We hold it for you for a few hours so you can check the date and the materials. You see the artwork once it's held. Missing the print or go-live date loses you the job, and repeated misses suspend your dispatcher role.</p>
+				<p className="text-xs text-ink-500">The last dispatcher missed this job, so it's open again at the price already paid. Reserve it and we'll hold it for you for a few hours while you check the date and materials. Miss the print or go-live date and you lose the job. Repeated misses suspend your dispatcher role.</p>
 			</div>
 		);
 	}

@@ -1,4 +1,6 @@
+import { useEffect, useRef, useState } from "react";
 import { data, Form, Link, redirect, useNavigation } from "react-router";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import type { AccountRoleDefinition, AccountRoleKind } from "@greyboards/types";
 import { cloudflareContext } from "~/lib/cloudflare";
 import { formError, getServerApi } from "~/lib/api.server";
@@ -46,9 +48,18 @@ export async function action({ request, context }: Route.ActionArgs) {
 	}
 }
 
+const STEPS = ["What brings you to Greyboards?", "About you"] as const;
+
 export default function SignUp({ loaderData, actionData }: Route.ComponentProps) {
 	const busy = useNavigation().state !== "idle";
 	const { registrationOpen } = useLimits();
+	const hasRoles = Boolean(loaderData?.definitions.length);
+	const [step, setStep] = useState(() => (!hasRoles || (actionData && !actionData.fieldErrors.roles) ? 1 : 0));
+	const details = useRef<HTMLFieldSetElement>(null);
+
+	useEffect(() => {
+		if (step === 1 && hasRoles) details.current?.querySelector("input")?.focus();
+	}, [step, hasRoles]);
 
 	return (
 		<AuthFrame
@@ -66,25 +77,19 @@ export default function SignUp({ loaderData, actionData }: Route.ComponentProps)
 				</>
 			}
 		>
-			{!registrationOpen && <Alert>Sign-ups are closed right now. If you already have an account, sign in instead.</Alert>}
+			{!registrationOpen && <Alert>Sign-ups are closed right now.</Alert>}
 			<Form method="post" className={`space-y-5 ${registrationOpen ? "" : "hidden"}`}>
 				{loaderData?.next && <input type="hidden" name="next" value={loaderData.next} />}
+				{hasRoles && <SignUpSteps current={step} />}
 				{actionData?.error && !Object.keys(actionData.fieldErrors).length && <Alert>{actionData.error}</Alert>}
-				<Field label="Your name" error={actionData?.fieldErrors.name}>
-					<Input name="name" autoComplete="name" required defaultValue={actionData?.name} autoFocus />
-				</Field>
-				<Field label="Email" error={actionData?.fieldErrors.email}>
-					<Input name="email" type="email" autoComplete="email" required defaultValue={actionData?.email} />
-				</Field>
-				<Field label="Password" error={actionData?.fieldErrors.password} hint="At least 8 characters.">
-					<Input name="password" type="password" autoComplete="new-password" minLength={8} required />
-				</Field>
-				{loaderData?.definitions.length ? (
-					<fieldset>
-						<legend className="mb-1.5 text-sm font-semibold text-ink-900">How will you use Greyboards?</legend>
-						<p className="mb-3 text-xs text-ink-500">Pick any. You can change this later in settings.</p>
+
+				{hasRoles && (
+					<fieldset className={step === 0 ? "space-y-5" : "hidden"}>
+						<legend className="sr-only">{STEPS[0]}</legend>
+						<p className="text-sm text-ink-500">You can change this later.</p>
+						{actionData?.fieldErrors.roles && <Alert>{actionData.fieldErrors.roles}</Alert>}
 						<div className="grid gap-2">
-							{loaderData.definitions.map((definition) => {
+							{loaderData!.definitions.map((definition) => {
 								const Icon = ROLE_ICONS[definition.kind];
 
 								return (
@@ -95,33 +100,71 @@ export default function SignUp({ loaderData, actionData }: Route.ComponentProps)
 										<input type="checkbox" name="roles" value={definition.kind} defaultChecked={definition.kind === "advertiser"} className="mt-1 accent-brand-500" />
 										<Icon className="mt-0.5 h-5 w-5 shrink-0 text-brand-600" aria-hidden />
 										<span>
-											<span className="block text-sm font-semibold text-ink-900">{definition.label}</span>
-											<span className="block text-xs text-ink-500">
-												{definition.description}
-												{definition.needsReview && " We check scouts and dispatchers before they start."}
+											<span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-semibold text-ink-900">
+												{definition.label}
+												{definition.needsReview && <span className="rounded-full bg-surface-100 px-2 py-0.5 text-[11px] font-medium text-ink-500">Quick review first</span>}
 											</span>
+											<span className="block text-xs text-ink-500">{definition.description}</span>
 										</span>
 									</label>
 								);
 							})}
 						</div>
+						<Button type="button" className="w-full py-3" onClick={() => setStep(1)}>
+							Continue
+							<ArrowRight className="h-4 w-4" aria-hidden />
+						</Button>
 					</fieldset>
-				) : null}
-				<Button type="submit" className="w-full py-3" disabled={busy}>
-					{busy ? "Creating your account…" : "Create account"}
-				</Button>
-				<p className="text-center text-sm text-ink-500">
-					By creating an account you agree to the{" "}
-					<Link prefetch="intent" to="/terms" className="font-medium text-brand-700 hover:underline">
-						terms of use
-					</Link>{" "}
-					and{" "}
-					<Link prefetch="intent" to="/privacy" className="font-medium text-brand-700 hover:underline">
-						privacy policy
-					</Link>
-					.
-				</p>
+				)}
+
+				<fieldset ref={details} className={step === 1 ? "space-y-5" : "hidden"} disabled={step !== 1}>
+					<legend className="sr-only">{STEPS[1]}</legend>
+					<Field label="Your name" error={actionData?.fieldErrors.name}>
+						<Input name="name" autoComplete="name" required defaultValue={actionData?.name} autoFocus={!hasRoles} />
+					</Field>
+					<Field label="Email" error={actionData?.fieldErrors.email}>
+						<Input name="email" type="email" autoComplete="email" required defaultValue={actionData?.email} />
+					</Field>
+					<Field label="Password" error={actionData?.fieldErrors.password} hint="At least 8 characters.">
+						<Input name="password" type="password" autoComplete="new-password" minLength={8} required />
+					</Field>
+					<div className="flex gap-2">
+						{hasRoles && (
+							<Button type="button" variant="secondary" className="py-3" onClick={() => setStep(0)} aria-label="Back">
+								<ArrowLeft className="h-4 w-4" aria-hidden />
+							</Button>
+						)}
+						<Button type="submit" className="flex-1 py-3" disabled={busy}>
+							{busy ? "Creating your account…" : "Create account"}
+						</Button>
+					</div>
+					<p className="text-center text-sm text-ink-500">
+						By creating an account you agree to the{" "}
+						<Link prefetch="intent" to="/terms" className="font-medium text-brand-700 hover:underline">
+							terms of use
+						</Link>{" "}
+						and{" "}
+						<Link prefetch="intent" to="/privacy" className="font-medium text-brand-700 hover:underline">
+							privacy policy
+						</Link>
+						.
+					</p>
+				</fieldset>
 			</Form>
 		</AuthFrame>
+	);
+}
+
+/** Progress bar and title for the sign-up steps. */
+function SignUpSteps({ current }: { current: number }) {
+	return (
+		<div>
+			<div className="flex gap-1.5" aria-hidden>
+				{STEPS.map((label, index) => (
+					<span key={label} className={`h-1.5 flex-1 rounded-full transition-colors ${index <= current ? "bg-brand-500" : "bg-surface-200"}`} />
+				))}
+			</div>
+			<p className="mt-4 font-display text-xl font-bold tracking-tight text-ink-900">{STEPS[current]}</p>
+		</div>
 	);
 }

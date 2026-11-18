@@ -41,7 +41,7 @@ export function SiteFooter() {
 				<div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
 					<div className="max-w-xs">
 						<Logo />
-						<p className="mt-4 text-sm leading-relaxed text-ink-500">Billboards anywhere, booked online. Book it, see it, pay only when it is up.</p>
+						<p className="mt-4 text-sm leading-relaxed text-ink-500">Your brand, on billboards anywhere.</p>
 					</div>
 					<FooterColumn title="Explore" links={explore} />
 					<FooterColumn title="Greyboards" links={company} />

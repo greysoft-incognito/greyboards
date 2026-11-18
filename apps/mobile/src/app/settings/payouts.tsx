@@ -78,7 +78,7 @@ export default function Payouts() {
           </View>
           {!summary.enabled ? <Callout tone="warning">Payouts start soon. Add your bank details now and what you’re owed goes out once they do.</Callout> : null}
 
-          <Section title="Your bank account" description="For your scout’s cut and print jobs.">
+          <Section title="Your bank account" description="For what you earn from scouting and print jobs.">
             <AccountForm account={summary.account} banks={banks} onSaved={load} />
           </Section>
 

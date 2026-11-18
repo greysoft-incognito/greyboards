@@ -53,7 +53,7 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
 				<p className="text-sm text-brand-100">Your Greyboards</p>
 				<h1 className="mt-1 font-display text-4xl font-extrabold tracking-[-0.03em] sm:text-5xl">Hello, {firstName}</h1>
 				<p className="mt-3 max-w-lg text-brand-100">
-					{active === 1 ? "You work in 1 role" : `You work in ${active} roles`}
+					{active === 1 ? "You have 1 role" : `You have ${active} roles`}
 					{pending ? `, and ${pending === 1 ? "1 application is" : `${pending} applications are`} being checked.` : "."}
 				</p>
 				<div className="absolute top-1/2 right-8 hidden aspect-[400/260] w-64 -translate-y-1/2 rotate-2 overflow-hidden rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.35)] ring-4 ring-white/10 md:block">
