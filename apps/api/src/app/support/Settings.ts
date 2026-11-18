@@ -45,6 +45,9 @@ export interface SettingGroup {
 export class Settings {
   static readonly CACHE_KEY = 'settings:saved'
 
+  /** `{{ group.field }}` in a page's text. */
+  static readonly PLACEHOLDER = /\{\{\s*([a-z0-9_]+\.[a-z0-9_]+)\s*\}\}/g
+
   static groups(): SettingGroup[] {
     return config('settings.groups', []) as SettingGroup[]
   }
@@ -62,7 +65,7 @@ export class Settings {
   static async saved(): Promise<Record<string, unknown>> {
     return Cache.remember(Settings.CACHE_KEY, Number(config('settings.cache_seconds', 60)), async () => {
       const rows = (await Setting.query().get()).all()
-      const fields = new Map(Settings.groups().flatMap((group) => group.fields.map((field) => [field.key, field] as const)))
+      const fields = Settings.fields()
 
       return Object.fromEntries(rows.map((row) => [row.key, fields.has(row.key) ? Settings.cast(fields.get(row.key)!, row.value) : row.value]))
     })
@@ -77,6 +80,38 @@ export class Settings {
 
   static async number(key: string): Promise<number> {
     return Number(await Settings.get(key))
+  }
+
+  /** Every field admins can change, by config key. */
+  static fields(): Map<string, SettingField> {
+    return new Map(Settings.groups().flatMap((group) => group.fields.map((field) => [field.key, field] as const)))
+  }
+
+  /**
+   * `text` with each `{{ group.field }}` replaced by that setting's value in use, so pages
+   * can quote figures like the refund window. Unknown keys are left as written.
+   */
+  static async fill(text: string): Promise<string> {
+    const keys = [...new Set([...text.matchAll(Settings.PLACEHOLDER)].map((match) => match[1]))]
+    const fields = Settings.fields()
+    const values = new Map<string, string>()
+
+    for (const key of keys) {
+      const field = fields.get(key)
+
+      if (field) values.set(key, Settings.display(field, await Settings.get(key)))
+    }
+
+    return text.replace(Settings.PLACEHOLDER, (placeholder, key: string) => values.get(key) ?? placeholder)
+  }
+
+  /** A value as people read it: an option's label, yes or no, or the number or text. */
+  static display(field: SettingField, value: unknown): string {
+    if (field.type === 'select') return field.options?.find((option) => option.value === value)?.label ?? String(value ?? '')
+    if (field.type === 'boolean') return value ? 'on' : 'off'
+    if (field.type === 'number') return Number(value).toLocaleString('en-NG')
+
+    return String(value ?? '')
   }
 
   /** Validation rules for a group's form. Every field is optional; null puts it back to its default. */
