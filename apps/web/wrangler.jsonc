@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "greyboards-web",
+  "name": "greyboards",
   "main": "./workers/app.ts",
   "compatibility_date": "2026-10-01",
   "compatibility_flags": ["nodejs_compat"],
@@ -11,7 +11,7 @@
   "env": {
     // Built with CLOUDFLARE_ENV=production by Cloudflare's Git builds.
     "production": {
-      "name": "greyboards-web"
+      "name": "greyboards"
     }
   }
 }
