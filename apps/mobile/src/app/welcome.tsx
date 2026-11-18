@@ -2,15 +2,15 @@ import { StyleSheet, View } from 'react-native'
 import { router } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { Camera, CircleCheck, type LucideIcon, MapPinned } from 'lucide-react-native'
+import { Camera, Globe, type LucideIcon, MapPinned } from 'lucide-react-native'
 import { BoardScene } from '@/components/BoardScene'
 import { Button, Logo, Text } from '@/components/ui'
 import { colors, fonts, radius } from '@/theme'
 
 const PROMISES: { icon: LucideIcon; text: string }[] = [
-  { icon: MapPinned, text: 'Find boards anywhere on a live map' },
-  { icon: Camera, text: 'See photo proof your ad went up' },
-  { icon: CircleCheck, text: "Pay only when it's up" },
+  { icon: MapPinned, text: 'Explore real boards on a live map' },
+  { icon: Camera, text: 'Watch your ad go up from anywhere' },
+  { icon: Globe, text: 'Reach people in any city' },
 ]
 
 /** The first screen for visitors: a board at dusk, the Greyboards promise and a way in. */
@@ -30,7 +30,7 @@ export default function Welcome() {
       </View>
 
       <View style={[styles.copy, { paddingBottom: insets.bottom + 24 }]}>
-        <Text style={styles.headline}>Book it, see it, pay only when it's up.</Text>
+        <Text style={styles.headline}>Your brand, on billboards anywhere.</Text>
         <View style={styles.promises}>
           {PROMISES.map((promise) => (
             <View key={promise.text} style={styles.promise}>

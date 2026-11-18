@@ -1,12 +1,12 @@
 import type { ReactNode } from "react";
-import { Camera, CircleCheck, MapPinned } from "lucide-react";
+import { Camera, Globe, MapPinned } from "lucide-react";
 import { Logo } from "~/components/ui";
 import { BoardScene } from "~/components/BoardScene";
 
 const PROMISES = [
-	{ icon: MapPinned, text: "Find boards anywhere on a live map" },
-	{ icon: Camera, text: "See photo proof your ad went up" },
-	{ icon: CircleCheck, text: "Pay only when it's up" },
+	{ icon: MapPinned, text: "Explore real boards on a live map" },
+	{ icon: Camera, text: "Watch your ad go up from anywhere" },
+	{ icon: Globe, text: "Reach people in any city" },
 ];
 
 /** Layout for the sign-in, sign-up and account recovery pages: the form beside a board at dusk and the Greyboards promise. */
@@ -22,7 +22,7 @@ export function AuthFrame({ title, subtitle, children }: { title: string; subtit
 				</div>
 				<div className="flex flex-1 flex-col justify-center p-10">
 					<div>
-						<p className="max-w-sm font-display text-3xl leading-tight font-extrabold tracking-tight text-white">Book it, see it, pay only when it's up.</p>
+						<p className="max-w-sm font-display text-3xl leading-tight font-extrabold tracking-tight text-white">Your brand, on billboards anywhere.</p>
 						<ul className="mt-6 space-y-3">
 							{PROMISES.map((promise) => (
 								<li key={promise.text} className="flex items-center gap-3 text-brand-50">

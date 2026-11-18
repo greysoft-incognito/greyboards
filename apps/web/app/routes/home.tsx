@@ -1,5 +1,5 @@
 import { Link, redirect } from "react-router";
-import { ArrowRight, Camera, Map, MapPinned, ShieldCheck, Wallet } from "lucide-react";
+import { ArrowRight, Camera, Map, ShieldCheck, Wallet } from "lucide-react";
 import { optionalUser } from "~/lib/session.server";
 import { ROLE_ICONS } from "~/components/AccountRoles";
 import { Logo, buttonClass } from "~/components/ui";
@@ -10,10 +10,10 @@ import type { Route } from "./+types/home";
 
 export function meta(_: Route.MetaArgs) {
 	return [
-		{ title: "Greyboards · Billboards anywhere, booked online" },
+		{ title: "Greyboards · Your brand on billboards anywhere" },
 		{
 			name: "description",
-			content: "Find a billboard anywhere, book it, upload your artwork and see photo proof it went up. Pay only when it's up.",
+			content: "Explore billboards around the world on a live map, book the one that fits your brand and watch your ad go up from wherever you are.",
 		},
 	];
 }
@@ -25,17 +25,17 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 }
 
 const STEPS = [
-	{ icon: Map, title: "Find a board", text: "Search a live map of verified boards. See each one's photos, size and which way it faces." },
-	{ icon: ShieldCheck, title: "Book it", text: "Pick your dates and upload your artwork. We hold your payment, not the owner." },
-	{ icon: Camera, title: "See it go up", text: "Geotagged photos from the site show your ad on the board, without you ever visiting." },
-	{ icon: Wallet, title: "Pay when it's up", text: "The owner is paid only once the proof is accepted." },
+	{ icon: Map, title: "Find a board", text: "Explore real boards on a live map, with photos, size and the traffic that passes them." },
+	{ icon: ShieldCheck, title: "Book it", text: "Pick your dates and upload your artwork. That's it." },
+	{ icon: Camera, title: "See it go up", text: "Photos taken at the board show your ad live, wherever you are in the world." },
+	{ icon: Wallet, title: "Rest easy", text: "We hold your payment until your ad is up, so you never pay for a blank board." },
 ];
 
 const ROLES = [
-	{ kind: "advertiser", title: "Advertisers", text: "Book boards anywhere in the world and track every campaign from one place.", time: "dusk", art: "brand", headline: "Summer is here" },
-	{ kind: "owner", title: "Board owners", text: "A scout signs you up and runs your board. You get texts and bank transfers.", time: "day", art: "empty", headline: "Your ad here" },
-	{ kind: "scout", title: "Scouts", text: "Find boards, sign their owners and earn on every booking of the boards you bring in.", time: "night", art: "dark", headline: "Fresh daily" },
-	{ kind: "dispatch", title: "Dispatchers", text: "Reserve print-and-post jobs near you and get paid once the proof is accepted.", time: "day", art: "brand", headline: "Up by Friday" },
+	{ kind: "advertiser", title: "Advertisers", text: "Put your brand on the right streets in any city, and follow every campaign from one place.", time: "dusk", art: "brand", headline: "Summer is here" },
+	{ kind: "owner", title: "Board owners", text: "Fill your boards with great brands. A scout can list and run them for you.", time: "day", art: "empty", headline: "Your ad here" },
+	{ kind: "scout", title: "Scouts", text: "Find boards, sign up their owners and earn on every booking they get.", time: "night", art: "dark", headline: "Fresh daily" },
+	{ kind: "dispatch", title: "Dispatchers", text: "Print and put up ads on boards near you, and earn on every job.", time: "day", art: "brand", headline: "Up by Friday" },
 ] as const;
 
 /** Price tags on the drawn map, placed in percent of the hero. */
@@ -79,12 +79,8 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 
 				<div className="mx-auto grid max-w-7xl items-end gap-6 px-4 pt-10 pb-12 sm:px-6 lg:min-h-[44rem] lg:grid-cols-[minmax(0,30rem)_1fr] lg:pt-16 lg:pb-16">
 					<div className="glass rounded-[1.75rem] p-6 sm:p-8 lg:self-center">
-						<p className="inline-flex items-center gap-2 rounded-full bg-brand-50 px-3 py-1.5 text-xs font-bold tracking-wide text-brand-700 uppercase">
-							<MapPinned className="h-4 w-4" aria-hidden />
-							Billboards anywhere, booked online
-						</p>
-						<h1 className="mt-5 font-display text-4xl leading-[1.08] font-extrabold tracking-[-0.03em] text-ink-900 sm:text-5xl">Book it, see it, pay only when it's up.</h1>
-						<p className="mt-4 text-lg text-ink-500">Find a board on the map, upload your artwork and get photo proof it went up, without ever visiting the site.</p>
+						<h1 className="font-display text-4xl leading-[1.08] font-extrabold tracking-[-0.03em] text-ink-900 sm:text-5xl">Your brand, on billboards anywhere.</h1>
+						<p className="mt-4 text-lg text-ink-500">Explore real boards on a live map, pick the one that fits your brand and watch your ad go up from wherever you are.</p>
 						<div className="mt-7 flex flex-wrap gap-3">
 							<Link prefetch="intent" to="/signup" className={buttonClass("primary", "min-h-12 px-6 text-base")}>
 								Get started
@@ -166,7 +162,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 				<div className="bg-brand-sweep mt-20 flex flex-col items-start gap-6 rounded-[1.75rem] p-8 text-white shadow-[0_16px_36px_rgba(88,38,52,0.35)] sm:flex-row sm:items-center sm:justify-between sm:p-10">
 					<div>
 						<p className="font-display text-2xl font-extrabold tracking-tight sm:text-3xl">Your next board is already on the map.</p>
-						<p className="mt-2 text-brand-100">Create an account in a minute. You only pay when your ad is up.</p>
+						<p className="mt-2 text-brand-100">Create an account in a minute and start exploring.</p>
 					</div>
 					<Link prefetch="intent" to="/signup" className={buttonClass("secondary", "min-h-12 px-6 text-base")}>
 						Get started
