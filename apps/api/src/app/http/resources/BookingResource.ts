@@ -12,6 +12,7 @@ import { Messages } from '@app/services/Messages'
 import { Review } from '@app/models/Review'
 import { Reviews } from '@app/services/Reviews'
 import { Shares } from '@app/services/Shares'
+import { ScreenPlayer } from '@app/services/ScreenPlayer'
 import { Disputes } from '@app/services/Disputes'
 import { Settings } from '@app/support/Settings'
 import { DisputeCollection } from './DisputeCollection'
@@ -54,7 +55,7 @@ export class BookingResource extends Resource {
     return this
   }
 
-  private async details(booking: Booking) {
+  private async details(booking: Booking, board: Board | null) {
     const viewer = this.viewer!
     const job = await PrintJob.query().where({ bookingId: booking.id }).first()
     const manages = await BookingPolicy.managesBoard(viewer, booking)
@@ -71,6 +72,8 @@ export class BookingResource extends Resource {
       },
       printJob: job ? { id: job.id, status: job.displayStatus(), priced: job.isPriced(), dueOn: Day.of(job.dueOn), printPhotoUrl: await job.printPhotoUrl() } : null,
       proof: await new ProofSummary(booking).for(viewer).data(),
+      /** On a digital screen: how often the ad played, as the screen's player reported it. */
+      plays: board?.isDigital() ? await ScreenPlayer.summary(booking) : null,
       cancellation: BookingPolicy.owns(viewer, booking) && booking.status === 'paid' ? await Refunds.quote(booking) : null,
       shares: booking.shared ? await BookingResource.shares(booking, viewer) : null,
       /** On a shared booking: when its lock for the sharers ends, whether the whole board is open to bids, and the bidding once it started. */
@@ -169,6 +172,8 @@ export class BookingResource extends Resource {
       endsOn,
       periods: booking.periods,
       face: face ? { id: face.id, label: face.label } : null,
+      /** On a digital screen: the slots in the loop it takes, and the part of the day. */
+      slots: board?.isDigital() ? { start: booking.slotStart, count: booking.slots, daypart: booking.daypart, hourFrom: booking.hourFrom, hourTo: booking.hourTo } : null,
       rate: { amountMinor: booking.rateMinor, currency: booking.currency, period: booking.ratePeriod },
       amountMinor: booking.amountMinor,
       printFeeMinor: booking.printFeeMinor,
@@ -188,7 +193,7 @@ export class BookingResource extends Resource {
             }
           : null,
       board: board ? await new BoardResource(board).data() : null,
-      ...(this.detailed ? await this.details(booking) : {}),
+      ...(this.detailed ? await this.details(booking, board ?? null) : {}),
       paidAt: booking.paidAt,
       releasedAt: booking.releasedAt,
       cancelledAt: booking.cancelledAt,

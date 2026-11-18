@@ -4,6 +4,7 @@ import type { QueryBuilder } from 'arkormx'
 import { BoardPolicy } from '@app/policies/BoardPolicy'
 import { Commissions } from '@app/services/Commissions'
 import { OwnerPricing } from '@app/services/OwnerPricing'
+import { DigitalSlots, type Daypart, type SlotPick } from '@app/services/DigitalSlots'
 import { Refunds } from '@app/services/Refunds'
 import { Shares } from '@app/services/Shares'
 import { Payouts } from '@app/services/Payouts'
@@ -56,6 +57,8 @@ interface HoldTerms {
   holdMinutes: number
   source: BookingSource
   shared?: boolean
+  /** On a screen, the slots and hours it takes. Anywhere else, the one slot all day. */
+  pick?: SlotPick
 }
 
 /** A run of days a booking takes on a board. */
@@ -99,6 +102,12 @@ export class Booking extends Model {
   declare source: BookingSource
   /** Split between advertisers, each paying a share. `advertiserId` is the organiser. */
   declare shared: boolean
+  /** On a digital screen: the first slot of the loop it takes, how many, and the hours. Elsewhere 0, 1 and all day. */
+  declare slotStart: number
+  declare slots: number
+  declare daypart: Daypart
+  declare hourFrom: number
+  declare hourTo: number
   declare artworkPath: string | null
   declare artworkDisk: string | null
   declare artworkWidth: number | null
@@ -168,6 +177,9 @@ export class Booking extends Model {
     releasedAt: 'released_at',
     paidAt: 'paid_at',
     cancelledAt: 'cancelled_at',
+    slotStart: 'slot_start',
+    hourFrom: 'hour_from',
+    hourTo: 'hour_to',
   }
 
   protected override casts = {
@@ -197,7 +209,7 @@ export class Booking extends Model {
    * they pay. Holds that ran out are let go first; dates someone else holds or booked, the
    * owner blocked, or that are open for bids are refused.
    */
-  static async hold(board: Board, face: BoardFace, advertiser: User, startsOn: string, periods: number, shares = 1): Promise<Booking> {
+  static async hold(board: Board, face: BoardFace, advertiser: User, startsOn: string, periods: number, shares = 1, slots?: { slots: number; daypart: Daypart }): Promise<Booking> {
     const endsOn = await Booking.checkDates(board, face, advertiser, startsOn, periods)
     const shared = shares > 1
     const payHours = shared ? await Booking.checkShares(startsOn, shares) : 0
@@ -208,9 +220,10 @@ export class Booking extends Model {
 
     abortIf(open >= Booking.MAX_HOLDS, 'Finish or cancel a checkout you started before booking another board.', 429)
 
-    const rateMinor = board.rateFor(face)!
+    const pick = board.isDigital() ? await DigitalSlots.pick(board, face, startsOn, endsOn, slots?.slots ?? 1, slots?.daypart ?? 'all_day') : undefined
+    const rateMinor = pick ? await DigitalSlots.price(board, face, pick.slots, pick.daypart) : board.rateFor(face)!
     const holdMinutes = shared ? payHours * 60 : await Settings.number('bookings.hold_minutes')
-    const booking = await Booking.reserve(board, face, advertiser, { startsOn, endsOn, periods, rateMinor, rentMinor: rateMinor * periods, holdMinutes, source: 'book', shared })
+    const booking = await Booking.reserve(board, face, advertiser, { startsOn, endsOn, periods, rateMinor, rentMinor: rateMinor * periods, holdMinutes, source: 'book', shared, pick })
 
     if (shared) await Shares.create(booking, advertiser, shares)
 
@@ -256,6 +269,7 @@ export class Booking extends Model {
       rentMinor,
       holdMinutes: (await Settings.number('bids.pay_hours')) * 60,
       source,
+      pick: board.isDigital() ? { ...DigitalSlots.WHOLE, slots: (await DigitalSlots.loop(board)).slots } : undefined,
     })
   }
 
@@ -308,9 +322,10 @@ export class Booking extends Model {
         ownerProfileId: board.ownerProfileId,
         source: terms.source,
         shared: !!terms.shared,
+        ...(terms.pick ?? DigitalSlots.WHOLE),
       })
     } catch (error) {
-      abortIf(Booking.isOverlap(error), 'Someone else has some of those dates. Pick other dates.', 409)
+      abortIf(Booking.isOverlap(error), terms.pick ? 'Someone just took some of those slots. Try again, or pick other dates.' : 'Someone else has some of those dates. Pick other dates.', 409)
 
       throw error
     }
@@ -324,8 +339,9 @@ export class Booking extends Model {
   /**
    * Days already taken on a face of `board` between two days: bookings, days the owner
    * blocked for the face or the whole board, and days open for bids. At most 200 of each.
+   * For a screen's `calendar`, booked days count only when no slot is left on them.
    */
-  static async taken(board: Board, face: BoardFace, from: string, to: string): Promise<BookedDays[]> {
+  static async taken(board: Board, face: BoardFace, from: string, to: string, calendar = false): Promise<BookedDays[]> {
     await Booking.expireHolds()
 
     const bookings = await Booking.query()
@@ -335,11 +351,13 @@ export class Booking extends Model {
       .oldest('startsOn')
       .limit(200)
       .get()
+    // A screen's calendar shows only the days with no slot left; the rest can still take bookings.
+    const booked = calendar && board.isDigital() ? await DigitalSlots.fullDays(board, face, from, to) : bookings.all().map((booking) => booking.days())
     const blocks = await Booking.blocks(board, face, from, to).oldest('startsOn').limit(200).get()
     const auctions = await Auction.covering(face, from, to).oldest('startsOn').limit(200).get()
 
     return [
-      ...bookings.all().map((booking) => booking.days()),
+      ...booked,
       ...blocks.all().map((block) => ({ ...block.days(), blocked: true })),
       ...auctions.all().map((auction) => ({ ...auction.days(), auction: true })),
     ].sort((first, second) => first.startsOn.localeCompare(second.startsOn))

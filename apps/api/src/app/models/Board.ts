@@ -54,6 +54,9 @@ export interface BoardDetails {
   printsOwn?: boolean
   /** What they charge for that, in minor units. Null uses the standard print price. */
   printFeeMinor?: number | null
+  /** On a digital screen: slots in its loop, and seconds each. Null uses the settings. */
+  loopSlots?: number | null
+  slotSeconds?: number | null
   /** The rate entered is what the owner receives; the listed rate adds the other shares on top. */
   ownerNet?: boolean
 }
@@ -112,6 +115,12 @@ export class Board extends Model {
   /** The owner's amount per period, when `ownerNet` is on. */
   declare ownerRateMinor: string | number | null
   declare rateMinor: string | number | null
+  /** On a digital screen: slots in the loop and seconds each, or null for the settings' defaults. */
+  declare loopSlots: number | null
+  declare slotSeconds: number | null
+  /** The hash of the token a screen's player signs in with, and when it last checked in. */
+  declare playerTokenHash: string | null
+  declare playerSeenAt: Date | null
   declare currency: string
   declare ratePeriod: BoardRatePeriod
   declare printsOwn: boolean
@@ -178,6 +187,10 @@ export class Board extends Model {
     ownerRateMinor: 'owner_rate_minor',
     ratePeriod: 'rate_period',
     printsOwn: 'prints_own',
+    loopSlots: 'loop_slots',
+    slotSeconds: 'slot_seconds',
+    playerTokenHash: 'player_token_hash',
+    playerSeenAt: 'player_seen_at',
     ratingSum: 'rating_sum',
     ratingCount: 'rating_count',
     printFeeMinor: 'print_fee_minor',
@@ -390,6 +403,11 @@ export class Board extends Model {
 
   kindLabel(): string {
     return Board.kindLabel(this.kind)
+  }
+
+  /** Whether it is a screen that sells slots in a loop. */
+  isDigital(): boolean {
+    return this.kind === 'digital'
   }
 
   isListed(): boolean {

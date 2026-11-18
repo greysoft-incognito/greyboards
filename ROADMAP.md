@@ -34,7 +34,7 @@ What's built and what's left, following the phases in [docs/proposal.md](docs/pr
 
 ## Phase 3: Scale
 
-- [ ] Digital slot scheduling and play logs
+- [x] Digital slot scheduling and play logs
 - [ ] Traffic estimates and price guidance
 - [x] Owner bulk import and price rules
 - [ ] Public API for agencies
