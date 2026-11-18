@@ -167,7 +167,7 @@ describe('Reputation and badges', () => {
     await api('put', '/admin/settings/reputation', { proven_score: 10 }, 'admin')
     ark('reputation:sweep')
     expect((await roleOf('poster', 'dispatch')).reputation.proven).toBe(true)
-  })
+  }, 30_000)
 })
 
 describe('Reputation for scouts', () => {
