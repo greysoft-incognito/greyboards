@@ -21,7 +21,7 @@ export const DOCUMENTS: DocumentSeed[] = [
     summary: 'Billboards anywhere, booked online. Book it, see it, pay only when it is up.',
     sort: 0,
     body: `
-Greyboards is a marketplace for outdoor advertising that works entirely online. Find a billboard, book it, upload your artwork and see photo proof that it went up, without ever visiting the site. We are starting in Kaduna and growing city by city.
+Greyboards is a marketplace for outdoor advertising that works entirely online. Find a billboard anywhere in the world, book it, upload your artwork and see photo proof that it went up, without ever visiting the site. New cities and countries are added as scouts bring their boards in.
 
 ## For advertisers
 
@@ -98,7 +98,7 @@ Some roles have their own terms as well: [board owner terms](/pages/owner-terms)
 
 ## Your account
 
-- You must be 18 or older, and able to enter into a binding agreement.
+- You must be 18 or older, or the age of majority where you live if that is higher, and able to enter into a binding agreement.
 - Give your real name and an email address you can open.
 - Keep your password to yourself. You are responsible for what happens in your account.
 - Scouts and dispatchers are checked before they can take on work, and may be asked for ID and bank details.
@@ -139,7 +139,9 @@ We work hard to keep Greyboards running and to check boards and proof, but we ca
 
 ## Changes and law
 
-We may update these terms as Greyboards changes. We'll update the date on this page, and tell you by email or in the app when a change is important. These terms are governed by the laws of the Federal Republic of Nigeria.
+We may update these terms as Greyboards changes. We'll update the date on this page, and tell you by email or in the app when a change is important. These terms are governed by the laws of the Federal Republic of Nigeria, where Greysoft is based. This doesn't take away any rights the law where you live gives you that can't be waived by agreement.
+
+Boards are in many countries. Local law where a board stands, including advertising and signage rules, still applies to bookings on it.
 `,
   },
   {
@@ -149,7 +151,7 @@ We may update these terms as Greyboards changes. We'll update the date on this p
     summary: 'What Greyboards collects, why, who sees it, and the choices you have.',
     sort: 11,
     body: `
-This policy explains what Greyboards collects when you use it, why, and what you can do about it. Greyboards is run by Greysoft ("we", "us"), and we handle your information in line with the Nigeria Data Protection Act 2023.
+This policy explains what Greyboards collects when you use it, why, and what you can do about it. Greyboards is run by Greysoft ("we", "us"). We handle your information in line with the data protection laws that apply to you, such as the GDPR in the European Union and United Kingdom and the Nigeria Data Protection Act.
 
 ## What we collect
 
@@ -185,13 +187,17 @@ Advertisers see a board's photos, location and details. The people on a booking 
 
 We keep your account details while your account is open. Payment, payout and booking records are kept for as long as tax and accounting law requires, even after you delete your account.
 
+## Moving information between countries
+
+Greyboards is used around the world, so your information may be stored or handled in countries other than your own, including Nigeria, where Greysoft is based, and wherever our providers run their servers. When it moves, we use the safeguards the law requires, such as standard contract terms.
+
 ## Your rights
 
 You can ask to see, correct or delete your information, object to how we use it, or take a copy of it.
 
 - Change your details in Settings.
 - Delete your account from Settings → Delete account.
-- For anything else, contact us through [greysoft.ng](https://greysoft.ng). You can also complain to the Nigeria Data Protection Commission.
+- For anything else, contact us through [greysoft.ng](https://greysoft.ng). You can also complain to the data protection authority where you live.
 
 See our [cookie policy](/pages/cookies) for what the website stores in your browser.
 
@@ -257,7 +263,7 @@ If the ad wasn't put up as booked, was put up late or wrongly, or the board was 
 
 ## How refunds are paid
 
-Refunds go back to the card or account you paid with, through our payment provider. Most arrive within 5 to 10 working days, depending on your bank.
+Refunds go back to the card or account you paid with, in the currency you paid in, through our payment provider. Most arrive within 5 to 10 working days, depending on your bank and country.
 `,
   },
   {
@@ -267,12 +273,12 @@ Refunds go back to the card or account you paid with, through our payment provid
     summary: 'What ads can and can’t show on boards booked through Greyboards.',
     sort: 14,
     body: `
-Billboards are seen by everyone who passes, children included. Every ad booked through Greyboards must follow these standards, the law, and the rules of the board's owner.
+Billboards are seen by everyone who passes, children included. Every ad booked through Greyboards must follow these standards, the law where the board stands, and the rules of the board's owner. Where local rules are stricter than ours, the local rules win.
 
 ## Approvals
 
-- Advertisers are responsible for any approval their ad needs, including vetting by the Advertising Regulatory Council of Nigeria (ARCON) where it applies.
-- Owners are responsible for the board's own permits from the state signage agency and the local government.
+- Advertisers are responsible for any approval their ad needs in the board's country, such as pre-approval by an advertising regulator where one is required.
+- Owners are responsible for the board's own permits from the local authorities.
 
 ## Not allowed
 
@@ -280,8 +286,8 @@ Billboards are seen by everyone who passes, children included. Every ad booked t
 - False or misleading claims about a product, price or result.
 - Hate, harassment, or content that demeans people for who they are.
 - Violence, weapons, or sexual content.
-- Tobacco, and gambling or alcohol ads where the law or the board's location doesn't allow them.
-- Political or religious ads that break electoral law or attack others.
+- Tobacco, and gambling, alcohol or other restricted products where the law or the board's location doesn't allow them.
+- Political or religious ads that break local election law or attack others.
 - Another business's brand, or a person's image, used without permission.
 - Content that could distract or confuse drivers, like fake road signs.
 
@@ -334,7 +340,7 @@ You can ask us to stop taking new bookings for your board at any time. Bookings 
     summary: 'What scouts and dispatchers agree to when they work through Greyboards.',
     sort: 16,
     body: `
-These terms apply to scouts and dispatchers. They add to our [terms of use](/terms). You work for yourself, not for Greysoft, and you are responsible for your own tax.
+These terms apply to scouts and dispatchers. They add to our [terms of use](/terms). You work for yourself, not for Greysoft, and you are responsible for your own tax and any registration your country requires.
 
 ## Getting approved
 
@@ -349,6 +355,7 @@ Before you take on work, we check who you are. We may ask for a photo of a gover
 ## For dispatch
 
 - Set your own price for printing and posting, and only reserve jobs you can do.
+- Follow local rules for posting, including any permits or safety requirements where the board stands.
 - Print the artwork as approved, and show the finished print {{printing.print_by_days}} days before the ad goes live.
 - Post the ad by the start date, and send at least {{proofs.min_photos}} proof photos taken within {{proofs.max_distance_m}} metres of the board.
 - Missing a deadline loses you the job, and repeated misses can suspend your account.

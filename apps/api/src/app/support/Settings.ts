@@ -109,7 +109,7 @@ export class Settings {
   static display(field: SettingField, value: unknown): string {
     if (field.type === 'select') return field.options?.find((option) => option.value === value)?.label ?? String(value ?? '')
     if (field.type === 'boolean') return value ? 'on' : 'off'
-    if (field.type === 'number') return Number(value).toLocaleString('en-NG')
+    if (field.type === 'number') return Number(value).toLocaleString('en')
 
     return String(value ?? '')
   }
