@@ -20,11 +20,23 @@ API_DIR="$CURRENT/apps/api"
 
 export NODE_ENV=production
 export CI=true
+export COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 
 log() { printf '\n==> %s\n' "$*"; }
 
-pnpm_cmd() {
-  if command -v pnpm >/dev/null 2>&1; then pnpm "$@"; else corepack pnpm "$@"; fi
+# Puts pnpm on PATH, through corepack shims when it isn't installed globally,
+# so install scripts that spawn `pnpm` themselves can find it.
+ensure_pnpm() {
+  command -v pnpm >/dev/null 2>&1 && return
+
+  if ! command -v corepack >/dev/null 2>&1; then
+    echo "pnpm is not on PATH and corepack is unavailable. Install pnpm (see docs/DEPLOY.md)." >&2
+    exit 1
+  fi
+
+  mkdir -p "$DEPLOY_PATH/.bin"
+  corepack enable --install-directory "$DEPLOY_PATH/.bin" pnpm
+  export PATH="$DEPLOY_PATH/.bin:$PATH"
 }
 
 switch_to() {
@@ -105,18 +117,19 @@ deploy() {
   tar -xzf "$RELEASES/$RELEASE.tar.gz" -C "$dir"
   rm -f "$RELEASES/$RELEASE.tar.gz"
   link_shared "$RELEASE"
+  ensure_pnpm
 
   log "Installing dependencies"
-  (cd "$dir" && pnpm_cmd install --frozen-lockfile --filter '@greyboards/api...')
+  (cd "$dir" && pnpm install --frozen-lockfile --filter '@greyboards/api...')
 
   log "Building"
-  (cd "$dir/apps/api" && pnpm_cmd exec ark build)
+  (cd "$dir/apps/api" && pnpm exec ark build)
 
   if [ "$SKIP_MIGRATIONS" = "true" ]; then
     log "Skipping migrations"
   else
     log "Running migrations"
-    (cd "$dir/apps/api" && pnpm_cmd exec ark migrate --no-interaction)
+    (cd "$dir/apps/api" && pnpm exec ark migrate --no-interaction)
   fi
 
   log "Switching current to $RELEASE"

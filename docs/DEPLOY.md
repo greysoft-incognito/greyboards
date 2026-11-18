@@ -9,7 +9,7 @@ Install these on the server before the first deploy. Versions are the minimum te
 | Software | Version | Why |
 | --- | --- | --- |
 | Node.js | 24 (22 at least) | Runs the API |
-| pnpm | 10 | Installs and builds the API |
+| pnpm | 10 | Installs and builds the API. Without a global install, the deploy uses corepack (bundled with Node 24) instead. |
 | pm2 | latest | Keeps the API running and restarts it on deploy |
 | PostgreSQL | 16 | Database |
 | PostGIS | 3 | Board locations and distance searches (`CREATE EXTENSION postgis`) |
@@ -231,7 +231,8 @@ cd /var/www/greyboards-api/current/apps/api && pnpm exec ark users:role you@exam
 ## Troubleshooting
 
 - **`Missing .../shared/.env`**: create it (setup step 3), or set `API_DOTENV`.
-- **`pnpm: command not found` or `pm2: command not found`**: they aren't on the login shell's `PATH`; see [Dependencies](#dependencies).
+- **`pm2: command not found`, or `pnpm` and `corepack` both missing**: they aren't on the login shell's `PATH`; see [Dependencies](#dependencies).
+- **`Unable to sync ArkORM model registry: Models directory not found`**: a harmless warning during install; the API's models live in `src/app/models`.
 - **`extension "postgis" is not available`**: install PostGIS for your PostgreSQL version, e.g. `postgresql-16-postgis-3`.
 - **Health check failed**: the release was rolled back. Check `pm2 logs greyboards-api` and `shared/storage/logs`, and that `APP_PORT` in `.env` is the port the API listens on.
 - **A migration failed**: nothing was switched. Fix it and deploy again.
