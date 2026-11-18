@@ -4,7 +4,10 @@ import { CalendarClock, MapPin } from 'lucide-react-native'
 import type { PrintJob, PrintJobStatus } from '@greyboards/types'
 import { BoardCover, boardPlace } from '@/components/boards/BoardBits'
 import { Text } from '@/components/ui'
+import { formatDistance, formatMoney } from '@/lib/format'
 import { colors, fonts, radius, surfaces } from '@/theme'
+
+export { formatDistance, formatMoney }
 
 const STATUS: Record<PrintJobStatus, { label: string; background: string; color: string }> = {
   open: { label: 'Open', background: colors.emerald50, color: colors.available },
@@ -26,19 +29,9 @@ export function JobStatusBadge({ status }: { status: PrintJobStatus }) {
   )
 }
 
-/** "₦175,000" from minor units. */
-export function formatMoney(amountMinor: number, currency: string) {
-  return new Intl.NumberFormat('en-NG', { style: 'currency', currency, maximumFractionDigits: 0 }).format(amountMinor / 100)
-}
-
 /** "Mon 3 Feb" for a 'YYYY-MM-DD' day. */
 export function formatDay(day: string) {
   return new Date(`${day}T00:00:00`).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })
-}
-
-/** "800 m" close by, "12.4 km" further out. */
-export function formatDistance(metres: number) {
-  return metres < 1000 ? `${metres} m` : `${(metres / 1000).toFixed(1)} km`
 }
 
 /** A job in a list: the board, how far, when it's due, and the pay. */
