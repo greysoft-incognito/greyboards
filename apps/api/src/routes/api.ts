@@ -9,6 +9,7 @@ import ShareController from 'src/app/http/controllers/ShareController'
 import MessageController from 'src/app/http/controllers/MessageController'
 import ReviewController from 'src/app/http/controllers/ReviewController'
 import DisputeController from 'src/app/http/controllers/DisputeController'
+import CampaignReportController from 'src/app/http/controllers/CampaignReportController'
 import OfferController from 'src/app/http/controllers/OfferController'
 import BookingController from 'src/app/http/controllers/BookingController'
 import PaymentController from 'src/app/http/controllers/PaymentController'
@@ -165,6 +166,15 @@ Router.post('/bookings/:booking/review', [ReviewController, 'store'], [auth, lim
 
 // Disputes: anyone on a booking raises one, staff decide it.
 Router.post('/bookings/:booking/disputes', [DisputeController, 'store'], [auth, limiter(10, 60)])
+
+// Campaign reports: bookings grouped into one page with their proof, shared by link.
+Router.get('/reports', [CampaignReportController, 'index'], [auth])
+Router.get('/reports/bookings', [CampaignReportController, 'bookings'], [auth])
+Router.post('/reports', [CampaignReportController, 'store'], [auth, limiter(20, 60)])
+Router.get('/reports/shared/:token', [CampaignReportController, 'shared'], [limiter(120, 60)])
+Router.get('/reports/:report', [CampaignReportController, 'show'], [auth])
+Router.post('/reports/:report/link', [CampaignReportController, 'relink'], [auth, limiter(20, 60)])
+Router.delete('/reports/:report', [CampaignReportController, 'destroy'], [auth])
 
 // Proof the ad is up: geotagged photos from the billposter, checked by the advertiser, release the money.
 Router.post('/bookings/:booking/proofs', [ProofController, 'store'], [auth, limiter(30, 60)])

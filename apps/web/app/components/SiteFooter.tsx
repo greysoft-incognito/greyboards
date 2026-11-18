@@ -6,7 +6,7 @@ export function SiteFooter() {
 	const documents = useDocuments();
 
 	return (
-		<footer className="border-t border-surface-100">
+		<footer className="border-t border-surface-100 print:hidden">
 			<div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-8 text-sm text-ink-500 sm:flex-row sm:items-center sm:justify-between sm:px-6">
 				<p>© {new Date().getFullYear()} Greysoft</p>
 				<nav aria-label="About and policies" className="flex flex-wrap gap-x-5 gap-y-2">

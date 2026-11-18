@@ -25,6 +25,7 @@ export default [
 		route("bookings", "routes/bookings/index.tsx"),
 		route("bookings/:id", "routes/bookings/booking.tsx"),
 		route("shares/:token", "routes/shares/invite.tsx"),
+		route("reports", "routes/reports/index.tsx"),
 		route("jobs", "routes/jobs/index.tsx"),
 		route("jobs/:id", "routes/jobs/job.tsx"),
 		route("checkout/complete", "routes/checkout-complete.tsx"),
@@ -63,6 +64,7 @@ export default [
 	layout("routes/site-layout.tsx", [
 		route("pages/:slug", "routes/document.tsx"),
 		route("agreements/:token", "routes/agreement.tsx"),
+		route("reports/:token", "routes/reports/shared.tsx"),
 		...(["privacy", "terms", "about"] as const).map((slug) => route(slug, "routes/document.tsx", { id: `document-${slug}` })),
 	]),
 ] satisfies RouteConfig;
