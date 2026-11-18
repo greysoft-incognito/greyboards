@@ -41,6 +41,8 @@ export const colors = {
 
   amber50: '#fffbeb',
   amber200: '#fde68a',
+  amber400: '#fbbf24',
+  amber500: '#f59e0b',
   amber700: '#b45309',
   amber900: '#78350f',
 } as const

@@ -29,6 +29,7 @@ export default function Account() {
       label: document.title,
       open: () => router.push({ pathname: '/pages/[slug]', params: { slug: document.slug } }),
     })),
+    { label: 'Reputation and badges', open: () => router.push('/reputation') },
   ]
 
   const status: Record<string, Status | undefined> = {
@@ -64,7 +65,6 @@ export default function Account() {
           </Text>
         </View>
       </Pressable>
-
 
       {SETTINGS_GROUPS.map((group) => (
         <View key={group.label} style={styles.group}>
