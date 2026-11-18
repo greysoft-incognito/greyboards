@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { router } from 'expo-router'
 import { SettingsPage, Section } from '@/components/settings/SettingsPage'
 import { Button, Callout, Field, Input, Text } from '@/components/ui'
 import { api } from '@/lib/api'
@@ -12,7 +11,7 @@ export default function DeleteAccount() {
   const [password, setPassword] = useState('')
 
   const destroy = async () => {
-    if (!(await confirm('Delete your account?', 'Every book and photo goes for good. This cannot be undone.', 'Delete everything'))) return
+    if (!(await confirm('Delete your account?', 'Your account goes for good and you’re signed out everywhere. This cannot be undone.', 'Delete everything'))) return
 
     await remove.run(async () => {
       await api.account.remove({ password }).send()
@@ -23,14 +22,7 @@ export default function DeleteAccount() {
   return (
     <SettingsPage title="Delete account">
       <Section danger>
-        <Text>This deletes your account, every book and every photo for good. Links you've shared stop working.</Text>
-        <Text variant="muted">
-          Want to keep them?{' '}
-          <Text variant="link" accessibilityRole="link" onPress={() => router.push('/settings/data')}>
-            Download your data
-          </Text>{' '}
-          first.
-        </Text>
+        <Text>This deletes your account and signs you out everywhere, for good.</Text>
         <Field label="Enter your password to confirm" error={remove.problem.fields.password}>
           <Input value={password} onChangeText={setPassword} secureTextEntry autoComplete="current-password" textContentType="password" />
         </Field>
