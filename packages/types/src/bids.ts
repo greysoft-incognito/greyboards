@@ -35,6 +35,10 @@ export interface Auction {
   /** The least the next bid may be, while open. */
   nextMinimumMinor: number | null
   face: { id: ID; label: string } | null
+  /** On bidding for a whole shared board: that shared booking. */
+  takeoverOf: ID | null
+  /** While the winner of a shared board pays: when their time runs out. */
+  payBy: string | null
   /** The viewer's own bid. */
   myBid: {
     amountMinor: number

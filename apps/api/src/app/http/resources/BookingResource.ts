@@ -1,3 +1,4 @@
+import { Auction } from '@app/models/Auction'
 import type { Booking } from '@app/models/Booking'
 import type { Board } from '@app/models/Board'
 import { PrintJob } from '@app/models/PrintJob'
@@ -15,6 +16,7 @@ import { Disputes } from '@app/services/Disputes'
 import { Settings } from '@app/support/Settings'
 import { DisputeCollection } from './DisputeCollection'
 import { Resource } from 'resora'
+import { AuctionResource } from './AuctionResource'
 import { BoardResource } from './BoardResource'
 
 /**
@@ -71,8 +73,8 @@ export class BookingResource extends Resource {
       proof: await new ProofSummary(booking).for(viewer).data(),
       cancellation: BookingPolicy.owns(viewer, booking) && booking.status === 'paid' ? await Refunds.quote(booking) : null,
       shares: booking.shared ? await BookingResource.shares(booking, viewer) : null,
-      /** On a shared booking: when its lock for the sharers ends, and whether someone can now take the whole board. */
-      sharing: booking.shared ? { lockedUntil: await Shares.lockedUntil(booking), takeoverOpen: await Shares.takeoverOpen(booking) } : null,
+      /** On a shared booking: when its lock for the sharers ends, whether the whole board is open to bids, and the bidding once it started. */
+      sharing: booking.shared ? await BookingResource.sharing(booking, viewer) : null,
       messages: await Messages.counts(booking, viewer),
       reviews: await BookingResource.reviews(booking, viewer),
       dispute: await BookingResource.dispute(booking, viewer),
@@ -91,6 +93,17 @@ export class BookingResource extends Resource {
    * Each share of a shared booking, who holds it and whether it's paid. The organiser sees
    * the invite link of each open share; nobody else sees links.
    */
+  private static async sharing(booking: Booking, viewer: User | null) {
+    const auction = await Auction.takeoverFor(booking)
+
+    return {
+      lockedUntil: await Shares.lockedUntil(booking),
+      takeoverOpen: await Shares.takeoverOpen(booking),
+      bidsCloseAt: auction?.closesAt ?? (await Shares.takeoverClosesAt(booking)),
+      auction: auction ? await new AuctionResource(auction).for(viewer).data() : null,
+    }
+  }
+
   private static async shares(booking: Booking, viewer: User) {
     const shares = (await Shares.of(booking)).all()
     const holders = await User.query().whereIn('id', shares.map((share) => share.userId).filter((id): id is string => !!id)).get()

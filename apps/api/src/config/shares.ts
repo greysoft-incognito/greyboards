@@ -28,15 +28,21 @@ export default () => {
 
     /**
      * Hours after a shared booking starts that it stays locked for the people sharing it. After
-     * that, while shares are still unpaid, anyone can pay for the whole board and take it; those
-     * who paid a share get their money back.
+     * that, while shares are still unpaid, the whole board goes up for bids from the full price.
+     * If the winner pays, the board is theirs and those who paid a share get their money back.
      */
     lock_hours: Number(env('SHARED_BOOKINGS_LOCK_HOURS', 24)),
 
     /**
-     * Whether someone can take a shared board whole once its lock ends.
+     * Whether a shared board goes up for bids, whole, once its lock ends.
      */
     takeover: Boolean(env('SHARED_BOOKINGS_TAKEOVER', true)),
+
+    /**
+     * Hours the winner of a shared board's bidding has to pay. Bidding closes this long before
+     * the shared booking's time to pay runs out.
+     */
+    takeover_pay_hours: Number(env('SHARED_BOOKINGS_TAKEOVER_PAY_HOURS', 6)),
 
     /**
      * How the advertisers' designs are merged into one print: `columns` side by side, `rows` one above another.

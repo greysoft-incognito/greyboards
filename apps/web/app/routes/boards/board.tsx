@@ -43,7 +43,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 	const { api } = await requireUser(request, context);
 	const form = await request.formData();
 	const intent = String(form.get("intent"));
-	const id = String(form.get("id") ?? "");
+	const id = String(form.get("id") ?? form.get("bookingId") ?? "");
 
 	try {
 		if (intent === "offer") {
@@ -82,7 +82,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 			return { error: null, message: "Bidding closed. The dates are free to book again.", intent, id };
 		}
 
-		if (isSharedBookingIntent(intent)) await sharedBookingAction(api, intent, String(form.get("bookingId")));
+		if (isSharedBookingIntent(intent)) return await sharedBookingAction(api, intent, String(form.get("bookingId")), form);
 
 		if (intent === "book") {
 			const faceId = String(form.get("faceId") ?? "") || undefined;
@@ -253,7 +253,7 @@ export default function BoardPage({ loaderData, actionData }: Route.ComponentPro
 
 					{!manages && board.status === "listed" && <BookPanel board={board} taken={taken} canBook={canBook} error={errorFor("book") ?? errorFor("offer")} />}
 					{shared.map((entry) => (
-						<SharedBookingCard key={entry.id} shared={entry} canJoin={canBook} />
+						<SharedBookingCard key={entry.id} shared={entry} canJoin={canBook} error={errorFor("takeover-bid", entry.id) ?? errorFor("pay-takeover", entry.id)} />
 					))}
 					{!manages && auctions.map((auction) => <AuctionCard key={auction.id} auction={auction} canBid={canBook} error={errorFor("bid", auction.id)} />)}
 

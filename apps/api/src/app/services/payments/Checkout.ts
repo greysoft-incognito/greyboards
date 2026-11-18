@@ -27,13 +27,13 @@ export class Checkout {
     return this.charge(booking, user, amountMinor, due ? ', your share' : '', { shareIds: due ? due.shares.map((share) => share.id) : null })
   }
 
-  /** A pending payment for a whole shared board, once its lock ended. Whoever holds a share covers the rest instead. */
+  /** A pending payment for a whole shared board, from whoever won the bidding for it, at their bid. */
   async startTakeover(booking: Booking, user: User): Promise<{ payment: Payment; url: string }> {
     abortIf(!this.gateway.enabled(), 'Payments are not available right now.', 503)
-    abortIf(!(await Shares.takeoverOpen(booking)), 'This shared board can’t be taken whole right now.', 422)
-    abortIf(booking.advertiserId === user.id || (await Shares.holds(user, booking)), 'You’re sharing this board. Cover the unpaid shares instead.', 422)
 
-    return this.charge(booking, user, booking.amountMinor, ', the whole board', { takeover: true })
+    const due = await Shares.takeoverDue(booking, user)
+
+    return this.charge(booking, user, due.amountMinor, ', the whole board', { takeover: true })
   }
 
   /** A pending payment for a dispatcher's price to print and post a paid booking. */

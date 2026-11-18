@@ -24,7 +24,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 	const intent = String(form.get("intent"));
 
 	try {
-		if (isSharedBookingIntent(intent)) await sharedBookingAction(api, intent, String(form.get("bookingId")));
+		if (isSharedBookingIntent(intent)) return await sharedBookingAction(api, intent, String(form.get("bookingId")), form);
 	} catch (error) {
 		if (error instanceof Response) throw error;
 
@@ -34,7 +34,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 	return { error: "Something went wrong. Try again.", message: null };
 }
 
-/** Shared boards anyone can join before they're full, or take whole once their lock ends. */
+/** Shared boards anyone can join before they're full, or bid for whole once their lock ends. */
 export default function OpenShares({ loaderData, actionData }: Route.ComponentProps) {
 	useToastMessage(actionData);
 
@@ -46,7 +46,7 @@ export default function OpenShares({ loaderData, actionData }: Route.ComponentPr
 				<UsersRound className="h-8 w-8 text-brand-600" aria-hidden />
 				Shared boards
 			</h1>
-			<p className="mt-1 max-w-2xl text-ink-500">Join others on a board for the same days and pay only your share. Once a sharing's lock ends with shares unpaid, anyone can take the whole board.</p>
+			<p className="mt-1 max-w-2xl text-ink-500">Join others on a board for the same days and pay only your share. Once a sharing's lock ends with shares unpaid, the whole board goes up for bids.</p>
 			{actionData?.error && (
 				<div className="mt-4">
 					<Alert>{actionData.error}</Alert>

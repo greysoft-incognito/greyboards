@@ -198,7 +198,10 @@ export function createEndpoints(alova: GreyboardsAlova) {
     /** Join a listed shared booking: its first open share is yours to pay. */
     joinShare: (id: ID) => alova.Post<ApiResponse<Booking>>(`/bookings/${id}/shares/join`),
     /** Pay for the whole of a shared board once its lock ended. The sharers get their money back. */
-    takeOver: (id: ID) => alova.Post<ApiResponse<Payment>>(`/bookings/${id}/takeover`),
+    /** Bid for a whole shared board once its lock ended. The first bid opens the bidding. */
+    bidToTake: (id: ID, amountMinor: number) => alova.Post<ApiResponse<Auction>>(`/bookings/${id}/takeover`, { amountMinor }),
+    /** The winning bidder pays for the whole shared board. */
+    payTakeover: (id: ID) => alova.Post<ApiResponse<Payment>>(`/bookings/${id}/takeover/checkout`),
     /** Send the design for a share you hold. Once everyone has, they're merged into the print. */
     sendShareDesign: (id: ID, shareId: ID, file: Blob | { uri: string; name: string; type: string }) => alova.Post<ApiResponse<Booking>>(`/bookings/${id}/shares/${shareId}/design`, upload('design', file)),
     /** A board's auctions: the running ones, and recent ones for whoever looks after it. */

@@ -167,32 +167,69 @@ describe('Shared bookings', { timeout: 60_000 }, () => {
     expect((await api('get', `/shares/open?boardId=${boardId}`, undefined, 'buyer')).body.data.find((entry: { id: string }) => entry.id === booking.id)).toMatchObject({ openCount: 1 })
   })
 
-  it('keeps the board for the sharers while locked, then lets someone pay for all of it', async () => {
+  it('keeps the board for the sharers while locked, then puts it up for bids and gives it to the winner', async () => {
     const booking = (await api('post', `/boards/${boardId}/bookings`, { startsOn: fromToday(200), periods: 1, shares: 2 })).body.data
 
     await api('post', `/bookings/${booking.id}/shares/join`, undefined, 'second')
 
     const share = await pay(booking.id, 'second')
+    const bid = (amountMinor: number, who: string) => api('post', `/bookings/${booking.id}/takeover`, { amountMinor }, who)
 
-    expect((await api('post', `/bookings/${booking.id}/takeover`, undefined, 'buyer')).status).toBe(422)
-    expect((await api('get', `/bookings/${booking.id}`)).body.data.sharing).toMatchObject({ takeoverOpen: false })
+    expect((await bid(booking.amountMinor, 'buyer')).status).toBe(422)
+    expect((await api('get', `/bookings/${booking.id}`)).body.data.sharing).toMatchObject({ takeoverOpen: false, auction: null })
 
     ark('db', `update bookings set "createdAt" = now() - interval '25 hours' where id = '${booking.id}'`)
 
     expect((await api('get', `/bookings/${booking.id}`)).body.data.sharing).toMatchObject({ takeoverOpen: true })
-    expect((await api('post', `/bookings/${booking.id}/takeover`, undefined, 'second')).status).toBe(422)
+    expect((await bid(booking.amountMinor, 'second')).status).toBe(422)
+    expect((await bid(booking.amountMinor - 1, 'buyer')).status).toBe(422)
 
-    const started = await api('post', `/bookings/${booking.id}/takeover`, undefined, 'buyer')
+    const first = await bid(booking.amountMinor, 'buyer')
+
+    expect(first.status).toBe(200)
+    expect(first.body.data).toMatchObject({ status: 'open', takeoverOf: booking.id, reserveMinor: booking.amountMinor, highestMinor: booking.amountMinor, myBid: { leading: true } })
+
+    const winning = Math.ceil(first.body.data.nextMinimumMinor / 100) * 100
+
+    expect((await bid(winning, 'third')).status).toBe(200)
+    expect((await api('get', `/boards/${boardId}/auctions`, undefined, 'third')).body.data.some((entry: { takeoverOf: string | null }) => entry.takeoverOf === booking.id)).toBe(false)
+    expect((await api('get', `/shares/open?boardId=${boardId}`, undefined, 'buyer')).body.data.find((entry: { id: string }) => entry.id === booking.id).auction).toMatchObject({ highestMinor: winning, bidCount: 2 })
+    expect((await api('post', `/bookings/${booking.id}/takeover/checkout`, undefined, 'third')).status).toBe(403)
+
+    ark('db', `update auctions set closes_at = now() - interval '1 minute' where shared_booking_id = '${booking.id}'`)
+    ark('bids:settle')
+
+    expect((await api('post', `/bookings/${booking.id}/takeover/checkout`, undefined, 'buyer')).status).toBe(403)
+
+    const started = await api('post', `/bookings/${booking.id}/takeover/checkout`, undefined, 'third')
 
     expect(started.status).toBe(201)
-    expect(started.body.data.amountMinor).toBe(booking.amountMinor)
-    await api('post', `/payments/${started.body.data.reference}/verify`, undefined, 'buyer')
+    expect(started.body.data.amountMinor).toBe(winning)
+    await api('post', `/payments/${started.body.data.reference}/verify`, undefined, 'third')
 
-    const taken = (await api('get', `/bookings/${booking.id}`, undefined, 'buyer')).body.data
+    const taken = (await api('get', `/bookings/${booking.id}`, undefined, 'third')).body.data
 
-    expect(taken).toMatchObject({ status: 'paid', shared: false, amountMinor: booking.amountMinor })
+    expect(taken).toMatchObject({ status: 'paid', shared: false, amountMinor: winning })
     expect((await api('get', `/bookings/${booking.id}`, undefined, 'second')).status).toBe(404)
-    expect(ark('db', `select sum(amount_minor) from ledger_entries where booking_id = '${booking.id}' and account = 'escrow'`)).toContain(String(booking.amountMinor))
+    expect(ark('db', `select status from auctions where shared_booking_id = '${booking.id}'`)).toContain('sold')
+    expect(ark('db', `select sum(amount_minor) from ledger_entries where booking_id = '${booking.id}' and account = 'escrow'`)).toContain(String(winning))
     expect(ark('db', `select count(*) from refunds where booking_id = '${booking.id}' and amount_minor = ${share.amountMinor}`)).toMatch(/\b1\b/)
+  })
+
+  it('ends the bidding when the sharers pay every share first', async () => {
+    const booking = (await api('post', `/boards/${boardId}/bookings`, { startsOn: fromToday(230), periods: 1, shares: 2 })).body.data
+
+    ark('db', `update bookings set "createdAt" = now() - interval '25 hours' where id = '${booking.id}'`)
+
+    expect((await api('post', `/bookings/${booking.id}/takeover`, { amountMinor: booking.amountMinor }, 'buyer')).status).toBe(200)
+    expect((await api('post', `/bookings/${booking.id}/shares/cover`)).status).toBe(200)
+
+    await pay(booking.id, 'organiser')
+
+    const kept = (await api('get', `/bookings/${booking.id}`)).body.data
+
+    expect(kept).toMatchObject({ status: 'paid', shared: true, sharing: { takeoverOpen: false, auction: null } })
+    expect(ark('db', `select status from auctions where shared_booking_id = '${booking.id}'`)).toContain('unsold')
+    expect(ark('db', `select b.status from bids b join auctions a on a.id = b.auction_id where a.shared_booking_id = '${booking.id}'`)).toContain('lost')
   })
 })

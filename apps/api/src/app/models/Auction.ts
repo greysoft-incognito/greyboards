@@ -8,6 +8,7 @@ import { Bid } from './Bid'
 import { Board, type BoardRatePeriod } from './Board'
 import { BoardFace } from './BoardFace'
 import { Booking } from './Booking'
+import { BookingShare } from './BookingShare'
 import { User } from './User'
 
 /**
@@ -31,6 +32,10 @@ export interface AuctionInput {
  * winner pays, the dates can't be booked another way. The highest bid at or over the
  * reserve wins and is held as a booking at that price; if the winner doesn't pay in time,
  * the next highest bid gets the dates.
+ *
+ * A take-over auction is for a whole shared board whose lock ended with shares unpaid. The
+ * shared booking already holds the dates, so the winner pays to take that booking over, by
+ * `payBy`. The sharers can still fill their shares until then, which ends the auction.
  */
 export class Auction extends Model {
   declare id: string
@@ -48,6 +53,10 @@ export class Auction extends Model {
   declare winningBidId: string | null
   declare bookingId: string | null
   declare openedById: string | null
+  /** The shared booking a take-over auction is for. */
+  declare sharedBookingId: string | null
+  /** When a take-over winner's time to pay runs out. */
+  declare payBy: Date | null
   declare createdAt: Date
   declare updatedAt: Date
 
@@ -73,6 +82,8 @@ export class Auction extends Model {
     winningBidId: 'winning_bid_id',
     bookingId: 'booking_id',
     openedById: 'opened_by_id',
+    sharedBookingId: 'shared_booking_id',
+    payBy: 'pay_by',
   }
 
   protected override casts = {
@@ -129,9 +140,63 @@ export class Auction extends Model {
     })
   }
 
-  /** Auctions on a face that keep any day from `from` to `to` off the market. */
+  /**
+   * Put a shared board up for bids, whole, until `closesAt`. The reserve is the full price,
+   * and only one take-over auction runs per shared booking at a time.
+   */
+  static async openTakeover(booking: Booking, closesAt: Date): Promise<Auction> {
+    const running = await Auction.takeoverFor(booking)
+
+    if (running) return running
+
+    const faceId = booking.faceId ?? (await (await booking.board().firstOrFail()).faceFor(null)).id
+
+    try {
+      return await Auction.query().create({
+        boardId: booking.boardId,
+        faceId,
+        startsOn: booking.days().startsOn,
+        endsOn: booking.days().endsOn,
+        periods: booking.periods,
+        ratePeriod: booking.ratePeriod,
+        currency: booking.currency,
+        reserveMinor: booking.amountMinor,
+        format: (await Settings.get<string>('bids.format')) === 'sealed' ? 'sealed' : 'open',
+        closesAt,
+        status: 'open',
+        openedById: null,
+        sharedBookingId: booking.id,
+      })
+    } catch (error) {
+      const raced = await Auction.takeoverFor(booking)
+
+      if (raced) return raced
+
+      throw error
+    }
+  }
+
+  /** The take-over auction running for a shared booking, open or waiting for the winner to pay. */
+  static takeoverFor(booking: Booking): Promise<Auction | null> {
+    return Auction.query().where({ sharedBookingId: booking.id }).whereIn('status', Auction.TAKING).first()
+  }
+
+  /** The sharers paid every share first, so the board stays theirs: bidding ends without a sale. */
+  static async endTakeover(booking: Booking): Promise<void> {
+    const auction = await Auction.takeoverFor(booking)
+
+    if (!auction) return
+    if (auction.winningBidId) await Bid.query().where({ id: auction.winningBidId }).updateFrom({ status: 'lost' })
+
+    await auction.endUnsold()
+  }
+
+  /** Auctions on a face that keep any day from `from` to `to` off the market. Take-overs don't: their shared booking already does. */
   static covering(face: BoardFace, from: string, to: string) {
-    return Auction.query().where({ faceId: face.id }).whereIn('status', Auction.TAKING).whereRaw('ends_on >= ? and starts_on <= ?', [from, to])
+    return Auction.query()
+      .where({ faceId: face.id })
+      .whereIn('status', Auction.TAKING)
+      .whereRaw('shared_booking_id is null and ends_on >= ? and starts_on <= ?', [from, to])
   }
 
   static covers(face: BoardFace, from: string, to: string): Promise<boolean> {
@@ -173,6 +238,10 @@ export class Auction extends Model {
     return { startsOn: Day.of(this.startsOn), endsOn: Day.of(this.endsOn) }
   }
 
+  isTakeover(): boolean {
+    return !!this.sharedBookingId
+  }
+
   isOpen(): boolean {
     return this.status === 'open' && this.closesAt.getTime() > Date.now()
   }
@@ -209,6 +278,7 @@ export class Auction extends Model {
 
     abortIf(!this.isOpen(), 'Bidding has closed.', 422)
     abortIf(await BoardPolicy.manages(user, board), 'You look after this board, so you can’t bid for it.', 422)
+    abortIf(this.isTakeover() && (await this.sharing(user)), 'You’re sharing this board. Pay or cover the unpaid shares to keep it instead.', 422)
     abortIf(amountMinor < minimum, `Bid at least ${(minimum / 100).toLocaleString('en')} ${this.currency}.`, 422)
     abortIf(!!mine && amountMinor <= mine.amountMinor, 'Raise your bid above the one you placed.', 422)
 
@@ -225,6 +295,7 @@ export class Auction extends Model {
   /** Close bidding early. Only before anyone bid, so no bidder loses a chance they were given. */
   async cancel(): Promise<void> {
     abortIf(this.status !== 'open', 'Only an auction still taking bids can be closed.', 422)
+    abortIf(this.isTakeover(), 'Bidding for a shared board ends on its own, when the sharers pay or the time runs out.', 422)
     abortIf(await Bid.query().where({ auctionId: this.id }).exists(), 'Someone already bid, so this auction runs to its close.', 422)
 
     await this.update({ status: 'cancelled' })
@@ -237,11 +308,12 @@ export class Auction extends Model {
 
   /** While the winner pays: once paid it's sold; a win left unpaid goes to the next bid. Returns whether anything changed. */
   async followUp(): Promise<boolean> {
+    if (this.isTakeover()) return this.followUpTakeover()
+
     const booking = this.bookingId ? await Booking.query().find(this.bookingId) : null
 
     if (booking && ['paid', 'live', 'completed'].includes(booking.status)) {
-      await this.update({ status: 'sold' })
-      await Bid.query().where({ auctionId: this.id, status: 'active' }).updateFrom({ status: 'lost' })
+      await this.markSold()
 
       return true
     }
@@ -261,6 +333,8 @@ export class Auction extends Model {
    * passed over. Returns false when no bid is left.
    */
   private async awardNext(): Promise<boolean> {
+    if (this.isTakeover()) return this.awardTakeover()
+
     const board = await this.board().firstOrFail()
     const face = await this.face().firstOrFail()
     const { startsOn } = this.days()
@@ -280,6 +354,74 @@ export class Auction extends Model {
     }
 
     return false
+  }
+
+  /**
+   * Give a shared board to the highest bid, while its shares are still unpaid. The winner has
+   * `shares.takeover_pay_hours` to pay, and never past the shared booking's own hold.
+   */
+  private async awardTakeover(): Promise<boolean> {
+    const booking = await this.sharedStillOpen()
+    const bid = booking ? await this.highest() : null
+
+    if (!booking || !bid || bid.amountMinor < this.reserveMinor) return false
+
+    const payMs = (await Settings.number('shares.takeover_pay_hours')) * 3_600_000
+    const holdEnds = booking.holdExpiresAt ? new Date(booking.holdExpiresAt).getTime() : Date.now()
+
+    await bid.update({ status: 'won' })
+    await this.update({ status: 'awarded', winningBidId: bid.id, bookingId: booking.id, payBy: new Date(Math.min(Date.now() + payMs, holdEnds)) })
+
+    return true
+  }
+
+  /** While a take-over winner pays: sold once they did; past `payBy`, the next bid gets it; over once the sharers paid or the hold ran out. */
+  private async followUpTakeover(): Promise<boolean> {
+    const booking = await Booking.query().find(this.sharedBookingId!)
+    const winner = this.winningBidId ? await Bid.query().find(this.winningBidId) : null
+
+    if (booking && winner && !booking.shared && booking.advertiserId === winner.bidderId && [Booking.PAID, Booking.LIVE, Booking.COMPLETED].includes(booking.status)) {
+      await this.markSold()
+
+      return true
+    }
+
+    if (!(await this.sharedStillOpen())) {
+      if (winner) await winner.update({ status: 'lost' })
+      await this.endUnsold()
+
+      return true
+    }
+
+    if (this.payBy && this.payBy.getTime() > Date.now()) return false
+    if (winner) await winner.update({ status: 'lapsed' })
+    if (!(await this.awardNext())) await this.endUnsold()
+
+    return true
+  }
+
+  /** The winner paid: sold, and every other bid lost. */
+  async markSold(): Promise<void> {
+    await this.update({ status: 'sold' })
+    await Bid.query().where({ auctionId: this.id, status: 'active' }).updateFrom({ status: 'lost' })
+  }
+
+  /** The shared booking, while it's still held with a share unpaid. */
+  private async sharedStillOpen(): Promise<Booking | null> {
+    const booking = this.sharedBookingId ? await Booking.query().find(this.sharedBookingId) : null
+
+    if (!booking || !booking.shared || !booking.isHeld()) return null
+
+    const unpaid = await BookingShare.query().where({ bookingId: booking.id }).whereRaw("status <> 'paid'").exists()
+
+    return unpaid ? booking : null
+  }
+
+  /** Whether `user` organised or holds a share of the shared booking. */
+  private async sharing(user: User): Promise<boolean> {
+    const booking = await Booking.query().find(this.sharedBookingId!)
+
+    return booking?.advertiserId === user.id || (await BookingShare.query().where({ bookingId: this.sharedBookingId!, userId: user.id }).exists())
   }
 
   private async endUnsold(): Promise<void> {

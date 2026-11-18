@@ -1,7 +1,9 @@
 import { abortIf } from '@arkstack/common'
 import { randomBytes } from 'node:crypto'
+import { Auction } from '@app/models/Auction'
 import { Booking } from '@app/models/Booking'
 import { BookingShare } from '@app/models/BookingShare'
+import { Bid } from '@app/models/Bid'
 import { Payment } from '@app/models/Payment'
 import type { UploadedFile, User } from '@app/models/User'
 import { Board } from '@app/models/Board'
@@ -18,8 +20,11 @@ import { Refunds } from './Refunds'
  * hold runs out first, everyone who paid gets their money back.
  *
  * Shared bookings with shares left are listed for anyone to find and join. They stay locked
- * for the sharers for `shares.lock_hours`; after that, while shares are unpaid, anyone may pay
- * for the whole board and take it, and the sharers get their money back.
+ * for the sharers for `shares.lock_hours`; after that, while shares are unpaid, the whole
+ * board goes up for bids, starting at the full price. Bidding closes `shares.takeover_pay_hours`
+ * before the shared booking's hold runs out, and the winner has until then to pay. If they do,
+ * the board is theirs and the sharers get their money back; if the sharers pay every share
+ * first, the board stays theirs and bidding ends.
  */
 export class Shares {
   /** Split a new held booking into `count` equal shares. The organiser takes the first, with any odd amount. */
@@ -63,12 +68,39 @@ export class Shares {
     return new Date(new Date(booking.createdAt).getTime() + (await Settings.number('shares.lock_hours')) * 3_600_000)
   }
 
-  /** Whether someone can pay for the whole board now: its lock ended and shares are still unpaid. */
+  /** When bidding for the whole board closes: early enough for the winner to pay before the hold runs out. */
+  static async takeoverClosesAt(booking: Booking): Promise<Date> {
+    const holdEnds = booking.holdExpiresAt ? new Date(booking.holdExpiresAt).getTime() : Date.now()
+
+    return new Date(holdEnds - (await Settings.number('shares.takeover_pay_hours')) * 3_600_000)
+  }
+
+  /**
+   * Whether anyone can bid for the whole board now: its lock ended, shares are still unpaid,
+   * and bidding is running or there's time left to open it.
+   */
   static async takeoverOpen(booking: Booking): Promise<boolean> {
     if (!booking.shared || !booking.isHeld() || !(await Settings.get('shares.takeover'))) return false
     if ((await Shares.lockedUntil(booking)).getTime() > Date.now()) return false
+    if (!(await BookingShare.query().where({ bookingId: booking.id }).whereRaw("status <> 'paid'").exists())) return false
 
-    return BookingShare.query().where({ bookingId: booking.id }).whereRaw("status <> 'paid'").exists()
+    const running = await Auction.takeoverFor(booking)
+
+    if (running) return running.isOpen()
+
+    return (await Shares.takeoverClosesAt(booking)).getTime() > Date.now() + Auction.MIN_OPEN_HOURS * 3_600_000
+  }
+
+  /** Bid for the whole board, opening the bidding if this is the first bid. Those sharing it can't. */
+  static async bidToTake(booking: Booking, user: User, amountMinor: number): Promise<Auction> {
+    abortIf(!(await Shares.takeoverOpen(booking)), 'This shared board isn’t open to bids right now.', 422)
+    abortIf(booking.advertiserId === user.id || (await Shares.holds(user, booking)), 'You’re sharing this board. Pay or cover the unpaid shares to keep it instead.', 422)
+
+    const auction = await Auction.openTakeover(booking, await Shares.takeoverClosesAt(booking))
+
+    await auction.placeBid(user, amountMinor)
+
+    return Auction.query().findOrFail(auction.id)
   }
 
   /**
@@ -81,7 +113,9 @@ export class Shares {
     let query = Booking.query()
       .where({ shared: true, status: Booking.HELD })
       .whereRaw('hold_expires_at > now()')
-      .whereRaw("exists (select 1 from booking_shares where booking_shares.booking_id = bookings.id and booking_shares.status = 'open')")
+      .whereRaw(
+        "(exists (select 1 from booking_shares where booking_shares.booking_id = bookings.id and booking_shares.status = 'open') or exists (select 1 from auctions where auctions.shared_booking_id = bookings.id and auctions.status in ('open', 'awarded')))",
+      )
 
     if (filter.boardId) query = query.where({ boardId: filter.boardId })
 
@@ -107,25 +141,56 @@ export class Shares {
   }
 
   /**
-   * Someone paid for the whole board after its lock ended. The booking becomes theirs alone:
-   * everyone who paid a share gets their money back, and the payment goes into escrow. If the
-   * shares filled first or the hold ran out, their payment goes back instead.
+   * The winning bidder paid for the whole board. The booking becomes theirs alone, at their
+   * bid: everyone who paid a share gets their money back, and the payment goes into escrow.
+   * If the sharers paid every share first, or the winner's time ran out, it goes back instead.
    */
   static async takeOver(booking: Booking, payment: Payment): Promise<void> {
-    if (!(await Shares.takeoverOpen(booking)) || payment.amountMinor < booking.amountMinor) {
-      await Shares.giveBack(booking, payment, 'Paid to take a shared board that was no longer open to it', false)
+    const auction = await Auction.takeoverFor(booking)
+    const winner = auction?.status === 'awarded' && auction.winningBidId ? await Bid.query().find(auction.winningBidId) : null
+    const valid =
+      booking.shared &&
+      booking.isHeld() &&
+      !!winner &&
+      winner.bidderId === payment.userId &&
+      payment.amountMinor >= winner.amountMinor &&
+      (await BookingShare.query().where({ bookingId: booking.id }).whereRaw("status <> 'paid'").exists())
+
+    if (!valid) {
+      await Shares.giveBack(booking, payment, 'Paid to take a shared board that was no longer theirs to take', false)
 
       return
     }
 
-    await Shares.refundAll(booking, 'Someone took the whole board after the shared booking’s lock ended')
+    await Shares.refundAll(booking, 'Someone won the whole board after the shared booking’s lock ended')
     await BookingShare.query().where({ bookingId: booking.id }).whereIn('status', ['open', 'claimed']).updateFrom({ status: 'refunded' })
-    await booking.update({ advertiserId: payment.userId, shared: false })
-    await booking.record('escrow', 'payment_in', payment.amountMinor, payment.reference, 'The whole board, held until the artwork is up', payment.userId)
+    await booking.update({
+      advertiserId: payment.userId,
+      shared: false,
+      amountMinor: payment.amountMinor,
+      rateMinor: Math.round((payment.amountMinor - booking.printFeeMinor) / booking.periods),
+      source: 'bid',
+    })
+    await booking.record('escrow', 'payment_in', payment.amountMinor, payment.reference, 'The whole board, won by bid, held until the artwork is up', payment.userId)
 
-    if (await booking.confirmPaid()) return
+    if (await booking.confirmPaid()) {
+      await auction!.markSold()
+
+      return
+    }
 
     await Shares.giveBack(booking, payment, 'Paid after the hold ran out and the days were taken', true)
+  }
+
+  /** What the winner of a shared board's bidding owes, and by when. */
+  static async takeoverDue(booking: Booking, user: User): Promise<{ amountMinor: number; payBy: Date }> {
+    const auction = await Auction.takeoverFor(booking)
+    const winner = auction?.status === 'awarded' && auction.winningBidId ? await Bid.query().find(auction.winningBidId) : null
+
+    abortIf(!winner || winner.bidderId !== user.id, 'Only whoever won the bidding can pay for the whole board.', 403)
+    abortIf(!auction!.payBy || auction!.payBy.getTime() <= Date.now() || !booking.isHeld(), 'Your time to pay for the board ran out.', 422)
+
+    return { amountMinor: winner!.amountMinor, payBy: auction!.payBy! }
   }
 
   /** Take an open share from its invite link. One share per advertiser per booking. */
@@ -184,7 +249,7 @@ export class Shares {
     const unpaid = await BookingShare.query().where({ bookingId: booking.id }).whereRaw("status <> 'paid'").exists()
 
     if (unpaid) return
-    if (await booking.confirmPaid()) return
+    if (await booking.confirmPaid()) return Auction.endTakeover(booking)
 
     await Shares.refundAll(booking, 'Paid after the hold ran out and the days were taken')
   }

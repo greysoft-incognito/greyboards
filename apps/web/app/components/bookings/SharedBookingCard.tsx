@@ -1,21 +1,44 @@
 import { Form, Link, useNavigation } from "react-router";
-import { CreditCard, Lock, UsersRound } from "lucide-react";
+import { CreditCard, Gavel, Lock, UsersRound } from "lucide-react";
 import type { SharedBooking } from "@greyboards/types";
 import { formatDay, formatMoney } from "./BookingBits";
-import { Button, Spinner } from "~/components/ui";
+import { Alert, Button, Field, Input, Spinner } from "~/components/ui";
 
 /** "21 Nov, 4 PM" in Nigerian time. */
 function moment(value: string) {
 	return new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", hour: "numeric", hour12: true, timeZone: "Africa/Lagos" }).format(new Date(value));
 }
 
+/** What the viewer sees of the bidding for the whole board. */
+function biddingNote(shared: SharedBooking) {
+	const auction = shared.auction;
+	const mine = auction?.myBid;
+
+	if (!auction) {
+		return `No longer locked. The whole board is open to bids from ${formatMoney(shared.amountMinor, shared.currency)} until ${moment(shared.bidsCloseAt)}. If the winner pays, the sharers get their money back.`;
+	}
+
+	const highest = auction.highestMinor !== null ? `Highest bid ${formatMoney(auction.highestMinor, auction.currency)}` : "Bids are sealed until the close";
+
+	if (auction.status === "awarded") {
+		return mine?.status === "won" ? `You won the whole board. Pay by ${auction.payBy ? moment(auction.payBy) : "the deadline"} to take it.` : "Bidding closed. The winner is paying for the whole board.";
+	}
+
+	const yours = mine ? (mine.leading ? " You're the highest bidder." : auction.format === "open" ? " Someone bid more than you." : "") : "";
+
+	return `Up for bids, whole. ${highest} from ${auction.bidCount} ${auction.bidCount === 1 ? "bid" : "bids"}, closing ${moment(auction.closesAt)}.${yours} The sharers keep it if they pay every share first.`;
+}
+
 /**
  * A shared booking anyone can join: the days, what a share costs and how many are left. Once
- * its lock ends with shares unpaid, anyone can pay for the whole board instead.
+ * its lock ends with shares unpaid, the whole board goes up for bids, from the full price.
  */
-export function SharedBookingCard({ shared, showBoard = false, canJoin }: { shared: SharedBooking; showBoard?: boolean; canJoin: boolean }) {
+export function SharedBookingCard({ shared, showBoard = false, canJoin, error }: { shared: SharedBooking; showBoard?: boolean; canJoin: boolean; error?: string | null }) {
 	const navigation = useNavigation();
 	const busy = navigation.formData?.get("bookingId") === shared.id ? navigation.formData.get("intent") : null;
+	const auction = shared.auction;
+	const minimum = auction?.nextMinimumMinor ?? shared.amountMinor;
+	const won = auction?.status === "awarded" && auction.myBid?.status === "won";
 
 	return (
 		<div className="panel space-y-3 p-5">
@@ -38,10 +61,10 @@ export function SharedBookingCard({ shared, showBoard = false, canJoin }: { shar
 				</div>
 			</div>
 			<p className="flex items-center gap-2 text-sm text-ink-700">
-				<Lock className="h-4 w-4 shrink-0 text-ink-500" aria-hidden />
-				{shared.takeoverOpen
-					? `No longer locked. Anyone can take the whole board for ${formatMoney(shared.amountMinor, shared.currency)}, and the sharers get their money back.`
-					: `Kept for the sharers until ${moment(shared.lockedUntil)}. After that, someone can take the whole board if shares are still unpaid.`}
+				{shared.takeoverOpen || auction ? <Gavel className="h-4 w-4 shrink-0 text-brand-600" aria-hidden /> : <Lock className="h-4 w-4 shrink-0 text-ink-500" aria-hidden />}
+				{shared.takeoverOpen || auction
+					? biddingNote(shared)
+					: `Kept for the sharers until ${moment(shared.lockedUntil)}. After that, the whole board goes up for bids if shares are still unpaid.`}
 			</p>
 			{shared.joined ? (
 				<Link prefetch="intent" to={`/bookings/${shared.id}`} className="inline-block text-sm font-semibold text-brand-700 hover:underline">
@@ -60,19 +83,33 @@ export function SharedBookingCard({ shared, showBoard = false, canJoin }: { shar
 								</Button>
 							</Form>
 						)}
-						{shared.takeoverOpen && (
+						{won && auction.myBid && (
 							<Form method="post">
-								<input type="hidden" name="intent" value="take-over" />
+								<input type="hidden" name="intent" value="pay-takeover" />
 								<input type="hidden" name="bookingId" value={shared.id} />
-								<Button type="submit" variant="secondary" disabled={!!busy}>
-									{busy === "take-over" ? <Spinner /> : <CreditCard className="h-4 w-4" aria-hidden />}
-									Take the whole board, {formatMoney(shared.amountMinor, shared.currency)}
+								<Button type="submit" disabled={!!busy}>
+									{busy === "pay-takeover" ? <Spinner /> : <CreditCard className="h-4 w-4" aria-hidden />}
+									Pay {formatMoney(auction.myBid.amountMinor, auction.currency)} for the whole board
 								</Button>
 							</Form>
 						)}
 					</div>
 				)
 			)}
+			{!shared.joined && canJoin && shared.takeoverOpen && (
+				<Form method="post" preventScrollReset className="flex flex-wrap items-end gap-2 border-t border-surface-200 pt-3">
+					<input type="hidden" name="intent" value="takeover-bid" />
+					<input type="hidden" name="bookingId" value={shared.id} />
+					<Field label="Bid for the whole board" hint={`At least ${formatMoney(minimum, shared.currency)}`}>
+						<Input name="amount" type="number" min={minimum / 100} step="1000" defaultValue={minimum / 100} required />
+					</Field>
+					<Button type="submit" variant="secondary" disabled={!!busy}>
+						{busy === "takeover-bid" ? <Spinner /> : <Gavel className="h-4 w-4" aria-hidden />}
+						{auction?.myBid ? "Raise my bid" : "Place bid"}
+					</Button>
+				</Form>
+			)}
+			{error && <Alert>{error}</Alert>}
 		</div>
 	);
 }

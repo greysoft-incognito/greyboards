@@ -9,6 +9,7 @@ import { BaseController } from './BaseController'
 import { GenericResource } from 'resora'
 import { PaymentResource } from '@app/http/resources/PaymentResource'
 import { SharedBookingResource } from '@app/http/resources/SharedBookingResource'
+import { AuctionResource } from '@app/http/resources/AuctionResource'
 import { Checkout } from '@app/services/payments/Checkout'
 
 /** Shared bookings: joining one from its invite link, and the organiser covering the rest. */
@@ -89,8 +90,17 @@ export default class ShareController extends BaseController {
     return new BookingResource(booking).withDetails(this.user).additional({ status: 'success', message: 'The share is yours. Pay it to book your part.', code: 200 })
   }
 
-  /** Pay for the whole board once the lock ended; the sharers get their money back. */
+  /** Bid for the whole board once the lock ended. The first bid opens the bidding. */
   async takeover() {
+    const booking = await this.listed()
+    const data = await this.validate({ amountMinor: 'required|integer|min:1' })
+    const auction = await Shares.bidToTake(booking, this.user, Number(data.amountMinor))
+
+    return new AuctionResource(auction).for(this.user).additional({ status: 'success', message: 'Bid placed.', code: 200 })
+  }
+
+  /** The winning bidder pays for the whole board; the sharers get their money back. */
+  async payTakeover() {
     const booking = await this.listed()
     const { payment, url } = await new Checkout().startTakeover(booking, this.user)
 

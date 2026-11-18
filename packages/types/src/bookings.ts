@@ -1,4 +1,5 @@
 import type { PageQuery } from './api'
+import type { Auction } from './bids'
 import type { Board, BoardRate } from './boards'
 import type { ID } from './models'
 import type { BookingReviews } from './reviews'
@@ -61,7 +62,8 @@ export interface Booking {
   /** On a shared booking's own page: each share and who holds it. */
   shares?: BookingShare[] | null
   /** On a shared booking: when its lock for the sharers ends, and whether someone can now take the whole board. */
-  sharing?: { lockedUntil: string; takeoverOpen: boolean } | null
+  /** On a shared booking: the lock for the sharers, and the bidding for the whole board once it ends. */
+  sharing?: { lockedUntil: string; takeoverOpen: boolean; bidsCloseAt: string; auction: Auction | null } | null
   /** On the booking's own page: how many messages, and how many the viewer hasn't read. */
   messages?: MessageCounts
   /** On the booking's own page: the viewer's review and whether they can write it. */
@@ -477,8 +479,12 @@ export interface SharedBooking {
   payBy: string | null
   /** Until then the board is kept for the sharers. */
   lockedUntil: string
-  /** Whether someone can pay for the whole board now. */
+  /** Whether anyone can bid for the whole board now. */
   takeoverOpen: boolean
+  /** When bidding for the whole board closes, or would once someone bids. */
+  bidsCloseAt: string
+  /** The bidding for the whole board, once someone bid. */
+  auction: Auction | null
   /** Whether the viewer is already sharing it. */
   joined: boolean
 }

@@ -18,7 +18,7 @@ export default class AuctionController extends BaseController {
     if (!(await BoardPolicy.view(viewer, board))) throw new RequestException('Board not found.', 404)
 
     const manages = !!viewer && (await BoardPolicy.manages(viewer, board))
-    const query = Auction.query().where({ boardId: board.id })
+    const query = Auction.query().where({ boardId: board.id }).whereRaw('shared_booking_id is null')
 
     if (!manages) query.whereIn('status', Auction.TAKING)
 

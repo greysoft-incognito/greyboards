@@ -1,17 +1,29 @@
 import { redirect } from "react-router";
 import type { ServerApi } from "./api.server";
+import { toMinor } from "~/components/bids/BidBits";
 
-/** Join a listed shared booking, or pay to take the whole board. Both go on to the booking or its checkout. */
-export async function sharedBookingAction(api: ServerApi, intent: string, bookingId: string) {
+const INTENTS = ["join-share", "takeover-bid", "pay-takeover"];
+
+/**
+ * Join a listed shared booking, bid for the whole board once its lock ended, or, having won,
+ * pay for it. Joining goes on to the booking and paying to its checkout; a bid stays on the page.
+ */
+export async function sharedBookingAction(api: ServerApi, intent: string, bookingId: string, form: FormData) {
 	if (intent === "join-share") {
 		await api.joinShare(bookingId);
 
 		throw redirect(`/bookings/${bookingId}`);
 	}
 
-	const { data: payment } = await api.takeOver(bookingId);
+	if (intent === "takeover-bid") {
+		await api.bidToTake(bookingId, toMinor(form.get("amount")));
 
-	throw redirect(payment.checkoutUrl ?? `/bookings/${bookingId}`);
+		return { error: null, message: "Bid placed for the whole board.", intent, id: bookingId };
+	}
+
+	const { data: payment } = await api.payTakeover(bookingId);
+
+	throw redirect(payment.checkoutUrl ?? "/bookings?view=bids");
 }
 
-export const isSharedBookingIntent = (intent: string) => intent === "join-share" || intent === "take-over";
+export const isSharedBookingIntent = (intent: string) => INTENTS.includes(intent);
