@@ -76,7 +76,7 @@ export default function SignUp() {
             />
           </Field>
           {definitions.length ? (
-            <Field label="How will you use Greyboards?" error={problem.fields.roles} hint="Pick any. Scouts and dispatchers are checked before they start.">
+            <Field label="What brings you to Greyboards?" error={problem.fields.roles} hint="Choose as many as you like. Scouts and dispatchers get a quick review before they start.">
               <View style={styles.roles}>
                 {definitions.map((definition) => (
                   <CheckOption
