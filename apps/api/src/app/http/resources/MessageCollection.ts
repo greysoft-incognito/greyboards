@@ -8,7 +8,7 @@ import { BoardPolicy } from '@app/policies/BoardPolicy'
 import { Collection } from './Collection'
 
 /** Which side of the booking someone is on, so each message can say who wrote it. */
-export type MessageSide = 'advertiser' | 'board' | 'billposter' | 'staff'
+export type MessageSide = 'advertiser' | 'board' | 'dispatch' | 'staff'
 
 /** A page of a booking's messages, with each author's name and side, loaded once per author. */
 export class MessageCollection extends Collection {
@@ -62,7 +62,7 @@ export class MessageCollection extends Collection {
     const board = await Board.query().find(booking.boardId)
 
     if (board && (await BoardPolicy.manages(user, board))) return 'board'
-    if (await PrintJob.query().where({ bookingId: booking.id, billposterId: user.id }).exists()) return 'billposter'
+    if (await PrintJob.query().where({ bookingId: booking.id, dispatcherId: user.id }).exists()) return 'dispatch'
 
     return 'staff'
   }

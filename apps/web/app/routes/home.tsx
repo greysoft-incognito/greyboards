@@ -35,7 +35,7 @@ const ROLES = [
 	{ kind: "advertiser", title: "Advertisers", text: "Book boards anywhere in the world and track every campaign from one place.", time: "dusk", art: "brand", headline: "Summer is here" },
 	{ kind: "owner", title: "Board owners", text: "A scout signs you up and runs your board. You get texts and bank transfers.", time: "day", art: "empty", headline: "Your ad here" },
 	{ kind: "scout", title: "Scouts", text: "Find boards, sign their owners and earn on every booking of the boards you bring in.", time: "night", art: "dark", headline: "Fresh daily" },
-	{ kind: "billposter", title: "Billposters", text: "Reserve print-and-post jobs near you and get paid once the proof is accepted.", time: "day", art: "brand", headline: "Up by Friday" },
+	{ kind: "dispatch", title: "Dispatchers", text: "Reserve print-and-post jobs near you and get paid once the proof is accepted.", time: "day", art: "brand", headline: "Up by Friday" },
 ] as const;
 
 /** Price tags on the drawn map, placed in percent of the hero. */

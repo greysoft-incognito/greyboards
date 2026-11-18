@@ -9,13 +9,13 @@ import { Booking } from './Booking'
 import type { UploadedFile, User } from './User'
 
 /**
- * `open` for any billposter nearby, `reserved` while one decides, `confirmed` once it's
+ * `open` for any dispatcher nearby, `reserved` while one decides, `confirmed` once it's
  * theirs, `printed` when the finished print is photographed, `posted` once it's up.
  */
 export type PrintJobStatus = 'open' | 'reserved' | 'confirmed' | 'printed' | 'posted' | 'cancelled'
 
 /**
- * Printing a booking's approved artwork and putting it up on the board. Billposters find
+ * Printing a booking's approved artwork and putting it up on the board. Dispatchers find
  * jobs near them, reserve one while they check they can make the date, then confirm it.
  * The fee comes from the advertiser's payment and is paid out once the ad is up.
  */
@@ -23,7 +23,7 @@ export class PrintJob extends Model {
   declare id: string
   declare bookingId: string
   declare boardId: string
-  declare billposterId: string | null
+  declare dispatcherId: string | null
   declare status: PrintJobStatus
   declare feeMinor: number
   declare currency: string
@@ -50,7 +50,7 @@ export class PrintJob extends Model {
   static readonly POSTED: PrintJobStatus = 'posted'
   static readonly CANCELLED: PrintJobStatus = 'cancelled'
 
-  /** Jobs one billposter can hold before confirming any. */
+  /** Jobs one dispatcher can hold before confirming any. */
   static readonly MAX_RESERVED = 3
 
   /** Jobs a search returns. */
@@ -61,7 +61,7 @@ export class PrintJob extends Model {
   protected static override columns = {
     bookingId: 'booking_id',
     boardId: 'board_id',
-    billposterId: 'billposter_id',
+    dispatcherId: 'billposter_id',
     feeMinor: 'fee_minor',
     dueOn: 'due_on',
     reservedUntil: 'reserved_until',
@@ -89,7 +89,7 @@ export class PrintJob extends Model {
     return Math.round(Number(board.widthM) * Number(board.heightM) * perSqm) * 100
   }
 
-  /** Put a booking's job up for billposters, once its artwork is approved. Owners who print their own boards need no job. */
+  /** Put a booking's job up for dispatchers, once its artwork is approved. Owners who print their own boards need no job. */
   static async open(booking: Booking): Promise<PrintJob | null> {
     if (booking.printFeeMinor <= 0 || booking.printedBy === 'owner') return null
 
@@ -107,7 +107,7 @@ export class PrintJob extends Model {
     })
   }
 
-  /** Jobs any billposter can take: open, or reserved by someone whose hold ran out. */
+  /** Jobs any dispatcher can take: open, or reserved by someone whose hold ran out. */
   scopeAvailable(query: QueryBuilder<PrintJob>): QueryBuilder<PrintJob> {
     return query.where((match: QueryBuilder<PrintJob>) =>
       match.where({ status: PrintJob.OPEN }).orWhereRaw('(status = ? and reserved_until < now())', [PrintJob.RESERVED]),
@@ -125,9 +125,9 @@ export class PrintJob extends Model {
       .orderByRaw(`${location} <-> ${point}`, [longitude, latitude], 'asc')
   }
 
-  /** Jobs a billposter holds or has taken. */
+  /** Jobs a dispatcher holds or has taken. */
   scopeTakenBy(query: QueryBuilder<PrintJob>, user: User): QueryBuilder<PrintJob> {
-    return query.where({ billposterId: user.id })
+    return query.where({ dispatcherId: user.id })
   }
 
   booking() {
@@ -138,14 +138,14 @@ export class PrintJob extends Model {
     return this.belongsTo(Board, 'boardId')
   }
 
-  /** What the billposter earns: the fee plus any rush bonus. */
+  /** What the dispatcher earns: the fee plus any rush bonus. */
   payMinor(): number {
     return Number(this.feeMinor) + Number(this.bonusMinor ?? 0)
   }
 
-  /** Whoever looks after the board does it themselves, so billposters no longer see the job. */
+  /** Whoever looks after the board does it themselves, so dispatchers no longer see the job. */
   async stepIn(): Promise<void> {
-    await this.update({ status: PrintJob.CANCELLED, billposterId: null, reservedUntil: null })
+    await this.update({ status: PrintJob.CANCELLED, dispatcherId: null, reservedUntil: null })
   }
 
   isAvailable(): boolean {
@@ -154,7 +154,7 @@ export class PrintJob extends Model {
 
   /** Whether `user` holds this job, by a live reservation or by confirming it. */
   isHeldBy(user: User): boolean {
-    if (this.billposterId !== user.id) return false
+    if (this.dispatcherId !== user.id) return false
 
     return this.status === PrintJob.RESERVED ? this.reservationLive() : [PrintJob.CONFIRMED, PrintJob.PRINTED, PrintJob.POSTED].includes(this.status)
   }
@@ -172,7 +172,7 @@ export class PrintJob extends Model {
   async reserve(user: User): Promise<PrintJob> {
     abortIf(!this.isAvailable(), 'Someone else has this job.', 409)
 
-    const holding = await PrintJob.query().where({ billposterId: user.id, status: PrintJob.RESERVED }).whereRaw('reserved_until > now()').count()
+    const holding = await PrintJob.query().where({ dispatcherId: user.id, status: PrintJob.RESERVED }).whereRaw('reserved_until > now()').count()
 
     abortIf(holding >= PrintJob.MAX_RESERVED, `You can hold ${PrintJob.MAX_RESERVED} jobs at once. Confirm or let one go first.`, 429)
 
@@ -180,14 +180,14 @@ export class PrintJob extends Model {
     const claimed = await PrintJob.query()
       .where({ id: this.id })
       .scope('available')
-      .updateFrom({ status: PrintJob.RESERVED, billposterId: user.id, reservedUntil: new Date(Date.now() + hours * 3_600_000) })
+      .updateFrom({ status: PrintJob.RESERVED, dispatcherId: user.id, reservedUntil: new Date(Date.now() + hours * 3_600_000) })
 
     abortIf(!claimed, 'Someone else just took this job.', 409)
 
     return PrintJob.query().findOrFail(this.id)
   }
 
-  /** The job becomes `user`'s; other billposters stop seeing it. */
+  /** The job becomes `user`'s; other dispatchers stop seeing it. */
   async confirm(user: User): Promise<void> {
     abortIf(this.status !== PrintJob.RESERVED || !this.isHeldBy(user), 'Reserve the job first. Your hold may have run out.', 422)
 
@@ -198,7 +198,7 @@ export class PrintJob extends Model {
   async release(user: User): Promise<void> {
     abortIf(!this.isHeldBy(user) || ![PrintJob.RESERVED, PrintJob.CONFIRMED].includes(this.status), 'You can only let go of a job you hold and haven’t printed.', 422)
 
-    await this.update({ status: PrintJob.OPEN, billposterId: null, reservedUntil: null, confirmedAt: null })
+    await this.update({ status: PrintJob.OPEN, dispatcherId: null, reservedUntil: null, confirmedAt: null })
   }
 
   /** A photo of the finished print, before it goes up, so a wrong print is caught early. */

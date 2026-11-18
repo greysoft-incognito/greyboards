@@ -35,7 +35,7 @@ export type PayoutStatus = 'processing' | 'paid' | 'failed'
 export interface Payout {
   id: ID
   bookingId: ID
-  account: 'owner' | 'scout' | 'billposter'
+  account: 'owner' | 'scout' | 'dispatch'
   userId: ID | null
   ownerProfileId: ID | null
   amountMinor: number

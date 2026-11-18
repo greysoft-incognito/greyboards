@@ -200,7 +200,7 @@ export function createEndpoints(alova: GreyboardsAlova) {
     /** Whoever looks after the board approves the artwork, or sends it back with a note. */
     reviewArtwork: (id: ID, data: ArtworkReview) => alova.Post<ApiResponse<Booking>>(`/bookings/${id}/artwork/review`, data),
 
-    /** Proof the ad is up. The billposter on the job, or the owner of a board with none, adds photos taken at the board. */
+    /** Proof the ad is up. The dispatcher on the job, or the owner of a board with none, adds photos taken at the board. */
     proofs: {
       add: (id: ID, file: Blob | { uri: string; name: string; type: string }, where: ProofPhotoLocation) => {
         const form = upload('photo', file)
@@ -217,11 +217,11 @@ export function createEndpoints(alova: GreyboardsAlova) {
       dispute: (id: ID, note: string) => alova.Post<ApiResponse<Booking>>(`/bookings/${id}/proof/dispute`, { note }),
     },
 
-    /** Print jobs for billposters. Needs an active billposter role. */
+    /** Print jobs for dispatchers. Needs an active dispatcher role. */
     printJobs: {
       /** Jobs anyone can take near a point, nearest first. */
       near: (params: PrintJobSearch) => alova.Get<ApiResponse<PrintJob[]>>('/print-jobs', { params, cacheFor: null }),
-      /** Jobs the billposter holds or took. */
+      /** Jobs the dispatcher holds or took. */
       mine: (params: PageQuery = {}) => alova.Get<PaginatedResponse<PrintJob>>('/account/print-jobs', { params, cacheFor: null }),
       show: (id: ID) => alova.Get<ApiResponse<PrintJob>>(`/print-jobs/${id}`, { cacheFor: null }),
       reserve: (id: ID) => alova.Post<ApiResponse<PrintJob>>(`/print-jobs/${id}/reserve`),
@@ -307,8 +307,8 @@ export function createEndpoints(alova: GreyboardsAlova) {
 
       /** The marketplace roles the account holds, with what each one is for. */
       roles: () => alova.Get<ApiResponse<AccountRole[]> & { definitions: AccountRoleDefinition[] }>('/account/roles', { cacheFor: null }),
-      /** Take on a role. Scouts and billposters wait for a reviewer. */
-      /** What the account has shown for the scout and billposter checks. */
+      /** Take on a role. Scouts and dispatchers wait for a reviewer. */
+      /** What the account has shown for the scout and dispatcher checks. */
       partnerChecks: () => alova.Get<ApiResponse<PartnerChecks> & { documents: IdentityDocumentDefinition[] }>('/account/partner-checks', { cacheFor: null }),
       /** Send a photo of a government ID for review. */
       sendIdentity: (data: IdentityInput, photo: Blob, filename = 'id.jpg') => {

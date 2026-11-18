@@ -48,7 +48,7 @@ export class Tasks {
 
       const job = await PrintJob.query().where({ bookingId: booking.id }).first()
 
-      if (job?.isAvailable()) tasks.push(task('install', `Arrange printing and posting on ${name(booking)}`, 'No billposter has taken the job yet. Step in, or wait for one.', booking))
+      if (job?.isAvailable()) tasks.push(task('install', `Arrange printing and posting on ${name(booking)}`, 'No dispatcher has taken the job yet. Step in, or wait for one.', booking))
       else if (await BookingPolicy.postsProof(user, booking))
         tasks.push(task('proof', `Photos of the ad on ${name(booking)}`, booking.proofStatus === 'disputed' ? 'The advertiser asked for better photos.' : 'Take them at the board once the ad is up.', booking))
     }

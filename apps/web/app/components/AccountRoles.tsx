@@ -6,7 +6,7 @@ export const ROLE_ICONS: Record<AccountRoleKind, LucideIcon> = {
 	advertiser: Megaphone,
 	owner: Presentation,
 	scout: Binoculars,
-	billposter: PaintRoller,
+	dispatch: PaintRoller,
 };
 
 const STATUS_LABELS: Record<AccountRoleStatus, string> = {

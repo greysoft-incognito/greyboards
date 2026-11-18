@@ -344,7 +344,7 @@ export default () => {
       {
         id: 'messages',
         title: 'Messages',
-        description: 'Messages about a booking between the advertiser, the board’s side and the billposter.',
+        description: 'Messages about a booking between the advertiser, the board’s side and the dispatcher.',
         icon: 'messages-square',
         fields: [
           {
@@ -417,7 +417,7 @@ export default () => {
             env: 'DISPUTES_ENABLED',
             type: 'boolean',
             label: 'Disputes',
-            help: 'The advertiser, the board’s side and the billposter can raise a dispute on a paid booking.',
+            help: 'The advertiser, the board’s side and the dispatcher can raise a dispute on a paid booking.',
           },
           {
             name: 'window_days',
@@ -579,7 +579,7 @@ export default () => {
       {
         id: 'printing',
         title: 'Printing',
-        description: 'What billposters are paid, how long they hold a job, and what happens when they miss a date.',
+        description: 'What dispatchers are paid, how long they hold a job, and what happens when they miss a date.',
         icon: 'printer',
         fields: [
           {
@@ -588,7 +588,7 @@ export default () => {
             env: 'PRINT_PRICE_PER_SQM',
             type: 'number',
             label: 'Printing and posting',
-            help: 'Per square metre of board face. Added to bookings of printed boards and paid to the billposter once the ad is up. Booked jobs keep their price.',
+            help: 'Per square metre of board face. Added to bookings of printed boards and paid to the dispatcher once the ad is up. Booked jobs keep their price.',
             unit: '₦ per m²',
             min: 0,
             max: 1000000,
@@ -599,7 +599,7 @@ export default () => {
             env: 'PRINT_RESERVE_HOURS',
             type: 'number',
             label: 'Hold on a job',
-            help: 'How long a billposter has to confirm a job they reserved before others can take it.',
+            help: 'How long a dispatcher has to confirm a job they reserved before others can take it.',
             unit: 'hours',
             min: 1,
             max: 48,
@@ -610,7 +610,7 @@ export default () => {
             env: 'PRINT_SEARCH_RADIUS_KM',
             type: 'number',
             label: 'Job search radius',
-            help: 'How far from them billposters see jobs by default.',
+            help: 'How far from them dispatchers see jobs by default.',
             unit: 'km',
             min: 1,
             max: 100,
@@ -621,7 +621,7 @@ export default () => {
             env: 'PRINT_BY_DAYS',
             type: 'number',
             label: 'Print photo due',
-            help: 'Days before go-live the billposter must show the finished print. Missing it, or not putting the ad up by go-live, loses them the job.',
+            help: 'Days before go-live the dispatcher must show the finished print. Missing it, or not putting the ad up by go-live, loses them the job.',
             unit: 'days',
             min: 0,
             max: 14,
@@ -654,7 +654,7 @@ export default () => {
             env: 'PRINT_MAX_MISSES',
             type: 'number',
             label: 'Misses before suspension',
-            help: 'Jobs a billposter can lose within the window below before their role is suspended.',
+            help: 'Jobs a dispatcher can lose within the window below before their role is suspended.',
             unit: 'jobs',
             min: 1,
             max: 20,
@@ -675,7 +675,7 @@ export default () => {
       {
         id: 'payouts',
         title: 'Payouts',
-        description: 'Sending owners, scouts and billposters what they are owed.',
+        description: 'Sending owners, scouts and dispatchers what they are owed.',
         icon: 'wallet',
         fields: [
           {
@@ -702,7 +702,7 @@ export default () => {
       {
         id: 'partners',
         title: 'Partner checks',
-        description: 'What scouts and billposters show before they are let in, and spotting boards tagged twice.',
+        description: 'What scouts and dispatchers show before they are let in, and spotting boards tagged twice.',
         icon: 'id-card',
         fields: [
           {
@@ -711,7 +711,7 @@ export default () => {
             env: 'PARTNERS_REQUIRE_ID',
             type: 'boolean',
             label: 'ID before approval',
-            help: 'Scouts and billposters send a photo of a government ID, and reviewers check it before letting them in.',
+            help: 'Scouts and dispatchers send a photo of a government ID, and reviewers check it before letting them in.',
           },
           {
             name: 'require_bank',

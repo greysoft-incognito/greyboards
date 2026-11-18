@@ -72,14 +72,14 @@ export class AccountMail {
     )
   }
 
-  /** Tell a billposter they lost a job by missing its date. */
+  /** Tell a dispatcher they lost a job by missing its date. */
   static printJobMissed(user: User, boardName: string, reason: string) {
     return AccountMail.send(
       user,
       'You lost a print job',
       `<p>Hi ${AccountMail.escape(user.name)},</p>
-      <p>The job for "${AccountMail.escape(boardName)}" went back to other billposters because ${AccountMail.escape(reason)}.</p>
-      <p>Missing several dates suspends your billposter role, so only take jobs you can deliver on time.</p>
+      <p>The job for "${AccountMail.escape(boardName)}" went back to other dispatchers because ${AccountMail.escape(reason)}.</p>
+      <p>Missing several dates suspends your dispatcher role, so only take jobs you can deliver on time.</p>
       ${AccountMail.button('Find other jobs', `${config('app.frontend_url')}/jobs`)}`,
     )
   }
@@ -90,7 +90,7 @@ export class AccountMail {
       user,
       'Nobody has taken a print job yet',
       `<p>Hi ${AccountMail.escape(user.name)},</p>
-      <p>The ad booked on "${AccountMail.escape(boardName)}" goes live on ${dueOn}, and no billposter has taken the job to print and put it up.</p>
+      <p>The ad booked on "${AccountMail.escape(boardName)}" goes live on ${dueOn}, and no dispatcher has taken the job to print and put it up.</p>
       <p>If you can arrange it yourself, open the booking to download the artwork, then add the proof photos once it's up.</p>
       ${AccountMail.button('Open the booking', link)}`,
     )

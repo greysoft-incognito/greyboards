@@ -34,7 +34,7 @@ export interface Booking {
   amountMinor: number
   /** Printing and putting up the artwork. 0 on digital boards. */
   printFeeMinor: number
-  /** Who prints and puts it up: a billposter from the marketplace, or the owner's side. */
+  /** Who prints and puts it up: a dispatcher from the marketplace, or the owner's side. */
   printedBy: PrintedBy
   /** Booked at the listed price, an accepted offer, or a won bid. */
   source: BookingSource
@@ -134,7 +134,7 @@ export interface MessageCounts {
 }
 
 /** Which side of a booking someone is on. */
-export type MessageSide = 'advertiser' | 'board' | 'billposter' | 'staff'
+export type MessageSide = 'advertiser' | 'board' | 'dispatch' | 'staff'
 
 /** A message about a booking, with an optional photo as evidence. */
 export interface BookingMessage {
@@ -238,7 +238,7 @@ export interface BookingProof {
   maxPhotos: number
   /** How far from the board a photo may be taken. */
   maxDistanceM: number
-  /** Whether the viewer photographs this ad: the billposter on the job, or the owner of a board with none. */
+  /** Whether the viewer photographs this ad: the dispatcher on the job, or the owner of a board with none. */
   canAdd: boolean
   /** Whether the viewer booked it and the proof waits for them. */
   canReview: boolean
@@ -274,7 +274,7 @@ export interface BookingPrintJob {
 }
 
 /**
- * `open` until a billposter reserves it, `reserved` for a few hours while they check the
+ * `open` until a dispatcher reserves it, `reserved` for a few hours while they check the
  * date, `confirmed` once it is theirs, then `printed` and `posted`. `cancelled` when whoever
  * looks after the board stepped in to do it themselves.
  */
@@ -283,7 +283,7 @@ export type PrintJobStatus = 'open' | 'reserved' | 'confirmed' | 'printed' | 'po
 export interface PrintJob {
   id: ID
   status: PrintJobStatus
-  /** What the billposter earns, any rush bonus included. */
+  /** What the dispatcher earns, any rush bonus included. */
   feeMinor: number
   /** Extra pay because the job went back close to go-live. */
   bonusMinor: number
@@ -292,20 +292,20 @@ export interface PrintJob {
   dueOn: string
   /** The last day for the photo of the finished print. Missing it loses the job. */
   printBy: string
-  /** When the hold ends, for the billposter holding it. */
+  /** When the hold ends, for the dispatcher holding it. */
   reservedUntil: string | null
-  /** Whether the viewing billposter holds this job. */
+  /** Whether the viewing dispatcher holds this job. */
   mine: boolean
   distanceM: number | null
   board: Board | null
-  /** The artwork and the booked days show only to the billposter holding the job. */
+  /** The artwork and the booked days show only to the dispatcher holding the job. */
   artworkUrl: string | null
   bookedDays: BookedDays | null
   printPhotoUrl: string | null
-  /** The booking and its proof, for the billposter holding the job. */
+  /** The booking and its proof, for the dispatcher holding the job. */
   bookingId: ID | null
   proof: BookingProof | null
-  /** Messages about the booking, for the billposter holding the job. */
+  /** Messages about the booking, for the dispatcher holding the job. */
   messages: MessageCounts | null
   createdAt: string
 }
@@ -322,7 +322,7 @@ export interface ArtworkReview {
 }
 
 /** `owner` covers the owner or the scout who runs the board for them. */
-export type PrintedBy = 'billposter' | 'owner'
+export type PrintedBy = 'dispatch' | 'owner'
 
 /** Whether a board takes bookings, and the limits for the date picker. */
 export interface BoardBookingTerms {

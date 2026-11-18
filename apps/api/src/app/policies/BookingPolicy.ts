@@ -16,7 +16,7 @@ export class BookingPolicy {
     return user.can('bookings.view')
   }
 
-  /** Who reads and writes its messages: anyone who sees the booking, and the billposter on its print job. */
+  /** Who reads and writes its messages: anyone who sees the booking, and the dispatcher on its print job. */
   static async talks(user: User, booking: Booking): Promise<boolean> {
     if (await BookingPolicy.view(user, booking)) return true
 
@@ -43,7 +43,7 @@ export class BookingPolicy {
   }
 
   /**
-   * Who photographs the ad on the board: the billposter holding its print job, or whoever
+   * Who photographs the ad on the board: the dispatcher holding its print job, or whoever
    * looks after the board when there's no job or nobody has taken it (they step in).
    */
   static async postsProof(user: User, booking: Booking): Promise<boolean> {

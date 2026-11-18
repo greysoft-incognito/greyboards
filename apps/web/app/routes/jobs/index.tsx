@@ -15,7 +15,7 @@ export const meta = () => [{ title: "Print jobs · Greyboards" }];
 export async function loader({ request, context }: Route.LoaderArgs) {
 	const { api, user } = await requireUser(request, context);
 	const params = new URL(request.url).searchParams;
-	const role = heldRole(user.accountRoles, "billposter");
+	const role = heldRole(user.accountRoles, "dispatch");
 	const mine = params.get("view") === "mine";
 	const lat = Number(params.get("lat"));
 	const lng = Number(params.get("lng"));
@@ -37,7 +37,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 const tab = ({ isActive }: { isActive: boolean }) =>
 	`rounded-xl px-4 py-2 text-sm font-semibold transition ${isActive ? "bg-ink-900 text-white" : "text-ink-700 hover:bg-surface-100"}`;
 
-/** Billposters find open print jobs near them, and follow the ones they took. */
+/** Dispatchers find open print jobs near them, and follow the ones they took. */
 export default function Jobs({ loaderData }: Route.ComponentProps) {
 	const { roleStatus, mine, located, jobs, meta } = loaderData;
 
@@ -79,7 +79,7 @@ export default function Jobs({ loaderData }: Route.ComponentProps) {
 	);
 }
 
-/** Asks the browser where the billposter is, then searches around it. */
+/** Asks the browser where the dispatcher is, then searches around it. */
 function FindMe({ compact = false }: { compact?: boolean }) {
 	const navigate = useNavigate();
 	const [params] = useSearchParams();
@@ -137,12 +137,12 @@ function RoleNeeded({ status }: { status: string | null }) {
 		<div className="panel mt-6 flex flex-col items-center gap-4 px-6 py-10 text-center">
 			<p className="max-w-md text-ink-700">
 				{status === "pending"
-					? "Your billposter application is being checked. Jobs show here once it's approved."
-					: "Print jobs are for billposters. Apply for the role and we'll check your details."}
+					? "Your dispatcher application is being checked. Jobs show here once it's approved."
+					: "Print jobs are for dispatchers. Apply for the role and we'll check your details."}
 			</p>
 			{status !== "pending" && (
 				<Link prefetch="intent" to="/settings/roles" className={buttonClass("primary")}>
-					Become a billposter
+					Become a dispatcher
 				</Link>
 			)}
 		</div>

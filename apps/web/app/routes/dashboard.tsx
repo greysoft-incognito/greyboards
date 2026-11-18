@@ -22,7 +22,7 @@ const EMPTY: Record<AccountRoleKind, string> = {
 	advertiser: "Your campaigns will show here once you book a board.",
 	owner: "Your boards and their bookings will show here once you list one.",
 	scout: "Boards you tag and owners you sign will show here.",
-	billposter: "Print-and-post jobs near you will show here.",
+	dispatch: "Print-and-post jobs near you will show here.",
 };
 
 /** The drawn board on each role's card. */
@@ -30,7 +30,7 @@ const SCENES: Record<AccountRoleKind, { time: SceneTime; art: SceneArt; headline
 	advertiser: { time: "dusk", art: "brand", headline: "Your ad here" },
 	owner: { time: "day", art: "empty", headline: "Free from 1 Dec" },
 	scout: { time: "night", art: "dark", headline: "New board" },
-	billposter: { time: "day", art: "brand", headline: "Up by Friday" },
+	dispatch: { time: "day", art: "brand", headline: "Up by Friday" },
 };
 
 /** The signed-in home: a greeting, then one card for each marketplace role the account holds. */

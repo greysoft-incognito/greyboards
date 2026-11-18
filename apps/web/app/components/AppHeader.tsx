@@ -15,7 +15,7 @@ const AREAS: { to: string; label: string; icon: LucideIcon; roles?: AccountRoleK
 	{ to: "/boards", label: "Boards", icon: Presentation, roles: ["owner", "scout"] },
 	{ to: "/bookings", label: "Bookings", icon: CalendarCheck },
 	{ to: "/pipeline", label: "Pipeline", icon: MapPinned, roles: ["scout"] },
-	{ to: "/jobs", label: "Jobs", icon: Printer, roles: ["billposter"] },
+	{ to: "/jobs", label: "Jobs", icon: Printer, roles: ["dispatch"] },
 ];
 
 /** The top bar. Signed-in people get their areas, on a row of their own on phones; visitors get a way in. Its height is kept in `--header-height` for content that sticks below it. */

@@ -32,7 +32,7 @@ Scouts sign you up in person and run your board for you. You get a text when it'
 
 Find boards, sign their owners and put the boards on the map. You earn a share of every booking on the boards you bring in.
 
-## For billposters
+## For dispatchers
 
 Find booked boards near you that need printing, reserve the job, print the artwork and put it up. You're paid once the proof is accepted.
 
@@ -50,19 +50,19 @@ This policy explains what Greyboards collects when you use it, why, and what you
 
 ## What we collect
 
-**Your account.** Your name, email address, username, profile photo, and the roles you hold (advertiser, owner, scout or billposter). Your password is stored scrambled, so nobody can read it, us included.
+**Your account.** Your name, email address, username, profile photo, and the roles you hold (advertiser, owner, scout or dispatcher). Your password is stored scrambled, so nobody can read it, us included.
 
 **Boards and bookings.** Board photos, locations and details, the bookings you make or take, artwork, and proof photos.
 
 **Location.** The mobile app reads your location and compass only while you capture a board or proof photo. We don't track you otherwise.
 
-**Payouts.** Bank details for owners, scouts and billposters, so we can pay them.
+**Payouts.** Bank details for owners, scouts and dispatchers, so we can pay them.
 
 ## How we use it
 
 - To run your account and the bookings you're part of.
 - To check boards, owners and partners, and to prevent fraud.
-- To pay owners, scouts and billposters.
+- To pay owners, scouts and dispatchers.
 - To tell you about your account and bookings by email, text or in the app.
 
 ## Who sees it
@@ -90,7 +90,7 @@ These terms are the agreement between you and Greysoft ("we", "us") for using Gr
 
 - Give your real name and an email address you can open.
 - Keep your password to yourself. You're responsible for what happens in your account.
-- Scouts and billposters are reviewed before they can take on work, and may be asked for ID and bank details.
+- Scouts and dispatchers are reviewed before they can take on work, and may be asked for ID and bank details.
 
 ## Boards and bookings
 

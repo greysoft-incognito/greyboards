@@ -72,7 +72,7 @@ describe('Print deadlines', () => {
   beforeAll(async () => {
     for (const who of ['advertiser', 'owner', 'reviewer', 'poster', 'rival']) {
       const email = `deadline-${who}-${Date.now()}@greyboards.test`
-      const roles = who === 'owner' ? ['owner'] : ['poster', 'rival'].includes(who) ? ['billposter'] : ['advertiser']
+      const roles = who === 'owner' ? ['owner'] : ['poster', 'rival'].includes(who) ? ['dispatch'] : ['advertiser']
       const register = await api('post', '/auth/register', { name: `Deadline ${who}`, email, password: 'password123', roles }, null)
 
       tokens[who] = register.body.data.token
@@ -91,7 +91,7 @@ describe('Print deadlines', () => {
     second = await approvedBooking(0.05)
   }, 120_000)
 
-  it('takes a job back from a billposter who misses the print date, with a rush bonus, and warns the owner', async () => {
+  it('takes a job back from a dispatcher who misses the print date, with a rush bonus, and warns the owner', async () => {
     await take(first.job, 'poster', 0)
     expect((await api('get', `/print-jobs/${first.job}`, undefined, 'poster')).body.data).toMatchObject({ status: 'confirmed', printBy: expect.any(String) })
 
@@ -116,12 +116,12 @@ describe('Print deadlines', () => {
     expect((await api('post', `/print-jobs/${first.job}/reserve`, undefined, 'rival')).status).toBe(409)
   })
 
-  it('suspends a billposter who misses too often, and pays the bonus to whoever finishes the job', async () => {
+  it('suspends a dispatcher who misses too often, and pays the bonus to whoever finishes the job', async () => {
     sql(`insert into print_job_misses (id, print_job_id, billposter_id, stage, "createdAt", "updatedAt") select gen_random_uuid(), '${first.job}', billposter_id, 'print', now(), now() from print_job_misses where print_job_id = '${first.job}'`)
     await take(second.job, 'poster', 0)
     check()
 
-    expect((await api('get', '/account/roles', undefined, 'poster')).body.data[0]).toMatchObject({ kind: 'billposter', status: 'suspended' })
+    expect((await api('get', '/account/roles', undefined, 'poster')).body.data[0]).toMatchObject({ kind: 'dispatch', status: 'suspended' })
     expect((await api('post', `/print-jobs/${second.job}/reserve`, undefined, 'poster')).status).toBe(403)
 
     await take(second.job, 'rival', 2)
@@ -133,6 +133,6 @@ describe('Print deadlines', () => {
     await api('post', `/bookings/${second.booking}/proof/accept`)
 
     // Greyboards' ₦100,000 share pays the ₦43,750 bonus.
-    expect(ledger(second.booking).sort()).toEqual(['billposter 21875000', 'escrow -67500000', 'escrow 67500000', 'owner 40000000', 'platform 5625000'].sort())
+    expect(ledger(second.booking).sort()).toEqual(['dispatch 21875000', 'escrow -67500000', 'escrow 67500000', 'owner 40000000', 'platform 5625000'].sort())
   }, 60_000)
 })

@@ -18,7 +18,7 @@ const STATUSES: { value: PayoutStatus; label: string }[] = [
 	{ value: "paid", label: "Paid" },
 ];
 
-const WHO = { owner: "Owner", scout: "Scout", billposter: "Billposter" } as const;
+const WHO = { owner: "Owner", scout: "Scout", dispatch: "Dispatch" } as const;
 
 export async function loader({ request, context }: Route.LoaderArgs) {
 	const { api } = await requireAdmin(request, context, "payouts.manage");
@@ -42,7 +42,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 	}
 }
 
-/** Every transfer to owners, scouts and billposters, with failed ones to send again. */
+/** Every transfer to owners, scouts and dispatchers, with failed ones to send again. */
 export default function AdminPayouts({ loaderData, actionData }: Route.ComponentProps) {
 	useToastMessage(actionData);
 
@@ -52,7 +52,7 @@ export default function AdminPayouts({ loaderData, actionData }: Route.Component
 
 	return (
 		<>
-			<AdminHeader title="Payouts" description="Money sent to owners, scouts and billposters once the hold days pass. Failed transfers wait here to be sent again." />
+			<AdminHeader title="Payouts" description="Money sent to owners, scouts and dispatchers once the hold days pass. Failed transfers wait here to be sent again." />
 			<div className="space-y-6 px-4 py-8 sm:px-8">
 				<Form method="get" className="flex flex-wrap items-center gap-3">
 					<Select name="status" defaultValue={status} aria-label="Status" className="w-auto">

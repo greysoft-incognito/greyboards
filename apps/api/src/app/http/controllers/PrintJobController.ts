@@ -6,7 +6,7 @@ import { Settings } from '@app/support/Settings'
 import { BaseController } from './BaseController'
 import { RequestException, perPage } from '@arkstack/common'
 
-/** Billposters find print jobs near them, take them on, and show the finished print. */
+/** Dispatchers find print jobs near them, take them on, and show the finished print. */
 export default class PrintJobController extends BaseController {
   /** Jobs anyone can take within reach of a point, nearest first, at most 50. */
   async index() {
@@ -22,7 +22,7 @@ export default class PrintJobController extends BaseController {
     return new PrintJobCollection(jobs.all()).for(this.user).additional({ status: 'success', message: 'OK', code: 200 })
   }
 
-  /** Jobs the billposter holds or took, soonest due first. */
+  /** Jobs the dispatcher holds or took, soonest due first. */
   async mine() {
     const jobs = await PrintJob.scope('takenBy', this.user).oldest('dueOn').paginate(perPage(this.query, { perPage: 20, maxPerPage: 50 }))
 

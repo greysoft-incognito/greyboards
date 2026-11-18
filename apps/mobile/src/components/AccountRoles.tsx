@@ -9,7 +9,7 @@ export const ROLE_ICONS: Record<AccountRoleKind, LucideIcon> = {
   advertiser: Megaphone,
   owner: Presentation,
   scout: Binoculars,
-  billposter: PaintRoller,
+  dispatch: PaintRoller,
 }
 
 const STATUS: Record<AccountRoleStatus, { label: string; background: string; color: string }> = {

@@ -12,9 +12,9 @@ export type UserRole = string
 export type Permission = 'dashboard.view' | 'users.view' | 'users.manage' | 'partners.review' | 'boards.review' | 'bookings.view' | 'payouts.manage' | 'disputes.resolve' | 'settings.manage' | 'roles.manage' | 'pages.manage'
 
 /** A marketplace role. One account can hold several. */
-export type AccountRoleKind = 'advertiser' | 'owner' | 'scout' | 'billposter'
+export type AccountRoleKind = 'advertiser' | 'owner' | 'scout' | 'dispatch'
 
-/** Advertisers and owners start active; scouts and billposters start pending until a reviewer decides. */
+/** Advertisers and owners start active; scouts and dispatchers start pending until a reviewer decides. */
 export type AccountRoleStatus = 'active' | 'pending' | 'rejected' | 'suspended'
 
 /** A marketplace role an account holds. */

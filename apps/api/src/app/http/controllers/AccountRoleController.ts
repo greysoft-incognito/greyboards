@@ -40,7 +40,7 @@ export default class AccountRoleController extends BaseController {
     return new GenericResource({ kind: role.kind }).additional({ status: 'success', message: `You no longer work as ${role.named()}`, code: 200 })
   }
 
-  /** What the account has shown for the scout and billposter checks, and the IDs it can send. */
+  /** What the account has shown for the scout and dispatcher checks, and the IDs it can send. */
   async checks() {
     return new GenericResource(await PartnerChecks.summary(this.user, false)).additional({
       status: 'success',

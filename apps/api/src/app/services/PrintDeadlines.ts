@@ -20,7 +20,7 @@ const REASONS: Record<PrintJobMissStage, string> = {
 }
 
 /**
- * Keeps print jobs on time. A billposter who misses the print or go-live date loses the
+ * Keeps print jobs on time. A dispatcher who misses the print or go-live date loses the
  * job, which goes back to others (with a bonus when go-live is close); too many misses
  * suspend them. Whoever looks after a board is warned when its job has no taker close to go-live.
  */
@@ -57,41 +57,41 @@ export class PrintDeadlines {
     return late.all().length
   }
 
-  /** Take the job back, record the miss, and suspend a billposter who misses too often. */
+  /** Take the job back, record the miss, and suspend a dispatcher who misses too often. */
   private static async miss(job: PrintJob, stage: PrintJobMissStage): Promise<void> {
-    const billposterId = job.billposterId
+    const dispatcherId = job.dispatcherId
 
-    if (!billposterId) return
+    if (!dispatcherId) return
 
     const rushDays = await Settings.number('printing.rush_days')
     const rush = Day.of(job.dueOn) <= Day.today(rushDays)
     const bonusMinor = rush ? Math.round((Number(job.feeMinor) * (await Settings.number('printing.rush_bonus_percent'))) / 100) : Number(job.bonusMinor ?? 0)
 
     const taken = await PrintJob.query()
-      .where({ id: job.id, status: job.status, billposterId })
-      .updateFrom({ status: PrintJob.OPEN, billposterId: null, reservedUntil: null, confirmedAt: null, printPhotoPath: null, printPhotoDisk: null, printedAt: null, bonusMinor })
+      .where({ id: job.id, status: job.status, dispatcherId })
+      .updateFrom({ status: PrintJob.OPEN, dispatcherId: null, reservedUntil: null, confirmedAt: null, printPhotoPath: null, printPhotoDisk: null, printedAt: null, bonusMinor })
 
     if (!taken) return
 
     await StoredImage.remove(job.printPhotoDisk, job.printPhotoPath)
-    await PrintJobMiss.query().create({ printJobId: job.id, billposterId, stage })
+    await PrintJobMiss.query().create({ printJobId: job.id, dispatcherId, stage })
 
-    const user = await User.query().find(billposterId)
+    const user = await User.query().find(dispatcherId)
     const board = await Board.query().find(job.boardId)
 
     if (user) await AccountMail.printJobMissed(user, board?.name ?? 'a board', REASONS[stage])?.catch(() => undefined)
 
-    await PrintDeadlines.suspendIfRepeated(billposterId)
+    await PrintDeadlines.suspendIfRepeated(dispatcherId)
   }
 
-  private static async suspendIfRepeated(billposterId: string): Promise<void> {
+  private static async suspendIfRepeated(dispatcherId: string): Promise<void> {
     const max = await Settings.number('printing.max_misses')
     const windowDays = await Settings.number('printing.miss_window_days')
-    const misses = await PrintJobMiss.query().where({ billposterId }).whereRaw('"createdAt" > now() - make_interval(days => ?)', [windowDays]).count()
+    const misses = await PrintJobMiss.query().where({ dispatcherId }).whereRaw('"createdAt" > now() - make_interval(days => ?)', [windowDays]).count()
 
     if (misses < max) return
 
-    const role = await AccountRole.query().where({ userId: billposterId, kind: 'billposter' }).first()
+    const role = await AccountRole.query().where({ userId: dispatcherId, kind: 'dispatch' }).first()
 
     await role?.suspend(`Missed ${misses} print jobs in ${windowDays} days.`)
   }

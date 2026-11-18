@@ -8,8 +8,8 @@ import { BoardResource } from './BoardResource'
 import { ProofSummary } from './ProofSummary'
 
 /**
- * A print job as billposters see it: the board, its size, the pay and the date. The artwork
- * and the booking's days show only to the billposter who holds the job.
+ * A print job as dispatchers see it: the board, its size, the pay and the date. The artwork
+ * and the booking's days show only to the dispatcher who holds the job.
  */
 export class PrintJobResource extends Resource {
   private viewer: User | null = null
@@ -42,10 +42,10 @@ export class PrintJobResource extends Resource {
       artworkUrl: booking ? await booking.artworkUrl() : null,
       bookedDays: booking ? booking.days() : null,
       printPhotoUrl: held ? await job.printPhotoUrl() : null,
-      /** The booking and its proof of posting, which the billposter photographs once the ad is up. */
+      /** The booking and its proof of posting, which the dispatcher photographs once the ad is up. */
       bookingId: booking ? booking.id : null,
       proof: booking ? await new ProofSummary(booking).for(this.viewer!).data() : null,
-      /** Messages about the booking, for the billposter holding the job. */
+      /** Messages about the booking, for the dispatcher holding the job. */
       messages: booking ? await Messages.counts(booking, this.viewer!) : null,
       createdAt: job.createdAt,
     }

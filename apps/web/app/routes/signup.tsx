@@ -98,7 +98,7 @@ export default function SignUp({ loaderData, actionData }: Route.ComponentProps)
 											<span className="block text-sm font-semibold text-ink-900">{definition.label}</span>
 											<span className="block text-xs text-ink-500">
 												{definition.description}
-												{definition.needsReview && " We check scouts and billposters before they start."}
+												{definition.needsReview && " We check scouts and dispatchers before they start."}
 											</span>
 										</span>
 									</label>

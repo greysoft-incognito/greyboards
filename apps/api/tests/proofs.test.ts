@@ -65,7 +65,7 @@ describe('Proof of posting', () => {
   beforeAll(async () => {
     for (const who of ['advertiser', 'owner', 'reviewer', 'poster']) {
       const email = `proof-${who}-${Date.now()}@greyboards.test`
-      const roles = who === 'owner' ? ['owner'] : who === 'poster' ? ['billposter'] : ['advertiser']
+      const roles = who === 'owner' ? ['owner'] : who === 'poster' ? ['dispatch'] : ['advertiser']
       const register = await api('post', '/auth/register', { name: `Proof ${who}`, email, password: 'password123', roles }, null)
 
       tokens[who] = register.body.data.token
@@ -89,7 +89,7 @@ describe('Proof of posting', () => {
     await upload(`/print-jobs/${jobId}/print-photo`, 'photo', 'poster')
   }, 120_000)
 
-  it('takes geotagged photos at the board from the billposter on the job', async () => {
+  it('takes geotagged photos at the board from the dispatcher on the job', async () => {
     expect((await upload(`/bookings/${printed}/proofs`, 'photo', 'owner', at(10))).status).toBe(403)
     expect((await upload(`/bookings/${printed}/proofs`, 'photo', 'poster')).status).toBe(422)
 
@@ -146,7 +146,7 @@ describe('Proof of posting', () => {
     expect((await api('post', `/bookings/${printed}/proof/accept`)).status).toBe(422)
 
     // ₦500,000 rent at 85/15, and ₦175,000 to print 10 × 5 m.
-    expect(ledger(printed).sort()).toEqual(['billposter 17500000', 'escrow -67500000', 'escrow 67500000', 'owner 40000000', 'platform 10000000'].sort())
+    expect(ledger(printed).sort()).toEqual(['dispatch 17500000', 'escrow -67500000', 'escrow 67500000', 'owner 40000000', 'platform 10000000'].sort())
   })
 
   it('lets the owner prove a digital board, and accepts an unchecked proof after the deadline', async () => {

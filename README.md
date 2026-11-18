@@ -24,7 +24,7 @@ Every account can work in one or more marketplace roles, taken from **Settings â
 - **Advertiser**: finds and books boards. Active straight away.
 - **Board owner**: lists their own boards. Active straight away.
 - **Scout**: signs owners and manages boards for them. Reviewed by the team first.
-- **Billposter**: prints booked artwork and puts it up. Reviewed by the team first.
+- **Dispatcher**: prints booked artwork and puts it up. Reviewed by the team first.
 
 Reviews happen in the admin dashboard under **Applications**, by anyone holding the `partners.review` permission. These roles are separate from the staff roles (`user`, `admin`, `reviewer`) that control the dashboard.
 

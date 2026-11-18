@@ -23,7 +23,7 @@ export const addBank = (token: string) =>
     .set({ Accept: 'application/json', Authorization: `Bearer ${token}` })
     .send({ bankCode: '058', accountNumber: '0123456789' })
 
-/** Everything a scout or billposter sends before a reviewer can let them in. */
+/** Everything a scout or dispatcher sends before a reviewer can let them in. */
 export const passChecks = async (token: string) => {
   await sendId(token)
   await addBank(token)

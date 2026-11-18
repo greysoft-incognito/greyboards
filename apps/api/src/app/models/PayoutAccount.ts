@@ -5,7 +5,7 @@ import { Settings } from '@app/support/Settings'
 import type { OwnerProfile } from './OwnerProfile'
 import type { User } from './User'
 
-/** Who a payout account belongs to: an account (scouts, billposters) or an owner profile (owners' shares). */
+/** Who a payout account belongs to: an account (scouts, dispatchers) or an owner profile (owners' shares). */
 export type PayoutHolder = { userId: string } | { ownerProfileId: string }
 
 /**

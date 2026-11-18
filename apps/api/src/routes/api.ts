@@ -67,7 +67,7 @@ Router.post('/account/email/verification', [AccountController, 'sendVerification
 Router.put('/account/password', [AccountController, 'updatePassword'], [auth, limiter(10, 60)])
 Router.delete('/account', [AccountController, 'destroy'], [auth, limiter(5, 60)])
 
-// Marketplace roles: advertiser, owner, scout and billposter
+// Marketplace roles: advertiser, owner, scout and dispatcher
 Router.get('/account-roles', [AccountRoleController, 'definitions'], [limiter(120, 60)])
 Router.get('/account/roles', [AccountRoleController, 'index'], [auth])
 Router.post('/account/roles', [AccountRoleController, 'create'], [auth, limiter(20, 60)])
@@ -186,21 +186,21 @@ Router.get('/reports/:report', [CampaignReportController, 'show'], [auth])
 Router.post('/reports/:report/link', [CampaignReportController, 'relink'], [auth, limiter(20, 60)])
 Router.delete('/reports/:report', [CampaignReportController, 'destroy'], [auth])
 
-// Proof the ad is up: geotagged photos from the billposter, checked by the advertiser, release the money.
+// Proof the ad is up: geotagged photos from the dispatcher, checked by the advertiser, release the money.
 Router.post('/bookings/:booking/proofs', [ProofController, 'store'], [auth, limiter(30, 60)])
 Router.delete('/bookings/:booking/proofs/:proof', [ProofController, 'destroy'], [auth])
 Router.post('/bookings/:booking/proof/submit', [ProofController, 'submit'], [auth])
 Router.post('/bookings/:booking/proof/accept', [ProofController, 'accept'], [auth])
 Router.post('/bookings/:booking/proof/dispute', [ProofController, 'dispute'], [auth])
 
-// Billposters print approved artwork and put it up. A reserved job is theirs alone for a few hours.
-Router.get('/print-jobs', [PrintJobController, 'index'], [auth, Authorize.actingAs('billposter'), limiter(120, 60)])
-Router.get('/account/print-jobs', [PrintJobController, 'mine'], [auth, Authorize.actingAs('billposter')])
-Router.get('/print-jobs/:job', [PrintJobController, 'show'], [auth, Authorize.actingAs('billposter')])
-Router.post('/print-jobs/:job/reserve', [PrintJobController, 'reserve'], [auth, Authorize.actingAs('billposter'), limiter(30, 60)])
-Router.post('/print-jobs/:job/confirm', [PrintJobController, 'confirm'], [auth, Authorize.actingAs('billposter')])
-Router.post('/print-jobs/:job/release', [PrintJobController, 'release'], [auth, Authorize.actingAs('billposter')])
-Router.post('/print-jobs/:job/print-photo', [PrintJobController, 'printPhoto'], [auth, Authorize.actingAs('billposter'), limiter(20, 60)])
+// Dispatchers print approved artwork and put it up. A reserved job is theirs alone for a few hours.
+Router.get('/print-jobs', [PrintJobController, 'index'], [auth, Authorize.actingAs('dispatch'), limiter(120, 60)])
+Router.get('/account/print-jobs', [PrintJobController, 'mine'], [auth, Authorize.actingAs('dispatch')])
+Router.get('/print-jobs/:job', [PrintJobController, 'show'], [auth, Authorize.actingAs('dispatch')])
+Router.post('/print-jobs/:job/reserve', [PrintJobController, 'reserve'], [auth, Authorize.actingAs('dispatch'), limiter(30, 60)])
+Router.post('/print-jobs/:job/confirm', [PrintJobController, 'confirm'], [auth, Authorize.actingAs('dispatch')])
+Router.post('/print-jobs/:job/release', [PrintJobController, 'release'], [auth, Authorize.actingAs('dispatch')])
+Router.post('/print-jobs/:job/print-photo', [PrintJobController, 'printPhoto'], [auth, Authorize.actingAs('dispatch'), limiter(20, 60)])
 
 // Payments finish on the provider's checkout. The webhook checks each one with the provider.
 Router.post('/payments/:reference/verify', [PaymentController, 'verify'], [auth, limiter(30, 60)])
@@ -213,7 +213,7 @@ Router.post('/admin/disputes/:dispute/resolve', [AdminDisputeController, 'resolv
 Router.get('/admin/payouts', [AdminPayoutController, 'index'], [auth, Authorize.to('payouts.manage')])
 Router.post('/admin/payouts/:payout/retry', [AdminPayoutController, 'retry'], [auth, Authorize.to('payouts.manage'), limiter(30, 60)])
 
-// Where owners, scouts and billposters are paid, and what they've been sent.
+// Where owners, scouts and dispatchers are paid, and what they've been sent.
 Router.get('/banks', [PayoutController, 'banks'], [auth, limiter(30, 60)])
 Router.get('/account/payouts', [PayoutController, 'show'], [auth])
 Router.get('/account/payouts/history', [PayoutController, 'history'], [auth])

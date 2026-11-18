@@ -4,7 +4,7 @@ import { PayoutAccount } from '@app/models/PayoutAccount'
 import type { User } from '@app/models/User'
 import { Settings } from '@app/support/Settings'
 
-/** What a scout or billposter has shown so far, as the account or a reviewer sees it. */
+/** What a scout or dispatcher has shown so far, as the account or a reviewer sees it. */
 export interface PartnerCheckSummary {
   identity: {
     status: IdentityCheck['status']
@@ -24,7 +24,7 @@ export interface PartnerCheckSummary {
 }
 
 /**
- * The checks scouts and billposters pass before they handle other people's boards and
+ * The checks scouts and dispatchers pass before they handle other people's boards and
  * money: a government ID a reviewer looked at, and a bank account the bank confirmed.
  * The one place that decides whether an application can be approved.
  */

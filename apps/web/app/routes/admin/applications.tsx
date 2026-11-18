@@ -15,7 +15,7 @@ export const meta = () => [{ title: "Applications · Admin · Greyboards" }];
 
 const KINDS: { value: AccountRoleKind; label: string }[] = [
 	{ value: "scout", label: "Scouts" },
-	{ value: "billposter", label: "Billposters" },
+	{ value: "dispatch", label: "Dispatchers" },
 	{ value: "owner", label: "Board owners" },
 	{ value: "advertiser", label: "Advertisers" },
 ];
@@ -71,7 +71,7 @@ export default function AdminApplications({ loaderData, actionData }: Route.Comp
 
 	return (
 		<>
-			<AdminHeader title="Applications" description="Scouts and billposters handle other people's boards and money, so each one is checked before they start." />
+			<AdminHeader title="Applications" description="Scouts and dispatchers handle other people's boards and money, so each one is checked before they start." />
 			<div className="space-y-6 px-4 py-8 sm:px-8">
 				<Form method="get" className="flex flex-wrap items-center gap-3">
 					<Select name="kind" defaultValue={params.get("kind") ?? ""} aria-label="Role" className="w-auto">

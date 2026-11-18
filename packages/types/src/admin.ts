@@ -49,7 +49,7 @@ export interface AdminUserDetail extends AdminUser {
 /** A marketplace role as reviewers see it, with the account that holds it. */
 export interface AdminAccountRole extends AccountRole {
   user: AdminUser | null
-  /** For scouts and billposters: their ID and bank account. */
+  /** For scouts and dispatchers: their ID and bank account. */
   checks: PartnerChecks | null
 }
 

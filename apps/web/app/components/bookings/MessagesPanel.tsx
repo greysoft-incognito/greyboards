@@ -8,7 +8,7 @@ import { Button, Spinner, Textarea } from "~/components/ui";
 const SIDES: Record<MessageSide, string> = {
 	advertiser: "Advertiser",
 	board: "Board owner's side",
-	billposter: "Billposter",
+	dispatch: "Dispatch",
 	staff: "Greyboards",
 };
 
@@ -19,7 +19,7 @@ function formatSent(moment: string) {
 
 /**
  * Messages about the booking between the advertiser, whoever looks after the board and the
- * billposter, oldest at the top. A photo can go with a message as evidence.
+ * dispatcher, oldest at the top. A photo can go with a message as evidence.
  */
 export function MessagesPanel({ messages, more }: { messages: BookingMessage[]; more: boolean }) {
 	const navigation = useNavigation();

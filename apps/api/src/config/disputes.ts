@@ -4,7 +4,7 @@
 export default () => {
   return {
     /**
-     * Whether the advertiser, the board's side and the billposter can raise a dispute.
+     * Whether the advertiser, the board's side and the dispatcher can raise a dispute.
      */
     enabled: Boolean(env('DISPUTES_ENABLED', true)),
 
