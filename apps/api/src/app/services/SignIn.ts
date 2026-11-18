@@ -42,7 +42,7 @@ export class SignIn {
   async attempt(email: string, password: string): Promise<User> {
     const throttle = new Throttle(`sign-in:${email}|${this.req.ip}`, await Settings.number('accounts.max_password_attempts'), await SignIn.lockoutSeconds())
 
-    await throttle.ensureAllowed('Too many attempts. Please wait a moment.')
+    await throttle.ensureAllowed('Too many sign-in attempts.')
 
     SignIn.decoyHash ??= Hash.make(randomUUID())
 
@@ -71,7 +71,7 @@ export class SignIn {
     const user = (await this.auth.authorizeTemporaryToken(challengeToken, 'two-factor-login')) as User
     const throttle = new Throttle(`two-factor:${user.id}`, SignIn.MAX_CODE_ATTEMPTS, await SignIn.lockoutSeconds())
 
-    await throttle.ensureAllowed('Too many wrong codes. Please wait a moment.')
+    await throttle.ensureAllowed('Too many wrong codes.')
 
     const secret = await TwoFactor.getSecret(user.id)
     const code = answer.code?.replace(/\s/g, '')

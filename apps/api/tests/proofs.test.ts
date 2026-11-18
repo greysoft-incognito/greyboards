@@ -96,7 +96,7 @@ describe('Proof of posting', () => {
     const far = await upload(`/bookings/${printed}/proofs`, 'photo', 'poster', at(400))
 
     expect(far.status).toBe(422)
-    expect(far.body.message).toMatch(/taken 40\d m from the board/)
+    expect(far.body.message).toMatch(/taken 40\d m away/)
 
     const near = await upload(`/bookings/${printed}/proofs`, 'photo', 'poster', at(20))
 

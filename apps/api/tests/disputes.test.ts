@@ -76,7 +76,7 @@ describe('Disputes', { timeout: 60_000 }, () => {
 
     const messages = (await api('get', `/bookings/${first}/messages`, undefined, 'owner')).body.data
 
-    expect(messages[0].body).toMatch(/^Raised a dispute: The ad isn’t up\./)
+    expect(messages[0].body).toMatch(/^Reported a problem: The ad isn’t up\./)
   })
 
   it('keeps the money in escrow while the dispute is open', async () => {

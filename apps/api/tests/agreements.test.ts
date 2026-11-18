@@ -97,9 +97,9 @@ describe('Owner agreements', () => {
     expect(JSON.stringify(offer.body.data)).not.toContain(phone)
     expect(offer.body.data.wording).toMatchObject({ headline: 'Let Greyboards find advertisers for your board', shareLine: 'of every booking is yours' })
     expect(offer.body.data.wording.terms).toEqual([
-      'Agreements scout looks after bookings, printing and posting on this board for you.',
-      expect.stringContaining('You get 70% of the rent each advertiser pays'),
-      expect.stringContaining('You can stop at any time'),
+      'Agreements scout handles bookings, printing and putting up ads on this board for you.',
+      expect.stringContaining('You get 70% of every booking'),
+      expect.stringContaining('You can stop any time'),
     ])
   })
 
@@ -120,7 +120,7 @@ describe('Owner agreements', () => {
     const offer = (await api('get', `/agreements/${linkToken(phone)}`, undefined, null)).body.data
 
     expect(offer.wording.terms).toHaveLength(3)
-    expect(offer.wording.terms[1]).toContain('You get 70% of the rent')
+    expect(offer.wording.terms[1]).toContain('You get 70% of every booking')
 
     await api('put', '/admin/settings/agreements', { sms_text: null, term_2: null, term_4: null }, 'admin')
   })

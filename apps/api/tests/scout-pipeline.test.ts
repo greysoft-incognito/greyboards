@@ -51,7 +51,7 @@ describe('Scout pipeline and territories', { timeout: 60_000 }, () => {
 
     prospectId = added.body.data.id
 
-    expect((await api('post', '/account/prospects', { name: 'Same board', ...here }, 'scoutB')).body.message).toMatch(/already working a board here/)
+    expect((await api('post', '/account/prospects', { name: 'Same board', ...here }, 'scoutB')).body.message).toMatch(/already working on a board here/)
     expect((await api('post', '/account/prospects', { name: 'Same owner', ...there, ownerPhone: phone }, 'scoutB')).body.message).toMatch(/already talking to this owner/)
     expect((await api('post', '/account/prospects', { name: 'Market wall', ...there }, 'scoutB')).status).toBe(201)
   })
