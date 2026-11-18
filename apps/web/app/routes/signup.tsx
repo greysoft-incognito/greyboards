@@ -86,7 +86,7 @@ export default function SignUp({ loaderData, actionData }: Route.ComponentProps)
 				{hasRoles && (
 					<fieldset className={step === 0 ? "space-y-5" : "hidden"}>
 						<legend className="sr-only">{STEPS[0]}</legend>
-						<p className="text-sm text-ink-500">Choose as many as you like. You can change this anytime.</p>
+						<p className="text-sm text-ink-500">You can change this later.</p>
 						{actionData?.fieldErrors.roles && <Alert>{actionData.fieldErrors.roles}</Alert>}
 						<div className="grid gap-2">
 							{loaderData!.definitions.map((definition) => {
