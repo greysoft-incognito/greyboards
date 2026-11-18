@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { Form, Link, redirect, useNavigation, useSearchParams, useSubmit } from "react-router";
-import { ArrowLeft, BadgeCheck, Camera, Compass, ExternalLink, FileSignature, Layers, Lightbulb, Map as MapIcon, MapPin, Pencil, Phone, Ruler, Send, Trash2, User, X } from "lucide-react";
+import { ArrowLeft, BadgeCheck, Camera, CarFront, Compass, ExternalLink, FileSignature, Layers, Lightbulb, Map as MapIcon, MapPin, Pencil, Phone, Ruler, Send, Trash2, User, X } from "lucide-react";
 import type { BoardAgreement, BoardDetail, BoardPhoto, Daypart, OwnerProfile } from "@greyboards/types";
 import { BoardCover, BoardStatusBadge, formatHeading, formatRate, formatSize, mapLink } from "~/components/boards/BoardBits";
 import { AuctionCard, AuctionsManager, toMinor } from "~/components/bids/BidBits";
 import { BookPanel } from "~/components/bookings/BookPanel";
+import { formatMoney } from "~/components/bookings/BookingBits";
 import { SharedBookingCard } from "~/components/bookings/SharedBookingCard";
 import { ScreenPlayerPanel } from "~/components/boards/ScreenPlayerPanel";
 import { cloudflareContext } from "~/lib/cloudflare";
@@ -210,6 +211,7 @@ export default function BoardPage({ loaderData, actionData }: Route.ComponentPro
 		{ icon: Layers, label: board.faces === 1 ? "One face" : `${board.faces} faces` },
 		board.facing || board.headingDeg !== null ? { icon: Compass, label: [board.headingDeg !== null ? formatHeading(board.headingDeg) : null, board.facing].filter(Boolean).join(", ") } : null,
 		{ icon: Lightbulb, label: board.lit ? "Lit at night" : "Not lit" },
+		board.traffic ? { icon: CarFront, label: `About ${board.traffic.daily.toLocaleString("en-NG")} people pass a day${board.traffic.source === "measured" ? ", counted" : ", estimated from the road"}` } : null,
 	].filter((fact) => fact !== null);
 
 	return (
@@ -260,6 +262,9 @@ export default function BoardPage({ loaderData, actionData }: Route.ComponentPro
 								{rate}
 								{board.loop && <span className="ml-1.5 font-sans text-sm font-semibold text-ink-500">per slot, {board.loop.slots} slots of {board.loop.seconds}s in the loop</span>}
 							</p>
+						)}
+						{board.costPerThousandMinor != null && board.rate && (
+							<p className="-mt-2 text-sm text-ink-500">About {formatMoney(board.costPerThousandMinor, board.rate.currency)} for every 1,000 people passing</p>
 						)}
 						<RatingLine rating={board.rating} />
 						<ul className="grid gap-2 text-sm text-ink-700 sm:grid-cols-2">

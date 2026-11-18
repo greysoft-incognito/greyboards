@@ -50,6 +50,8 @@ import type {
   BoardImportResult,
   PriceRuleInput,
   PriceRuleResult,
+  PriceGuide,
+  PriceGuideQuery,
   Daypart,
   SlotQuote,
   PartnerChecks,
@@ -394,6 +396,8 @@ export function createEndpoints(alova: GreyboardsAlova) {
       importBoards: (data: BoardImportInput) => alova.Post<ApiResponse<BoardImportResult>>('/account/boards/import', data),
       /** Change several boards' rates at once. `dryRun` previews it. */
       priceRule: (data: PriceRuleInput) => alova.Post<ApiResponse<PriceRuleResult>>('/account/boards/price-rule', data),
+      /** A suggested rate for a board being tagged: boards of the same kind nearby, and what its traffic is worth. */
+      priceGuide: (params: PriceGuideQuery) => alova.Get<ApiResponse<PriceGuide>>('/account/boards/price-guide', { params, cacheFor: null }),
       /** Make a token for a digital screen's player. It shows once. */
       issuePlayerToken: (id: ID) => alova.Post<ApiResponse<{ token: string }>>(`/account/boards/${id}/player`),
       revokePlayerToken: (id: ID) => alova.Delete<ApiResponse<{ id: ID }>>(`/account/boards/${id}/player`),

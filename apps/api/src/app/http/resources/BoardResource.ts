@@ -1,6 +1,7 @@
 import type { Board } from '@app/models/Board'
 import type { BoardPhoto } from '@app/models/BoardPhoto'
 import { Reviews } from '@app/services/Reviews'
+import { PriceGuide } from '@app/services/PriceGuide'
 import { DigitalSlots } from '@app/services/DigitalSlots'
 import { Resource } from 'resora'
 
@@ -20,6 +21,7 @@ export class BoardResource extends Resource {
     const cover = this.cover === undefined ? await board.photos().oldest('createdAt').first() : this.cover
     const rate = board.rate()
     const distance = (board as any).distance_m ?? board.distanceM
+    const traffic = await PriceGuide.traffic(board.roadClass, board.dailyTraffic)
 
     return {
       id: board.id,
@@ -40,6 +42,11 @@ export class BoardResource extends Resource {
       longitude: board.longitude,
       rate: rate === null ? null : { amountMinor: rate, currency: board.currency, period: board.ratePeriod },
       printsOwn: !!board.printsOwn,
+      roadClass: board.roadClass ?? null,
+      /** About how many people pass each day, and whether someone counted them or it's from the kind of road. */
+      traffic,
+      /** What the rate costs for each 1,000 people passing. */
+      costPerThousandMinor: PriceGuide.costPerThousand(rate, board.ratePeriod, traffic),
       /** On a digital screen: its loop. The rate is then for one slot, all day. */
       loop: board.isDigital() ? await DigitalSlots.loop(board) : null,
       status: board.status,
