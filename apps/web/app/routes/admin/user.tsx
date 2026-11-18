@@ -79,7 +79,7 @@ export default function AdminUserPage({ loaderData, actionData }: Route.Componen
 										<span className="flex-1 font-medium text-ink-900">{held.label}</span>
 										{held.note && <span className="text-sm text-ink-500">{held.note}</span>}
 										<RoleStatus status={held.status} />
-										<RoleReputationControls role={held} history={histories[held.id] ?? []} canManage={canVerify && !isMe} busy={navigation.state !== "idle"} />
+										<RoleReputationControls role={held} history={histories[held.id] ?? []} canManage={canVerify} busy={navigation.state !== "idle"} />
 									</li>
 								);
 							})}
