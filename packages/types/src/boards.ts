@@ -147,6 +147,12 @@ export interface BoardDetail extends Board {
   taggedById?: ID | null
   /** What the owner charges to print and put up an ad, when they do it. Null uses the standard price. */
   ownPrintFeeMinor?: number | null
+  /** Whether the tagger fixed what the owner receives, so the rate is listed with the other shares on top. */
+  ownerNet?: boolean
+  /** The owner's amount per period, when `ownerNet` is on. */
+  ownerRateMinor?: number | null
+  /** The percent of the rent the owner gets. */
+  ownerPercent?: number
   reviewNote?: string | null
   reviewedAt?: string | null
   /** For boards a scout runs for their owner. */
@@ -184,6 +190,14 @@ export interface BoardInput {
   ratePeriod?: BoardRatePeriod | null
   printsOwn?: boolean
   printFeeMinor?: number | null
+  /** `rateMinor` is what the owner receives; the listed rate adds the other shares on top. */
+  ownerNet?: boolean
+}
+
+/** What to list a board at so its owner receives a fixed amount. */
+export interface OwnerPriceQuote {
+  ownerPercent: number
+  listedMinor: number | null
 }
 
 /** Who owns a board being tagged: a suggested or managed profile, or a new owner's name and phone. */
@@ -261,6 +275,8 @@ export interface BoardFace {
   rateMinor: number | null
   /** Its own rate, or null when it uses the board's. */
   ownRateMinor: number | null
+  /** The owner's fixed amount for this face, on a board that fixes it. Only for whoever looks after the board. */
+  ownerRateMinor?: number | null
   /** The fewest weeks or months one booking can take. */
   minPeriods: number
 }

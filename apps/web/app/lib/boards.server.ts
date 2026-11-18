@@ -36,6 +36,7 @@ export function boardInput(form: FormData): BoardInput {
 		ratePeriod: (text(form, "ratePeriod") ?? "month") as BoardInput["ratePeriod"],
 		printsOwn: form.get("printsOwn") === "1",
 		printFeeMinor: printFee === null ? null : Math.round(printFee * 100),
+		ownerNet: form.get("ownerNet") === "1",
 	};
 }
 

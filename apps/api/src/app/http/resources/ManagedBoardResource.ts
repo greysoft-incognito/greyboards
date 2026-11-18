@@ -43,6 +43,7 @@ export class ManagedBoardResource extends BoardResource {
         headingDeg: face.headingDeg,
         rateMinor: board.rateFor(face),
         ownRateMinor: face.ownRate(),
+        ownerRateMinor: this.showPrivate ? face.ownerRate() : null,
         minPeriods: face.minPeriods,
       })),
       booking: {
@@ -58,6 +59,9 @@ export class ManagedBoardResource extends BoardResource {
         ? {
             owner: owner ? await new OwnerProfileResource(owner).data() : null,
             taggedById: board.taggedById,
+            ownerNet: !!board.ownerNet,
+            ownerRateMinor: board.ownerRate(),
+            ownerPercent: await Commissions.ownerPercent(board),
             ownPrintFeeMinor: board.printFeeMinor === null ? null : Number(board.printFeeMinor),
             reviewNote: board.reviewNote,
             reviewedAt: board.reviewedAt,

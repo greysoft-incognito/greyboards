@@ -45,6 +45,7 @@ import type {
   IdentityInput,
   IdentityReview,
   NearbyBoard,
+  OwnerPriceQuote,
   PartnerChecks,
   BoardAgreement,
   BoardDetail,
@@ -380,6 +381,9 @@ export function createEndpoints(alova: GreyboardsAlova) {
       /** Boards already tagged near a spot and facing the same way. */
       nearbyBoards: (params: { lat: number; lng: number; headingDeg?: number | null; except?: ID }) =>
         alova.Get<ApiResponse<NearbyBoard[]>>('/account/boards/nearby', { params, cacheFor: null }),
+      /** What to list a board at so its owner receives `amountMinor` each period. */
+      ownerPrice: (params: { amountMinor?: number | null; as: 'owner' | 'scout' }) =>
+        alova.Get<ApiResponse<OwnerPriceQuote>>('/account/boards/owner-price', { params, cacheFor: null }),
       /** Change a face's name, heading or rate card. */
       updateBoardFace: (id: ID, face: ID, data: BoardFaceInput) => alova.Put<ApiResponse<BoardDetail>>(`/account/boards/${id}/faces/${face}`, data),
       /** Keep days off the market, on one face or the whole board. */

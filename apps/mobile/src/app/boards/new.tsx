@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
-import { Pressable, StyleSheet, View } from 'react-native'
+import { Pressable, StyleSheet, Switch, View } from 'react-native'
 import { Image } from 'expo-image'
 import * as ImagePicker from 'expo-image-picker'
 import { router } from 'expo-router'
-import { Binoculars, Camera, LocateFixed, MapPin, Presentation, X } from 'lucide-react-native'
+import { Binoculars, Camera, HandCoins, LocateFixed, MapPin, Presentation, X } from 'lucide-react-native'
 import type { BoardKind, BoardKindDefinition, BoardOwnerChoice, BoardRatePeriod, NearbyBoard } from '@greyboards/types'
 import { HeadingPicker } from '@/components/boards/HeadingPicker'
 import { OwnerPicker } from '@/components/boards/OwnerPicker'
@@ -49,6 +49,8 @@ export default function TagBoard() {
   const [owner, setOwner] = useState<BoardOwnerChoice>({})
   const [heading, setHeading] = useState<number | null>(null)
   const [nearby, setNearby] = useState<NearbyBoard[]>([])
+  const [ownerNet, setOwnerNet] = useState(false)
+  const [ownerPercents, setOwnerPercents] = useState<{ owner: number; scout: number } | null>(null)
   const [form, setForm] = useState({ name: '', kind: 'billboard' as BoardKind, widthM: '', heightM: '', faces: '1', lit: '0', facing: '', address: '', city: '', rate: '', ratePeriod: 'month' as BoardRatePeriod })
   const errors = save.problem.fields
   const set = (key: keyof typeof form) => (value: string) => setForm((current) => ({ ...current, [key]: value }))
@@ -70,6 +72,13 @@ export default function TagBoard() {
       clearTimeout(timer)
     }
   }, [spot, heading])
+
+  // The owner's percent of the rent, to show what the board lists at and what the owner gets.
+  useEffect(() => {
+    Promise.all([api.account.ownerPrice({ as: 'owner' }).send(), api.account.ownerPrice({ as: 'scout' }).send()])
+      .then(([owner, scout]) => setOwnerPercents({ owner: owner.data.ownerPercent, scout: scout.data.ownerPercent }))
+      .catch(() => undefined)
+  }, [])
 
   useEffect(() => {
     api
@@ -131,6 +140,7 @@ export default function TagBoard() {
           accuracyM: spot.accuracyM,
           rateMinor: rate === null ? null : Math.round(rate * 100),
           ratePeriod: form.ratePeriod,
+          ownerNet,
           ...(as === 'scout' ? owner : {}),
         })
         .send()
@@ -258,7 +268,11 @@ export default function TagBoard() {
       <Section title={as === 'scout' ? 'Owner and rate' : 'Rate'}>
         <View style={styles.pair}>
           <View style={styles.flex}>
-            <Field label="Rate in naira" error={errors.rateMinor} hint={as === 'scout' ? 'What the owner asks, if you know.' : undefined}>
+            <Field
+              label={ownerNet ? 'Owner gets, in naira' : 'Rate in naira'}
+              error={errors.rateMinor}
+              hint={ownerNet ? 'Each period, after every other share.' : as === 'scout' ? 'What the owner asks, if you know.' : undefined}
+            >
               <Input value={form.rate} onChangeText={set('rate')} keyboardType="number-pad" placeholder="850000" />
             </Field>
           </View>
@@ -268,6 +282,7 @@ export default function TagBoard() {
             </Field>
           </View>
         </View>
+        <OwnerNetToggle on={ownerNet} onChange={setOwnerNet} rate={form.rate} percent={ownerPercents?.[as] ?? null} />
         {as === 'scout' ? <OwnerPicker onChange={setOwner} errors={errors} /> : null}
       </Section>
 
@@ -289,7 +304,42 @@ export default function TagBoard() {
   )
 }
 
+const naira = (amount: number) => `₦${Math.round(amount).toLocaleString('en-NG')}`
+
+/**
+ * Lets the tagger fix what the owner receives. The rate typed is then the owner's amount, and
+ * the listed rate adds the other shares on top: the same rounding the API uses, up to a naira.
+ */
+function OwnerNetToggle({ on, onChange, rate, percent }: { on: boolean; onChange: (on: boolean) => void; rate: string; percent: number | null }) {
+  const amount = Number(rate.replace(/[^\d.]/g, ''))
+  const typed = rate.trim() !== '' && Number.isFinite(amount) && amount > 0
+  const listed = typed && percent !== null && percent > 0 && percent < 100 ? Math.ceil((amount * 100) / percent) : null
+
+  return (
+    <View style={styles.ownerNet}>
+      <View style={styles.ownerNetRow}>
+        <HandCoins size={18} color={colors.brand600} />
+        <View style={styles.flex}>
+          <Text variant="label">The owner gets exactly this amount</Text>
+          <Text variant="small">The other shares are added on top of this amount, instead of coming out of it.</Text>
+        </View>
+        <Switch value={on} onValueChange={onChange} trackColor={{ true: colors.brand500, false: colors.surface300 }} thumbColor={colors.white} accessibilityLabel="The owner gets exactly this amount" />
+      </View>
+      {typed && percent !== null ? (
+        <Text variant="small" style={styles.ownerNetPreview}>
+          {on && listed !== null
+            ? `Listed at ${naira(listed)}. The owner gets ${naira(amount)}, which is ${percent}% of the rent.`
+            : `Listed at ${naira(amount)}. The owner gets ${naira(Math.floor((amount * percent) / 100))}, which is ${percent}% of the rent.`}
+        </Text>
+      ) : null}
+    </View>
+  )
+}
+
 const styles = StyleSheet.create({
+  ownerNet: { gap: 10, borderWidth: 1.5, borderColor: colors.surface200, borderRadius: radius.lg, padding: 12 },
+  ownerNetRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  ownerNetPreview: { backgroundColor: colors.surface100, borderRadius: radius.md, paddingHorizontal: 10, paddingVertical: 8, overflow: 'hidden', color: colors.ink700 },
   flex: { flex: 1 },
   as: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 },
   spot: { flexDirection: 'row', alignItems: 'center', gap: 12 },
