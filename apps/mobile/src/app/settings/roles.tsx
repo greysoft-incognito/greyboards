@@ -3,6 +3,8 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native'
 import { useRequest } from 'alova/client'
 import type { AccountRole, AccountRoleDefinition, AccountRoleKind } from '@greyboards/types'
 import { RoleIcon, RoleStatus, heldRole } from '@/components/AccountRoles'
+import { Standing } from '@/components/reputation/Badges'
+import { RoleReputationPanel } from '@/components/reputation/RoleReputation'
 import { SettingsPage, Section } from '@/components/settings/SettingsPage'
 import { Button, Callout, Text } from '@/components/ui'
 import { api } from '@/lib/api'
@@ -52,10 +54,12 @@ export default function Roles() {
               <View style={styles.flex}>
                 <Text variant="title">{definition.label}</Text>
                 {role ? <RoleStatus status={role.status} /> : null}
+                {role ? <Standing standing={role.reputation} showScore={false} /> : null}
               </View>
             </View>
             <Text variant="muted">{definition.description}</Text>
             {role?.note ? <Text style={styles.note}>Reviewer's note: {role.note}</Text> : null}
+            {role && (role.status === 'active' || role.status === 'suspended') ? <RoleReputationPanel kind={role.kind} reputation={role.reputation} /> : null}
             {!role || role.status === 'rejected' ? (
               <Button
                 title={role ? 'Apply again' : definition.needsReview ? 'Apply' : 'Start'}
