@@ -45,7 +45,7 @@ What's built and what's left, following the phases in [docs/proposal.md](docs/pr
 - The owner agreement wording
 - The bid format (proposal question 3)
 
-Decided: Kaduna goes live first; the rent splits owner 70, Greyboards 20, scout 10 after the dispatcher is paid; sharing merges every advertiser's design into one print; Billposter is now Dispatch.
+Decided: Kaduna goes live first; the rent splits owner 70, Greyboards 20, scout 10, with the dispatcher's price paid separately on top; sharing merges every advertiser's design into one print; Billposter is now Dispatch.
 
 ## Needed before launch
 

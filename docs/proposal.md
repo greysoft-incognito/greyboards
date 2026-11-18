@@ -113,17 +113,17 @@ One person can be a dispatcher and a scout, or an owner, on the same account.
 
 ### 3.6 Commissions
 
-Printing and posting is paid first, to the dispatcher who did it. The rent left is split between the owner, Greyboards and the scout who brought the board in: 70%, 20% and 10% by default. Admins can change the three parts, and they must always add up to 100%. On a board its owner tagged, with no scout, the scout's part goes to the owner by default (an admin setting can send it to Greyboards instead).
+The rent is split between the owner, Greyboards and the scout who brought the board in: 70%, 20% and 10% by default. Printing and posting is separate: the advertiser pays the dispatcher's price on top of the rent, and it goes to the dispatcher who did it, so it never comes out of anyone's share. Admins can change the three parts, and they must always add up to 100%. On a board its owner tagged, with no scout, the scout's part goes to the owner by default (an admin setting can send it to Greyboards instead).
 
-Example with a ₦1,000,000 booking on a scouted board, of which ₦100,000 is printing and posting:
+Example with ₦1,000,000 of rent on a scouted board, and a dispatcher's price of ₦100,000:
 
 | | Amount |
 | --- | --- |
-| Advertiser pays | ₦1,000,000 (held by Greyboards) |
+| Advertiser pays | ₦1,100,000 (held by Greyboards): ₦1,000,000 rent and ₦100,000 printing |
 | Dispatcher, for printing and posting | ₦100,000 |
-| Owner receives (70% of the ₦900,000 rent) | ₦630,000 |
-| Greyboards keeps (20%) | ₦180,000 |
-| Scout receives (10%) | ₦90,000 |
+| Owner receives (70% of the rent) | ₦700,000 |
+| Greyboards keeps (20%) | ₦200,000 |
+| Scout receives (10%) | ₦100,000 |
 
 Shares are paid only after proof of posting is accepted. A signed agreement keeps the owner's share it was signed at, and a paid booking keeps the split it was paid with.
 
