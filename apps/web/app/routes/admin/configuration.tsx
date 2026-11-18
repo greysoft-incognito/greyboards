@@ -42,16 +42,20 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 
 /**
  * App settings, one group at a time: the groups on the left, the chosen group's form
- * on the right. On phones the list comes first and each group opens on its own.
+ * on the right. On large screens the page fills the viewport and each side scrolls on
+ * its own. On phones the list comes first and each group opens on its own.
  */
 export default function AdminConfiguration({ loaderData }: Route.ComponentProps) {
 	const { groups, current, chosen } = loaderData;
 
 	return (
-		<>
+		<div className="lg:flex lg:h-dvh lg:flex-col">
 			<AdminHeader title="Configuration" description="Settings for the whole app. Secrets and API keys live in the API's .env file instead." />
-			<div className="lg:grid lg:grid-cols-[22rem_1fr]">
-				<nav aria-label="Settings groups" className={`border-surface-200 p-3 lg:block lg:border-r-[1.5px] ${chosen ? "hidden" : ""}`}>
+			<div className="lg:grid lg:min-h-0 lg:flex-1 lg:grid-cols-[22rem_1fr]">
+				<nav
+					aria-label="Settings groups"
+					className={`border-surface-200 p-3 lg:block lg:overflow-y-auto lg:overscroll-contain lg:border-r-[1.5px] ${chosen ? "hidden" : ""}`}
+				>
 					<ul className="space-y-1">
 						{groups.map((group) => (
 							<li key={group.id}>
@@ -81,11 +85,11 @@ export default function AdminConfiguration({ loaderData }: Route.ComponentProps)
 						))}
 					</ul>
 				</nav>
-				<div className={chosen ? "" : "hidden lg:block"}>
+				<div className={`lg:overflow-y-auto lg:overscroll-contain ${chosen ? "" : "hidden lg:block"}`}>
 					<GroupForm key={current.id} group={current} />
 				</div>
 			</div>
-		</>
+		</div>
 	);
 }
 
