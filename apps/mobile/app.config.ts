@@ -3,7 +3,7 @@ import type { ConfigContext, ExpoConfig } from 'expo/config'
 /**
  * Lets EAS_PROJECT_ID and EAS_OWNER override the EAS project in app.json, and adds universal links (iOS) and
  * app links (Android) for the web app's address, so the reset-password and verify-email links in
- * emails, open the app when EXPO_PUBLIC_WEB_URL is an https address.
+ * emails, and the payment provider's return link, open the app when EXPO_PUBLIC_WEB_URL is an https address.
  */
 export default ({ config }: ConfigContext): ExpoConfig => {
   const projectId = process.env.EAS_PROJECT_ID
@@ -28,7 +28,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         {
           action: 'VIEW',
           autoVerify: true,
-          data: ['/reset-password', '/verify-email'].map((pathPrefix) => ({ scheme: 'https', host, pathPrefix })),
+          data: ['/reset-password', '/verify-email', '/checkout/complete'].map((pathPrefix) => ({ scheme: 'https', host, pathPrefix })),
           category: ['BROWSABLE', 'DEFAULT'],
         },
       ],

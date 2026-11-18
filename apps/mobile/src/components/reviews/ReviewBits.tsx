@@ -1,9 +1,13 @@
-import { StyleSheet, View } from 'react-native'
+import { useState } from 'react'
+import { Pressable, StyleSheet, View } from 'react-native'
 import { Star } from 'lucide-react-native'
-import type { PublishedReview, RatingSummary } from '@greyboards/types'
+import type { BookingReviews, PublishedReview, RatingSummary } from '@greyboards/types'
+import { Standing } from '@/components/reputation/Badges'
 import { Section } from '@/components/settings/SettingsPage'
-import { Text } from '@/components/ui'
+import { Button, Callout, Input, Text } from '@/components/ui'
+import { api } from '@/lib/api'
 import { formatDay } from '@/lib/format'
+import { useAction } from '@/lib/use-action'
 import { colors, fonts } from '@/theme'
 
 /** Five stars, filled up to `rating`. */
@@ -56,6 +60,70 @@ export function BoardReviews({ reviews, summary }: { reviews: PublishedReview[];
           {review.body ? <Text style={styles.body}>{review.body}</Text> : null}
         </View>
       ))}
+    </Section>
+  )
+}
+
+/** Rate the board, or the advertiser, once the ad is up. A review can be changed until the window closes. */
+export function ReviewSection({ bookingId, reviews, onChange }: { bookingId: string; reviews: BookingReviews; onChange: () => void }) {
+  const action = useAction()
+  const [rating, setRating] = useState(reviews.mine?.rating ?? 0)
+  const [body, setBody] = useState(reviews.mine?.body ?? '')
+  const [editing, setEditing] = useState(!reviews.mine)
+  const about = reviews.subject === 'board' ? 'the board' : 'the advertiser'
+
+  if (!reviews.subject || (!reviews.canWrite && !reviews.mine)) return null
+
+  const save = () =>
+    action.run(async () => {
+      await api.review(bookingId, { rating, body: body.trim() || null }).send()
+      setEditing(false)
+      onChange()
+
+      return 'Thanks for your review.'
+    })
+
+  return (
+    <Section title={reviews.mine ? `Your review of ${about}` : `How was ${about}?`}>
+      {reviews.advertiserRating && reviews.advertiserRating.count > 0 ? (
+        <View style={styles.line}>
+          <Text variant="muted">Others rated this advertiser</Text>
+          <RatingLine rating={reviews.advertiserRating} />
+        </View>
+      ) : null}
+      {reviews.advertiserStanding ? (
+        <View style={styles.line}>
+          <Text variant="muted">The advertiser’s standing</Text>
+          <Standing standing={reviews.advertiserStanding} compact />
+        </View>
+      ) : null}
+      {reviews.mine && !editing ? (
+        <>
+          <Stars rating={reviews.mine.rating} size={20} />
+          {reviews.mine.body ? <Text style={styles.body}>{reviews.mine.body}</Text> : null}
+          {reviews.canWrite ? <Button title="Change it" variant="ghost" onPress={() => setEditing(true)} /> : null}
+        </>
+      ) : (
+        <>
+          <View style={styles.stars} accessibilityRole="radiogroup" accessibilityLabel="Stars">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <Pressable key={star} accessibilityRole="radio" accessibilityState={{ checked: rating === star }} accessibilityLabel={`${star} ${star === 1 ? 'star' : 'stars'}`} onPress={() => setRating(star)} hitSlop={4}>
+                <Star size={32} color={star <= rating ? colors.amber400 : colors.surface300} fill={star <= rating ? colors.amber400 : 'transparent'} />
+              </Pressable>
+            ))}
+          </View>
+          <Input
+            value={body}
+            onChangeText={setBody}
+            multiline
+            maxLength={1000}
+            accessibilityLabel="Your review"
+            placeholder={reviews.subject === 'board' ? 'Was it seen? Was it put up well and on time?' : 'Did they send artwork on time? Were they easy to work with?'}
+          />
+          <Button title={reviews.mine ? 'Save review' : 'Post review'} loading={action.busy} disabled={!rating} onPress={save} />
+        </>
+      )}
+      {action.problem.message ? <Callout>{action.problem.message}</Callout> : null}
     </Section>
   )
 }

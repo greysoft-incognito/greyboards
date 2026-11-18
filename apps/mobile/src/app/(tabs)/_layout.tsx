@@ -1,6 +1,6 @@
 import type { ColorValue } from 'react-native'
 import { Tabs } from 'expo-router'
-import { CircleUserRound, LayoutDashboard, type LucideIcon, MapPinned, Presentation, Printer } from 'lucide-react-native'
+import { CalendarCheck, CircleUserRound, LayoutDashboard, type LucideIcon, MapPinned, Presentation, Printer } from 'lucide-react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { AppHeader } from '@/components/AppHeader'
 import { taggingRoles } from '@/components/boards/BoardBits'
@@ -12,7 +12,7 @@ const icon =
   (Icon: LucideIcon) =>
   ({ focused, color, size }: { focused: boolean; color: ColorValue; size: number }) => <Icon color={color as string} size={size} strokeWidth={focused ? 2.4 : 2} />
 
-/** The signed-in app: the dashboard, finding boards, boards for owners and scouts, and the account, under the shared header and over the glass tab bar. */
+/** The signed-in app: the dashboard, finding boards, bookings, boards for owners and scouts, and the account, under the shared header and over the glass tab bar. */
 export default function TabsLayout() {
   const insets = useSafeAreaInsets()
   const roles = useUser().accountRoles
@@ -36,6 +36,7 @@ export default function TabsLayout() {
       >
         <Tabs.Screen name="index" options={{ title: 'Dashboard', tabBarIcon: icon(LayoutDashboard) }} />
         <Tabs.Screen name="find" options={{ title: 'Find', tabBarIcon: icon(MapPinned) }} />
+        <Tabs.Screen name="bookings" options={{ title: 'Bookings', tabBarIcon: icon(CalendarCheck) }} />
         <Tabs.Screen name="boards" options={{ title: 'Boards', tabBarIcon: icon(Presentation), href: tags ? undefined : null }} />
         <Tabs.Screen name="jobs" options={{ title: 'Jobs', tabBarIcon: icon(Printer), href: posts ? undefined : null }} />
         <Tabs.Screen name="account" options={{ title: 'Account', tabBarIcon: icon(CircleUserRound) }} />
