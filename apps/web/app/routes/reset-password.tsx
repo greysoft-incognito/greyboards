@@ -43,8 +43,8 @@ export default function ResetPassword({ loaderData, actionData }: Route.Componen
 
 	if (!loaderData.token) {
 		return (
-			<AuthFrame title="This link is incomplete" subtitle={subtitle}>
-				<p className="text-sm text-ink-500">Open the reset link from your email again, or ask for a new one.</p>
+			<AuthFrame title="This link doesn't work" subtitle={subtitle}>
+				<p className="text-sm text-ink-500">Open the link from your email again.</p>
 			</AuthFrame>
 		);
 	}
@@ -57,7 +57,7 @@ export default function ResetPassword({ loaderData, actionData }: Route.Componen
 				<Field label="New password" error={actionData?.fieldErrors.password} hint="At least 8 characters.">
 					<Input name="password" type="password" autoComplete="new-password" minLength={8} required autoFocus />
 				</Field>
-				<Field label="Type it again">
+				<Field label="Confirm password">
 					<Input name="password_confirmation" type="password" autoComplete="new-password" minLength={8} required />
 				</Field>
 				<p className="text-xs text-ink-500">Every device signed in to your account will be signed out.</p>

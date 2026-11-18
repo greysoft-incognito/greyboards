@@ -45,7 +45,7 @@ export default function SignUp() {
       }
     >
       {!registrationOpen ? (
-        <Callout>Sign-ups are closed right now. If you already have an account, sign in instead.</Callout>
+        <Callout>Sign-ups are closed right now.</Callout>
       ) : (
         <>
           {problem.summary ? <Callout>{problem.summary}</Callout> : null}
@@ -76,7 +76,7 @@ export default function SignUp() {
             />
           </Field>
           {definitions.length ? (
-            <Field label="How will you use Greyboards?" error={problem.fields.roles} hint="Pick any. Scouts and dispatchers are checked before they start.">
+            <Field label="What brings you to Greyboards?" error={problem.fields.roles} hint="You can change this later. Scouts and dispatchers get a quick review first.">
               <View style={styles.roles}>
                 {definitions.map((definition) => (
                   <CheckOption

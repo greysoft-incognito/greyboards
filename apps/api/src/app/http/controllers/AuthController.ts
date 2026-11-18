@@ -141,7 +141,7 @@ export default class AuthController extends BaseController {
     const reset = await PasswordReset.fromToken(String(data.token))
     const user = reset && !reset.isExpired() ? await User.query().where({ email: reset.email }).first() : null
 
-    assertFound(user, 'This reset link has expired. Ask for a new one.', 422)
+    assertFound(user, 'This link has expired. Ask for a new one.', 422)
 
     await user.changePassword(String(data.password))
     await user.markEmailVerified()

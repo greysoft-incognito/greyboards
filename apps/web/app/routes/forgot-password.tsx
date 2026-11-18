@@ -41,14 +41,13 @@ export default function ForgotPassword({ actionData }: Route.ComponentProps) {
 				<div className="space-y-5">
 					<Notice>{actionData.sent}</Notice>
 					<p className="text-sm text-ink-500">
-						Check <strong className="text-ink-700">{actionData.email}</strong>. The link works for an hour. Not there? Look in spam, or
-						try again in a minute.
+						It expires in an hour. Can't find it? Check your spam folder.
 					</p>
 				</div>
 			) : (
 				<Form method="post" className="space-y-5">
 					{actionData?.error && !Object.keys(actionData.fieldErrors).length && <Alert>{actionData.error}</Alert>}
-					<p className="text-sm text-ink-500">Enter the email you signed up with and we'll send you a link to choose a new password.</p>
+					<p className="text-sm text-ink-500">We'll email you a link to reset it.</p>
 					<Field label="Email" error={actionData?.fieldErrors.email}>
 						<Input name="email" type="email" autoComplete="email" required defaultValue={actionData?.email} autoFocus />
 					</Field>
