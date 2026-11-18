@@ -36,7 +36,7 @@ What's built and what's left, following the phases in [docs/proposal.md](docs/pr
 
 - [x] Digital slot scheduling and play logs
 - [x] Traffic estimates and price guidance
-- [ ] Owner bulk import and price rules
+- [x] Owner bulk import and price rules
 - [x] Public API for agencies
 
 ## Open decisions

@@ -364,6 +364,24 @@ export default () => {
         ],
       },
       {
+        id: 'imports',
+        title: 'Owner bulk tools',
+        description: 'Importing boards from a spreadsheet, and changing many rates at once.',
+        icon: 'upload',
+        fields: [
+          {
+            name: 'max_rows',
+            key: 'imports.max_rows',
+            env: 'IMPORT_MAX_ROWS',
+            type: 'number',
+            label: 'Boards at a time',
+            help: 'The most boards one import or one price change can cover.',
+            min: 1,
+            max: 2000,
+          },
+        ],
+      },
+      {
         id: 'public_api',
         title: 'Public API',
         description: 'Keys agencies use to search boards and book from their own systems.',

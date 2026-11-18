@@ -49,6 +49,10 @@ import type {
   IdentityReview,
   NearbyBoard,
   OwnerPriceQuote,
+  BoardImportInput,
+  BoardImportResult,
+  PriceRuleInput,
+  PriceRuleResult,
   PriceGuide,
   PriceGuideQuery,
   Daypart,
@@ -391,6 +395,10 @@ export function createEndpoints(alova: GreyboardsAlova) {
       /** Boards already tagged near a spot and facing the same way. */
       nearbyBoards: (params: { lat: number; lng: number; headingDeg?: number | null; except?: ID }) =>
         alova.Get<ApiResponse<NearbyBoard[]>>('/account/boards/nearby', { params, cacheFor: null }),
+      /** Add boards from a spreadsheet saved as CSV. `dryRun` checks every row without saving. */
+      importBoards: (data: BoardImportInput) => alova.Post<ApiResponse<BoardImportResult>>('/account/boards/import', data),
+      /** Change several boards' rates at once. `dryRun` previews it. */
+      priceRule: (data: PriceRuleInput) => alova.Post<ApiResponse<PriceRuleResult>>('/account/boards/price-rule', data),
       /** A suggested rate for a board being tagged: boards of the same kind nearby, and what its traffic is worth. */
       priceGuide: (params: PriceGuideQuery) => alova.Get<ApiResponse<PriceGuide>>('/account/boards/price-guide', { params, cacheFor: null }),
       /** Make a token for a digital screen's player. It shows once. */
