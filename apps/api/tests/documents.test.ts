@@ -77,6 +77,31 @@ describe('Pages and policies', () => {
     expect(response.body.errors).toHaveProperty('slug')
   })
 
+  it('seeds the legal pages', async () => {
+    const policies = await api('get', '/documents?type=policy', undefined, null)
+
+    expect(policies.body.data.map((document: { slug: string }) => document.slug)).toEqual(
+      expect.arrayContaining(['terms', 'privacy', 'cookies', 'refunds', 'advertising-standards', 'owner-terms', 'partner-terms', 'api-terms']),
+    )
+  })
+
+  it('shows readers the settings a page quotes, and admins the placeholders', async () => {
+    await api('put', '/admin/settings/bookings', { full_refund_days: 9 })
+
+    const created = await api('post', '/admin/documents', {
+      title: `Refund window ${Date.now()}`,
+      body: 'Cancel {{ bookings.full_refund_days }} days ahead. Split: {{revenue.unscouted_to}}. Kept: {{no.such_key}}',
+      published: true,
+    })
+    const read = await api('get', `/documents/${created.body.data.slug}`, undefined, null)
+
+    expect(read.body.data.body).toBe('Cancel 9 days ahead. Split: The owner. Kept: {{no.such_key}}')
+    expect((await api('get', `/admin/documents/${created.body.data.id}`)).body.data.body).toContain('{{ bookings.full_refund_days }}')
+
+    await api('put', '/admin/settings/bookings', { full_refund_days: null })
+    await api('delete', `/admin/documents/${created.body.data.id}`)
+  })
+
   it('keeps members out of the editor', async () => {
     expect((await api('get', '/admin/documents', undefined, 'member')).status).toBe(403)
     expect((await api('post', '/admin/documents', { title: 'Mine', body: 'x' }, 'member')).status).toBe(403)
