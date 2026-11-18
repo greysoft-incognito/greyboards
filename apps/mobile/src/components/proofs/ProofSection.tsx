@@ -1,10 +1,11 @@
+import { useState } from 'react'
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import { Image } from 'expo-image'
 import * as ImagePicker from 'expo-image-picker'
 import { BadgeCheck, Camera, X } from 'lucide-react-native'
 import type { BookingProof } from '@greyboards/types'
 import { Section } from '@/components/settings/SettingsPage'
-import { Button, Callout, Text } from '@/components/ui'
+import { Button, Callout, Field, Input, Text } from '@/components/ui'
 import { api } from '@/lib/api'
 import { PlainProblem } from '@/lib/forms'
 import { megabytes, useLimits } from '@/lib/limits'
@@ -17,22 +18,29 @@ import { colors, radius } from '@/theme'
 function explain(proof: BookingProof) {
   const at = (moment: string) => new Date(moment).toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })
 
-  if (proof.status === 'accepted') return `Accepted${proof.acceptedAt ? ` ${at(proof.acceptedAt)}` : ''}. The money left escrow and you're paid.`
+  if (proof.status === 'accepted') return `Accepted${proof.acceptedAt ? ` ${at(proof.acceptedAt)}` : ''}. The money left escrow and everyone is paid.`
+  if (proof.status === 'submitted' && proof.canReview) {
+    return `Check the photos. Accepting puts your ad live and pays everyone.${proof.acceptsAt ? ` If you don't answer by ${at(proof.acceptsAt)}, it counts as accepted.` : ''}`
+  }
   if (proof.status === 'submitted') return `With the advertiser to check.${proof.acceptsAt ? ` It counts as accepted at ${at(proof.acceptsAt)} if they don't answer.` : ''}`
   if (proof.canAdd) return `Once it's up, take at least ${proof.minPhotos} photos showing the whole ad, standing within ${proof.maxDistanceM} m of the board with location on.`
 
-  return 'Photos of the ad on the board show here once they are taken.'
+  return 'Once the ad is up, photos taken at the board show here for you to check. Nobody is paid until then.'
 }
 
 /**
- * Proof the ad is up, for whoever photographs it. Each photo is taken with the camera at
- * the board and sent with where the phone is; the API turns away photos taken too far off.
+ * Proof the ad is up. Whoever photographs it takes each photo with the camera at the board,
+ * sent with where the phone is; the API turns away photos taken too far off. The advertiser
+ * then accepts, which pays everyone, or says what to fix.
  */
 export function ProofSection({ bookingId, proof, onChange }: { bookingId: string; proof: BookingProof; onChange: () => void }) {
   const { maxImageMb } = useLimits()
   const add = useAction()
   const remove = useAction()
   const submit = useAction()
+  const review = useAction()
+  const [disputing, setDisputing] = useState(false)
+  const [note, setNote] = useState('')
   const enough = proof.photos.length >= proof.minPhotos
 
   const takePhoto = () =>
@@ -73,7 +81,24 @@ export function ProofSection({ bookingId, proof, onChange }: { bookingId: string
       return 'Sent to the advertiser to check.'
     })
 
-  const problem = add.problem.message || remove.problem.message || submit.problem.message
+  const accept = () =>
+    review.run(async () => {
+      await api.proofs.accept(bookingId).send()
+      onChange()
+
+      return 'Accepted. Your ad is live and everyone is paid.'
+    })
+
+  const dispute = () =>
+    review.run(async () => {
+      await api.proofs.dispute(bookingId, note).send()
+      setDisputing(false)
+      onChange()
+
+      return 'Sent back with your note.'
+    })
+
+  const problem = add.problem.message || remove.problem.message || submit.problem.message || review.problem.message
 
   return (
     <Section title="Proof it's up">
@@ -83,7 +108,7 @@ export function ProofSection({ bookingId, proof, onChange }: { bookingId: string
           {explain(proof)}
         </Text>
       </View>
-      {proof.status === 'disputed' && proof.note ? <Callout tone="warning">The advertiser asked: {proof.note}</Callout> : null}
+      {proof.status === 'disputed' && proof.note ? <Callout tone="warning">The advertiser said: {proof.note}</Callout> : null}
 
       {proof.photos.length ? (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.photos}>
@@ -110,6 +135,21 @@ export function ProofSection({ bookingId, proof, onChange }: { bookingId: string
           <Text variant="small">
             {proof.photos.length} of {proof.minPhotos}+ photos
           </Text>
+        </>
+      ) : null}
+      {proof.canReview && !disputing ? (
+        <>
+          <Button title="It's up, accept" loading={review.busy} onPress={accept} />
+          <Button title="Report a problem" variant="ghost" disabled={review.busy} onPress={() => setDisputing(true)} />
+        </>
+      ) : null}
+      {disputing ? (
+        <>
+          <Field label="What's wrong?">
+            <Input value={note} onChangeText={setNote} multiline maxLength={500} placeholder="The left side is hidden by a tree. Please take one from across the road." />
+          </Field>
+          <Button title="Send it back" variant="danger" loading={review.busy} disabled={!note.trim()} onPress={dispute} />
+          <Button title="Keep checking" variant="ghost" onPress={() => setDisputing(false)} />
         </>
       ) : null}
       {problem ? <Callout>{problem}</Callout> : null}
