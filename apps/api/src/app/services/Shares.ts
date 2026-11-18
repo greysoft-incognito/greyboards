@@ -53,7 +53,7 @@ export class Shares {
     const share = await BookingShare.query().where({ token }).first()
     const booking = share ? await Booking.query().find(share.bookingId) : null
 
-    abortIf(!share || !booking, 'This invite link isn’t valid.', 404)
+    abortIf(!share || !booking, 'This invite link doesn’t work.', 404)
 
     return { share: share!, booking: booking! }
   }
@@ -94,7 +94,7 @@ export class Shares {
   /** Bid for the whole board, opening the bidding if this is the first bid. Those sharing it can't. */
   static async bidToTake(booking: Booking, user: User, amountMinor: number): Promise<Auction> {
     abortIf(!(await Shares.takeoverOpen(booking)), 'This shared board isn’t open to bids right now.', 422)
-    abortIf(booking.advertiserId === user.id || (await Shares.holds(user, booking)), 'You’re sharing this board. Pay or cover the unpaid shares to keep it instead.', 422)
+    abortIf(booking.advertiserId === user.id || (await Shares.holds(user, booking)), 'You’re already sharing this board. Pay the remaining shares to keep it.', 422)
 
     const auction = await Auction.openTakeover(booking, await Shares.takeoverClosesAt(booking))
 
@@ -108,7 +108,7 @@ export class Shares {
    * Narrowed to one board, or to boards within `radiusKm` of a point.
    */
   static async discoverable(filter: { boardId?: string; near?: { latitude: number; longitude: number; radiusKm: number } } = {}) {
-    abortIf(!(await Settings.get('shares.discoverable')), 'Shared bookings aren’t listed right now.', 404)
+    abortIf(!(await Settings.get('shares.discoverable')), 'Shared boards aren’t available right now.', 404)
 
     let query = Booking.query()
       .where({ shared: true, status: Booking.HELD })
@@ -131,11 +131,11 @@ export class Shares {
   /** Join a listed shared booking: take its first open share, to pay it. */
   static async join(booking: Booking, user: User): Promise<void> {
     abortIf(!booking.shared, 'This booking isn’t shared.', 404)
-    abortIf(!(await Settings.get('shares.discoverable')), 'Join a shared booking from its invite link.', 403)
+    abortIf(!(await Settings.get('shares.discoverable')), 'Use the invite link to join this booking.', 403)
 
     const share = await BookingShare.query().where({ bookingId: booking.id, status: 'open' }).oldest('position').first()
 
-    abortIf(!share, 'Every share of this booking is taken.', 409)
+    abortIf(!share, 'All the shares are taken.', 409)
 
     await Shares.claim(share!, booking, user)
   }
@@ -187,15 +187,15 @@ export class Shares {
     const auction = await Auction.takeoverFor(booking)
     const winner = auction?.status === 'awarded' && auction.winningBidId ? await Bid.query().find(auction.winningBidId) : null
 
-    abortIf(!winner || winner.bidderId !== user.id, 'Only whoever won the bidding can pay for the whole board.', 403)
-    abortIf(!auction!.payBy || auction!.payBy.getTime() <= Date.now() || !booking.isHeld(), 'Your time to pay for the board ran out.', 422)
+    abortIf(!winner || winner.bidderId !== user.id, 'Only the winning bidder can pay for this board.', 403)
+    abortIf(!auction!.payBy || auction!.payBy.getTime() <= Date.now() || !booking.isHeld(), 'Your time to pay has run out.', 422)
 
     return { amountMinor: winner!.amountMinor, payBy: auction!.payBy! }
   }
 
   /** Take an open share from its invite link. One share per advertiser per booking. */
   static async claim(share: BookingShare, booking: Booking, user: User): Promise<void> {
-    abortIf(!booking.isHeld(), 'This shared booking is no longer waiting for payments.', 422)
+    abortIf(!booking.isHeld(), 'This booking is already closed.', 422)
     abortIf(share.userId === user.id, 'This share is already yours.', 422)
     abortIf(share.status !== 'open', 'Someone already took this share.', 409)
     abortIf(await Shares.holds(user, booking), 'You already have a share of this booking.', 422)
@@ -207,8 +207,8 @@ export class Shares {
 
   /** The organiser takes every share nobody paid yet, so they can pay the rest themselves. */
   static async cover(booking: Booking, organiser: User): Promise<number> {
-    abortIf(!booking.shared || booking.advertiserId !== organiser.id, 'Only the organiser of a shared booking can cover the rest.', 403)
-    abortIf(!booking.isHeld(), 'This shared booking is no longer waiting for payments.', 422)
+    abortIf(!booking.shared || booking.advertiserId !== organiser.id, 'Only the person who started this booking can pay the remaining shares.', 403)
+    abortIf(!booking.isHeld(), 'This booking is already closed.', 422)
 
     return BookingShare.query()
       .where({ bookingId: booking.id })
@@ -261,9 +261,9 @@ export class Shares {
    */
   static async sendDesign(booking: Booking, share: BookingShare, user: User, file: UploadedFile): Promise<boolean> {
     abortIf(!booking.shared || share.bookingId !== booking.id, 'That share isn’t part of this booking.', 404)
-    abortIf(share.userId !== user.id, 'Only whoever holds a share sends its design.', 403)
-    abortIf(booking.status !== Booking.PAID || share.status !== 'paid', 'Send your design once the booking is paid.', 422)
-    abortIf(booking.artworkStatus === 'approved', 'The merged artwork is already approved and on its way to print.', 422)
+    abortIf(share.userId !== user.id, 'Only the person who paid for this share can upload its design.', 403)
+    abortIf(booking.status !== Booking.PAID || share.status !== 'paid', 'You can upload your design once the booking is paid.', 422)
+    abortIf(booking.artworkStatus === 'approved', 'The design is already approved and being printed.', 422)
 
     const saved = await StoredImage.save(`bookings/${booking.id}/designs`, file)
 

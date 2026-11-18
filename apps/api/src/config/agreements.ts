@@ -32,12 +32,12 @@ export default () => {
     headline: String(env('AGREEMENT_HEADLINE', 'Let Greyboards find advertisers for your board')),
 
     /** Shown beside the owner's percent. */
-    share_line: String(env('AGREEMENT_SHARE_LINE', 'of the rent is yours')),
+    share_line: String(env('AGREEMENT_SHARE_LINE', 'of every booking is yours')),
 
     /** What the owner agrees to, one point each. */
-    term_1: String(env('AGREEMENT_TERM_1', '{scout} looks after bookings, printing and posting on this board for you.')),
-    term_2: String(env('AGREEMENT_TERM_2', 'You get {share}% of the rent each advertiser pays, sent to you after the ad goes up. Printing and posting is paid for separately, so it never comes out of your share.')),
-    term_3: String(env('AGREEMENT_TERM_3', 'You can stop at any time once current bookings end. Text or call us and we’ll take the board off Greyboards.')),
+    term_1: String(env('AGREEMENT_TERM_1', '{scout} handles bookings, printing and putting up ads on this board for you.')),
+    term_2: String(env('AGREEMENT_TERM_2', 'You get {share}% of every booking, paid to you once the ad is up. Printing is paid for separately, so it never comes out of your share.')),
+    term_3: String(env('AGREEMENT_TERM_3', 'You can stop any time once current bookings end. Just text or call us and we’ll take your board off Greyboards.')),
     term_4: String(env('AGREEMENT_TERM_4', '')),
     term_5: String(env('AGREEMENT_TERM_5', '')),
   }

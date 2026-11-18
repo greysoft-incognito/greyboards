@@ -95,7 +95,7 @@ describe('Owner agreements', () => {
     expect(offer.body.data).toMatchObject({ status: 'sent', ownerSharePercent: 70, scout: { name: 'Agreements scout' }, board: { name: 'Third Mainland exit' } })
     expect(offer.body.data.ownerPhone).toMatch(/^\+234•+\d{4}$/)
     expect(JSON.stringify(offer.body.data)).not.toContain(phone)
-    expect(offer.body.data.wording).toMatchObject({ headline: 'Let Greyboards find advertisers for your board', shareLine: 'of the rent is yours' })
+    expect(offer.body.data.wording).toMatchObject({ headline: 'Let Greyboards find advertisers for your board', shareLine: 'of every booking is yours' })
     expect(offer.body.data.wording.terms).toEqual([
       'Agreements scout looks after bookings, printing and posting on this board for you.',
       expect.stringContaining('You get 70% of the rent each advertiser pays'),

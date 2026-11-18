@@ -14,14 +14,14 @@ const REASONS: Record<DisputeReason, string> = {
   wrong_ad: 'The wrong ad is up',
   damaged: 'The ad or board is damaged',
   taken_down: 'The ad came down early',
-  payment: 'A problem with the money',
+  payment: 'A payment problem',
   other: 'Something else',
 }
 
 const DECISIONS: Record<DisputeDecision, string> = {
   refund_full: 'Cancelled and refunded in full',
-  refund_part: 'Cancelled with part of the money back',
-  release: 'The board’s side is paid',
+  refund_part: 'Cancelled with a partial refund',
+  release: 'The board owner was paid',
   dismiss: 'Nothing changes',
 }
 
@@ -54,30 +54,30 @@ export class Disputes {
 
   /** Why the booking can't take a dispute now, or null when it can. */
   static async closedReason(booking: Booking): Promise<string | null> {
-    if (!(await Settings.get('disputes.enabled'))) return 'Disputes are turned off. Message the others on the booking instead.'
-    if (![Booking.PAID, Booking.LIVE, Booking.COMPLETED].includes(booking.status)) return 'Only a paid booking can be disputed.'
-    if (await Dispute.isOpenOn(booking.id)) return 'This booking already has a dispute waiting for a decision.'
+    if (!(await Settings.get('disputes.enabled'))) return 'Reporting problems is turned off. Send a message on the booking instead.'
+    if (![Booking.PAID, Booking.LIVE, Booking.COMPLETED].includes(booking.status)) return 'You can only report a problem on a paid booking.'
+    if (await Dispute.isOpenOn(booking.id)) return 'A problem on this booking is already being looked into.'
 
     const lastDay = Day.addDays(Day.of(booking.endsOn), await Settings.number('disputes.window_days'))
 
-    return Day.today() > lastDay ? 'It’s too long since this booking ended to raise a dispute.' : null
+    return Day.today() > lastDay ? 'It’s too late to report a problem on this booking.' : null
   }
 
   static async open(booking: Booking, user: User, reason: DisputeReason, details: string): Promise<Dispute> {
     const side = await Disputes.sideOf(booking, user)
     const closed = await Disputes.closedReason(booking)
 
-    abortIf(!side, 'Only the advertiser, whoever looks after the board and the dispatcher can raise a dispute.', 403)
+    abortIf(!side, 'Only people on this booking can report a problem.', 403)
     abortIf(!!closed, closed!, 422)
-    abortIf(!details.trim(), 'Say what went wrong, so staff can look into it.', 422)
+    abortIf(!details.trim(), 'Tell us what went wrong so we can look into it.', 422)
 
     const dispute = await Dispute.query()
       .create({ bookingId: booking.id, openedById: user.id, side: side!, reason, details: details.trim(), status: 'open' })
       .catch(() => null)
 
-    abortIf(!dispute, 'This booking already has a dispute waiting for a decision.', 409)
+    abortIf(!dispute, 'A problem on this booking is already being looked into.', 409)
 
-    await Disputes.post(booking, user, `Raised a dispute: ${REASONS[reason]}. ${details.trim()}`)
+    await Disputes.post(booking, user, `Reported a problem: ${REASONS[reason]}. ${details.trim()}`)
 
     return dispute!
   }
@@ -91,22 +91,22 @@ export class Disputes {
     const inEscrow = booking.status === Booking.PAID
     const note = resolution.trim()
 
-    abortIf(dispute.status !== 'open', 'This dispute was already decided.', 409)
-    abortIf(!note, 'Say why, so everyone on the booking understands the decision.', 422)
-    abortIf(decision !== 'dismiss' && !inEscrow, 'The money has already left escrow, so this dispute can only be closed without a change.', 422)
-    abortIf(decision === 'refund_part' && (!refundMinor || refundMinor <= 0 || refundMinor >= booking.amountMinor), 'Refund part of what was paid: more than nothing and less than all of it.', 422)
+    abortIf(dispute.status !== 'open', 'This has already been decided.', 409)
+    abortIf(!note, 'Add a reason so everyone on the booking understands.', 422)
+    abortIf(decision !== 'dismiss' && !inEscrow, 'The payment has already gone out, so this can only be closed.', 422)
+    abortIf(decision === 'refund_part' && (!refundMinor || refundMinor <= 0 || refundMinor >= booking.amountMinor), 'Enter an amount between zero and the full payment.', 422)
 
     const memo = `Dispute: ${note}`
 
     if (decision === 'refund_full') await Refunds.refundInFull(booking, staff, memo)
     if (decision === 'refund_part') await Refunds.partly(booking, staff, refundMinor!, memo)
-    if (decision === 'release') abortIf(!(await booking.acceptProof(['none', 'submitted', 'disputed'])), 'This booking changed meanwhile. Refresh and decide again.', 409)
+    if (decision === 'release') abortIf(!(await booking.acceptProof(['none', 'submitted', 'disputed'])), 'This booking just changed. Refresh and try again.', 409)
 
     const closed = await Dispute.query()
       .where({ id: dispute.id, status: 'open' })
       .updateFrom({ status: 'resolved', decision, resolution: note, refundMinor: decision === 'refund_part' ? refundMinor : decision === 'refund_full' ? booking.amountMinor : null, resolvedById: staff.id, resolvedAt: new Date() })
 
-    abortIf(!closed, 'This dispute was already decided.', 409)
+    abortIf(!closed, 'This has already been decided.', 409)
 
     const outcome = decision === 'refund_part' ? `${DECISIONS[decision]} (${Money.format(refundMinor!, booking.currency)})` : DECISIONS[decision]
 

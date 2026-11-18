@@ -91,10 +91,10 @@ export class Offer extends Model {
 
     const waiting = await Offer.query().where({ advertiserId: advertiser.id }).whereIn('status', Offer.WAITING).count()
 
-    abortIf(input.amountMinor >= listMinor, 'That’s the listed price or more. Book it instead.', 422)
+    abortIf(input.amountMinor >= listMinor, 'That’s the full price or more. Just book it instead.', 422)
     abortIf(input.amountMinor < lowest, `Offer at least ${Money.format(lowest, board.currency)}.`, 422)
-    abortIf(waiting >= Offer.MAX_WAITING, `You have ${Offer.MAX_WAITING} offers waiting for an answer. Wait for one, or withdraw it.`, 429)
-    abortIf((await Booking.taken(board, face, input.startsOn, endsOn)).length > 0, 'Someone else has some of those dates. Pick other dates.', 409)
+    abortIf(waiting >= Offer.MAX_WAITING, `You have ${Offer.MAX_WAITING} offers waiting for a reply. Wait for one, or withdraw it.`, 429)
+    abortIf((await Booking.taken(board, face, input.startsOn, endsOn)).length > 0, 'Some of those dates were just booked. Try other dates.', 409)
 
     return Offer.query().create({
       boardId: board.id,
@@ -168,7 +168,7 @@ export class Offer extends Model {
 
   /** Agree to the offer, or to the counter, which holds the dates at that price while the advertiser pays. */
   async accept(user: User): Promise<Booking> {
-    abortIf(!(await this.awaits(user)), 'This offer isn’t waiting for you.', 422)
+    abortIf(!(await this.awaits(user)), 'This offer is no longer available.', 422)
 
     const board = await this.board().firstOrFail()
     const face = await this.face().firstOrFail()
@@ -181,22 +181,22 @@ export class Offer extends Model {
   }
 
   async decline(user: User): Promise<void> {
-    abortIf(!(await this.awaits(user)), 'This offer isn’t waiting for you.', 422)
+    abortIf(!(await this.awaits(user)), 'This offer is no longer available.', 422)
 
     await this.update({ status: 'declined', respondedById: user.id, respondedAt: new Date() })
   }
 
   /** The board's side names the price they would take, between the offer and the listed price. */
   async counter(user: User, amountMinor: number): Promise<void> {
-    abortIf(this.displayStatus() !== 'pending' || !(await this.awaits(user)), 'Only an offer waiting for you can be countered.', 422)
-    abortIf(amountMinor <= this.amountMinor, 'Counter with more than they offered, or accept it.', 422)
-    abortIf(amountMinor >= this.listMinor, 'Counter below the listed price, or decline so they can book it.', 422)
+    abortIf(this.displayStatus() !== 'pending' || !(await this.awaits(user)), 'This offer is no longer available.', 422)
+    abortIf(amountMinor <= this.amountMinor, 'Suggest a price higher than their offer, or accept it.', 422)
+    abortIf(amountMinor >= this.listMinor, 'Suggest a price below your listed price, or decline.', 422)
 
     await this.update({ status: 'countered', counterMinor: amountMinor, respondedById: user.id, respondedAt: new Date(), expiresAt: await Offer.replyBy() })
   }
 
   async withdraw(user: User): Promise<void> {
-    abortIf(user.id !== this.advertiserId, 'Only the advertiser who made it can withdraw it.', 403)
+    abortIf(user.id !== this.advertiserId, 'Only the person who made this offer can withdraw it.', 403)
     abortIf(!Offer.WAITING.includes(this.displayStatus()), 'This offer has already been answered.', 422)
 
     await this.update({ status: 'withdrawn' })

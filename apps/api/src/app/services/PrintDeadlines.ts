@@ -130,6 +130,6 @@ export class PrintDeadlines {
       return
     }
 
-    if (profile?.phone) await Sms.send(profile.phone, `No printer has taken the ad booked on "${board.name}" for ${dueOn} yet. If you can put it up yourself, tell Greyboards. - Greyboards`).catch(() => undefined)
+    if (profile?.phone) await Sms.send(profile.phone, `Nobody has taken the print job for "${board.name}" yet, and it goes live on ${dueOn}. Can you put it up yourself? Let us know. - Greyboards`).catch(() => undefined)
   }
 }

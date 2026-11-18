@@ -277,7 +277,7 @@ export class Board extends Model {
     if (owner.ownerProfileId) {
       const profile = await OwnerProfile.query().find(owner.ownerProfileId)
 
-      abortIf(!profile, 'That owner profile no longer exists. Pick the owner again.', 422)
+      abortIf(!profile, 'We couldn’t find that owner. Please choose them again.', 422)
 
       return profile!
     }
@@ -477,7 +477,7 @@ export class Board extends Model {
       .whereRaw("position > ? and exists (select 1 from bookings where bookings.face_id = board_faces.id and bookings.status in ('held', 'paid', 'live'))", [count])
       .exists()
 
-    abortIf(booked, 'A face you are removing still has bookings. Keep it until they end.', 422)
+    abortIf(booked, 'That side still has bookings. You can remove it once they end.', 422)
   }
 
   /**
@@ -488,7 +488,7 @@ export class Board extends Model {
     const faces = (await this.boardFaces().getResults()).all()
     const face = faceId ? faces.find((candidate) => candidate.id === faceId) : faces.length === 1 ? faces[0] : undefined
 
-    abortIf(!face, faceId ? 'That face isn’t on this board.' : 'Pick which face of the board to book.', 422)
+    abortIf(!face, faceId ? 'That side isn’t on this board.' : 'Choose which side of the board to book.', 422)
 
     return face!
   }
@@ -503,7 +503,7 @@ export class Board extends Model {
     abortIf(status === Board.PENDING, 'Pick listed, rejected or unlisted.', 422)
     const profile = await this.ownerProfile().first()
 
-    abortIf(reviewer.id === this.taggedById || profile?.isManagedBy(reviewer), 'You cannot review a board you tagged or own.', 422)
+    abortIf(reviewer.id === this.taggedById || profile?.isManagedBy(reviewer), 'You can’t review your own board.', 422)
 
     await this.update({ status, reviewNote: note?.trim() || null, reviewedById: reviewer.id, reviewedAt: new Date() })
   }

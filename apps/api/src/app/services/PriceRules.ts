@@ -45,7 +45,7 @@ export class PriceRules {
       rows.push(await PriceRules.applyTo(board, input))
     }
 
-    abortIf(!rows.length, 'None of those boards are yours to price.', 404)
+    abortIf(!rows.length, 'You can’t change the price of those boards.', 404)
 
     return { dryRun: input.dryRun, changed: rows.filter((row) => !row.skipped).length, rows }
   }

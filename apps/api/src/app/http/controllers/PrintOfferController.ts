@@ -153,7 +153,7 @@ export default class PrintOfferController extends BaseController {
   private async offer(): Promise<PrintOffer> {
     const offer = await PrintOffer.query().find(String(this.params.offer))
 
-    if (!offer || offer.dispatcherId !== this.user.id) throw new RequestException('Price not found.', 404)
+    if (!offer || offer.dispatcherId !== this.user.id) throw new RequestException('Quote not found.', 404)
 
     return offer
   }

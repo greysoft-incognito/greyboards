@@ -23,7 +23,7 @@ export class Messages {
     const maxLength = await Settings.number('messages.max_length')
 
     abortIf(!text && !photo, 'Write a message or add a photo.', 422)
-    abortIf(!!text && text.length > maxLength, `Keep a message to ${maxLength} characters.`, 422)
+    abortIf(!!text && text.length > maxLength, `Messages can be up to ${maxLength} characters.`, 422)
 
     const saved = photo ? await StoredImage.save(`bookings/${booking.id}/messages`, photo) : null
     const message = await BookingMessage.query().create({

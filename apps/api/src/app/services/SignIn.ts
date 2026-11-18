@@ -42,7 +42,7 @@ export class SignIn {
   async attempt(email: string, password: string): Promise<User> {
     const throttle = new Throttle(`sign-in:${email}|${this.req.ip}`, await Settings.number('accounts.max_password_attempts'), await SignIn.lockoutSeconds())
 
-    await throttle.ensureAllowed('Too many sign-in attempts.')
+    await throttle.ensureAllowed('Too many attempts. Please wait a moment.')
 
     SignIn.decoyHash ??= Hash.make(randomUUID())
 
@@ -52,16 +52,16 @@ export class SignIn {
     if (!user || !valid) {
       await throttle.hit()
 
-      throw new AuthenticationException('Email or password is not right', {
+      throw new AuthenticationException('Wrong email or password', {
         req: this.req as never,
         status: 422,
-        errors: { password: ['Email or password is not right'] },
+        errors: { password: ['Wrong email or password'] },
       })
     }
 
     await throttle.clear()
 
-    if (user.isSuspended()) abort('This account is suspended. Contact support if you think this is a mistake.', 403)
+    if (user.isSuspended()) abort('Your account is suspended. Contact support if you think this is a mistake.', 403)
 
     return user
   }
@@ -71,7 +71,7 @@ export class SignIn {
     const user = (await this.auth.authorizeTemporaryToken(challengeToken, 'two-factor-login')) as User
     const throttle = new Throttle(`two-factor:${user.id}`, SignIn.MAX_CODE_ATTEMPTS, await SignIn.lockoutSeconds())
 
-    await throttle.ensureAllowed('Too many wrong codes.')
+    await throttle.ensureAllowed('Too many wrong codes. Please wait a moment.')
 
     const secret = await TwoFactor.getSecret(user.id)
     const code = answer.code?.replace(/\s/g, '')
@@ -82,7 +82,7 @@ export class SignIn {
 
     if (!passed) {
       await throttle.hit()
-      abort('That code is not right. Try again.', 422)
+      abort('That code isn’t right. Try again.', 422)
     }
 
     await throttle.clear()

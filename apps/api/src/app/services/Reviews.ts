@@ -41,9 +41,9 @@ export class Reviews {
   static async write(booking: Booking, author: User, rating: number, body: string | null): Promise<Review> {
     const subject = await Reviews.subjectFor(booking, author)
 
-    abortIf(!subject, 'Only the advertiser and whoever looks after the board review a booking.', 403)
-    abortIf(!(await Reviews.open(booking)), 'Reviews open once the ad is up, and close a while after the booking ends.', 422)
-    abortIf(!Number.isInteger(rating) || rating < 1 || rating > 5, 'Pick 1 to 5 stars.', 422)
+    abortIf(!subject, 'Only the advertiser and the board owner can review a booking.', 403)
+    abortIf(!(await Reviews.open(booking)), 'You can leave a review once the ad is up, until a little after the booking ends.', 422)
+    abortIf(!Number.isInteger(rating) || rating < 1 || rating > 5, 'Choose 1 to 5 stars.', 422)
 
     const existing = await Review.query().where({ bookingId: booking.id, subject: subject! }).first()
     const text = body?.trim() || null

@@ -36,12 +36,12 @@ export class Refunds {
   static async quote(booking: Booking): Promise<CancellationQuote> {
     const no = (reason: string): CancellationQuote => ({ allowed: false, reason, refundMinor: 0, full: false })
 
-    if (booking.status !== Booking.PAID) return no('Only a paid booking that hasn’t started can be cancelled.')
-    if (booking.proofStatus !== 'none') return no('The ad is already up, so the booking can’t be cancelled.')
+    if (booking.status !== Booking.PAID) return no('You can only cancel a paid booking before it starts.')
+    if (booking.proofStatus !== 'none') return no('Your ad is already up, so this booking can’t be cancelled.')
 
     const daysLeft = Day.between(Day.today(), Day.of(booking.startsOn))
 
-    if (daysLeft <= 0) return no('The booking has started. Contact support if something went wrong.')
+    if (daysLeft <= 0) return no('This booking has already started. Contact support if something’s wrong.')
 
     const printed = await Refunds.printed(booking)
     const fullDays = await Settings.number('bookings.full_refund_days')
@@ -73,7 +73,7 @@ export class Refunds {
   /** Staff settle a dispute: cancel a paid booking, give part back, and share the rest by the split. */
   static async partly(booking: Booking, user: User, refundMinor: number, reason: string): Promise<Refund | null> {
     abortIf(booking.status !== Booking.PAID, 'Only a paid booking whose money is still held can be refunded here.', 422)
-    abortIf(refundMinor <= 0 || refundMinor >= booking.amountMinor, 'Refund part of what was paid: more than nothing and less than all of it.', 422)
+    abortIf(refundMinor <= 0 || refundMinor >= booking.amountMinor, 'Enter an amount between zero and the full payment.', 422)
 
     return Refunds.close(booking, user, refundMinor, reason)
   }
@@ -107,7 +107,7 @@ export class Refunds {
   private static async close(booking: Booking, user: User, refundMinor: number, reason: string): Promise<Refund | null> {
     const claimed = await Booking.query().where({ id: booking.id, status: Booking.PAID }).updateFrom({ status: Booking.CANCELLED, cancelledAt: new Date() })
 
-    abortIf(!claimed, 'This booking changed while you were cancelling it. Refresh and try again.', 409)
+    abortIf(!claimed, 'This booking just changed. Refresh and try again.', 409)
 
     const job = await PrintJob.query().where({ bookingId: booking.id }).first()
     const printed = !!job && [PrintJob.PRINTED, PrintJob.POSTED].includes(job.status)

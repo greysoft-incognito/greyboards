@@ -191,12 +191,12 @@ export class PrintJob extends Model {
 
   /** Hold the job for `user` while they check they can print and post it in time. */
   async reserve(user: User): Promise<PrintJob> {
-    abortIf(!this.isAvailable(), 'Someone else has this job.', 409)
-    abortIf(!this.isPriced(), 'Send your price for this job. The advertiser picks who prints it.', 422)
+    abortIf(!this.isAvailable(), 'Someone else has taken this job.', 409)
+    abortIf(!this.isPriced(), 'Send a quote for this job. The advertiser will choose who prints it.', 422)
 
     const holding = await PrintJob.query().where({ dispatcherId: user.id, status: PrintJob.RESERVED }).whereRaw('reserved_until > now()').count()
 
-    abortIf(holding >= PrintJob.MAX_RESERVED, `You can hold ${PrintJob.MAX_RESERVED} jobs at once. Confirm or let one go first.`, 429)
+    abortIf(holding >= PrintJob.MAX_RESERVED, `You can hold up to ${PrintJob.MAX_RESERVED} jobs at once. Confirm or release one first.`, 429)
 
     const hours = await Settings.number('printing.reserve_hours')
     const claimed = await PrintJob.query()
@@ -211,21 +211,21 @@ export class PrintJob extends Model {
 
   /** The job becomes `user`'s; other dispatchers stop seeing it. */
   async confirm(user: User): Promise<void> {
-    abortIf(this.status !== PrintJob.RESERVED || !this.isHeldBy(user), 'Reserve the job first. Your hold may have run out.', 422)
+    abortIf(this.status !== PrintJob.RESERVED || !this.isHeldBy(user), 'Reserve the job first. Your hold may have expired.', 422)
 
     await this.update({ status: PrintJob.CONFIRMED, confirmedAt: new Date(), reservedUntil: null })
   }
 
   /** Give the job back to the marketplace before printing it. */
   async release(user: User): Promise<void> {
-    abortIf(!this.isHeldBy(user) || ![PrintJob.RESERVED, PrintJob.CONFIRMED].includes(this.status), 'You can only let go of a job you hold and haven’t printed.', 422)
+    abortIf(!this.isHeldBy(user) || ![PrintJob.RESERVED, PrintJob.CONFIRMED].includes(this.status), 'You can only release a job you haven’t printed yet.', 422)
 
     await this.update({ status: PrintJob.OPEN, dispatcherId: null, reservedUntil: null, confirmedAt: null })
   }
 
   /** A photo of the finished print, before it goes up, so a wrong print is caught early. */
   async addPrintPhoto(user: User, file: UploadedFile): Promise<void> {
-    abortIf(!this.isHeldBy(user) || ![PrintJob.CONFIRMED, PrintJob.PRINTED].includes(this.status), 'Confirm the job before adding the print.', 422)
+    abortIf(!this.isHeldBy(user) || ![PrintJob.CONFIRMED, PrintJob.PRINTED].includes(this.status), 'Confirm the job before uploading the print.', 422)
 
     const saved = await StoredImage.save(`print-jobs/${this.id}`, file)
 

@@ -41,16 +41,16 @@ export class Tasks {
     const name = (booking: Booking) => boards.get(booking.boardId)?.name ?? 'your board'
     const task = (kind: TaskKind, title: string, detail: string, booking: Booking): Task => ({ kind, title, detail, dueOn: booking.days().startsOn, bookingId: booking.id, boardId: booking.boardId, prospectId: null })
 
-    for (const booking of artwork) tasks.push(task('artwork', `Check the artwork for ${name(booking)}`, 'Approve it so it can go to print, or send it back with a note.', booking))
+    for (const booking of artwork) tasks.push(task('artwork', `Check the artwork for ${name(booking)}`, 'Approve it for printing, or request changes.', booking))
 
     for (const booking of bookings) {
       if (booking.artworkStatus !== 'approved' || !['none', 'disputed'].includes(booking.proofStatus)) continue
 
       const job = await PrintJob.query().where({ bookingId: booking.id }).first()
 
-      if (job?.isAvailable()) tasks.push(task('install', `Arrange printing and posting on ${name(booking)}`, 'No dispatcher has taken the job yet. Step in, or wait for one.', booking))
+      if (job?.isAvailable()) tasks.push(task('install', `Arrange printing for ${name(booking)}`, 'No dispatcher has taken the job yet. Arrange it yourself, or wait a little longer.', booking))
       else if (await BookingPolicy.postsProof(user, booking))
-        tasks.push(task('proof', `Photos of the ad on ${name(booking)}`, booking.proofStatus === 'disputed' ? 'The advertiser asked for better photos.' : 'Take them at the board once the ad is up.', booking))
+        tasks.push(task('proof', `Photos of the ad on ${name(booking)}`, booking.proofStatus === 'disputed' ? 'The advertiser asked for new photos.' : 'Take them at the board once the ad is up.', booking))
     }
 
     return [...tasks, ...(await Tasks.agreements(user)), ...(await Tasks.quiet(user, days))].sort((a, b) => (a.dueOn ?? '9999').localeCompare(b.dueOn ?? '9999'))
@@ -64,7 +64,7 @@ export class Tasks {
     return sent.map((agreement) => ({
       kind: 'agreement',
       title: `${agreement.ownerName ?? 'The owner'} hasn’t signed for ${boards.get(agreement.boardId)?.name ?? 'the board'}`,
-      detail: 'Remind them, or send the agreement again.',
+      detail: 'Give them a nudge, or resend the link.',
       dueOn: Day.of(agreement.expiresAt),
       bookingId: null,
       boardId: agreement.boardId,
@@ -88,7 +88,7 @@ export class Tasks {
     return prospects.map((prospect) => ({
       kind: 'follow_up',
       title: `Follow up on ${prospect.name}`,
-      detail: prospect.stage === 'signed' ? 'The owner signed. Tag the board to capture it.' : prospect.ownerName ? `Get back to ${prospect.ownerName}.` : 'Find the owner and make contact.',
+      detail: prospect.stage === 'signed' ? 'The owner signed. Tag the board to add it.' : prospect.ownerName ? `Get back to ${prospect.ownerName}.` : 'Find the owner and get in touch.',
       dueOn: null,
       bookingId: null,
       boardId: null,

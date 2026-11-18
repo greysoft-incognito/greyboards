@@ -59,14 +59,14 @@ export class Reputation {
     {
       action: 'posted',
       roles: ['dispatch', 'scout', 'owner'],
-      label: 'Put up an ad, and the advertiser accepted the geotagged photos taken at the board',
+      label: 'Put up an ad, and the advertiser approved the photos',
       setting: 'reputation.points_posted',
       sign: 1,
     },
-    { action: 'signed', roles: ['scout'], label: 'A board owner signed the agreement the scout sent, with a code texted to the owner', setting: 'reputation.points_signed', sign: 1 },
-    { action: 'hosted', roles: ['owner', 'scout'], label: 'A campaign on a board they own or run went up and was checked', setting: 'reputation.points_hosted', sign: 1 },
-    { action: 'campaign', roles: ['advertiser'], label: 'A paid campaign went up and was checked', setting: 'reputation.points_campaign', sign: 1 },
-    { action: 'missed', roles: ['dispatch'], label: 'Lost a print job by missing its print or go-live date', setting: 'reputation.points_missed', sign: -1 },
+    { action: 'signed', roles: ['scout'], label: 'A board owner signed up through you', setting: 'reputation.points_signed', sign: 1 },
+    { action: 'hosted', roles: ['owner', 'scout'], label: 'A campaign on their board went live', setting: 'reputation.points_hosted', sign: 1 },
+    { action: 'campaign', roles: ['advertiser'], label: 'A campaign went live', setting: 'reputation.points_campaign', sign: 1 },
+    { action: 'missed', roles: ['dispatch'], label: 'Missed a print job deadline', setting: 'reputation.points_missed', sign: -1 },
   ]
 
   /** Credit everyone whose work a checked campaign proves: who put it up, the board's side, and the advertiser. */
@@ -97,9 +97,9 @@ export class Reputation {
 
   /** Staff correct a role's score, with a note saying why. */
   static async adjust(role: AccountRole, staff: User, points: number, note: string): Promise<void> {
-    abortIf(staff.id === role.userId, 'You cannot change your own reputation.', 422)
-    abortIf(!Number.isInteger(points) || points === 0, 'Give a whole number of points to add or take away.', 422)
-    abortIf(!note.trim(), 'Say why the score is changing.', 422)
+    abortIf(staff.id === role.userId, 'You can’t change your own score.', 422)
+    abortIf(!Number.isInteger(points) || points === 0, 'Enter a whole number of points to add or remove.', 422)
+    abortIf(!note.trim(), 'Add a reason for the change.', 422)
 
     await Reputation.record(role, 'adjusted', points, { note: note.trim(), createdById: staff.id, counts: false })
   }
@@ -144,17 +144,17 @@ export class Reputation {
         {
           key: 'verified',
           label: 'Verified by Greyboards',
-          summary: 'Checked in person by Greyboards staff.',
+          summary: 'Checked in person by our team.',
           description:
-            'Someone on the Greyboards team checked this person for this role by hand, for example by meeting them, visiting their boards or confirming their papers. Staff give and remove this badge. Points can’t earn it.',
+            'Someone from our team checked this person themselves, for example by meeting them, visiting their boards or checking their documents. It can’t be earned with points.',
         },
         {
           key: 'proven',
           label: 'Proven',
-          summary: 'Earned through checked work on Greyboards.',
+          summary: 'Earned through real work on Greyboards.',
           description:
             `Given automatically when a role reaches ${score} reputation points from at least ${actions} checked actions, after ${days} ${days === 1 ? 'day' : 'days'} in the role. ` +
-            'Points only come from physical work Greyboards could check, such as geotagged photos of an ad the advertiser accepted, or an agreement an owner signed with a texted code. ' +
+            'Points come from real work we can confirm, like photos of an ad the advertiser approved, or an owner signing up. ' +
             (revokes ? `The badge goes away if the score falls below ${score}.` : 'Once earned, it stays.') +
             ' Greyboards staff did not check this person by hand unless they also have the Verified badge.',
         },

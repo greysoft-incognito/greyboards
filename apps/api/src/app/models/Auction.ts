@@ -106,11 +106,11 @@ export class Auction extends Model {
     const closes = input.closesAt.getTime()
 
     abortIf(!!blocker, blocker ?? '', 422)
-    abortIf(!Day.valid(input.startsOn), 'Pick the first day.', 422)
+    abortIf(!Day.valid(input.startsOn), 'Choose a start date.', 422)
     abortIf(input.startsOn > Day.today(Booking.MAX_DAYS_AHEAD), 'Dates can start up to a year ahead.', 422)
     abortIf(input.periods < 1 || input.periods > maxPeriods, `Offer between 1 and ${maxPeriods} ${board.ratePeriod}s.`, 422)
     abortIf(input.reserveMinor < Math.max(lowest, 1), `Set the reserve to at least ${(lowest / 100).toLocaleString('en')} ${board.currency}.`, 422)
-    abortIf(closes < Date.now() + Auction.MIN_OPEN_HOURS * 3_600_000, `Keep bidding open for at least ${Auction.MIN_OPEN_HOURS} hour.`, 422)
+    abortIf(closes < Date.now() + Auction.MIN_OPEN_HOURS * 3_600_000, `Bidding needs to stay open for at least ${Auction.MIN_OPEN_HOURS} hour.`, 422)
     abortIf(closes > Date.now() + maxOpenDays * 86_400_000, `Close bidding within ${maxOpenDays} days.`, 422)
     abortIf(
       closes + payHours * 3_600_000 > Date.parse(`${Day.addDays(input.startsOn, -leadDays)}T00:00:00Z`),
@@ -121,8 +121,8 @@ export class Auction extends Model {
     const endsOn = Booking.endOf(input.startsOn, input.periods, board.ratePeriod)
     const running = await Auction.query().where({ boardId: board.id }).whereIn('status', Auction.TAKING).count()
 
-    abortIf(running >= Auction.MAX_OPEN_PER_BOARD, `A board can have up to ${Auction.MAX_OPEN_PER_BOARD} auctions running. Close one first.`, 422)
-    abortIf((await Booking.taken(board, face, input.startsOn, endsOn)).length > 0, 'Some of those dates are booked, blocked or already open for bids.', 409)
+    abortIf(running >= Auction.MAX_OPEN_PER_BOARD, `You can run up to ${Auction.MAX_OPEN_PER_BOARD} auctions per board. Close one first.`, 422)
+    abortIf((await Booking.taken(board, face, input.startsOn, endsOn)).length > 0, 'Some of those dates aren’t available.', 409)
 
     return Auction.query().create({
       boardId: board.id,
@@ -277,10 +277,10 @@ export class Auction extends Model {
     const minimum = await this.nextMinimum()
 
     abortIf(!this.isOpen(), 'Bidding has closed.', 422)
-    abortIf(await BoardPolicy.manages(user, board), 'You look after this board, so you can’t bid for it.', 422)
-    abortIf(this.isTakeover() && (await this.sharing(user)), 'You’re sharing this board. Pay or cover the unpaid shares to keep it instead.', 422)
+    abortIf(await BoardPolicy.manages(user, board), 'You can’t bid on your own board.', 422)
+    abortIf(this.isTakeover() && (await this.sharing(user)), 'You’re already sharing this board. Pay the remaining shares to keep it.', 422)
     abortIf(amountMinor < minimum, `Bid at least ${(minimum / 100).toLocaleString('en')} ${this.currency}.`, 422)
-    abortIf(!!mine && amountMinor <= mine.amountMinor, 'Raise your bid above the one you placed.', 422)
+    abortIf(!!mine && amountMinor <= mine.amountMinor, 'Your new bid needs to be higher than your last one.', 422)
 
     const bid = mine
       ? await mine.update({ amountMinor, status: 'active' }).then(() => mine)
@@ -294,9 +294,9 @@ export class Auction extends Model {
 
   /** Close bidding early. Only before anyone bid, so no bidder loses a chance they were given. */
   async cancel(): Promise<void> {
-    abortIf(this.status !== 'open', 'Only an auction still taking bids can be closed.', 422)
-    abortIf(this.isTakeover(), 'Bidding for a shared board ends on its own, when the sharers pay or the time runs out.', 422)
-    abortIf(await Bid.query().where({ auctionId: this.id }).exists(), 'Someone already bid, so this auction runs to its close.', 422)
+    abortIf(this.status !== 'open', 'This auction has already closed.', 422)
+    abortIf(this.isTakeover(), 'Bidding on a shared board ends on its own.', 422)
+    abortIf(await Bid.query().where({ auctionId: this.id }).exists(), 'Someone has already bid, so this auction can’t be closed early.', 422)
 
     await this.update({ status: 'cancelled' })
   }

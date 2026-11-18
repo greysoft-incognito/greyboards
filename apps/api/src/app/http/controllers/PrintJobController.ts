@@ -32,7 +32,7 @@ export default class PrintJobController extends BaseController {
   async show() {
     const job = await this.job()
 
-    if (!job.isAvailable() && !job.isHeldBy(this.user)) throw new RequestException('Someone else has this job.', 404)
+    if (!job.isAvailable() && !job.isHeldBy(this.user)) throw new RequestException('Someone else has taken this job.', 404)
 
     return this.respond(job, 'OK')
   }

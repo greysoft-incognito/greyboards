@@ -33,7 +33,7 @@ export class DispatchOffers {
   static async jobFor(booking: Booking): Promise<PrintJob> {
     const job = await PrintJob.query().where({ bookingId: booking.id }).first()
 
-    abortIf(!job || !DispatchOffers.takesPrices(job), 'This booking has no print job waiting for prices.', 422)
+    abortIf(!job || !DispatchOffers.takesPrices(job), 'This booking doesn’t need a printer right now.', 422)
 
     return job!
   }
@@ -54,11 +54,11 @@ export class DispatchOffers {
 
   /** A dispatcher's price for `job`. A new price replaces their earlier bid. */
   static async bid(job: PrintJob, user: User, amountMinor: number, note: string | null): Promise<PrintOffer> {
-    abortIf(!DispatchOffers.takesPrices(job), 'This job isn’t taking prices any more.', 422)
+    abortIf(!DispatchOffers.takesPrices(job), 'This job isn’t taking quotes anymore.', 422)
 
     const live = await PrintOffer.query().where({ printJobId: job.id, dispatcherId: user.id }).whereIn('status', PrintOffer.LIVE).first()
 
-    abortIf(live?.status === 'requested', 'The advertiser asked you about this job. Accept or decline their request instead.', 409)
+    abortIf(live?.status === 'requested', 'The advertiser has asked you directly. Accept or decline their request instead.', 409)
 
     const expiresAt = await DispatchOffers.expiry(job, 'printing.offer_hours')
 
@@ -77,16 +77,16 @@ export class DispatchOffers {
     const board = await Board.query().findOrFail(booking.boardId)
     const nearby = (await DispatchOffers.nearby(board)).find((entry) => entry.user.id === dispatcherId)
 
-    abortIf(!nearby, 'That dispatcher doesn’t work near this board.', 422)
+    abortIf(!nearby, 'That dispatcher doesn’t cover this area.', 422)
 
     const already = await PrintOffer.query().where({ printJobId: job.id, dispatcherId }).whereIn('status', PrintOffer.LIVE).whereRaw('expires_at > now()').exists()
 
-    abortIf(already, 'That dispatcher already has a price or a request on this job.', 409)
+    abortIf(already, 'That dispatcher has already quoted or been asked.', 409)
 
     const waiting = await PrintOffer.query().where({ printJobId: job.id, kind: 'request', status: 'requested' }).whereRaw('expires_at > now()').count()
     const max = await Settings.number('printing.max_requests')
 
-    abortIf(waiting >= max, `You can ask ${max} dispatchers at a time. Wait for an answer, or pick a price you have.`, 429)
+    abortIf(waiting >= max, `You can ask up to ${max} dispatchers at a time. Wait for a reply, or pick a quote you already have.`, 429)
 
     await PrintOffer.query().where({ printJobId: job.id, dispatcherId }).whereIn('status', PrintOffer.LIVE).updateFrom({ status: 'closed' })
 
@@ -103,12 +103,12 @@ export class DispatchOffers {
 
   /** The dispatcher accepts a request at its price, which the advertiser can then pay, or declines it. */
   static async answer(offer: PrintOffer, user: User, accept: boolean): Promise<PrintOffer> {
-    abortIf(offer.dispatcherId !== user.id, 'That request is for someone else.', 404)
-    abortIf(offer.status !== 'requested' || !offer.isLive(), 'This request isn’t waiting for you any more.', 422)
+    abortIf(offer.dispatcherId !== user.id, 'That request isn’t for you.', 404)
+    abortIf(offer.status !== 'requested' || !offer.isLive(), 'This request is no longer available.', 422)
 
     const job = await PrintJob.query().findOrFail(offer.printJobId)
 
-    abortIf(accept && !DispatchOffers.takesPrices(job), 'This job isn’t taking prices any more.', 422)
+    abortIf(accept && !DispatchOffers.takesPrices(job), 'This job isn’t taking quotes anymore.', 422)
 
     await offer.update(accept ? { status: 'pending', expiresAt: await DispatchOffers.expiry(job, 'printing.offer_hours') } : { status: 'declined' })
 
@@ -117,8 +117,8 @@ export class DispatchOffers {
 
   /** The dispatcher takes back a price the advertiser hasn't paid. */
   static async withdraw(offer: PrintOffer, user: User): Promise<void> {
-    abortIf(offer.dispatcherId !== user.id, 'That price is someone else’s.', 404)
-    abortIf(offer.status !== 'pending', 'Only a price that isn’t paid can be taken back.', 422)
+    abortIf(offer.dispatcherId !== user.id, 'That quote isn’t yours.', 404)
+    abortIf(offer.status !== 'pending', 'You can’t withdraw a quote that’s already been paid.', 422)
 
     await offer.update({ status: 'withdrawn' })
   }
@@ -128,8 +128,8 @@ export class DispatchOffers {
     const job = await DispatchOffers.jobFor(booking)
     const offer = await PrintOffer.query().where({ id: offerId, printJobId: job.id }).first()
 
-    abortIf(!offer, 'Price not found.', 404)
-    abortIf(offer!.status !== 'pending' || !offer!.isLive(), 'This price isn’t open any more. Pick another, or ask a dispatcher.', 422)
+    abortIf(!offer, 'Quote not found.', 404)
+    abortIf(offer!.status !== 'pending' || !offer!.isLive(), 'This quote is no longer available. Pick another, or ask a dispatcher.', 422)
 
     return offer!
   }

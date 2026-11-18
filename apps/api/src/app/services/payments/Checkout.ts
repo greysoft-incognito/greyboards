@@ -15,12 +15,12 @@ export class Checkout {
 
   /** A pending payment for `booking`, or on a shared booking for `user`'s unpaid shares, and the checkout page to finish it on. */
   async start(booking: Booking, user: User): Promise<{ payment: Payment; url: string }> {
-    abortIf(!booking.isHeld(), 'The hold on these dates ran out. Book them again.', 422)
+    abortIf(!booking.isHeld(), 'Your hold on these dates expired. Book them again.', 422)
     abortIf(!this.gateway.enabled(), 'Payments are not available right now.', 503)
 
     const due = booking.shared ? await Shares.due(booking, user) : null
 
-    abortIf(!!due && due.amountMinor <= 0, 'You have no share of this booking left to pay.', 422)
+    abortIf(!!due && due.amountMinor <= 0, 'You’ve already paid your share.', 422)
 
     const amountMinor = due ? due.amountMinor : booking.amountMinor
 

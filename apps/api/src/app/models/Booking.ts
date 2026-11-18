@@ -219,7 +219,7 @@ export class Booking extends Model {
 
     const open = await Booking.query().where({ advertiserId: advertiser.id, status: Booking.HELD }).count()
 
-    abortIf(open >= Booking.MAX_HOLDS, 'Finish or cancel a checkout you started before booking another board.', 429)
+    abortIf(open >= Booking.MAX_HOLDS, 'Finish or cancel your other checkout before booking another board.', 429)
 
     const pick = board.isDigital() ? await DigitalSlots.pick(board, face, startsOn, endsOn, slots?.slots ?? 1, slots?.daypart ?? 'all_day') : undefined
     const rateMinor = pick ? await DigitalSlots.price(board, face, pick.slots, pick.daypart) : board.rateFor(face)!
@@ -241,9 +241,9 @@ export class Booking extends Model {
     const payHours = await Settings.number('shares.pay_hours')
     const earliest = Day.today((await Settings.number('bookings.lead_days')) + Math.ceil(payHours / 24))
 
-    abortIf(!(await Settings.get('shares.enabled')), 'Shared bookings aren’t available right now.', 422)
-    abortIf(shares > maxShares, `Split a booking between up to ${maxShares} advertisers.`, 422)
-    abortIf(startsOn < earliest, `A shared booking can start from ${earliest}, so everyone has time to pay before the artwork goes up.`, 422)
+    abortIf(!(await Settings.get('shares.enabled')), 'Shared boards aren’t available right now.', 422)
+    abortIf(shares > maxShares, `You can share a board with up to ${maxShares} advertisers.`, 422)
+    abortIf(startsOn < earliest, `Shared bookings can start from ${earliest}, so everyone has time to pay.`, 422)
 
     return payHours
   }
@@ -258,7 +258,7 @@ export class Booking extends Model {
 
     abortIf(!!blocker, blocker ?? '', 422)
     abortIf(startsOn <= Day.today(), 'Those dates have already started.', 422)
-    abortIf(await Booking.blocked(board, face, startsOn, endsOn), 'The owner keeps some of those dates for their own clients.', 409)
+    abortIf(await Booking.blocked(board, face, startsOn, endsOn), 'Some of those dates aren’t available.', 409)
 
     await Booking.expireHolds()
 
@@ -286,16 +286,16 @@ export class Booking extends Model {
     const minPeriods = Math.min(face.minPeriods, maxPeriods)
 
     abortIf(!!blocker, blocker ?? '', 422)
-    abortIf(await BoardPolicy.manages(advertiser, board), 'You look after this board, so you can’t book it.', 422)
-    abortIf(!Day.valid(startsOn), 'Pick a start date.', 422)
-    abortIf(startsOn < earliest, `The earliest start is ${earliest}, to leave time to print and put the artwork up.`, 422)
+    abortIf(await BoardPolicy.manages(advertiser, board), 'You can’t book your own board.', 422)
+    abortIf(!Day.valid(startsOn), 'Choose a start date.', 422)
+    abortIf(startsOn < earliest, `The earliest start date is ${earliest}, to leave time for printing.`, 422)
     abortIf(startsOn > Day.today(Booking.MAX_DAYS_AHEAD), 'Bookings can start up to a year ahead.', 422)
     abortIf(periods < minPeriods || periods > maxPeriods, `Book between ${minPeriods} and ${maxPeriods} ${board.ratePeriod}s.`, 422)
 
     const endsOn = Booking.endOf(startsOn, periods, board.ratePeriod)
 
-    abortIf(await Booking.blocked(board, face, startsOn, endsOn), 'The owner keeps some of those dates for their own clients. Pick other dates.', 409)
-    abortIf(await Auction.covers(face, startsOn, endsOn), 'Those dates are open for bids. Bid for them, or pick other dates.', 409)
+    abortIf(await Booking.blocked(board, face, startsOn, endsOn), 'Some of those dates aren’t available. Pick other dates.', 409)
+    abortIf(await Auction.covers(face, startsOn, endsOn), 'Those dates are open for bids. Place a bid, or choose other dates.', 409)
 
     return endsOn
   }
@@ -326,7 +326,7 @@ export class Booking extends Model {
         ...(terms.pick ?? DigitalSlots.WHOLE),
       })
     } catch (error) {
-      abortIf(Booking.isOverlap(error), terms.pick ? 'Someone just took some of those slots. Try again, or pick other dates.' : 'Someone else has some of those dates. Pick other dates.', 409)
+      abortIf(Booking.isOverlap(error), terms.pick ? 'Someone just booked some of those slots. Try other dates.' : 'Some of those dates were just booked. Try other dates.', 409)
 
       throw error
     }
@@ -472,7 +472,7 @@ export class Booking extends Model {
 
   /** The advertiser lets go of a hold. A paid booking is cancelled through `Refunds`, which works out the money back. */
   async cancel(): Promise<void> {
-    abortIf(this.status !== Booking.HELD, 'Only a booking that isn’t paid yet can be let go of here.', 422)
+    abortIf(this.status !== Booking.HELD, 'Only unpaid bookings can be released.', 422)
 
     await this.update({ status: Booking.CANCELLED, cancelledAt: new Date(), holdExpiresAt: null })
 
@@ -524,18 +524,18 @@ export class Booking extends Model {
 
   /** The advertiser's artwork, for the owner to check. A new file replaces one not yet approved. */
   async submitArtwork(file: UploadedFile): Promise<void> {
-    abortIf(this.status !== Booking.PAID, 'Add artwork once the booking is paid.', 422)
-    abortIf(this.artworkStatus === 'approved', 'The artwork is already approved and on its way to print.', 422)
+    abortIf(this.status !== Booking.PAID, 'You can upload your design once the booking is paid.', 422)
+    abortIf(this.artworkStatus === 'approved', 'The design is already approved and being printed.', 422)
 
-    abortIf(this.shared, 'Each advertiser on a shared booking sends their own design, and the print merges them.', 422)
+    abortIf(this.shared, 'On a shared booking, each person uploads their own design.', 422)
 
     await this.useArtwork(await StoredImage.save(`bookings/${this.id}/artwork`, file))
   }
 
   /** Put artwork up for the owner to check: the advertiser's, or a shared booking's merged designs. */
   async useArtwork(saved: SavedImage): Promise<void> {
-    abortIf(this.status !== Booking.PAID, 'Add artwork once the booking is paid.', 422)
-    abortIf(this.artworkStatus === 'approved', 'The artwork is already approved and on its way to print.', 422)
+    abortIf(this.status !== Booking.PAID, 'You can upload your design once the booking is paid.', 422)
+    abortIf(this.artworkStatus === 'approved', 'The design is already approved and being printed.', 422)
 
     await StoredImage.remove(this.artworkDisk, this.artworkPath)
     await this.update({
@@ -552,8 +552,8 @@ export class Booking extends Model {
 
   /** The owner or scout approves the artwork, which puts the print job up for dispatchers, or sends it back with a note. */
   async reviewArtwork(reviewer: User, approve: boolean, note?: string | null): Promise<void> {
-    abortIf(this.artworkStatus !== 'submitted', 'There is no artwork waiting for a check.', 422)
-    abortIf(!approve && !note?.trim(), 'Say what to change so the advertiser can fix it.', 422)
+    abortIf(this.artworkStatus !== 'submitted', 'There’s no design to review.', 422)
+    abortIf(!approve && !note?.trim(), 'Let the advertiser know what to change.', 422)
 
     await this.update({
       artworkStatus: approve ? 'approved' : 'rejected',
@@ -571,16 +571,16 @@ export class Booking extends Model {
 
   /** A geotagged photo of the ad on the board. It must be taken at the board. */
   async addProof(user: User, file: UploadedFile, where: ProofLocation): Promise<PostingProof> {
-    abortIf(this.status !== Booking.PAID || this.artworkStatus !== 'approved', 'Add proof once the artwork is approved and the ad is up.', 422)
-    abortIf(this.proofStatus === 'submitted' || this.proofStatus === 'accepted', 'The proof is already with the advertiser.', 422)
+    abortIf(this.status !== Booking.PAID || this.artworkStatus !== 'approved', 'You can add photos once the ad is up.', 422)
+    abortIf(this.proofStatus === 'submitted' || this.proofStatus === 'accepted', 'The photos have already been sent to the advertiser.', 422)
 
     const board = await this.board().firstOrFail()
     const distanceM = PostingProof.distanceFrom(board, where)
     const maxDistance = await Settings.number('proofs.max_distance_m')
     const count = await PostingProof.query().where({ bookingId: this.id }).count()
 
-    abortIf(distanceM > maxDistance, `This photo was taken ${distanceM} m from the board. Take it within ${maxDistance} m so the advertiser can trust it.`, 422)
-    abortIf(count >= PostingProof.MAX_PER_BOOKING, `Keep it to ${PostingProof.MAX_PER_BOOKING} photos. Remove one first.`, 422)
+    abortIf(distanceM > maxDistance, `This photo was taken ${distanceM} m away. Please take it within ${maxDistance} m of the board.`, 422)
+    abortIf(count >= PostingProof.MAX_PER_BOOKING, `You can add up to ${PostingProof.MAX_PER_BOOKING} photos. Remove one first.`, 422)
 
     await this.stepInIfUnclaimed(user)
 
@@ -599,7 +599,7 @@ export class Booking extends Model {
 
   async removeProof(proof: PostingProof): Promise<void> {
     abortIf(proof.bookingId !== this.id, 'That photo isn’t part of this booking.', 404)
-    abortIf(this.proofStatus === 'submitted' || this.proofStatus === 'accepted', 'The proof is already with the advertiser.', 422)
+    abortIf(this.proofStatus === 'submitted' || this.proofStatus === 'accepted', 'The photos have already been sent to the advertiser.', 422)
 
     await proof.remove()
   }
@@ -609,8 +609,8 @@ export class Booking extends Model {
     const needed = await Settings.number('proofs.min_photos')
     const count = await PostingProof.query().where({ bookingId: this.id }).count()
 
-    abortIf(this.status !== Booking.PAID || !['none', 'disputed'].includes(this.proofStatus), 'There is no proof to send for this booking.', 422)
-    abortIf(count < needed, `Add at least ${needed} photos of the ad on the board.`, 422)
+    abortIf(this.status !== Booking.PAID || !['none', 'disputed'].includes(this.proofStatus), 'There are no photos to send yet.', 422)
+    abortIf(count < needed, `Add at least ${needed} photos of your ad on the board.`, 422)
 
     await this.update({ proofStatus: 'submitted', proofSubmittedAt: new Date() })
     await PrintJob.query().where({ bookingId: this.id }).whereRaw('status <> ?', [PrintJob.CANCELLED]).updateFrom({ status: PrintJob.POSTED, postedAt: new Date() })
@@ -641,8 +641,8 @@ export class Booking extends Model {
 
   /** The advertiser says what's wrong. New photos can be added and sent again. */
   async disputeProof(note: string): Promise<void> {
-    abortIf(this.proofStatus !== 'submitted', 'There is no proof waiting for you to check.', 422)
-    abortIf(!note.trim(), 'Say what’s wrong so it can be put right.', 422)
+    abortIf(this.proofStatus !== 'submitted', 'There are no photos to review.', 422)
+    abortIf(!note.trim(), 'Let them know what’s wrong so they can fix it.', 422)
 
     await this.update({ proofStatus: 'disputed', proofNote: note.trim() })
     await PrintJob.query().where({ bookingId: this.id, status: PrintJob.POSTED }).updateFrom({ status: PrintJob.PRINTED, postedAt: null })
@@ -668,7 +668,7 @@ export class Booking extends Model {
 
     if (!profile?.phone || !board || !this.ownerAmountMinor) return
 
-    await Sms.send(profile.phone, `The ad on "${board.name}" is up and checked. ${Money.format(this.ownerAmountMinor, this.currency)} is now due to you. - Greyboards`).catch(() => undefined)
+    await Sms.send(profile.phone, `Good news! The ad on "${board.name}" is up. ${Money.format(this.ownerAmountMinor, this.currency)} is on its way to you. - Greyboards`).catch(() => undefined)
   }
 
   /** Text the owner that their board is booked and what they'll receive, signed in or not. */

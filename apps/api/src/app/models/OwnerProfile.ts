@@ -74,9 +74,9 @@ export class OwnerProfile extends Model {
   static async startClaim(phone: string): Promise<OwnerProfile> {
     const profile = await OwnerProfile.query().where({ phone: Sms.normalize(phone) }).whereNull('userId').first()
 
-    abortIf(!profile, 'No unclaimed owner profile uses this number.', 404)
+    abortIf(!profile, 'We couldn’t find any boards listed with this number.', 404)
 
-    await OwnerProfile.claimCode(phone).send((code) => `Your Greyboards code is ${code}. Use it to manage the boards listed under your name. Don't share it.`)
+    await OwnerProfile.claimCode(phone).send((code) => `Your Greyboards code is ${code}. Use it to manage your boards. Don't share it.`)
 
     return profile!
   }
@@ -85,7 +85,7 @@ export class OwnerProfile extends Model {
   static async finishClaim(user: User, phone: string, code: string): Promise<OwnerProfile> {
     const profile = await OwnerProfile.query().where({ phone: Sms.normalize(phone) }).whereNull('userId').first()
 
-    abortIf(!profile, 'No unclaimed owner profile uses this number.', 404)
+    abortIf(!profile, 'We couldn’t find any boards listed with this number.', 404)
 
     await OwnerProfile.claimCode(phone).verify(code)
     await profile!.update({ userId: user.id, claimedAt: new Date(), phoneVerifiedAt: new Date() })
