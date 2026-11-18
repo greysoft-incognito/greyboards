@@ -49,6 +49,7 @@ export default function RootLayout() {
               <Stack.Screen name="jobs" />
               <Stack.Screen name="bookings" />
               <Stack.Screen name="shares" />
+              <Stack.Screen name="reports" />
               <Stack.Screen name="checkout/complete" />
             </Stack.Protected>
             <Stack.Screen name="pages/[slug]" />
