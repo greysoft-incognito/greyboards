@@ -191,7 +191,7 @@ export default function TagBoard() {
           <Input value={form.address} onChangeText={set('address')} maxLength={191} placeholder="Admiralty Way, by the roundabout" />
         </Field>
         <Field label="City" error={errors.city}>
-          <Input value={form.city} onChangeText={set('city')} maxLength={80} placeholder="Lagos" autoCapitalize="words" />
+          <Input value={form.city} onChangeText={set('city')} maxLength={80} placeholder="Kaduna" autoCapitalize="words" />
         </Field>
       </Section>
 
@@ -218,7 +218,7 @@ export default function TagBoard() {
 
       <Section title="The board">
         <Field label="Name" error={errors.name} hint="What advertisers see first. A landmark helps.">
-          <Input value={form.name} onChangeText={set('name')} maxLength={120} placeholder="Admiralty Way, facing Lekki Phase 1" />
+          <Input value={form.name} onChangeText={set('name')} maxLength={120} placeholder="Ahmadu Bello Way, facing Murtala Square" />
         </Field>
         <Field label="Kind" error={errors.kind}>
           <Select label="Kind" value={form.kind} onChange={set('kind')} options={(kinds.length ? kinds : [{ kind: 'billboard' as BoardKind, label: 'Billboard' }]).map((kind) => ({ value: kind.kind, label: kind.label }))} />

@@ -193,8 +193,8 @@ Commission rates belong to one authority (a `Commissions` policy read from setti
 1. **Scout commission:** now that scouts run boards for managed owners, should they earn more on those than on self-serve boards, or get a fee per proof visit? Separately: a share of Greyboards' commission (as in 3.6) or an extra charge on the owner? For how long: the agreement's term, or for as long as the board stays listed?
 2. **Sharing:** is the shared booking (co-op) in 3.4 what you meant, or something else?
 3. **Bids:** may only owners open a period for bids, or can advertisers request an auction? Is the open highest-bid format right, or do you want sealed bids?
-4. **Print-and-display role name:** dispatcher, or one of the alternatives in 3.5?
-5. **Launch market:** "anywhere in the world" is the goal, but payments, permits and the first scouts need a starting country or city. Lagos?
+4. **Print-and-display role name:** decided: Dispatch.
+5. **Launch market:** decided: Kaduna goes live first.
 6. **Map provider:** MapLibre with hosted tiles, or Google Maps?
 
 ## 8. Design

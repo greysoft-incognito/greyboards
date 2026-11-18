@@ -42,8 +42,10 @@ What's built and what's left, following the phases in [docs/proposal.md](docs/pr
 ## Open decisions
 
 - The EAS project for mobile builds
-- Default owner share (70%) and the owner agreement wording
-- Scout pay on managed boards, what "sharing" means, the bid format and the launch city (proposal questions 1, 2, 3 and 5)
+- The owner agreement wording
+- The bid format (proposal question 3)
+
+Decided: Kaduna goes live first; the rent splits owner 70, Greyboards 20, scout 10 after the dispatcher is paid; sharing merges every advertiser's design into one print; Billposter is now Dispatch.
 
 ## Needed before launch
 

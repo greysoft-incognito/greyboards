@@ -83,7 +83,7 @@ export default function Reports({ loaderData, actionData }: Route.ComponentProps
 						<Form method="post" className="space-y-4">
 							<input type="hidden" name="intent" value="create" />
 							<Field label="Title">
-								<Input name="title" required minLength={3} maxLength={120} placeholder="Such as: Lagos launch, November" />
+								<Input name="title" required minLength={3} maxLength={120} placeholder="Such as: Kaduna launch, November" />
 							</Field>
 							<fieldset className="space-y-1">
 								<legend className="text-sm font-semibold text-ink-700">Bookings</legend>
