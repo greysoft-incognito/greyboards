@@ -1,5 +1,7 @@
 import { Pipeline } from '@app/services/Pipeline'
 import { OwnerPricing } from '@app/services/OwnerPricing'
+import { DigitalSlots } from '@app/services/DigitalSlots'
+import { ScreenPlayer } from '@app/services/ScreenPlayer'
 import { Board, type BoardDetails, type BoardOwnerChoice, type BoardStatus } from '@app/models/Board'
 import { BoardAgreement } from '@app/models/BoardAgreement'
 import { BoardAgreementResource } from '@app/http/resources/BoardAgreementResource'
@@ -45,6 +47,8 @@ const rules = (creating: boolean) => {
     printsOwn: 'nullable|boolean',
     printFeeMinor: 'nullable|integer|min:0',
     ownerNet: 'nullable|boolean',
+    loopSlots: 'nullable|integer|min:1|max:60',
+    slotSeconds: 'nullable|integer|min:5|max:120',
   }
 }
 
@@ -55,7 +59,7 @@ const ownerRules = {
   ownerPhone: ['nullable', 'string', PHONE],
 }
 
-const NUMBERS = ['widthM', 'heightM', 'faces', 'latitude', 'longitude', 'accuracyM', 'headingDeg', 'rateMinor', 'printFeeMinor'] as const
+const NUMBERS = ['widthM', 'heightM', 'faces', 'latitude', 'longitude', 'accuracyM', 'headingDeg', 'rateMinor', 'printFeeMinor', 'loopSlots', 'slotSeconds'] as const
 
 /** Only the fields that were sent, with numbers as numbers, so a missing field keeps what the board has. */
 const details = (data: Record<string, any>, sent: Record<string, unknown>): Partial<BoardDetails> => {
@@ -150,6 +154,8 @@ export default class AccountBoardController extends BaseController {
 
     const picked = details(data, this.body)
 
+    if (picked.loopSlots !== undefined) await DigitalSlots.checkLoop(board, picked.loopSlots)
+
     await board.revise(picked)
     await OwnerPricing.apply(board, 'rateMinor' in this.body ? (picked.rateMinor ?? null) : undefined)
 
@@ -211,6 +217,26 @@ export default class AccountBoardController extends BaseController {
       .additional({ status: 'success', message: `Sent to ${agreement.ownerName ?? 'the owner'} by SMS.`, code: 201 })
       .response()
       .setStatusCode(201)
+  }
+
+  /** Make a token for a digital screen's player. It shows once, and replaces any older one. */
+  async issuePlayerToken() {
+    const board = await this.managed()
+    const token = await ScreenPlayer.issue(board)
+
+    return new GenericResource({ token })
+      .additional({ status: 'success', message: 'Copy the token into the screen’s player now. It won’t show again.', code: 201 })
+      .response()
+      .setStatusCode(201)
+  }
+
+  /** Stop the screen's player from signing in. */
+  async revokePlayerToken() {
+    const board = await this.managed()
+
+    await ScreenPlayer.revoke(board)
+
+    return new GenericResource({ id: board.id }).additional({ status: 'success', message: 'Player token removed', code: 200 })
   }
 
   /** Change one face's name, heading or rate card. An empty rate uses the board's. */

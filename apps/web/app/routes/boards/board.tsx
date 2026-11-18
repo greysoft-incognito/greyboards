@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { Form, Link, redirect, useNavigation, useSearchParams, useSubmit } from "react-router";
 import { ArrowLeft, BadgeCheck, Camera, Compass, ExternalLink, FileSignature, Layers, Lightbulb, Map as MapIcon, MapPin, Pencil, Phone, Ruler, Send, Trash2, User, X } from "lucide-react";
-import type { BoardAgreement, BoardDetail, BoardPhoto, OwnerProfile } from "@greyboards/types";
+import type { BoardAgreement, BoardDetail, BoardPhoto, Daypart, OwnerProfile } from "@greyboards/types";
 import { BoardCover, BoardStatusBadge, formatHeading, formatRate, formatSize, mapLink } from "~/components/boards/BoardBits";
 import { AuctionCard, AuctionsManager, toMinor } from "~/components/bids/BidBits";
 import { BookPanel } from "~/components/bookings/BookPanel";
 import { SharedBookingCard } from "~/components/bookings/SharedBookingCard";
+import { ScreenPlayerPanel } from "~/components/boards/ScreenPlayerPanel";
+import { cloudflareContext } from "~/lib/cloudflare";
 import { isSharedBookingIntent, sharedBookingAction } from "~/lib/shares.server";
 import { BoardReviews, RatingLine } from "~/components/reviews/ReviewBits";
 import { BlockedDays, RateCard } from "~/components/boards/RateCard";
@@ -35,8 +37,9 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
 	const { data: auctions } = board.status === "listed" || manages ? await api.boardAuctions(board.id).catch(() => ({ data: [] })) : { data: [] };
 	const reviews = board.rating.count ? await api.boardReviews(board.id, { per_page: 5 }).catch(() => null) : null;
 	const shared = board.status === "listed" && !manages ? await api.openShares({ boardId: board.id }).then(({ data }) => data, () => []) : [];
+	const slotQuote = board.loop && board.status === "listed" && !manages ? await api.boardSlots(board.id).then(({ data }) => data, () => null) : null;
 
-	return { board, manages, taken, canBook, auctions, shared, reviews: reviews?.data ?? [], today: new Date().toISOString().slice(0, 10), styleUrl: mapStyleUrl(context) };
+	return { board, manages, taken, canBook, auctions, shared, slotQuote, apiUrl: manages && board.loop ? String(context.get(cloudflareContext).env.API_URL ?? "") : "", reviews: reviews?.data ?? [], today: new Date().toISOString().slice(0, 10), styleUrl: mapStyleUrl(context) };
 }
 
 export async function action({ request, context, params }: Route.ActionArgs) {
@@ -87,7 +90,8 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 		if (intent === "book") {
 			const faceId = String(form.get("faceId") ?? "") || undefined;
 			const shares = Number(form.get("shares") ?? 1) || 1;
-			const { data: booking } = await api.bookBoard(params.id, { startsOn: String(form.get("startsOn")), periods: Number(form.get("periods")), faceId, shares });
+			const slots = form.get("slots") ? { slots: Number(form.get("slots")), daypart: String(form.get("daypart") ?? "all_day") as Daypart } : {};
+			const { data: booking } = await api.bookBoard(params.id, { startsOn: String(form.get("startsOn")), periods: Number(form.get("periods")), faceId, shares, ...slots });
 
 			if (shares > 1) throw redirect(`/bookings/${booking.id}`);
 
@@ -141,6 +145,18 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 			return { error: null, message: "Days open for booking again." };
 		}
 
+		if (intent === "player-token") {
+			const { data } = await api.account.issuePlayerToken(params.id);
+
+			return { error: null, message: "Player token made.", intent, id, token: data.token };
+		}
+
+		if (intent === "player-revoke") {
+			await api.account.revokePlayerToken(params.id);
+
+			return { error: null, message: "The player is disconnected." };
+		}
+
 		if (intent === "send-agreement") {
 			const { data } = await api.account.sendAgreement(params.id);
 
@@ -172,7 +188,8 @@ const REVIEW_NOTES: Record<BoardDetail["status"], string> = {
 export default function BoardPage({ loaderData, actionData }: Route.ComponentProps) {
 	useToastMessage(actionData);
 
-	const { board, manages, taken, canBook, auctions, shared, reviews, today, styleUrl } = loaderData;
+	const { board, manages, taken, canBook, auctions, shared, slotQuote, apiUrl, reviews, today, styleUrl } = loaderData;
+	const playerToken = actionData && "token" in actionData ? (actionData.token ?? null) : null;
 	const errorFor = (intent: string, id = "") => (actionData?.intent === intent && (actionData.id ?? "") === id ? actionData.error : null);
 	const [params] = useSearchParams();
 	const [shown, setShown] = useState<BoardPhoto | null>(board.photos[0] ?? null);
@@ -238,7 +255,12 @@ export default function BoardPage({ loaderData, actionData }: Route.ComponentPro
 								</span>
 							</span>
 						</a>
-						{rate && <p className="font-display text-2xl font-extrabold text-ink-900 tabular-nums">{rate}</p>}
+						{rate && (
+							<p className="font-display text-2xl font-extrabold text-ink-900 tabular-nums">
+								{rate}
+								{board.loop && <span className="ml-1.5 font-sans text-sm font-semibold text-ink-500">per slot, {board.loop.slots} slots of {board.loop.seconds}s in the loop</span>}
+							</p>
+						)}
 						<RatingLine rating={board.rating} />
 						<ul className="grid gap-2 text-sm text-ink-700 sm:grid-cols-2">
 							{facts.map((fact) => (
@@ -251,7 +273,7 @@ export default function BoardPage({ loaderData, actionData }: Route.ComponentPro
 						{board.description && <p className="border-t border-surface-200 pt-4 text-sm whitespace-pre-line text-ink-700">{board.description}</p>}
 					</div>
 
-					{!manages && board.status === "listed" && <BookPanel board={board} taken={taken} canBook={canBook} error={errorFor("book") ?? errorFor("offer")} />}
+					{!manages && board.status === "listed" && <BookPanel board={board} taken={taken} canBook={canBook} slotQuote={slotQuote} error={errorFor("book") ?? errorFor("offer")} />}
 					{shared.map((entry) => (
 						<SharedBookingCard key={entry.id} shared={entry} canJoin={canBook} error={errorFor("takeover-bid", entry.id) ?? errorFor("pay-takeover", entry.id)} />
 					))}
@@ -284,6 +306,7 @@ export default function BoardPage({ loaderData, actionData }: Route.ComponentPro
 						</div>
 					)}
 
+					{manages && board.loop && <ScreenPlayerPanel board={board} token={playerToken} apiUrl={apiUrl} />}
 					{manages && board.rateCard.length > 0 && <RateCard board={board} />}
 					{manages && <BlockedDays board={board} today={today} />}
 					{manages && board.status === "listed" && <AuctionsManager board={board} auctions={auctions} today={today} />}
