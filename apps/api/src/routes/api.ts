@@ -35,6 +35,8 @@ import TerritoryController from 'src/app/http/controllers/admin/TerritoryControl
 import PayoutController from 'src/app/http/controllers/PayoutController'
 import PrintOfferController from 'src/app/http/controllers/PrintOfferController'
 import { Authorize } from 'src/app/http/middlewares/Authorize'
+import { apiKey } from 'src/app/http/middlewares/ApiKeyAuth'
+import ApiKeyController from 'src/app/http/controllers/ApiKeyController'
 import { Router } from '@arkstack/driver-express'
 import { auth, limiter } from '@arkstack/driver-express/middlewares'
 
@@ -257,3 +259,19 @@ Router.get('/admin/documents/:document', [AdminDocumentController, 'show'], [aut
 Router.post('/admin/documents', [AdminDocumentController, 'create'], [auth, Authorize.to('pages.manage')])
 Router.put('/admin/documents/:document', [AdminDocumentController, 'update'], [auth, Authorize.to('pages.manage')])
 Router.delete('/admin/documents/:document', [AdminDocumentController, 'destroy'], [auth, Authorize.to('pages.manage')])
+
+// Keys for the public API, made by a signed-in account.
+Router.get('/account/api-keys', [ApiKeyController, 'index'], [auth])
+Router.post('/account/api-keys', [ApiKeyController, 'store'], [auth, limiter(10, 60)])
+Router.delete('/account/api-keys/:key', [ApiKeyController, 'destroy'], [auth])
+
+// The public API: the same answers as the app's own API, signed in with an API key. See docs/public-api.md.
+Router.get('/v1/me', [AuthController, 'me'], [apiKey('read')])
+Router.get('/v1/boards', [BoardController, 'index'], [apiKey('read')])
+Router.get('/v1/boards/:board', [BoardController, 'show'], [apiKey('read')])
+Router.get('/v1/boards/:board/availability', [BookingController, 'availability'], [apiKey('read')])
+Router.post('/v1/boards/:board/bookings', [BookingController, 'create'], [apiKey('book'), Authorize.actingAs('advertiser')])
+Router.get('/v1/bookings', [BookingController, 'index'], [apiKey('read')])
+Router.get('/v1/bookings/:booking', [BookingController, 'show'], [apiKey('read')])
+Router.post('/v1/bookings/:booking/checkout', [BookingController, 'checkout'], [apiKey('book')])
+Router.post('/v1/bookings/:booking/cancel', [BookingController, 'cancel'], [apiKey('book')])

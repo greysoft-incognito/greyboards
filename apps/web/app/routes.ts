@@ -42,6 +42,7 @@ export default [
 			route("password", "routes/settings/password.tsx"),
 			route("two-step", "routes/settings/two-step.tsx"),
 			route("devices", "routes/settings/devices.tsx"),
+			route("api-keys", "routes/settings/api-keys.tsx"),
 			route("delete-account", "routes/settings/delete-account.tsx"),
 		]),
 	]),

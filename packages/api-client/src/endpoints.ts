@@ -1,4 +1,7 @@
 import type {
+  ApiKey,
+  ApiKeyAbility,
+  NewApiKey,
   PublishedReview,
   RatingSummary,
   ReviewInput,
@@ -407,6 +410,12 @@ export function createEndpoints(alova: GreyboardsAlova) {
       sessions: () => alova.Get<ApiResponse<Session[]>>('/account/sessions', { cacheFor: null }),
       revokeSession: (id: ID) => alova.Delete<ApiResponse<Session>>(`/account/sessions/${id}`),
       revokeOtherSessions: () => alova.Delete<ApiResponse<{ revoked: number }>>('/account/sessions'),
+
+      /** Keys for the public API. */
+      apiKeys: () => alova.Get<ApiResponse<ApiKey[]>>('/account/api-keys', { cacheFor: null }),
+      /** Make a key. The token in the reply is the only time it shows. */
+      createApiKey: (data: { name: string; abilities: ApiKeyAbility[] }) => alova.Post<ApiResponse<NewApiKey>>('/account/api-keys', data),
+      removeApiKey: (id: ID) => alova.Delete<ApiResponse<{ id: ID }>>(`/account/api-keys/${id}`),
 
       twoFactor: () => alova.Get<ApiResponse<TwoFactorStatus>>('/account/two-factor', { cacheFor: null }),
       setupTwoFactor: () => alova.Post<ApiResponse<TwoFactorSetup>>('/account/two-factor/setup'),
