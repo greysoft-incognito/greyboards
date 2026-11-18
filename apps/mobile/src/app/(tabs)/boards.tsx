@@ -8,12 +8,14 @@ import { EmptyState } from '@/components/EmptyState'
 import { useTabBarInset } from '@/components/GlassTabBar'
 import { Button, Callout, Text } from '@/components/ui'
 import { api } from '@/lib/api'
+import { useUser } from '@/lib/session'
 import { FormProblem } from '@/lib/forms'
 import { colors } from '@/theme'
 
 /** Boards the account tagged or owns, newest first, a page at a time, with a way to tag another. */
 export default function Boards() {
   const inset = useTabBarInset()
+  const scouts = useUser().accountRoles.some((role) => role.kind === 'scout' && role.status === 'active')
   const [boards, setBoards] = useState<Board[]>([])
   const [page, setPage] = useState({ current: 0, last: 1 })
   const [loading, setLoading] = useState(false)
@@ -62,6 +64,7 @@ export default function Boards() {
             <Text variant="muted">Boards you tagged. New ones go on the map once a reviewer checks them.</Text>
           </View>
           <Button title="Tag a board" onPress={() => router.push('/boards/new')} />
+          {scouts ? <Button title="Pipeline and to do" variant="secondary" onPress={() => router.push('/boards/pipeline')} /> : null}
           {problem ? <Callout>{problem}</Callout> : null}
         </View>
       }

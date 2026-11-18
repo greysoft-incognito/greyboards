@@ -30,7 +30,7 @@ What's built and what's left, following the phases in [docs/proposal.md](docs/pr
 - [x] Reviews
 - [x] Disputes
 - [x] Campaign reports
-- [ ] Scout pipeline and territories
+- [x] Scout pipeline and territories
 
 ## Phase 3: Scale
 

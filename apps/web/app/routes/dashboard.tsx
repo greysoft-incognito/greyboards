@@ -4,14 +4,17 @@ import type { AccountRoleKind } from "@greyboards/types";
 import { requireUser } from "~/lib/session.server";
 import { ROLE_ICONS, RoleStatus } from "~/components/AccountRoles";
 import { BoardScene, type SceneArt, type SceneTime } from "~/components/BoardScene";
+import { TaskList } from "~/components/scouting/ScoutingBits";
 import type { Route } from "./+types/dashboard";
 
 export const meta = () => [{ title: "Dashboard · Greyboards" }];
 
 export async function loader({ request, context }: Route.LoaderArgs) {
-	const { user } = await requireUser(request, context);
+	const { user, api } = await requireUser(request, context);
+	const looksAfterBoards = user.accountRoles.some((role) => (role.kind === "owner" || role.kind === "scout") && role.status === "active");
+	const tasks = looksAfterBoards ? await api.tasks().then((result) => result.data).catch(() => []) : null;
 
-	return { user, welcome: new URL(request.url).searchParams.has("welcome") };
+	return { user, tasks, welcome: new URL(request.url).searchParams.has("welcome") };
 }
 
 /** What each role's area will hold, shown until it has something in it. */
@@ -32,7 +35,7 @@ const SCENES: Record<AccountRoleKind, { time: SceneTime; art: SceneArt; headline
 
 /** The signed-in home: a greeting, then one card for each marketplace role the account holds. */
 export default function Dashboard({ loaderData }: Route.ComponentProps) {
-	const { user, welcome } = loaderData;
+	const { user, tasks, welcome } = loaderData;
 	const firstName = user.name.split(/\s+/)[0];
 	const active = user.accountRoles.filter((role) => role.status === "active").length;
 	const pending = user.accountRoles.filter((role) => role.status === "pending").length;
@@ -57,6 +60,13 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
 					<BoardScene time="night" art="brand" headline={`Hi, ${firstName}`} />
 				</div>
 			</section>
+
+			{tasks && tasks.length > 0 && (
+				<section className="panel mt-6 space-y-2 p-5 sm:p-6">
+					<h2 className="font-display text-xl font-extrabold tracking-tight text-ink-900">To do</h2>
+					<TaskList tasks={tasks} limit={6} />
+				</section>
+			)}
 
 			<div className="mt-6 grid gap-4 md:grid-cols-2">
 				{user.accountRoles.map((role) => {

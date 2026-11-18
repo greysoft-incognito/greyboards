@@ -2,6 +2,13 @@ import type {
   PublishedReview,
   RatingSummary,
   ReviewInput,
+  Prospect,
+  ProspectInput,
+  ProspectQuery,
+  ProspectStage,
+  Task,
+  Territory,
+  TerritoryInput,
   CampaignReport,
   CampaignReportInput,
   CampaignReportSummary,
@@ -131,6 +138,19 @@ export function createEndpoints(alova: GreyboardsAlova) {
     boardReviews: (id: ID, params: PageQuery = {}) => alova.Get<PaginatedResponse<PublishedReview> & { summary: RatingSummary }>(`/boards/${id}/reviews`, { params, cacheFor: null }),
     /** Write or change the viewer's review of a booking. */
     review: (id: ID, data: ReviewInput) => alova.Post<ApiResponse<{ id: ID; rating: number; body: string | null }>>(`/bookings/${id}/review`, data),
+    /** The scout pipeline: boards a scout spotted, from first sighting to earning. */
+    prospects: {
+      list: (params: ProspectQuery = {}) => alova.Get<PaginatedResponse<Prospect> & { counts: Record<ProspectStage, number> }>('/account/prospects', { params, cacheFor: null }),
+      create: (data: ProspectInput & { name: string; latitude: number; longitude: number }) => alova.Post<ApiResponse<Prospect>>('/account/prospects', data),
+      update: (id: ID, data: ProspectInput) => alova.Put<ApiResponse<Prospect>>(`/account/prospects/${id}`, data),
+      /** Link the board the scout tagged for it. */
+      link: (id: ID, boardId: ID) => alova.Post<ApiResponse<Prospect>>(`/account/prospects/${id}/board`, { boardId }),
+      remove: (id: ID) => alova.Delete<ApiResponse<unknown>>(`/account/prospects/${id}`),
+    },
+    /** The territories staff gave the scout. */
+    territories: () => alova.Get<ApiResponse<Territory[]>>('/account/territories', { cacheFor: null }),
+    /** What needs doing on the boards the account looks after, and in its pipeline. */
+    tasks: () => alova.Get<ApiResponse<Task[]>>('/account/tasks', { cacheFor: null }),
     /** Campaign reports: the advertiser's own, and the shared page anyone with the link opens. */
     reports: {
       list: (params: PageQuery = {}) => alova.Get<PaginatedResponse<CampaignReportSummary>>('/reports', { params, cacheFor: null }),
@@ -369,6 +389,10 @@ export function createEndpoints(alova: GreyboardsAlova) {
       payouts: (params: PageQuery & { status?: PayoutStatus | null } = {}) => alova.Get<PaginatedResponse<Payout>>('/admin/payouts', { params, cacheFor: null }),
       retryPayout: (id: ID) => alova.Post<ApiResponse<Payout>>(`/admin/payouts/${id}/retry`),
       refundBooking: (id: ID, data: { reason: string }) => alova.Post<ApiResponse<Booking>>(`/admin/bookings/${id}/refund`, data),
+      territories: (params: PageQuery = {}) => alova.Get<PaginatedResponse<Territory>>('/admin/territories', { params, cacheFor: null }),
+      createTerritory: (data: TerritoryInput) => alova.Post<ApiResponse<Territory>>('/admin/territories', data),
+      updateTerritory: (id: ID, data: Partial<TerritoryInput>) => alova.Put<ApiResponse<Territory>>(`/admin/territories/${id}`, data),
+      removeTerritory: (id: ID) => alova.Delete<ApiResponse<unknown>>(`/admin/territories/${id}`),
       /** Open disputes oldest first, or decided ones newest first. */
       disputes: (params: PageQuery & { status?: 'open' | 'resolved' } = {}) => alova.Get<PaginatedResponse<AdminDispute>>('/admin/disputes', { params, cacheFor: null }),
       resolveDispute: (id: ID, data: DisputeResolution) => alova.Post<ApiResponse<Dispute>>(`/admin/disputes/${id}/resolve`, data),
