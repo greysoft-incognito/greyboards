@@ -39,6 +39,7 @@ export function boardInput(form: FormData): BoardInput {
 		ownerNet: form.get("ownerNet") === "1",
 		roadClass: (text(form, "roadClass") ?? null) as BoardInput["roadClass"],
 		dailyTraffic: number(form, "dailyTraffic"),
+		...(form.get("kind") === "digital" ? { loopSlots: number(form, "loopSlots"), slotSeconds: number(form, "slotSeconds") } : {}),
 	};
 }
 

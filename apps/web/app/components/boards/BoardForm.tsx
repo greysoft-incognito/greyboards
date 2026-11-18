@@ -53,6 +53,8 @@ export function BoardForm({
 	const [locating, setLocating] = useState(false);
 	const [locateError, setLocateError] = useState<string | null>(null);
 	const scouting = !board && as === "scout";
+	const [kind, setKind] = useState(board?.kind ?? "billboard");
+	const digital = kind === "digital";
 	const [ownerNet, setOwnerNet] = useState(board?.ownerNet ?? false);
 	const [rate, setRate] = useState(() => {
 		const minor = board?.ownerNet && board.ownerRateMinor != null ? board.ownerRateMinor : board?.rate?.amountMinor;
@@ -170,7 +172,7 @@ export function BoardForm({
 				</Field>
 				<div className="grid gap-4 sm:grid-cols-3">
 					<Field label="Kind" error={fieldErrors.kind}>
-						<Select name="kind" required defaultValue={board?.kind ?? "billboard"}>
+						<Select name="kind" required value={kind} onChange={(event) => setKind(event.target.value as typeof kind)}>
 							{kinds.map((kind) => (
 								<option key={kind.kind} value={kind.kind}>
 									{kind.label}
@@ -219,6 +221,16 @@ export function BoardForm({
 						<Input name="dailyTraffic" type="number" min="0" step="100" defaultValue={board?.measuredTraffic ?? ""} placeholder="25000" />
 					</Field>
 				</div>
+				{digital && (
+					<div className="grid gap-4 sm:grid-cols-2">
+						<Field label="Slots in the loop" error={fieldErrors.loopSlots} hint="Each booking takes one or more. Empty uses the standard loop.">
+							<Input name="loopSlots" type="number" min="1" max="60" defaultValue={board?.ownLoopSlots ?? ""} placeholder={board?.loop ? String(board.loop.slots) : "6"} />
+						</Field>
+						<Field label="Seconds per slot" error={fieldErrors.slotSeconds} hint="Empty uses the standard length.">
+							<Input name="slotSeconds" type="number" min="5" max="120" defaultValue={board?.ownSlotSeconds ?? ""} placeholder={board?.loop ? String(board.loop.seconds) : "10"} />
+						</Field>
+					</div>
+				)}
 				<Field label="Notes" error={fieldErrors.description}>
 					<Textarea name="description" rows={3} defaultValue={board?.description ?? ""} maxLength={1000} placeholder="Anything an advertiser should know, such as trees in the way or a nearby junction." />
 				</Field>
@@ -228,7 +240,7 @@ export function BoardForm({
 				<h2 className="font-display text-lg font-extrabold tracking-tight text-ink-900">{scouting ? "Owner and rate" : !board && ownerProfiles.length > 1 ? "Owner and rate" : "Rate"}</h2>
 				<div className="grid gap-4 sm:grid-cols-2">
 					<Field
-						label={ownerNet ? "What the owner gets, in naira" : "Rate in naira"}
+						label={ownerNet ? (digital ? "What the owner gets per slot, in naira" : "What the owner gets, in naira") : digital ? "Rate per slot, all day, in naira" : "Rate in naira"}
 						error={fieldErrors.rateMinor}
 						hint={ownerNet ? "Each period, after every other share." : scouting ? "What the owner asks, if you know it." : undefined}
 					>

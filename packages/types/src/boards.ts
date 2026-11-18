@@ -53,6 +53,8 @@ export interface Board {
   traffic?: TrafficEstimate | null
   /** What the rate costs for each 1,000 people passing. */
   costPerThousandMinor?: number | null
+  /** On a digital screen: its loop. The rate is then for one slot, all day. */
+  loop?: ScreenLoop | null
   status: BoardStatus
   /** Metres from the search point, on a nearby search. */
   distanceM: number | null
@@ -155,6 +157,11 @@ export interface BoardDetail extends Board {
   ownPrintFeeMinor?: number | null
   /** People passing each day, when someone counted them. */
   measuredTraffic?: number | null
+  /** On a digital screen: the loop the owner set, or null for the standard one. */
+  ownLoopSlots?: number | null
+  ownSlotSeconds?: number | null
+  /** On a digital screen: whether its player has a token, and when it last checked in. */
+  player?: { connected: boolean; seenAt: string | null } | null
   /** Whether the tagger fixed what the owner receives, so the rate is listed with the other shares on top. */
   ownerNet?: boolean
   /** The owner's amount per period, when `ownerNet` is on. */
@@ -203,6 +210,9 @@ export interface BoardInput {
   roadClass?: RoadClass | null
   /** People passing each day, when someone counted them. */
   dailyTraffic?: number | null
+  /** On a digital screen: slots in its loop and seconds each. Empty uses the standard loop. */
+  loopSlots?: number | null
+  slotSeconds?: number | null
 }
 
 /** The kind of road a board faces, for its traffic estimate. */
@@ -237,6 +247,12 @@ export interface PriceGuideQuery {
   dailyTraffic?: number | null
   /** The board being edited, to leave it out of the comparison. */
   except?: ID
+}
+
+/** A digital screen's loop: how many slots, and seconds each. */
+export interface ScreenLoop {
+  slots: number
+  seconds: number
 }
 
 /** What to list a board at so its owner receives a fixed amount. */

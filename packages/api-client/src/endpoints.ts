@@ -48,6 +48,8 @@ import type {
   OwnerPriceQuote,
   PriceGuide,
   PriceGuideQuery,
+  Daypart,
+  SlotQuote,
   PartnerChecks,
   BoardAgreement,
   BoardDetail,
@@ -137,6 +139,9 @@ export function createEndpoints(alova: GreyboardsAlova) {
     boardPins: (params: BoardPinSearch) => alova.Get<BoardPinsResponse>('/boards/pins', { params, cacheFor: null }),
     /** Days already booked on a board, for its calendar. */
     boardAvailability: (id: ID, params: { from?: string; to?: string; faceId?: ID } = {}) => alova.Get<ApiResponse<BookedDays[]>>(`/boards/${id}/availability`, { params, cacheFor: null }),
+    /** On a digital screen: its loop, what part of the day costs a slot, and how many slots are free for the dates. */
+    boardSlots: (id: ID, params: { faceId?: ID; startsOn?: string; periods?: number; daypart?: Daypart } = {}) =>
+      alova.Get<ApiResponse<SlotQuote>>(`/boards/${id}/slots`, { params, cacheFor: null }),
     /** Hold dates on a board while the advertiser pays. */
     bookBoard: (id: ID, data: BookingInput) => alova.Post<ApiResponse<Booking>>(`/boards/${id}/bookings`, data),
     booking: (id: ID) => alova.Get<ApiResponse<Booking>>(`/bookings/${id}`, { cacheFor: null }),
@@ -385,6 +390,9 @@ export function createEndpoints(alova: GreyboardsAlova) {
         alova.Get<ApiResponse<NearbyBoard[]>>('/account/boards/nearby', { params, cacheFor: null }),
       /** A suggested rate for a board being tagged: boards of the same kind nearby, and what its traffic is worth. */
       priceGuide: (params: PriceGuideQuery) => alova.Get<ApiResponse<PriceGuide>>('/account/boards/price-guide', { params, cacheFor: null }),
+      /** Make a token for a digital screen's player. It shows once. */
+      issuePlayerToken: (id: ID) => alova.Post<ApiResponse<{ token: string }>>(`/account/boards/${id}/player`),
+      revokePlayerToken: (id: ID) => alova.Delete<ApiResponse<{ id: ID }>>(`/account/boards/${id}/player`),
       /** What to list a board at so its owner receives `amountMinor` each period. */
       ownerPrice: (params: { amountMinor?: number | null; as: 'owner' | 'scout' }) =>
         alova.Get<ApiResponse<OwnerPriceQuote>>('/account/boards/owner-price', { params, cacheFor: null }),

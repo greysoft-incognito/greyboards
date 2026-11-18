@@ -148,7 +148,7 @@ Ranked by how much the core promise depends on them.
 11. **Campaign report.** A shareable page and PDF with the proof photos, dates and boards, for advertisers to show their own clients.
 12. **Owner bulk tools.** Import many boards from a spreadsheet, apply price rules to several boards at once.
 13. **Multi-currency and payouts by region.** Prices shown in the buyer's currency, owners paid in theirs. The payment regions in toneflix/photos already handle this.
-14. **Digital board scheduling** (phase 3). Time-of-day slots and integrations with screen players for live play logs.
+14. **Digital board scheduling** (phase 3). Time-of-day slots and integrations with screen players for live play logs. Built: a screen's loop is sold by the slot, all day or for the morning (6 AM to noon), afternoon (noon to 6 PM) or evening (6 PM to midnight), each priced as an admin-set share of the all-day rate. The screen's player signs in with a token from the board's page, fetches each day's schedule and reports plays, which advertisers see on their booking.
 
 ## 5. Phases
 

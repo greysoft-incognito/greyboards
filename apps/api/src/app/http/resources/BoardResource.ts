@@ -2,6 +2,7 @@ import type { Board } from '@app/models/Board'
 import type { BoardPhoto } from '@app/models/BoardPhoto'
 import { Reviews } from '@app/services/Reviews'
 import { PriceGuide } from '@app/services/PriceGuide'
+import { DigitalSlots } from '@app/services/DigitalSlots'
 import { Resource } from 'resora'
 
 /** A board as anyone may see it. The owner's contact and review notes stay private. */
@@ -46,6 +47,8 @@ export class BoardResource extends Resource {
       traffic,
       /** What the rate costs for each 1,000 people passing. */
       costPerThousandMinor: PriceGuide.costPerThousand(rate, board.ratePeriod, traffic),
+      /** On a digital screen: its loop. The rate is then for one slot, all day. */
+      loop: board.isDigital() ? await DigitalSlots.loop(board) : null,
       status: board.status,
       distanceM: distance === undefined || distance === null ? null : Math.round(Number(distance)),
       coverUrl: cover ? await cover.url() : null,
