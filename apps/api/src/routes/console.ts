@@ -40,4 +40,10 @@ Schedule.command('print-jobs:check')
   .withoutOverlapping()
   .onOneServer()
 
+// Give the proven badge to roles that reached the reputation milestones, and take it from roles that fell below.
+Schedule.command('reputation:sweep')
+  .hourly()
+  .withoutOverlapping()
+  .onOneServer()
+
 // Schedule.exec('backup.sh').dailyAt('01:30').onOneServer()

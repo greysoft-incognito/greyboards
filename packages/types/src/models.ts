@@ -2,6 +2,8 @@
  * Core domain models, as the API returns them (camelCase keys, ISO dates).
  */
 
+import type { RoleReputation } from './reputation'
+
 /** Records use UUID primary keys. */
 export type ID = string
 
@@ -9,7 +11,7 @@ export type ID = string
 export type UserRole = string
 
 /** Something an admin role can be allowed to do in the admin dashboard. */
-export type Permission = 'dashboard.view' | 'users.view' | 'users.manage' | 'partners.review' | 'boards.review' | 'bookings.view' | 'payouts.manage' | 'disputes.resolve' | 'settings.manage' | 'roles.manage' | 'pages.manage'
+export type Permission = 'dashboard.view' | 'users.view' | 'users.manage' | 'partners.review' | 'boards.review' | 'bookings.view' | 'payouts.manage' | 'disputes.resolve' | 'reputation.manage' | 'settings.manage' | 'roles.manage' | 'pages.manage'
 
 /** A marketplace role. One account can hold several. */
 export type AccountRoleKind = 'advertiser' | 'owner' | 'scout' | 'dispatch'
@@ -26,6 +28,7 @@ export interface AccountRole {
   /** The reviewer's note, such as why an application was rejected. */
   note: string | null
   reviewedAt: string | null
+  reputation: RoleReputation
   createdAt: string
 }
 

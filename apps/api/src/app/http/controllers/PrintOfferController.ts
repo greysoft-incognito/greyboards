@@ -11,6 +11,7 @@ import { Checkout } from '@app/services/payments/Checkout'
 import { Settings } from '@app/support/Settings'
 import { RequestException, perPage } from '@arkstack/common'
 import { GenericResource } from 'resora'
+import { Reputation } from '@app/services/Reputation'
 import { BaseController } from './BaseController'
 
 /**
@@ -100,6 +101,7 @@ export default class PrintOfferController extends BaseController {
     const offers = open ? await DispatchOffers.live(job!) : []
     const asked = new Set(offers.map((offer) => offer.dispatcherId))
     const nearby = open ? await DispatchOffers.nearby(board) : []
+    const standings = await Reputation.standings(nearby.map((entry) => entry.user.id), 'dispatch')
 
     return new GenericResource({
       open,
@@ -113,6 +115,7 @@ export default class PrintOfferController extends BaseController {
           distanceM: entry.distanceM,
           note: entry.rate.note,
           asked: asked.has(entry.user.id),
+          standing: standings.get(entry.user.id) ?? null,
         })),
       ),
       maxRequests: await Settings.number('printing.max_requests'),

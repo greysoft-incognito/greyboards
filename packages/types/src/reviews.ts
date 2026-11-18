@@ -1,4 +1,5 @@
 import type { ID } from './models'
+import type { RoleStanding } from './reputation'
 
 /** An average out of 5, shown once enough reviews are in. */
 export interface RatingSummary {
@@ -28,6 +29,8 @@ export interface BookingReviews {
   mine: { rating: number; body: string | null; updatedAt: string } | null
   /** The advertiser's average, for the board's side. */
   advertiserRating: RatingSummary | null
+  /** The advertiser's reputation, for the board's side. */
+  advertiserStanding: RoleStanding | null
 }
 
 export interface ReviewInput {

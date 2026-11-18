@@ -1,3 +1,4 @@
+import type { BadgeKey } from './reputation'
 import type { AccountRole, AccountRoleKind, AccountRoleStatus, ID, Permission, UserRole } from './models'
 import type { PageQuery } from './api'
 import type { PartnerChecks } from './partners'
@@ -56,6 +57,10 @@ export interface AdminAccountRole extends AccountRole {
 export interface AdminAccountRoleQuery extends PageQuery {
   kind?: AccountRoleKind
   status?: AccountRoleStatus
+  /** Only roles holding this badge. */
+  badge?: BadgeKey
+  /** Highest reputation first, instead of oldest first. */
+  sort?: 'oldest' | 'reputation'
 }
 
 /** A reviewer's decision on a marketplace role. */

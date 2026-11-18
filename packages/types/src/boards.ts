@@ -3,6 +3,7 @@ import type { PageQuery } from './api'
 import type { BoardBookingTerms } from './bookings'
 import type { DuplicateBoard } from './partners'
 import type { ID } from './models'
+import type { RoleStanding } from './reputation'
 import type { RatingSummary } from './reviews'
 
 /** The kinds of board the map knows. */
@@ -146,6 +147,8 @@ export interface AgreementOffer {
 
 /** A board with its photos. The owner, agreement and review notes come only to whoever looks after it and reviewers. */
 export interface BoardDetail extends Board {
+  /** The reputation of the board's owner and the scout who runs it, without names. */
+  stewards: RoleStanding[]
   photos: BoardPhoto[]
   /** Each face is booked on its own, A first. */
   rateCard: BoardFace[]

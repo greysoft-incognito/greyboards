@@ -2,6 +2,7 @@ import { Model } from '@arkstack/database'
 import { abortIf } from '@arkstack/common'
 import { createHash, randomBytes } from 'node:crypto'
 import { AgreementWording, type AgreementTerms, type AgreementValues } from '@app/support/AgreementWording'
+import { Reputation } from '@app/services/Reputation'
 import { PhoneCode } from '@app/support/PhoneCode'
 import { Settings } from '@app/support/Settings'
 import { Sms } from '@app/support/Sms'
@@ -219,6 +220,8 @@ export class BoardAgreement extends Model {
     const profile = await this.ownerProfile().first()
 
     if (profile) await profile.update({ phoneVerifiedAt: new Date(), ...(profile.isClaimed() ? {} : { name: name.trim() }) })
+
+    await Reputation.award(this.sentById, 'scout', 'signed', this.boardId)
   }
 
   async decline(): Promise<void> {

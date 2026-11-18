@@ -35,6 +35,7 @@ import TerritoryController from 'src/app/http/controllers/admin/TerritoryControl
 import PayoutController from 'src/app/http/controllers/PayoutController'
 import PrintOfferController from 'src/app/http/controllers/PrintOfferController'
 import PlayerController from 'src/app/http/controllers/PlayerController'
+import ReputationController from 'src/app/http/controllers/ReputationController'
 import { Authorize } from 'src/app/http/middlewares/Authorize'
 import { Router } from '@arkstack/driver-express'
 import { auth, limiter } from '@arkstack/driver-express/middlewares'
@@ -74,6 +75,8 @@ Router.get('/account-roles', [AccountRoleController, 'definitions'], [limiter(12
 Router.get('/account/roles', [AccountRoleController, 'index'], [auth])
 Router.post('/account/roles', [AccountRoleController, 'create'], [auth, limiter(20, 60)])
 Router.delete('/account/roles/:kind', [AccountRoleController, 'destroy'], [auth])
+Router.get('/reputation', [ReputationController, 'disclosure'], [limiter(120, 60)])
+Router.get('/account/roles/:kind/reputation', [ReputationController, 'history'], [auth])
 Router.get('/account/partner-checks', [AccountRoleController, 'checks'], [auth])
 Router.post('/account/identity', [AccountRoleController, 'submitIdentity'], [auth, limiter(10, 60)])
 
@@ -144,8 +147,12 @@ Router.get('/admin/overview', [OverviewController, 'show'], [auth, Authorize.to(
 Router.get('/admin/users', [UserController, 'index'], [auth, Authorize.to('users.view', 'users.manage')])
 Router.get('/admin/users/:user', [UserController, 'show'], [auth, Authorize.to('users.view', 'users.manage')])
 Router.put('/admin/users/:user', [UserController, 'update'], [auth, Authorize.to('users.manage')])
-Router.get('/admin/account-roles', [AdminAccountRoleController, 'index'], [auth, Authorize.to('partners.review')])
+Router.get('/admin/account-roles', [AdminAccountRoleController, 'index'], [auth, Authorize.to('partners.review', 'reputation.manage')])
 Router.put('/admin/account-roles/:role', [AdminAccountRoleController, 'update'], [auth, Authorize.to('partners.review')])
+Router.put('/admin/account-roles/:role/verification', [AdminAccountRoleController, 'verify'], [auth, Authorize.to('reputation.manage')])
+Router.delete('/admin/account-roles/:role/verification', [AdminAccountRoleController, 'unverify'], [auth, Authorize.to('reputation.manage')])
+Router.get('/admin/account-roles/:role/reputation', [AdminAccountRoleController, 'reputation'], [auth, Authorize.to('reputation.manage')])
+Router.post('/admin/account-roles/:role/reputation', [AdminAccountRoleController, 'adjust'], [auth, Authorize.to('reputation.manage')])
 Router.put('/admin/account-roles/:role/identity', [AdminAccountRoleController, 'reviewIdentity'], [auth, Authorize.to('partners.review')])
 // Booking boards. Dates are held while the advertiser pays; the money waits in escrow until the ad is up.
 Router.get('/boards/:board/slots', [BookingController, 'slots'], [limiter(120, 60)])
