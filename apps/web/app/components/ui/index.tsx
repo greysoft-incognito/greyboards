@@ -78,14 +78,12 @@ export function Logo({ to = "/", light = false, compact = false }: { to?: string
 	);
 }
 
-/** The Greysoft mark: three grey circles and one wine circle. */
+/** The Greyboards G mark: a grey G with a wine dot over its crossbar. */
 export function LogoMark({ className = "h-8 w-8" }: { className?: string }) {
 	return (
-		<svg viewBox="0 0 64 64" className={className} aria-hidden>
-			<circle cx="15.75" cy="15.75" r="13.75" fill="#727376" />
-			<circle cx="48.25" cy="15.75" r="13.75" fill="#833b4b" />
-			<circle cx="15.75" cy="48.25" r="13.75" fill="#727376" />
-			<circle cx="48.25" cy="48.25" r="13.75" fill="#727376" />
+		<svg viewBox="5 5 54 54" className={className} aria-hidden>
+			<path d="M32 10A22 22 0 1 0 54 32H36" fill="none" stroke="#727376" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" />
+			<circle cx="45" cy="18.4" r="6.2" fill="#833b4b" />
 		</svg>
 	);
 }
