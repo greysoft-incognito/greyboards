@@ -28,7 +28,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         {
           action: 'VIEW',
           autoVerify: true,
-          data: ['/reset-password', '/verify-email', '/checkout/complete'].map((pathPrefix) => ({ scheme: 'https', host, pathPrefix })),
+          data: ['/reset-password', '/verify-email', '/checkout/complete', '/shares'].map((pathPrefix) => ({ scheme: 'https', host, pathPrefix })),
           category: ['BROWSABLE', 'DEFAULT'],
         },
       ],

@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native'
 import * as Location from 'expo-location'
-import { LocateFixed, MapPin as MapPinIcon, SearchX, SlidersHorizontal } from 'lucide-react-native'
+import { router } from 'expo-router'
+import { ChevronRight, LocateFixed, MapPin as MapPinIcon, SearchX, SlidersHorizontal, UsersRound } from 'lucide-react-native'
 import type { Board, BoardKind, BoardKindDefinition } from '@greyboards/types'
 import { BoardResult } from '@/components/boards/BoardResult'
 import { EmptyState } from '@/components/EmptyState'
@@ -12,7 +13,7 @@ import { api } from '@/lib/api'
 import { FormProblem } from '@/lib/forms'
 import { formatCompactMoney } from '@/lib/format'
 import { currentSpot } from '@/lib/location'
-import { colors, fonts, radius, shadows } from '@/theme'
+import { colors, fonts, radius, shadows, surfaces } from '@/theme'
 
 /** Where the search starts without the phone's location: central Kaduna, where Greyboards goes live first. */
 const KADUNA = { latitude: 10.5222, longitude: 7.4383, label: 'Kaduna' }
@@ -180,6 +181,16 @@ export default function Find() {
           {locating ? <ActivityIndicator size="small" color={colors.brand600} /> : <LocateFixed size={20} color={colors.brand600} />}
         </Pressable>
       </View>
+      <Pressable accessibilityRole="link" onPress={() => router.push('/shares')} style={({ pressed }) => [styles.shares, pressed && styles.pressed]}>
+        <View style={styles.sharesIcon}>
+          <UsersRound size={18} color={colors.brand700} />
+        </View>
+        <View style={styles.flex}>
+          <Text style={styles.searchTitle}>Shared boards</Text>
+          <Text variant="small">Join others on a board and pay only your share.</Text>
+        </View>
+        <ChevronRight size={18} color={colors.ink500} />
+      </Pressable>
       {problem ? <Callout>{problem}</Callout> : null}
     </View>
   )
@@ -278,4 +289,7 @@ const styles = StyleSheet.create({
   item: { paddingHorizontal: 16, paddingBottom: 10 },
   loading: { marginTop: 32 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  shares: { flexDirection: 'row', alignItems: 'center', gap: 12, marginHorizontal: 16, padding: 12, ...surfaces.panel },
+  pressed: { opacity: 0.85 },
+  sharesIcon: { width: 36, height: 36, borderRadius: radius.lg, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.brand50 },
 })
