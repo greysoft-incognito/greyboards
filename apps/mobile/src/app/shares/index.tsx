@@ -43,7 +43,7 @@ export default function OpenShares() {
   return (
     <SettingsPage
       title="Shared boards"
-      description="Join others on a board for the same days and pay only your share. Once a sharing’s lock ends with shares unpaid, the whole board goes up for bids."
+      description="Share a board with other advertisers for the same days and pay only your part. If shares are still unpaid when the lock ends, the whole board goes up for bids."
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}
     >
       {problem ? <Callout>{problem}</Callout> : null}

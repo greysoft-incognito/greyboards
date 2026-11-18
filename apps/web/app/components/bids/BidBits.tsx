@@ -80,7 +80,7 @@ export function AuctionCard({ auction, canBid, error }: { auction: Auction; canB
 				<div>
 					<dt className="text-ink-500">Highest bid</dt>
 					<dd className="font-display text-xl font-extrabold text-ink-900 tabular-nums">
-						{auction.highestMinor !== null ? formatMoney(auction.highestMinor, auction.currency) : auction.format === "sealed" ? "Sealed until the close" : "No bids yet"}
+						{auction.highestMinor !== null ? formatMoney(auction.highestMinor, auction.currency) : auction.format === "sealed" ? "Hidden until bidding ends" : "No bids yet"}
 					</dd>
 				</div>
 				<div>
@@ -152,7 +152,7 @@ export function AuctionsManager({ board, auctions, today }: { board: BoardDetail
 					<Gavel className="h-5 w-5 text-brand-600" aria-hidden />
 					Bids
 				</h2>
-				<p className="mt-1 text-sm text-ink-500">Open some dates to bids instead of the fixed price. The highest bid at or over your reserve wins.</p>
+				<p className="mt-1 text-sm text-ink-500">Let advertisers bid for some dates instead of paying the fixed price. The highest bid at or above your reserve wins.</p>
 			</div>
 
 			{auctions.length > 0 && (
@@ -276,7 +276,7 @@ export function OfferRow({ offer, onBoards }: { offer: Offer; onBoards: boolean 
 
 			{(offer.can.accept || offer.can.withdraw || offer.bookingId) && (
 				<div className="flex flex-wrap items-center gap-2 border-t border-surface-200 pt-3">
-					{offer.can.accept && answer("accept-offer", offer.status === "countered" ? "Accept the counter" : "Accept", Check, "primary")}
+					{offer.can.accept && answer("accept-offer", offer.status === "countered" ? "Accept their price" : "Accept", Check, "primary")}
 					{offer.can.counter && !countering && (
 						<Button variant="secondary" onClick={() => setCountering(true)}>
 							<HandCoins className="h-4 w-4" aria-hidden />

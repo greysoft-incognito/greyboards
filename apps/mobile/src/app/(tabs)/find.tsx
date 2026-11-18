@@ -187,7 +187,7 @@ export default function Find() {
         </View>
         <View style={styles.flex}>
           <Text style={styles.searchTitle}>Shared boards</Text>
-          <Text variant="small">Join others on a board and pay only your share.</Text>
+          <Text variant="small">Share a board with other advertisers.</Text>
         </View>
         <ChevronRight size={18} color={colors.ink500} />
       </Pressable>

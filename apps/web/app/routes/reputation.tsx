@@ -30,7 +30,7 @@ export default function ReputationPage({ loaderData }: Route.ComponentProps) {
 				<Gauge className="h-8 w-8 text-brand-100" aria-hidden />
 				<h1 className="mt-4 font-display text-4xl font-extrabold tracking-tight sm:text-5xl">Reputation and badges</h1>
 				<p className="mt-3 max-w-2xl text-brand-50/90">
-					A reputation score shows how far someone can be trusted in the role they hold. Each role has its own score, and it only moves for physical work Greyboards could check.
+					A reputation score shows how much you can trust someone in a role. Each role has its own score, and it only moves for real work we could confirm.
 				</p>
 			</section>
 

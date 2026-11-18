@@ -56,7 +56,7 @@ export default function Dashboard() {
         <Text style={styles.heroKicker}>Your Greyboards</Text>
         <Text style={styles.heroTitle}>Hello, {firstName}</Text>
         <Text style={styles.heroText}>
-          {active === 1 ? 'You work in 1 role' : `You work in ${active} roles`}
+          {active === 1 ? 'You have 1 role' : `You have ${active} roles`}
           {pending ? `, and ${pending === 1 ? '1 application is' : `${pending} applications are`} being checked.` : '.'}
         </Text>
       </LinearGradient>

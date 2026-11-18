@@ -193,7 +193,7 @@ function NextStep({ job, onChange }: { job: PrintJob; onChange: () => void }) {
     body = (
       <>
         <Button title={action.busy ? 'Reserving…' : 'Reserve this job'} loading={action.busy} onPress={() => act(() => api.printJobs.reserve(job.id).send(), 'Held for you. Confirm once you know you can make the date.')} />
-        <Text variant="small">This job went back after a miss, at the price the advertiser already paid. We hold it for you for a few hours so you can check the date. You see the artwork once it’s held.</Text>
+        <Text variant="small">The last dispatcher missed this job, so it’s open again at the price already paid. Reserve it and we’ll hold it for you for a few hours while you check the date.</Text>
       </>
     )
   } else if (job.mine && job.status === 'reserved') {

@@ -28,7 +28,7 @@ import { colors, fonts, radius, shadows, surfaces } from '@/theme'
 const REVIEW_NOTES: Record<BoardDetail['status'], string> = {
   pending: 'A reviewer checks the photos and location before it goes on the map.',
   listed: 'On the map. Advertisers can find and book it.',
-  rejected: 'A reviewer didn’t list it. Fix what the note says and it goes back for review.',
+  rejected: 'Not approved. Fix what the note says and it goes back for review.',
   unlisted: 'Off the map for now. Advertisers can’t book it.',
 }
 

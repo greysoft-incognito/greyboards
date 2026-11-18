@@ -29,7 +29,7 @@ export default function VerifyEmail() {
     return (
       <AuthFrame title="We couldn't confirm it" subtitle={FormProblem.from(error).message ?? undefined}>
         <Text variant="muted">
-          Links work for 24 hours and only for the address they were sent to. You can send a new one from your account.
+          The link may have expired. You can send a new one from your account.
         </Text>
         <Button title={next.label} size="lg" onPress={() => router.replace(next.href)} />
       </AuthFrame>

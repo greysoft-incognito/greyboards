@@ -45,7 +45,7 @@ export function MessagesPanel({ messages, more }: { messages: BookingMessage[]; 
 				<p className="mt-1 text-sm text-ink-500">Agree details here so they stay with the booking. Owners without the app get these by SMS.</p>
 			</div>
 
-			{more && <p className="text-center text-xs text-ink-500">Earlier messages are kept with the booking.</p>}
+			{more && <p className="text-center text-xs text-ink-500">Older messages aren't shown here.</p>}
 			{messages.length > 0 ? (
 				<ol className="space-y-3">
 					{[...messages].reverse().map((message) => (
