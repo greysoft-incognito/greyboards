@@ -127,6 +127,7 @@ export default function Bookings() {
               <Chip key={entry.view} label={entry.label} selected={entry.view === view} onPress={() => pick(entry.view)} />
             ))}
           </ScrollView>
+          {view === 'mine' ? <Button title="Campaign reports" variant="ghost" onPress={() => router.push('/reports')} /> : null}
           {problem ? <Callout>{problem}</Callout> : null}
         </View>
       }
