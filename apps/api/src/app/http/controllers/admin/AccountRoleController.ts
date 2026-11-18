@@ -87,7 +87,6 @@ export default class AccountRoleController extends BaseController {
     const identity = await IdentityCheck.query().where({ userId: role.userId }).first()
 
     if (!identity) throw new RequestException('They haven’t sent an ID yet.', 404)
-    if (role.userId === this.user.id) throw new RequestException('You cannot review your own ID.', 422)
 
     await identity.review(this.user, data.status as 'verified' | 'rejected', data.note)
 

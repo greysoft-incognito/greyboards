@@ -131,7 +131,6 @@ export class AccountRole extends Model {
   /** Record an admin's decision and email it to the account. Only active, rejected or suspended are decisions. */
   async review(reviewer: User, status: AccountRoleStatus, note?: string | null): Promise<void> {
     abortIf(status === AccountRole.PENDING, 'Pick active, rejected or suspended.', 422)
-    abortIf(reviewer.id === this.userId, 'You cannot review your own role.', 422)
 
     const user = await this.user().first()
 

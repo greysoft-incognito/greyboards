@@ -76,10 +76,15 @@ describe('Marketplace roles', () => {
     expect((await api('put', `/admin/account-roles/${mine.id}`, { status: 'pending' }, 'reviewer')).status).toBe(422)
   })
 
-  it("doesn't let reviewers review themselves", async () => {
+  it('lets reviewers review their own application', async () => {
     const own = (await api('get', '/account/roles', undefined, 'reviewer')).body.data.find((role: { kind: string }) => role.kind === 'scout')
 
-    expect((await api('put', `/admin/account-roles/${own.id}`, { status: 'active' }, 'reviewer')).status).toBe(422)
+    await passChecks(tokens.reviewer)
+
+    const approved = await api('put', `/admin/account-roles/${own.id}`, { status: 'active' }, 'reviewer')
+
+    expect(approved.status).toBe(200)
+    expect(approved.body.data).toMatchObject({ status: 'active' })
   })
 
   it('gives up a role', async () => {
