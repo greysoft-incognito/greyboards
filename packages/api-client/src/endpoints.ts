@@ -46,6 +46,8 @@ import type {
   IdentityReview,
   NearbyBoard,
   OwnerPriceQuote,
+  PriceGuide,
+  PriceGuideQuery,
   PartnerChecks,
   BoardAgreement,
   BoardDetail,
@@ -381,6 +383,8 @@ export function createEndpoints(alova: GreyboardsAlova) {
       /** Boards already tagged near a spot and facing the same way. */
       nearbyBoards: (params: { lat: number; lng: number; headingDeg?: number | null; except?: ID }) =>
         alova.Get<ApiResponse<NearbyBoard[]>>('/account/boards/nearby', { params, cacheFor: null }),
+      /** A suggested rate for a board being tagged: boards of the same kind nearby, and what its traffic is worth. */
+      priceGuide: (params: PriceGuideQuery) => alova.Get<ApiResponse<PriceGuide>>('/account/boards/price-guide', { params, cacheFor: null }),
       /** What to list a board at so its owner receives `amountMinor` each period. */
       ownerPrice: (params: { amountMinor?: number | null; as: 'owner' | 'scout' }) =>
         alova.Get<ApiResponse<OwnerPriceQuote>>('/account/boards/owner-price', { params, cacheFor: null }),

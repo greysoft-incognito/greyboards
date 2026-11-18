@@ -37,6 +37,8 @@ export function boardInput(form: FormData): BoardInput {
 		printsOwn: form.get("printsOwn") === "1",
 		printFeeMinor: printFee === null ? null : Math.round(printFee * 100),
 		ownerNet: form.get("ownerNet") === "1",
+		roadClass: (text(form, "roadClass") ?? null) as BoardInput["roadClass"],
+		dailyTraffic: number(form, "dailyTraffic"),
 	};
 }
 

@@ -1,6 +1,7 @@
 import { Pipeline } from '@app/services/Pipeline'
 import { OwnerPricing } from '@app/services/OwnerPricing'
-import { Board, type BoardDetails, type BoardOwnerChoice, type BoardStatus } from '@app/models/Board'
+import { PriceGuide } from '@app/services/PriceGuide'
+import { Board, type BoardDetails, type BoardKind, type BoardOwnerChoice, type BoardRatePeriod, type BoardStatus, type RoadClass } from '@app/models/Board'
 import { BoardAgreement } from '@app/models/BoardAgreement'
 import { BoardAgreementResource } from '@app/http/resources/BoardAgreementResource'
 import { BoardCollection } from '@app/http/resources/BoardCollection'
@@ -45,6 +46,8 @@ const rules = (creating: boolean) => {
     printsOwn: 'nullable|boolean',
     printFeeMinor: 'nullable|integer|min:0',
     ownerNet: 'nullable|boolean',
+    roadClass: `nullable|in:${Board.ROAD_CLASSES.join(',')}`,
+    dailyTraffic: 'nullable|integer|min:0|max:5000000',
   }
 }
 
@@ -55,7 +58,7 @@ const ownerRules = {
   ownerPhone: ['nullable', 'string', PHONE],
 }
 
-const NUMBERS = ['widthM', 'heightM', 'faces', 'latitude', 'longitude', 'accuracyM', 'headingDeg', 'rateMinor', 'printFeeMinor'] as const
+const NUMBERS = ['widthM', 'heightM', 'faces', 'latitude', 'longitude', 'accuracyM', 'headingDeg', 'rateMinor', 'printFeeMinor', 'dailyTraffic'] as const
 
 /** Only the fields that were sent, with numbers as numbers, so a missing field keeps what the board has. */
 const details = (data: Record<string, any>, sent: Record<string, unknown>): Partial<BoardDetails> => {
@@ -121,6 +124,39 @@ export default class AccountBoardController extends BaseController {
     const amount = query.amountMinor === undefined || query.amountMinor === null || query.amountMinor === '' ? null : Number(query.amountMinor)
 
     return new GenericResource(await OwnerPricing.quote(query.as === 'scout', amount)).additional({ status: 'success', message: 'OK', code: 200 })
+  }
+
+  /**
+   * A suggested rate for a board being tagged or edited: listed boards of the same kind nearby,
+   * and what its traffic is worth, for the form beside the rate.
+   */
+  async priceGuide() {
+    const query = await this.validateQuery({
+      lat: 'required|numeric|min:-90|max:90',
+      lng: 'required|numeric|min:-180|max:180',
+      kind: `required|in:${Board.KINDS.map((kind) => kind.kind).join(',')}`,
+      widthM: 'required|numeric|min:0.5|max:100',
+      heightM: 'required|numeric|min:0.5|max:100',
+      period: `nullable|in:${Board.PERIODS.join(',')}`,
+      roadClass: `nullable|in:${Board.ROAD_CLASSES.join(',')}`,
+      dailyTraffic: 'nullable|integer|min:0|max:5000000',
+      except: ['nullable', UUID],
+    })
+    const traffic = query.dailyTraffic === undefined || query.dailyTraffic === null || query.dailyTraffic === '' ? null : Number(query.dailyTraffic)
+
+    return new GenericResource(
+      await PriceGuide.guide({
+        latitude: Number(query.lat),
+        longitude: Number(query.lng),
+        kind: query.kind as BoardKind,
+        widthM: Number(query.widthM),
+        heightM: Number(query.heightM),
+        period: (query.period ?? 'month') as BoardRatePeriod,
+        roadClass: (query.roadClass || null) as RoadClass | null,
+        dailyTraffic: traffic,
+        exceptId: query.except ? String(query.except) : undefined,
+      }),
+    ).additional({ status: 'success', message: 'OK', code: 200 })
   }
 
   /** Tag a board. `as` says whether the user owns it or scouted it. */

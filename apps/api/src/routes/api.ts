@@ -85,6 +85,7 @@ Router.get('/boards/:board/availability', [BookingController, 'availability'], [
 Router.get('/account/boards', [AccountBoardController, 'index'], [auth])
 Router.get('/account/boards/nearby', [AccountBoardController, 'nearby'], [auth, Authorize.actingAs('owner', 'scout'), limiter(60, 60)])
 Router.get('/account/boards/owner-price', [AccountBoardController, 'ownerPrice'], [auth, Authorize.actingAs('owner', 'scout')])
+Router.get('/account/boards/price-guide', [AccountBoardController, 'priceGuide'], [auth, Authorize.actingAs('owner', 'scout'), limiter(60, 60)])
 Router.post('/account/boards', [AccountBoardController, 'create'], [auth, Authorize.actingAs('owner', 'scout'), limiter(30, 60)])
 Router.put('/account/boards/:board', [AccountBoardController, 'update'], [auth])
 Router.delete('/account/boards/:board', [AccountBoardController, 'destroy'], [auth])

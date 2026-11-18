@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { type FormEvent, useState } from "react";
 import { Form, useNavigation } from "react-router";
 import { Binoculars, Camera, HandCoins, LocateFixed, Presentation } from "lucide-react";
 import type { BoardDetail, BoardKindDefinition, OwnerProfile } from "@greyboards/types";
 import { ManagedOwnerSelect, OwnerPicker } from "./OwnerPicker";
 import { NearbyBoards } from "./NearbyBoards";
+import { PriceGuideBox, type GuideFields } from "./PriceGuideBox";
 import { Alert, Button, Field, Input, Select, Spinner, Textarea } from "~/components/ui";
 import { useLimits } from "~/lib/limits";
 
@@ -59,6 +60,25 @@ export function BoardForm({
 		return minor ? String(minor / 100) : "";
 	});
 	const ownerPercent = board ? (board.ownerPercent ?? null) : (ownerPercents?.[as] ?? null);
+	const [guideFields, setGuideFields] = useState<Omit<GuideFields, "latitude" | "longitude">>({
+		kind: board?.kind ?? "billboard",
+		widthM: board ? String(board.widthM) : "",
+		heightM: board ? String(board.heightM) : "",
+		ratePeriod: board?.rate?.period ?? "month",
+		roadClass: board?.roadClass ?? "",
+		dailyTraffic: board?.measuredTraffic ? String(board.measuredTraffic) : "",
+	});
+	// The guide is for the listed price; with the owner's amount fixed, the field takes the owner's part of it.
+	const useGuide = (listedMinor: number) => {
+		const minor = ownerNet && ownerPercent ? Math.floor((listedMinor * ownerPercent) / 100) : listedMinor;
+
+		setRate(String(Math.round(minor / 100)));
+	};
+	const trackGuide = (event: FormEvent<HTMLFormElement>) => {
+		const target = event.target as HTMLInputElement;
+
+		if (target.name in guideFields) setGuideFields((current) => ({ ...current, [target.name]: target.value }));
+	};
 
 	const locate = () => {
 		if (!("geolocation" in navigator)) return setLocateError("This browser can't tell where you are. Type the coordinates instead.");
@@ -84,7 +104,7 @@ export function BoardForm({
 	};
 
 	return (
-		<Form method="post" encType="multipart/form-data" className="space-y-6">
+		<Form method="post" encType="multipart/form-data" className="space-y-6" onChange={trackGuide}>
 			{error && <Alert>{error}</Alert>}
 
 			{tagAs.length > 1 && (
@@ -185,6 +205,20 @@ export function BoardForm({
 						</Select>
 					</Field>
 				</div>
+				<div className="grid gap-4 sm:grid-cols-2">
+					<Field label="The road it faces" error={fieldErrors.roadClass} hint="Gives advertisers a traffic estimate.">
+						<Select name="roadClass" defaultValue={board?.roadClass ?? ""}>
+							<option value="">Not sure</option>
+							<option value="expressway">Expressway or highway</option>
+							<option value="major">Major road</option>
+							<option value="street">Busy street</option>
+							<option value="local">Quiet street</option>
+						</Select>
+					</Field>
+					<Field label="People passing a day" error={fieldErrors.dailyTraffic} hint="Only if someone counted them.">
+						<Input name="dailyTraffic" type="number" min="0" step="100" defaultValue={board?.measuredTraffic ?? ""} placeholder="25000" />
+					</Field>
+				</div>
 				<Field label="Notes" error={fieldErrors.description}>
 					<Textarea name="description" rows={3} defaultValue={board?.description ?? ""} maxLength={1000} placeholder="Anything an advertiser should know, such as trees in the way or a nearby junction." />
 				</Field>
@@ -207,6 +241,7 @@ export function BoardForm({
 						</Select>
 					</Field>
 				</div>
+				<PriceGuideBox fields={{ ...guideFields, latitude: spot.latitude, longitude: spot.longitude }} exceptId={board?.id} onUse={useGuide} />
 				<OwnerNetToggle on={ownerNet} onChange={setOwnerNet} rate={rate} percent={ownerPercent} />
 				<div className="grid gap-4 sm:grid-cols-2">
 					<Field label="Who prints and puts up ads" error={fieldErrors.printsOwn}>

@@ -59,6 +59,7 @@ export class ManagedBoardResource extends BoardResource {
         ? {
             owner: owner ? await new OwnerProfileResource(owner).data() : null,
             taggedById: board.taggedById,
+            measuredTraffic: board.dailyTraffic,
             ownerNet: !!board.ownerNet,
             ownerRateMinor: board.ownerRate(),
             ownerPercent: await Commissions.ownerPercent(board),

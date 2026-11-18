@@ -56,7 +56,13 @@ export interface BoardDetails {
   printFeeMinor?: number | null
   /** The rate entered is what the owner receives; the listed rate adds the other shares on top. */
   ownerNet?: boolean
+  /** The kind of road it faces, and people passing each day when someone measured it. */
+  roadClass?: RoadClass | null
+  dailyTraffic?: number | null
 }
+
+/** The kind of road a board faces, for its traffic estimate. */
+export type RoadClass = 'expressway' | 'major' | 'street' | 'local'
 
 /** What an advertiser narrows the map down to. */
 export interface BoardFilters {
@@ -111,6 +117,9 @@ export class Board extends Model {
   declare ownerNet: boolean
   /** The owner's amount per period, when `ownerNet` is on. */
   declare ownerRateMinor: string | number | null
+  /** The kind of road it faces, and a measured count of people passing each day, if any. */
+  declare roadClass: RoadClass | null
+  declare dailyTraffic: number | null
   declare rateMinor: string | number | null
   declare currency: string
   declare ratePeriod: BoardRatePeriod
@@ -160,6 +169,8 @@ export class Board extends Model {
   /** Pins sent for one view of the map. Past this the map asks people to zoom in. */
   static readonly MAX_PINS = 500
 
+  static readonly ROAD_CLASSES: RoadClass[] = ['expressway', 'major', 'street', 'local']
+
   /** The farthest a nearby search reaches, in kilometres. */
   static readonly MAX_RADIUS_KM = 100
 
@@ -176,6 +187,8 @@ export class Board extends Model {
     rateMinor: 'rate_minor',
     ownerNet: 'owner_net',
     ownerRateMinor: 'owner_rate_minor',
+    roadClass: 'road_class',
+    dailyTraffic: 'daily_traffic',
     ratePeriod: 'rate_period',
     printsOwn: 'prints_own',
     ratingSum: 'rating_sum',
