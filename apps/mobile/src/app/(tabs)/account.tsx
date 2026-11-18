@@ -24,12 +24,11 @@ export default function Account() {
   const documents = useRequest(() => api.documents({ per_page: 100 }))
   const twoFactorOn = (twoFactor.data?.data as TwoFactorStatus | undefined)?.enabled
   const deviceCount = (devices.data?.data as Session[] | undefined)?.length
-  const about: { label: string; open: () => void }[] = [
-    ...((documents.data?.data as DocumentSummary[] | undefined) ?? []).map((document) => ({
-      label: document.title,
-      open: () => router.push({ pathname: '/pages/[slug]', params: { slug: document.slug } }),
-    })),
-  ]
+  const published = (documents.data?.data as DocumentSummary[] | undefined) ?? []
+  const pageGroups = [
+    { title: 'ABOUT', pages: published.filter((document) => document.type === 'page') },
+    { title: 'LEGAL', pages: published.filter((document) => document.type === 'policy') },
+  ].filter((group) => group.pages.length)
 
   const status: Record<string, Status | undefined> = {
     '/settings/profile': { text: user.name },
@@ -97,17 +96,24 @@ export default function Account() {
         </View>
       ))}
 
-      <View style={styles.group}>
-        <Text style={styles.groupLabel}>ABOUT</Text>
-        <View style={styles.list}>
-          {about.map((page, i) => (
-            <Pressable key={page.label} accessibilityRole="link" onPress={page.open} style={({ pressed }) => [styles.row, i > 0 && styles.divided, pressed && styles.pressed]}>
-              <Text style={[styles.label, styles.flex]}>{page.label}</Text>
-              <ChevronRight size={16} color={colors.ink500} />
-            </Pressable>
-          ))}
+      {pageGroups.map((group) => (
+        <View key={group.title} style={styles.group}>
+          <Text style={styles.groupLabel}>{group.title}</Text>
+          <View style={styles.list}>
+            {group.pages.map((document, i) => (
+              <Pressable
+                key={document.id}
+                accessibilityRole="link"
+                onPress={() => router.push({ pathname: '/pages/[slug]', params: { slug: document.slug } })}
+                style={({ pressed }) => [styles.row, i > 0 && styles.divided, pressed && styles.pressed]}
+              >
+                <Text style={[styles.label, styles.flex]}>{document.title}</Text>
+                <ChevronRight size={16} color={colors.ink500} />
+              </Pressable>
+            ))}
+          </View>
         </View>
-      </View>
+      ))}
 
       <Button title={logout.loading ? 'Signing out…' : 'Sign out'} variant="secondary" size="lg" loading={logout.loading} onPress={signOut} />
     </ScrollView>
