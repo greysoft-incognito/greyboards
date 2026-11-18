@@ -25,10 +25,21 @@ export default function Account() {
   const twoFactorOn = (twoFactor.data?.data as TwoFactorStatus | undefined)?.enabled
   const deviceCount = (devices.data?.data as Session[] | undefined)?.length
   const published = (documents.data?.data as DocumentSummary[] | undefined) ?? []
+  const pageLink = (document: DocumentSummary) => ({
+    key: document.id,
+    label: document.title,
+    open: () => router.push({ pathname: '/pages/[slug]', params: { slug: document.slug } }),
+  })
   const pageGroups = [
-    { title: 'ABOUT', pages: published.filter((document) => document.type === 'page') },
-    { title: 'LEGAL', pages: published.filter((document) => document.type === 'policy') },
-  ].filter((group) => group.pages.length)
+    {
+      title: 'ABOUT',
+      links: [
+        ...published.filter((document) => document.type === 'page').map(pageLink),
+        { key: 'reputation', label: 'Reputation and badges', open: () => router.push('/reputation') },
+      ],
+    },
+    { title: 'LEGAL', links: published.filter((document) => document.type === 'policy').map(pageLink) },
+  ].filter((group) => group.links.length)
 
   const status: Record<string, Status | undefined> = {
     '/settings/profile': { text: user.name },
@@ -63,7 +74,6 @@ export default function Account() {
           </Text>
         </View>
       </Pressable>
-
 
       {SETTINGS_GROUPS.map((group) => (
         <View key={group.label} style={styles.group}>
@@ -100,14 +110,14 @@ export default function Account() {
         <View key={group.title} style={styles.group}>
           <Text style={styles.groupLabel}>{group.title}</Text>
           <View style={styles.list}>
-            {group.pages.map((document, i) => (
+            {group.links.map((link, i) => (
               <Pressable
-                key={document.id}
+                key={link.key}
                 accessibilityRole="link"
-                onPress={() => router.push({ pathname: '/pages/[slug]', params: { slug: document.slug } })}
+                onPress={link.open}
                 style={({ pressed }) => [styles.row, i > 0 && styles.divided, pressed && styles.pressed]}
               >
-                <Text style={[styles.label, styles.flex]}>{document.title}</Text>
+                <Text style={[styles.label, styles.flex]}>{link.label}</Text>
                 <ChevronRight size={16} color={colors.ink500} />
               </Pressable>
             ))}

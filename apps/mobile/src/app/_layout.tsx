@@ -49,6 +49,7 @@ export default function RootLayout() {
               <Stack.Screen name="jobs" />
             </Stack.Protected>
             <Stack.Screen name="pages/[slug]" />
+            <Stack.Screen name="reputation" />
             <Stack.Screen name="reset-password" />
             <Stack.Screen name="verify-email" />
           </Stack>
