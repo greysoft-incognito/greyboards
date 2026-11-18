@@ -98,3 +98,22 @@ export interface Session {
   lastUsedAt: string | null
   createdAt: string
 }
+
+/** What a public API key may do: read boards and bookings, or also book and pay. */
+export type ApiKeyAbility = 'read' | 'book'
+
+/** A key for the public API. Only the first characters show after it's made. */
+export interface ApiKey {
+  id: ID
+  name: string
+  /** The start of the key, to tell keys apart. */
+  prefix: string
+  abilities: ApiKeyAbility[]
+  lastUsedAt: string | null
+  createdAt: string
+}
+
+/** A key just made. The full token shows this once. */
+export interface NewApiKey extends ApiKey {
+  token: string
+}

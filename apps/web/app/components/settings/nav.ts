@@ -16,6 +16,7 @@ export const SETTINGS_GROUPS = [
 			{ to: "/settings/password", label: "Password", hint: "Change the password you sign in with" },
 			{ to: "/settings/two-step", label: "Two-step sign-in", hint: "A code from your phone after your password" },
 			{ to: "/settings/devices", label: "Devices", hint: "Where you're signed in" },
+			{ to: "/settings/api-keys", label: "API keys", hint: "Connect your own tools to search and book boards" },
 		],
 	},
 	{
