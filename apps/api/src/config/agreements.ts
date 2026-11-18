@@ -18,5 +18,27 @@ export default () => {
      * The country code added to local numbers such as 0803 000 0000.
      */
     default_country_code: String(env('SMS_DEFAULT_COUNTRY_CODE', '234')),
+
+    /*
+     * The wording owners read. These can use {owner}, {scout}, {board}, {share} (the owner's
+     * percent) and {rate}; the text can also use {link}. Each agreement keeps the wording it was
+     * sent with. An empty term is left out.
+     */
+
+    /** The text with the signing link. "Hello {first name}, " is put in front of it. */
+    sms_text: String(env('AGREEMENT_SMS_TEXT', '{scout} wants to list your board "{board}" on Greyboards and find advertisers for it. Read and sign here: {link}')),
+
+    /** The agreement page's heading. */
+    headline: String(env('AGREEMENT_HEADLINE', 'Let Greyboards find advertisers for your board')),
+
+    /** Shown beside the owner's percent. */
+    share_line: String(env('AGREEMENT_SHARE_LINE', 'of the rent is yours')),
+
+    /** What the owner agrees to, one point each. */
+    term_1: String(env('AGREEMENT_TERM_1', '{scout} looks after bookings, printing and posting on this board for you.')),
+    term_2: String(env('AGREEMENT_TERM_2', 'You get {share}% of the rent each advertiser pays, sent to you after the ad goes up. Printing and posting is paid for separately, so it never comes out of your share.')),
+    term_3: String(env('AGREEMENT_TERM_3', 'You can stop at any time once current bookings end. Text or call us and we’ll take the board off Greyboards.')),
+    term_4: String(env('AGREEMENT_TERM_4', '')),
+    term_5: String(env('AGREEMENT_TERM_5', '')),
   }
 }
