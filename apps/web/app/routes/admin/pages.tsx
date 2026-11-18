@@ -3,6 +3,7 @@ import { useState, type InputHTMLAttributes } from "react";
 import { Link, data, redirect, useFetcher } from "react-router";
 import type { DocumentInput, DocumentType, SiteDocument } from "@greyboards/types";
 import { AdminHeader } from "~/components/admin/AdminHeader";
+import { Pager } from "~/components/Pager";
 import { MarkdownEditor } from "~/components/admin/MarkdownEditor";
 import { Alert, Button, buttonClass } from "~/components/ui";
 import { documentPath } from "~/lib/documents";
@@ -22,7 +23,8 @@ const TYPES: { value: DocumentType; label: string }[] = [
 
 export async function loader({ request, context, params }: Route.LoaderArgs) {
 	const { api } = await requireAdmin(request, context, "pages.manage");
-	const { data: documents } = await api.admin.documents({ per_page: 100 });
+	const page = Number(new URL(request.url).searchParams.get("page")) || 1;
+	const { data: documents, meta } = await api.admin.documents({ per_page: 30, page });
 	const creating = params.document === "new";
 	const id = creating ? null : (params.document ?? documents[0]?.id);
 	const current = id
@@ -34,7 +36,7 @@ export async function loader({ request, context, params }: Route.LoaderArgs) {
 
 	if (params.document && !creating && !current) throw new Response("Not found", { status: 404 });
 
-	return { documents, current, creating, chosen: Boolean(params.document) };
+	return { documents, meta, current, creating, chosen: Boolean(params.document) };
 }
 
 export async function action({ request, context, params }: Route.ActionArgs) {
@@ -66,7 +68,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 
 /** The privacy policy, terms, about page and any others admins write. Pages are on the left, the chosen one's editor on the right. */
 export default function AdminPages({ loaderData }: Route.ComponentProps) {
-	const { documents, current, creating, chosen } = loaderData;
+	const { documents, meta, current, creating, chosen } = loaderData;
 
 	return (
 		<>
@@ -104,6 +106,9 @@ export default function AdminPages({ loaderData }: Route.ComponentProps) {
 							);
 						})}
 					</ul>
+					<div className="mt-3 px-1">
+						<Pager meta={meta} noun="pages" />
+					</div>
 				</nav>
 				<div className={chosen ? "" : "hidden lg:block"}>
 					<PageEditor key={creating ? "new" : (current?.id ?? "new")} document={creating ? null : current} />
@@ -248,6 +253,9 @@ function PageEditor({ document }: { document: SiteDocument | null }) {
 				<div>
 					<MarkdownEditor value={form.body} onChange={(body) => change({ body })} invalid={!!errors.body} />
 					{errors.body && <p className="mt-1.5 px-1 text-xs text-red-700">{errors.body}</p>}
+					<p className="mt-1.5 px-1 text-xs text-ink-500">
+						Quote a setting with its key in double braces, like <code>{"{{bookings.full_refund_days}}"}</code>. Readers see its current value from Configuration.
+					</p>
 				</div>
 			</div>
 			<div className="sticky bottom-0 flex items-center justify-end gap-3 border-t border-surface-100 bg-canvas/95 px-4 py-4 backdrop-blur sm:px-8">
