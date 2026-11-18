@@ -2,6 +2,7 @@ import type { PageQuery } from './api'
 import type { Auction } from './bids'
 import type { Board, BoardRate, ScreenLoop } from './boards'
 import type { ID } from './models'
+import type { RoleStanding } from './reputation'
 import type { BookingReviews } from './reviews'
 
 /**
@@ -343,7 +344,7 @@ export interface PrintOffer {
   note: string | null
   /** Until when the advertiser can pay it, or the dispatcher can answer the request. */
   expiresAt: string
-  dispatcher: { id: ID; name: string; avatarUrl: string | null } | null
+  dispatcher: { id: ID; name: string; avatarUrl: string | null; standing: RoleStanding | null } | null
   /** On the dispatcher's own list: the job it is for. */
   job: { id: ID; boardName: string; city: string | null; widthM: number; heightM: number; dueOn: string } | null
   createdAt: string
@@ -359,6 +360,7 @@ export interface DispatcherOption {
   note: string | null
   /** Whether they already have a price or a request on this job. */
   asked: boolean
+  standing: RoleStanding | null
 }
 
 /** The prices on a booking's print job, and dispatchers nearby to ask. */

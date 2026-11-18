@@ -1,5 +1,6 @@
 import type { Board, BoardRatePeriod } from './boards'
 import type { ID } from './models'
+import type { RoleStanding } from './reputation'
 import type { RatingSummary } from './reviews'
 
 /**
@@ -88,7 +89,7 @@ export interface Offer {
   bookingId: ID | null
   face: { id: ID; label: string } | null
   /** Who made it, with their rating from boards' sides. */
-  advertiser: { id: ID; name: string; rating: RatingSummary } | null
+  advertiser: { id: ID; name: string; rating: RatingSummary; standing: RoleStanding | null } | null
   board: Board | null
   /** What the viewer can do now. */
   can: { accept: boolean; decline: boolean; counter: boolean; withdraw: boolean }

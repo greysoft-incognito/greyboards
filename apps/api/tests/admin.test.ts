@@ -46,9 +46,9 @@ describe('Admin dashboard', () => {
 
     expect(admin.body.data).toMatchObject({
       role: 'admin',
-      permissions: ['dashboard.view', 'users.view', 'users.manage', 'partners.review', 'boards.review', 'bookings.view', 'payouts.manage', 'disputes.resolve', 'settings.manage', 'roles.manage', 'pages.manage'],
+      permissions: ['dashboard.view', 'users.view', 'users.manage', 'partners.review', 'boards.review', 'bookings.view', 'payouts.manage', 'disputes.resolve', 'reputation.manage', 'settings.manage', 'roles.manage', 'pages.manage'],
     })
-    expect(reviewer.body.data).toMatchObject({ role: 'reviewer', permissions: ['dashboard.view', 'partners.review', 'boards.review'] })
+    expect(reviewer.body.data).toMatchObject({ role: 'reviewer', permissions: ['dashboard.view', 'partners.review', 'boards.review', 'reputation.manage'] })
     expect(member.body.data).toMatchObject({ role: 'user', permissions: [] })
   })
 

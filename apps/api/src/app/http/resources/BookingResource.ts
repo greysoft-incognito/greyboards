@@ -11,6 +11,7 @@ import { Refunds } from '@app/services/Refunds'
 import { Messages } from '@app/services/Messages'
 import { Review } from '@app/models/Review'
 import { Reviews } from '@app/services/Reviews'
+import { Reputation } from '@app/services/Reputation'
 import { Shares } from '@app/services/Shares'
 import { ScreenPlayer } from '@app/services/ScreenPlayer'
 import { Disputes } from '@app/services/Disputes'
@@ -143,6 +144,7 @@ export class BookingResource extends Resource {
       canWrite: !!subject && (await Reviews.open(booking)),
       mine: mine ? { rating: mine.rating, body: mine.body, updatedAt: mine.updatedAt } : null,
       advertiserRating: advertiser ? await Reviews.summary(advertiser.advertiserRatingSum ?? 0, advertiser.advertiserRatingCount ?? 0) : null,
+      advertiserStanding: advertiser ? await Reputation.standing(advertiser.id, 'advertiser') : null,
     }
   }
 

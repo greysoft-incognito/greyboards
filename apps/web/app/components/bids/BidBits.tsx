@@ -6,6 +6,7 @@ import { BoardCover } from "~/components/boards/BoardBits";
 import { RatingLine } from "~/components/reviews/ReviewBits";
 import { formatDays, formatMoney } from "~/components/bookings/BookingBits";
 import { Alert, Button, buttonClass, Field, Input, Select, Spinner } from "~/components/ui";
+import { Standing } from "~/components/reputation/Badges";
 
 const AUCTION_LABELS: Record<AuctionStatus, { label: string; tone: string }> = {
 	open: { label: "Taking bids", tone: "bg-brand-50 text-brand-700" },
@@ -262,6 +263,7 @@ export function OfferRow({ offer, onBoards }: { offer: Offer; onBoards: boolean 
 						<p className="flex flex-wrap items-center gap-2 text-sm text-ink-700">
 							From {offer.advertiser.name}
 							<RatingLine rating={offer.advertiser.rating} />
+							<Standing standing={offer.advertiser.standing} compact />
 						</p>
 					)}
 					{offer.note && <p className="text-sm text-ink-500">“{offer.note}”</p>}

@@ -102,6 +102,7 @@ describe('Print deadlines', () => {
 
     expect(job).toMatchObject({ status: 'open', mine: false, bonusMinor: 4_375_000, feeMinor: 21_875_000 })
     expect(sql(`select count(*) from print_job_misses where print_job_id = '${first.job}'`)).toMatch(/\b1\b/)
+    expect((await api('get', '/account/roles', undefined, 'poster')).body.data[0].reputation).toMatchObject({ score: -15, actions: 0 })
     expect(sql(`select unclaimed_alert_at is not null as alerted from print_jobs where id = '${first.job}'`)).toMatch(/\bt\b|true/)
   }, 30_000)
 

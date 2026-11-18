@@ -10,6 +10,7 @@ import { Day } from '@app/support/Day'
 import { Settings } from '@app/support/Settings'
 import { Sms } from '@app/support/Sms'
 import { StoredImage } from '@app/support/StoredImage'
+import { Reputation } from './Reputation'
 
 /** Jobs handled per run, so one run stays short. */
 const BATCH = 100
@@ -74,7 +75,9 @@ export class PrintDeadlines {
     if (!taken) return
 
     await StoredImage.remove(job.printPhotoDisk, job.printPhotoPath)
-    await PrintJobMiss.query().create({ printJobId: job.id, dispatcherId, stage })
+    const miss = await PrintJobMiss.query().create({ printJobId: job.id, dispatcherId, stage })
+
+    await Reputation.award(dispatcherId, 'dispatch', 'missed', miss.id)
 
     const user = await User.query().find(dispatcherId)
     const board = await Board.query().find(job.boardId)

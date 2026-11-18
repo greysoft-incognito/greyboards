@@ -4,6 +4,7 @@ import { AvailabilityBlock } from '@app/models/AvailabilityBlock'
 import { Day } from '@app/support/Day'
 import { PrintJob } from '@app/models/PrintJob'
 import { Settings } from '@app/support/Settings'
+import { Reputation, type RoleStanding } from '@app/services/Reputation'
 import { BoardAgreementResource } from './BoardAgreementResource'
 import { BoardPhotoResource } from './BoardPhotoResource'
 import { OwnerProfileResource } from './OwnerProfileResource'
@@ -27,9 +28,9 @@ export class ManagedBoardResource extends BoardResource {
     this.withCover(photos[0] ?? null)
 
     const details = await super.data()
-    const owner = this.showPrivate ? await board.ownerProfile().first() : null
+    const owner = await board.ownerProfile().first()
     const runByScout = !!owner && owner.userId !== board.taggedById
-    const agreement = runByScout ? await board.agreement() : null
+    const agreement = runByScout && this.showPrivate ? await board.agreement() : null
 
     const blocker = await Commissions.blocker(board)
     const faces = (await board.boardFaces().getResults()).all()
@@ -54,10 +55,12 @@ export class ManagedBoardResource extends BoardResource {
         printFeeMinor: await PrintJob.feeFor(board),
         shares: await ManagedBoardResource.shareTerms(),
       },
+      /** How far the people behind the board can be trusted, by role. Names stay private. */
+      stewards: await ManagedBoardResource.stewards(owner?.userId ?? null, runByScout ? board.taggedById : null),
       photos: await Promise.all(photos.map((photo) => new BoardPhotoResource(photo).of(this.showPrivate ? board : undefined).data())),
       ...(this.showPrivate
         ? {
-            owner: owner ? await new OwnerProfileResource(owner).data() : null,
+            owner: owner && this.showPrivate ? await new OwnerProfileResource(owner).data() : null,
             taggedById: board.taggedById,
             measuredTraffic: board.dailyTraffic,
             ownLoopSlots: board.loopSlots,
@@ -74,6 +77,13 @@ export class ManagedBoardResource extends BoardResource {
           }
         : {}),
     }
+  }
+
+  private static async stewards(ownerUserId: string | null, scoutId: string | null): Promise<RoleStanding[]> {
+    const owner = ownerUserId ? await Reputation.standing(ownerUserId, 'owner') : null
+    const scout = scoutId ? await Reputation.standing(scoutId, 'scout') : null
+
+    return [owner, scout].filter((standing): standing is RoleStanding => !!standing)
   }
 
   /** Whether bookings can be split with others, between how many, and from when. */

@@ -4,7 +4,9 @@ import { AdminHeader } from "~/components/admin/AdminHeader";
 import { ROLE_ICONS, RoleStatus } from "~/components/AccountRoles";
 import { Avatar } from "~/components/Avatar";
 import { Alert } from "~/components/ui";
-import { requireAdmin, updateAccount } from "~/lib/admin.server";
+import { RoleReputationControls } from "~/components/admin/RoleReputationControls";
+import { requireAdmin, updateAccount, updateReputation } from "~/lib/admin.server";
+import type { ReputationEvent } from "@greyboards/types";
 import type { Route } from "./+types/user";
 
 export const meta = ({ loaderData }: Route.MetaArgs) => [{ title: `${loaderData?.account.name ?? "Account"} · Admin · Greyboards` }];
@@ -12,23 +14,38 @@ export const meta = ({ loaderData }: Route.MetaArgs) => [{ title: `${loaderData?
 export async function loader({ request, context, params }: Route.LoaderArgs) {
 	const { api, user } = await requireAdmin(request, context, "users.view", "users.manage");
 	const [account, roles] = await Promise.all([api.admin.user(params.id), api.admin.roles()]);
+	const canVerify = user.permissions.includes("reputation.manage");
+	const histories = canVerify
+		? await Promise.all(account.data.accountRoles.map(async (role) => [role.id, (await api.admin.accountRoleReputation(role.id, { per_page: 5 }).catch(() => null))?.data ?? []] as const))
+		: [];
 
 	return {
 		account: account.data,
 		roles: roles.data,
 		isMe: user.id === params.id,
 		canManage: user.permissions.includes("users.manage"),
+		canVerify,
+		histories: Object.fromEntries(histories) as Record<string, ReputationEvent[]>,
 	};
 }
 
 export async function action({ request, context }: Route.ActionArgs) {
+	const form = await request.formData();
+	const intent = String(form.get("intent"));
+
+	if (["verify", "unverify", "adjust"].includes(intent)) {
+		const { api } = await requireAdmin(request, context, "reputation.manage");
+
+		return updateReputation(api, form);
+	}
+
 	const { api } = await requireAdmin(request, context, "users.manage");
 
-	return updateAccount(api, await request.formData());
+	return updateAccount(api, form);
 }
 
 export default function AdminUserPage({ loaderData, actionData }: Route.ComponentProps) {
-	const { account, roles, isMe, canManage } = loaderData;
+	const { account, roles, isMe, canManage, canVerify, histories } = loaderData;
 	const navigation = useNavigation();
 	const role = roles.find((entry) => entry.slug === account.role)?.name ?? account.role;
 
@@ -62,6 +79,7 @@ export default function AdminUserPage({ loaderData, actionData }: Route.Componen
 										<span className="flex-1 font-medium text-ink-900">{held.label}</span>
 										{held.note && <span className="text-sm text-ink-500">{held.note}</span>}
 										<RoleStatus status={held.status} />
+										<RoleReputationControls role={held} history={histories[held.id] ?? []} canManage={canVerify && !isMe} busy={navigation.state !== "idle"} />
 									</li>
 								);
 							})}

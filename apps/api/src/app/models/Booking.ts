@@ -8,6 +8,7 @@ import { DigitalSlots, type Daypart, type SlotPick } from '@app/services/Digital
 import { Refunds } from '@app/services/Refunds'
 import { Shares } from '@app/services/Shares'
 import { Payouts } from '@app/services/Payouts'
+import { Reputation } from '@app/services/Reputation'
 import { Day } from '@app/support/Day'
 import { Money } from '@app/support/Money'
 import { Auction } from './Auction'
@@ -632,6 +633,7 @@ export class Booking extends Model {
     Object.assign(this, { status: Booking.LIVE, proofStatus: 'accepted', proofAcceptedAt: now, releasedAt: now, proofNote: null })
 
     await Payouts.release(this)
+    await Reputation.campaignChecked(this)
     await this.tellOwnerPaid()
 
     return true

@@ -17,6 +17,22 @@ export async function requireAdmin(request: Request, context: Readonly<RouterCon
 	return session;
 }
 
+/** Saves a verification or a score correction posted by `RoleReputationControls`. */
+export async function updateReputation(api: ServerApi, form: FormData) {
+	const id = String(form.get("roleId"));
+	const intent = form.get("intent");
+
+	try {
+		if (intent === "verify") await api.admin.verifyAccountRole(id, { note: String(form.get("note") ?? "") || null });
+		if (intent === "unverify") await api.admin.unverifyAccountRole(id);
+		if (intent === "adjust") await api.admin.adjustReputation(id, { points: Number(form.get("points")), note: String(form.get("note") ?? "") });
+
+		return { error: null };
+	} catch (error) {
+		return { error: formError(error).error };
+	}
+}
+
 /** Saves a role change or a suspension posted by `AccountControls`. */
 export async function updateAccount(api: ServerApi, form: FormData) {
 	const id = String(form.get("id"));

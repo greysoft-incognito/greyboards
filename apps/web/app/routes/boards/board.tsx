@@ -19,6 +19,7 @@ import { photoLocation, postedPhoto } from "~/lib/boards.server";
 import { mapStyleUrl } from "~/lib/map.server";
 import { requireUser } from "~/lib/session.server";
 import { toast, useToastMessage } from "~/lib/toast";
+import { BoardStewards } from "~/components/reputation/BoardStewards";
 import mapStyles from "maplibre-gl/dist/maplibre-gl.css?url";
 import type { Route } from "./+types/board";
 
@@ -267,6 +268,7 @@ export default function BoardPage({ loaderData, actionData }: Route.ComponentPro
 							<p className="-mt-2 text-sm text-ink-500">About {formatMoney(board.costPerThousandMinor, board.rate.currency)} for every 1,000 people passing</p>
 						)}
 						<RatingLine rating={board.rating} />
+						<BoardStewards stewards={board.stewards} />
 						<ul className="grid gap-2 text-sm text-ink-700 sm:grid-cols-2">
 							{facts.map((fact) => (
 								<li key={fact.label} className="flex items-center gap-2">

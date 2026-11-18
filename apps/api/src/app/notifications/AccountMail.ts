@@ -72,6 +72,24 @@ export class AccountMail {
     )
   }
 
+  /** Tell the account its role got a badge: verified by staff when `verifiedAt` is newer, else proven. */
+  static badgeEarned(user: User, accountRole: AccountRole) {
+    const label = accountRole.label()
+    const verified = !!accountRole.verifiedAt && (!accountRole.provenAt || accountRole.verifiedAt >= accountRole.provenAt)
+    const subject = verified ? `Greyboards verified you as ${accountRole.named()}` : `You're now a proven ${label}`
+    const text = verified
+      ? `Our team checked you and verified your ${label} role. People who work with you see the Verified by Greyboards badge.`
+      : `Your checked work as ${accountRole.named()} reached our milestones, so your ${label} role now shows the Proven badge.`
+
+    return AccountMail.send(
+      user,
+      subject,
+      `<p>Hi ${AccountMail.escape(user.name)},</p>
+      <p>${text}</p>
+      ${AccountMail.button('See your roles', `${config('app.frontend_url')}/settings/roles`)}`,
+    )
+  }
+
   /** Tell a dispatcher they lost a job by missing its date. */
   static printJobMissed(user: User, boardName: string, reason: string) {
     return AccountMail.send(

@@ -31,6 +31,16 @@ export class AccountRole extends Model {
   declare note: string | null
   declare reviewedById: string | null
   declare reviewedAt: Date | null
+  /** Running total of the role's reputation events. */
+  declare reputation: number
+  /** Checked actions that added to the score, for the proven milestone. */
+  declare reputationActions: number
+  /** When staff verified the role by hand. */
+  declare verifiedAt: Date | null
+  declare verifiedById: string | null
+  declare verifiedNote: string | null
+  /** When the role reached the reputation milestones. */
+  declare provenAt: Date | null
   declare createdAt: Date
   declare updatedAt: Date
 
@@ -55,7 +65,17 @@ export class AccountRole extends Model {
     userId: 'user_id',
     reviewedById: 'reviewed_by_id',
     reviewedAt: 'reviewed_at',
+    reputationActions: 'reputation_actions',
+    verifiedAt: 'verified_at',
+    verifiedById: 'verified_by_id',
+    verifiedNote: 'verified_note',
+    provenAt: 'proven_at',
   }
+
+  protected override casts = {
+    reputation: 'number',
+    reputationActions: 'number',
+  } as never
 
   static kinds(): AccountRoleKind[] {
     return AccountRole.DEFINITIONS.map((definition) => definition.kind)
@@ -131,6 +151,25 @@ export class AccountRole extends Model {
     const user = await this.user().first()
 
     if (user) await AccountMail.roleReviewed(user, this)?.catch(() => undefined)
+  }
+
+  /** Staff vouch for the role by hand. Only an active role can be verified. */
+  async verify(staff: User, note?: string | null): Promise<void> {
+    abortIf(staff.id === this.userId, 'You cannot verify your own role.', 422)
+    abortIf(!this.isActive(), `Only an active ${this.label()} role can be verified.`, 422)
+
+    await this.update({ verifiedAt: new Date(), verifiedById: staff.id, verifiedNote: note?.trim() || null })
+
+    const user = await this.user().first()
+
+    if (user) await AccountMail.badgeEarned(user, this)?.catch(() => undefined)
+  }
+
+  /** Take the staff badge away. The proven badge, if earned, stays. */
+  async unverify(staff: User): Promise<void> {
+    abortIf(staff.id === this.userId, 'You cannot change your own verification.', 422)
+
+    await this.update({ verifiedAt: null, verifiedById: null, verifiedNote: null })
   }
 
   /** Give the role up. A suspended role stays so it can't be taken again to clear the suspension. */

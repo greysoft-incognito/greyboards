@@ -36,7 +36,7 @@ export class PriceRules {
     abortIf(input.change === 'percent' && (input.value < -90 || input.value > 500), 'Change by between −90% and 500%.', 422)
     abortIf(input.change === 'set' && input.value <= 0, 'Set a rate above zero.', 422)
 
-    const boards = (await Board.query().whereIn('id', ids).get()).all()
+    const boards = (await Board.query().whereIn('id', ids).get()).all().sort((first, second) => ids.indexOf(first.id) - ids.indexOf(second.id))
     const rows = []
 
     for (const board of boards) {

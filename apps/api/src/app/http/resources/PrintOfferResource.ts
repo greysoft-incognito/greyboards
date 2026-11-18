@@ -3,6 +3,7 @@ import { PrintJob } from '@app/models/PrintJob'
 import type { PrintOffer } from '@app/models/PrintOffer'
 import { User } from '@app/models/User'
 import { Day } from '@app/support/Day'
+import { Reputation } from '@app/services/Reputation'
 import { Resource } from 'resora'
 
 /**
@@ -33,7 +34,7 @@ export class PrintOfferResource extends Resource {
       currency: job?.currency ?? 'NGN',
       note: offer.note,
       expiresAt: offer.expiresAt,
-      dispatcher: dispatcher ? { id: dispatcher.id, name: dispatcher.name, avatarUrl: await dispatcher.avatarUrl() } : null,
+      dispatcher: dispatcher ? { id: dispatcher.id, name: dispatcher.name, avatarUrl: await dispatcher.avatarUrl(), standing: await Reputation.standing(dispatcher.id, 'dispatch') } : null,
       job: board && job ? { id: job.id, boardName: board.name, city: board.city, widthM: Number(board.widthM), heightM: Number(board.heightM), dueOn: Day.of(job.dueOn) } : null,
       createdAt: offer.createdAt,
     }

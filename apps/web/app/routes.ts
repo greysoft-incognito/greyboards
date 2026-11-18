@@ -57,6 +57,7 @@ export default [
 			route("users", "routes/admin/users.tsx"),
 			route("users/:id", "routes/admin/user.tsx"),
 			route("applications", "routes/admin/applications.tsx"),
+			route("reputation", "routes/admin/reputation.tsx"),
 			route("boards", "routes/admin/boards.tsx"),
 			route("bookings", "routes/admin/bookings.tsx"),
 			route("payouts", "routes/admin/payouts.tsx"),
@@ -79,6 +80,7 @@ export default [
 			route("errors", "routes/developers/errors.tsx"),
 		]),
 		route("reports/:token", "routes/reports/shared.tsx"),
+		route("reputation", "routes/reputation.tsx"),
 		...(["privacy", "terms", "about"] as const).map((slug) => route(slug, "routes/document.tsx", { id: `document-${slug}` })),
 	]),
 ] satisfies RouteConfig;

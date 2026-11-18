@@ -1,4 +1,7 @@
 import type {
+  ReputationAdjustment,
+  ReputationDisclosure,
+  ReputationEvent,
   ApiKey,
   ApiKeyAbility,
   NewApiKey,
@@ -292,6 +295,9 @@ export function createEndpoints(alova: GreyboardsAlova) {
       decline: (token: string) => alova.Post<ApiResponse<AgreementOffer>>(`/agreements/${token}/decline`),
     },
 
+    /** What the two badges mean and what earns reputation points. Works signed out. */
+    reputation: () => alova.Get<ApiResponse<ReputationDisclosure>>('/reputation'),
+
     /** What each marketplace role is for. Works signed out. */
     accountRoles: () => alova.Get<ApiResponse<AccountRoleDefinition[]>>('/account-roles'),
 
@@ -369,6 +375,8 @@ export function createEndpoints(alova: GreyboardsAlova) {
       },
       takeRole: (kind: AccountRoleKind) => alova.Post<ApiResponse<AccountRole>>('/account/roles', { kind }),
       dropRole: (kind: AccountRoleKind) => alova.Delete<ApiResponse<{ kind: AccountRoleKind }>>(`/account/roles/${kind}`),
+      /** How one of the account's roles earned and lost points, newest first. */
+      reputation: (kind: AccountRoleKind, params: PageQuery = {}) => alova.Get<PaginatedResponse<ReputationEvent>>(`/account/roles/${kind}/reputation`, { params, cacheFor: null }),
 
       /** Boards the account owns or tagged. */
       boards: (params: PageQuery & { status?: BoardStatus } = {}) =>
@@ -471,6 +479,13 @@ export function createEndpoints(alova: GreyboardsAlova) {
       reviewAccountRole: (id: ID, data: AccountRoleReview) => alova.Put<ApiResponse<AdminAccountRole>>(`/admin/account-roles/${id}`, data),
       /** Accept or turn down an applicant's ID photo on its own. */
       reviewIdentity: (id: ID, data: IdentityReview) => alova.Put<ApiResponse<AdminAccountRole>>(`/admin/account-roles/${id}/identity`, data),
+      /** Give a role the staff-verified badge. */
+      verifyAccountRole: (id: ID, data: { note?: string | null } = {}) => alova.Put<ApiResponse<AdminAccountRole>>(`/admin/account-roles/${id}/verification`, data),
+      unverifyAccountRole: (id: ID) => alova.Delete<ApiResponse<AdminAccountRole>>(`/admin/account-roles/${id}/verification`),
+      /** A role's reputation history, newest first. */
+      accountRoleReputation: (id: ID, params: PageQuery = {}) => alova.Get<PaginatedResponse<ReputationEvent>>(`/admin/account-roles/${id}/reputation`, { params, cacheFor: null }),
+      /** Add or take points by hand, with the reason. */
+      adjustReputation: (id: ID, data: ReputationAdjustment) => alova.Post<ApiResponse<AdminAccountRole>>(`/admin/account-roles/${id}/reputation`, data),
       /** Every role, with the permissions there are to choose from. */
       /** Boards waiting for review, or those with another status. */
       boards: (params: PageQuery & { status?: BoardStatus } = {}) =>

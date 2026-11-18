@@ -4,6 +4,7 @@ import { Star } from "lucide-react";
 import type { BookingReviews, PublishedReview, RatingSummary } from "@greyboards/types";
 import { formatDay } from "~/components/bookings/BookingBits";
 import { Button, Spinner, Textarea } from "~/components/ui";
+import { Standing } from "~/components/reputation/Badges";
 
 /** Five stars, filled up to `rating`. */
 export function Stars({ rating, className = "h-4 w-4" }: { rating: number; className?: string }) {
@@ -80,6 +81,11 @@ export function ReviewPanel({ reviews }: { reviews: BookingReviews }) {
 			{reviews.advertiserRating && reviews.advertiserRating.count > 0 && (
 				<p className="text-sm text-ink-500">
 					Others rated this advertiser <RatingLine rating={reviews.advertiserRating} />
+				</p>
+			)}
+			{reviews.advertiserStanding && (
+				<p className="flex flex-wrap items-center gap-2 text-sm text-ink-500">
+					The advertiser’s standing <Standing standing={reviews.advertiserStanding} compact />
 				</p>
 			)}
 			{reviews.mine && !editing ? (
