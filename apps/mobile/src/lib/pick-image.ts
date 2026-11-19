@@ -3,13 +3,15 @@ import { PlainProblem } from './forms'
 import { megabytes } from './limits'
 
 /**
- * Takes a photo with the camera or picks one from the library, asking for permission first.
+ * Takes a photo with the camera or picks one through the system photo picker.
  * Resolves to null when the person backs out; throws a PlainProblem when it can't be used.
  */
 export async function pickImage({ source, maxMb, why }: { source: 'camera' | 'library'; maxMb: number; why: string }) {
-  const permission = source === 'camera' ? await ImagePicker.requestCameraPermissionsAsync() : await ImagePicker.requestMediaLibraryPermissionsAsync()
+  if (source === 'camera') {
+    const permission = await ImagePicker.requestCameraPermissionsAsync()
 
-  if (!permission.granted) throw new PlainProblem(`Allow ${source === 'camera' ? 'the camera' : 'photos'} for Greyboards in your phone settings to ${why}.`)
+    if (!permission.granted) throw new PlainProblem(`Allow the camera for Greyboards in your phone settings to ${why}.`)
+  }
 
   const options: ImagePicker.ImagePickerOptions = { mediaTypes: ['images'], quality: 0.9 }
   const result = source === 'camera' ? await ImagePicker.launchCameraAsync(options) : await ImagePicker.launchImageLibraryAsync(options)
