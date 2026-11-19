@@ -1,4 +1,7 @@
+import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitest/config'
+
+const src = (path = '') => fileURLToPath(new URL(`./src/${path}`, import.meta.url))
 
 export default defineConfig({
   oxc: {
@@ -9,6 +12,13 @@ export default defineConfig({
   },
   resolve: {
     tsconfigPaths: true,
+    alias: [
+      { find: /^@app\//, replacement: src('app/') },
+      { find: /^@core\//, replacement: src('core/') },
+      { find: /^@controllers\//, replacement: src('app/http/controllers/') },
+      { find: /^@models\//, replacement: src('app/models/') },
+      { find: /^src\//, replacement: src() },
+    ],
   },
   test: {
     environment: 'node',
