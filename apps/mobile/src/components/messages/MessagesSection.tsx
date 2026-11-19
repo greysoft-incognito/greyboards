@@ -53,10 +53,6 @@ export function MessagesSection({ bookingId }: { bookingId: string }) {
 
   const attach = () =>
     send.run(async () => {
-      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync()
-
-      if (!permission.granted) throw new PlainProblem('Allow photos for Greyboards in your phone settings to send one.')
-
       const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.85 })
 
       if (result.canceled) return
