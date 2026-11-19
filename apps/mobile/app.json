@@ -18,7 +18,17 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.greysoft.greyboards.app"
+      "package": "com.greysoft.greyboards.app",
+      "blockedPermissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.READ_MEDIA_VIDEO",
+        "android.permission.READ_MEDIA_VISUAL_USER_SELECTED",
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.ACCESS_BACKGROUND_LOCATION"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -32,14 +42,17 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Greyboards uses your location to place the boards you tag and to show they were photographed on site."
+          "locationWhenInUsePermission": "Greyboards uses your location to place the boards you tag and to show they were photographed on site.",
+          "isAndroidBackgroundLocationEnabled": false,
+          "isIosBackgroundLocationEnabled": false
         }
       ],
       [
         "expo-image-picker",
         {
           "cameraPermission": "Greyboards uses the camera to photograph boards you tag.",
-          "photosPermission": "Greyboards lets you pick photos for your profile and boards."
+          "photosPermission": "Greyboards lets you pick photos for your profile and boards.",
+          "microphonePermission": false
         }
       ],
       [
