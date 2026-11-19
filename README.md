@@ -66,7 +66,7 @@ Then, under the `greyboards-web` Worker's Settings → Variables and secrets, ad
 
 ## Mobile builds (EAS)
 
-The Android app builds on [EAS](https://expo.dev/eas) from the **Deploy apps** workflow: a push to the `deploy` branch, or a manual run from the Actions tab. The bundle id is `com.greysoft.greyboards.app` on both iOS and Android.
+The Android app builds on [EAS](https://expo.dev/eas) from the **Deploy apps** workflow. A push to the `deploy` branch, or a manual run from the Actions tab, builds an installable APK. Only a published GitHub release builds an App Bundle and puts it on Google Play. The bundle id is `com.greysoft.greyboards.app` on both iOS and Android.
 
 One-time setup, in GitHub → Settings → Secrets and variables → Actions:
 
@@ -77,6 +77,24 @@ One-time setup, in GitHub → Settings → Secrets and variables → Actions:
 
 The first run creates the EAS project for the app (or finds it, if the account already has one called `greyboards`) and prints its id. Save that id as the variable `EAS_PROJECT_ID` to skip the lookup on later runs.
 
-For Google Play, upload the first App Bundle by hand in the Play Console, then add the secret `GOOGLE_SERVICE_ACCOUNT_JSON` (a service account with release access) to the `play-store` environment.
+For Google Play, upload the first App Bundle by hand in the Play Console, then add the secret `GOOGLE_SERVICE_ACCOUNT_JSON` (a service account with release access) to the `play-store` environment. Optional variables:
 
-The workflow builds an installable APK with the `preview` profile, and, when asked, an App Bundle with the `production` profile that it submits to Google Play. iOS builds run with `npx eas-cli build --platform ios` once an Apple Developer account is linked to the Expo project.
+- `PLAY_CLOSED_TRACK`: the closed testing track, `alpha` unless set (use your custom track's name, such as `qa`)
+- `PLAY_STORE_RELEASE_STATUS`: `completed` unless set; use `draft` until the app's first release is live
+
+### Versions and releases
+
+The version name is the release tag without its `v`, so `v1.4.0` and `1.4.0` both ship as `1.4.0`. The build number (Android `versionCode`) is `baseBuildNumber` in `apps/mobile/package.json` plus the workflow's run number, so every build gets a higher one. Raise `baseBuildNumber` if the run count ever starts over, for example after the workflow file is renamed. Builds that aren't releases keep the version in `app.json`.
+
+The tag decides which Play tracks a release goes to. Each one also goes to every testing track below it:
+
+| Release | Tag example | Tracks |
+| --- | --- | --- |
+| Production | `v1.4.0` | production, open, closed, internal |
+| Open testing | `v1.4.0-beta.1` or `v1.4.0-rc.1`, or any release marked as a pre-release | open, closed, internal |
+| Closed testing | `v1.4.0-alpha.1` | closed, internal |
+| Internal testing | `v1.4.0-internal.1` | internal |
+
+The "What's new" text comes from the `feat:` commits that touched `apps/mobile` since the previous tag, leaving out admin work, plus a line for fixes. The run's summary shows it and the tracks.
+
+iOS builds run with `npx eas-cli build --platform ios` once an Apple Developer account is linked to the Expo project.

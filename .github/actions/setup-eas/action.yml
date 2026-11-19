@@ -20,6 +20,12 @@ inputs:
   web-url:
     description: Public web app address, used for app links
     default: ''
+  app-version:
+    description: Version name the app is built with. Left empty, app.json's version is used
+    default: ''
+  build-number:
+    description: Build number (Android versionCode, iOS buildNumber). Left empty, app.json's is used
+    default: ''
   android-architectures:
     description: CPU architectures native code is compiled for on runner builds
     default: armeabi-v7a,arm64-v8a,x86,x86_64
@@ -137,12 +143,17 @@ runs:
         EAS_OWNER: ${{ inputs.eas-owner }}
         API_URL: ${{ inputs.api-url }}
         WEB_URL: ${{ inputs.web-url }}
+        APP_VERSION: ${{ inputs.app-version }}
+        APP_BUILD_NUMBER: ${{ inputs.build-number }}
       run: |
         jq --arg id "$EAS_PROJECT_ID" --arg owner "$EAS_OWNER" --arg api "$API_URL" --arg web "$WEB_URL" \
+          --arg version "$APP_VERSION" --arg build "$APP_BUILD_NUMBER" \
           '.build.base.env = ({ EXPO_PUBLIC_API_URL: $api }
             + (if $id != "" then { EAS_PROJECT_ID: $id } else {} end)
             + (if $owner != "" then { EAS_OWNER: $owner } else {} end)
-            + (if $web != "" then { EXPO_PUBLIC_WEB_URL: $web } else {} end))' \
+            + (if $web != "" then { EXPO_PUBLIC_WEB_URL: $web } else {} end)
+            + (if $version != "" then { APP_VERSION: $version } else {} end)
+            + (if $build != "" then { APP_BUILD_NUMBER: $build } else {} end))' \
           eas.json > eas.tmp.json
         mv eas.tmp.json eas.json
 
@@ -151,4 +162,6 @@ runs:
           [ -z "$EAS_PROJECT_ID" ] || echo "EAS_PROJECT_ID=$EAS_PROJECT_ID"
           [ -z "$EAS_OWNER" ] || echo "EAS_OWNER=$EAS_OWNER"
           [ -z "$WEB_URL" ] || echo "EXPO_PUBLIC_WEB_URL=$WEB_URL"
+          [ -z "$APP_VERSION" ] || echo "APP_VERSION=$APP_VERSION"
+          [ -z "$APP_BUILD_NUMBER" ] || echo "APP_BUILD_NUMBER=$APP_BUILD_NUMBER"
         } >> "$GITHUB_ENV"
