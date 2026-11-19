@@ -124,7 +124,7 @@ jobs:
           app-version: ${{ steps.version.outputs.version }}
           build-number: ${{ steps.version.outputs.build-number }}
 
-      - name: Build the signed App Bundle
+      - name: Build the signed App Bundle and APK
         working-directory: apps/mobile
         env:
           KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
@@ -143,19 +143,26 @@ jobs:
           pnpm exec expo prebuild --platform android --clean --no-install
 
           cd android
-          ./gradlew bundleRelease --no-daemon \
+          ./gradlew bundleRelease assembleRelease --no-daemon \
             -Pandroid.injected.signing.store.file="$keystore" \
             -Pandroid.injected.signing.store.password="$KEYSTORE_PASSWORD" \
             -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
             -Pandroid.injected.signing.key.password="${KEY_PASSWORD:-$KEYSTORE_PASSWORD}"
 
           cp app/build/outputs/bundle/release/app-release.aab "$RUNNER_TEMP/app.aab"
+          cp app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/app.apk"
           rm -f "$keystore"
 
       - uses: actions/upload-artifact@v7
         with:
           name: greyboards-${{ steps.version.outputs.version }}-${{ steps.version.outputs.build-number }}-aab
           path: ${{ runner.temp }}/app.aab
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: greyboards-${{ steps.version.outputs.version }}-${{ steps.version.outputs.build-number }}-apk
+          path: ${{ runner.temp }}/app.apk
           if-no-files-found: error
 
       - name: Upload to Google Play
@@ -168,6 +175,26 @@ jobs:
           tracks: ${{ steps.version.outputs.tracks }}
           status: ${{ vars.PLAY_STORE_RELEASE_STATUS || 'completed' }}
           whatsNewDirectory: ${{ env.WHATS_NEW_DIR }}
+
+      - name: Share the APK on EAS
+        continue-on-error: true
+        working-directory: apps/mobile
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+          BUILD_NUMBER: ${{ steps.version.outputs.build-number }}
+        run: |
+          if [ -z "$EXPO_TOKEN" ] || [ -z "$EAS_PROJECT_ID" ]; then
+            echo "::notice title=EAS upload skipped::Add the EXPO_TOKEN secret and EAS_PROJECT_ID variable to share release APKs on EAS."
+            exit 0
+          fi
+
+          npx --yes eas-cli@latest upload --platform android --build-path "$RUNNER_TEMP/app.apk" --json > "$RUNNER_TEMP/eas-upload.json"
+
+          url="$(jq -r '[.. | strings | select(startswith("https://"))] | first // empty' "$RUNNER_TEMP/eas-upload.json")"
+          url="${url:-https://expo.dev}"
+
+          printf '\n### APK %s (%s) on EAS\n\n[%s](%s) has the install link and QR code.\n' "$VERSION" "$BUILD_NUMBER" "$url" "$url" >> "$GITHUB_STEP_SUMMARY"
 
       # Records the released version in app.json on the default branch, so local builds match the store.
       - name: Save the released version

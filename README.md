@@ -103,6 +103,8 @@ The tag decides which Play tracks a release goes to. Each one also goes to every
 
 The "What's new" text comes from the `feat:` commits that touched `apps/mobile` since the previous tag, leaving out admin work, plus a line for fixes. The run's summary shows it and the tracks.
 
+Each release also builds an APK signed with the same key. It is kept as a run artifact and, when the `EXPO_TOKEN` secret and `EAS_PROJECT_ID` variable are set, uploaded to EAS with `eas upload`, so the run summary links to an expo.dev page with an install link and QR code. A failed EAS upload doesn't stop the release.
+
 After the upload, the workflow commits the released version and build number to `app.json` on the default branch, so local builds match the store. The commit carries `[skip ci]`. If the default branch is protected, let GitHub Actions push to it, or set `RELEASE_COMMIT_NAME` and `RELEASE_COMMIT_EMAIL` to change who the commit is from.
 
 ### Local builds
