@@ -501,9 +501,6 @@ export class Board extends Model {
   /** Record a reviewer's decision. Pending is not a decision. */
   async review(reviewer: User, status: BoardStatus, note?: string | null): Promise<void> {
     abortIf(status === Board.PENDING, 'Pick listed, rejected or unlisted.', 422)
-    const profile = await this.ownerProfile().first()
-
-    abortIf(reviewer.id === this.taggedById || profile?.isManagedBy(reviewer), 'You can’t review your own board.', 422)
 
     await this.update({ status, reviewNote: note?.trim() || null, reviewedById: reviewer.id, reviewedAt: new Date() })
   }

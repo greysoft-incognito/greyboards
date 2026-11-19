@@ -154,7 +154,6 @@ export class AccountRole extends Model {
 
   /** Staff vouch for the role by hand. Only an active role can be verified. */
   async verify(staff: User, note?: string | null): Promise<void> {
-    abortIf(staff.id === this.userId, 'You can’t verify yourself.', 422)
     abortIf(!this.isActive(), `Only an active ${this.label()} role can be verified.`, 422)
 
     await this.update({ verifiedAt: new Date(), verifiedById: staff.id, verifiedNote: note?.trim() || null })
@@ -166,8 +165,6 @@ export class AccountRole extends Model {
 
   /** Take the staff badge away. The proven badge, if earned, stays. */
   async unverify(staff: User): Promise<void> {
-    abortIf(staff.id === this.userId, 'You can’t change your own verification.', 422)
-
     await this.update({ verifiedAt: null, verifiedById: null, verifiedNote: null })
   }
 
