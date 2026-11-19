@@ -4,6 +4,7 @@
 | --- | --- |
 | `logo/` | G Monogram, the primary logo used across web and mobile |
 | `logo-variant/` | Board G, an alternate mark |
+| `store/` | Play Store and App Store screenshots, feature graphic and listing copy |
 
 Each folder holds:
 
