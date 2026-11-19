@@ -4,6 +4,9 @@ import type { User } from '@app/models/User'
 
 /** The emails Greyboards sends about a user's account. */
 export class AccountMail {
+  /** Longest a request waits on the mail provider. Slower deliveries finish after the response. */
+  static readonly WAIT_MS = 3000
+
   static verifyEmail(user: User, link: string) {
     return AccountMail.send(
       user,
@@ -96,12 +99,29 @@ export class AccountMail {
     )
   }
 
-  private static send(to: User | string, subject: string, message: string) {
-    return Notification.mail()
+  private static send(to: User | string, subject: string, message: string): Promise<void> {
+    const delivery = Notification.mail()
       .prepare(to as never, { frontend_url: config('app.frontend_url') })
       .view('mails/default')
       .subject(subject)
       .send(message)
+      .then(() => undefined)
+
+    return AccountMail.within(delivery, subject)
+  }
+
+  /** Settles with `delivery`, or after WAIT_MS, leaving a slow delivery to finish and log its own failure. */
+  private static within(delivery: Promise<void>, subject: string): Promise<void> {
+    let timer: NodeJS.Timeout | undefined
+
+    const waited = new Promise<void>((resolve) => {
+      timer = setTimeout(() => {
+        delivery.catch((error) => console.error(`Email "${subject}" failed`, error))
+        resolve()
+      }, AccountMail.WAIT_MS)
+    })
+
+    return Promise.race([delivery, waited]).finally(() => clearTimeout(timer))
   }
 
   private static button(label: string, link: string) {
