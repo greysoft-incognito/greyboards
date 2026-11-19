@@ -34,7 +34,7 @@ export default function TabsLayout() {
           sceneStyle: { backgroundColor: colors.canvas },
         }}
       >
-        <Tabs.Screen name="index" options={{ title: 'Dashboard', tabBarIcon: icon(LayoutDashboard) }} />
+        <Tabs.Screen name="index" options={{ title: 'Home', tabBarIcon: icon(LayoutDashboard) }} />
         <Tabs.Screen name="find" options={{ title: 'Find', tabBarIcon: icon(MapPinned) }} />
         <Tabs.Screen name="bookings" options={{ title: 'Bookings', tabBarIcon: icon(CalendarCheck) }} />
         <Tabs.Screen name="boards" options={{ title: 'Boards', tabBarIcon: icon(Presentation), href: tags ? undefined : null }} />
