@@ -46,6 +46,8 @@ pnpm dev:mobile  # Expo; set EXPO_PUBLIC_API_URL in apps/mobile/.env
 
 Make yourself an admin with `pnpm ark users:role you@example.com admin`.
 
+For a database full of demo people, boards and bookings, run `pnpm ark db:mock` on an empty database. The logins are listed in [apps/api/README.md](apps/api/README.md#mock-data).
+
 ## Checks
 
 ```sh
