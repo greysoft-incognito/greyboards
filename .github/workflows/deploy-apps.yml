@@ -3,26 +3,10 @@ name: Deploy apps
 on:
   push:
     branches: [deploy]
+  release:
+    types: [published]
   workflow_dispatch:
     inputs:
-      build_apk:
-        description: Build an Android APK (attached to the run as an artifact)
-        type: boolean
-        default: true
-      play_store:
-        description: Build an Android App Bundle and submit it to Google Play
-        type: boolean
-        default: false
-      play_store_track:
-        description: Google Play track
-        type: choice
-        options: [internal, alpha, beta, production]
-        default: internal
-      play_store_release_status:
-        description: Google Play release status (use draft until the app's first release is published)
-        type: choice
-        options: [completed, draft, inProgress, halted]
-        default: completed
       android_builder:
         description: Where Android builds run
         type: choice
@@ -42,13 +26,18 @@ env:
 
 jobs:
   android-apk:
-    if: github.event_name == 'push' || inputs.build_apk
+    if: github.event_name != 'release'
     runs-on: ubuntu-latest
     timeout-minutes: 60
     env:
       WAIT_FOR_EAS: ${{ inputs.wait_for_eas || vars.WAIT_FOR_EAS || 'false' }}
     steps:
       - uses: actions/checkout@v7
+
+      - name: Resolve the version
+        id: version
+        run: node apps/mobile/scripts/release.mjs
+
       - uses: ./.github/actions/setup-eas
         with:
           expo-token: ${{ secrets.EXPO_TOKEN }}
@@ -57,6 +46,8 @@ jobs:
           eas-owner: ${{ vars.EAS_OWNER }}
           api-url: ${{ vars.API_URL }}
           web-url: ${{ vars.WEB_URL }}
+          app-version: ${{ steps.version.outputs.version }}
+          build-number: ${{ steps.version.outputs.build-number }}
           android-architectures: ${{ vars.APK_ARCHITECTURES || 'arm64-v8a,armeabi-v7a' }}
 
       - name: Build APK
@@ -85,69 +76,126 @@ jobs:
       - uses: actions/upload-artifact@v7
         if: steps.build.outputs.apk == 'true'
         with:
-          name: greyboards-${{ github.sha }}-apk
+          name: greyboards-${{ steps.version.outputs.version }}-${{ steps.version.outputs.build-number }}-apk
           path: ${{ runner.temp }}/app.apk
           if-no-files-found: error
 
   play-store:
-    if: (github.event_name == 'push' && vars.PLAY_STORE_ON_DEPLOY == 'true') || inputs.play_store
+    if: github.event_name == 'release'
     runs-on: ubuntu-latest
     environment: play-store
     timeout-minutes: 120
+    permissions:
+      contents: write
     env:
-      TRACK: ${{ inputs.play_store_track || vars.PLAY_STORE_TRACK || 'internal' }}
-      RELEASE_STATUS: ${{ inputs.play_store_release_status || vars.PLAY_STORE_RELEASE_STATUS || 'completed' }}
+      WHATS_NEW_DIR: ${{ github.workspace }}/whatsnew
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Resolve the version, tracks and release notes
+        id: version
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          RELEASE_PRERELEASE: ${{ github.event.release.prerelease }}
+          PLAY_CLOSED_TRACK: ${{ vars.PLAY_CLOSED_TRACK }}
+        run: node apps/mobile/scripts/release.mjs
+
+      - name: Summarise the release
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          BUILD_NUMBER: ${{ steps.version.outputs.build-number }}
+          TRACKS: ${{ steps.version.outputs.tracks }}
+        run: |
+          {
+            printf '### Google Play: %s (%s)\n\nTracks: `%s`\n\n```\n' "$VERSION" "$BUILD_NUMBER" "$TRACKS"
+            cat "$WHATS_NEW_DIR/whatsnew-en-US"
+            printf '\n```\n'
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - uses: ./.github/actions/setup-eas
         with:
-          expo-token: ${{ secrets.EXPO_TOKEN }}
-          builder: ${{ env.ANDROID_BUILDER }}
+          builder: gradle
           eas-project-id: ${{ vars.EAS_PROJECT_ID }}
           eas-owner: ${{ vars.EAS_OWNER }}
           api-url: ${{ vars.API_URL }}
           web-url: ${{ vars.WEB_URL }}
+          app-version: ${{ steps.version.outputs.version }}
+          build-number: ${{ steps.version.outputs.build-number }}
 
-      - name: Configure the Google Play submission
+      - name: Build the signed App Bundle
         working-directory: apps/mobile
         env:
-          SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
-          submit='.submit.production.android.track = $track | .submit.production.android.releaseStatus = $status'
-
-          if [ -n "$SERVICE_ACCOUNT_JSON" ]; then
-            printf '%s' "$SERVICE_ACCOUNT_JSON" > "$RUNNER_TEMP/play-service-account.json"
-            submit="$submit | .submit.production.android.serviceAccountKeyPath = \$key"
+          if [ -z "$KEYSTORE_BASE64" ] || [ -z "$KEYSTORE_PASSWORD" ] || [ -z "$KEY_ALIAS" ]; then
+            echo "Add ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD and ANDROID_KEY_ALIAS to the play-store environment." >&2
+            exit 1
           fi
 
-          jq --arg track "$TRACK" --arg status "$RELEASE_STATUS" --arg key "$RUNNER_TEMP/play-service-account.json" \
-            "$submit" eas.json > eas.tmp.json
-          mv eas.tmp.json eas.json
+          keystore="$RUNNER_TEMP/upload-keystore.jks"
+          printf '%s' "$KEYSTORE_BASE64" | base64 -d > "$keystore"
 
-      - name: Build the App Bundle
-        id: build
-        working-directory: apps/mobile
-        run: |
-          if [ "$ANDROID_BUILDER" = "runner" ]; then
-            eas build --platform android --profile production --local --non-interactive --output "$RUNNER_TEMP/app.aab"
-          else
-            eas build --platform android --profile production --non-interactive --wait --json > "$RUNNER_TEMP/build.json"
-            echo "id=$(jq -r '.[0].id' "$RUNNER_TEMP/build.json")" >> "$GITHUB_OUTPUT"
-          fi
+          pnpm exec expo prebuild --platform android --clean --no-install
 
-      - name: Submit to Google Play
-        working-directory: apps/mobile
-        env:
-          BUILD_ID: ${{ steps.build.outputs.id }}
-        run: |
-          if [ -n "$BUILD_ID" ]; then
-            eas submit --platform android --profile production --id "$BUILD_ID" --non-interactive --wait
-          else
-            eas submit --platform android --profile production --path "$RUNNER_TEMP/app.aab" --non-interactive --wait
-          fi
+          cd android
+          ./gradlew bundleRelease --no-daemon \
+            -Pandroid.injected.signing.store.file="$keystore" \
+            -Pandroid.injected.signing.store.password="$KEYSTORE_PASSWORD" \
+            -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
+            -Pandroid.injected.signing.key.password="${KEY_PASSWORD:-$KEYSTORE_PASSWORD}"
+
+          cp app/build/outputs/bundle/release/app-release.aab "$RUNNER_TEMP/app.aab"
+          rm -f "$keystore"
 
       - uses: actions/upload-artifact@v7
-        if: env.ANDROID_BUILDER == 'runner'
         with:
-          name: greyboards-${{ github.sha }}-aab
+          name: greyboards-${{ steps.version.outputs.version }}-${{ steps.version.outputs.build-number }}-aab
           path: ${{ runner.temp }}/app.aab
+          if-no-files-found: error
+
+      - name: Upload to Google Play
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          packageName: ${{ steps.version.outputs.package }}
+          releaseFiles: ${{ runner.temp }}/app.aab
+          releaseName: ${{ steps.version.outputs.version }} (${{ steps.version.outputs.build-number }})
+          tracks: ${{ steps.version.outputs.tracks }}
+          status: ${{ vars.PLAY_STORE_RELEASE_STATUS || 'completed' }}
+          whatsNewDirectory: ${{ env.WHATS_NEW_DIR }}
+
+      # Records the released version in app.json on the default branch, so local builds match the store.
+      - name: Save the released version
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          BUILD_NUMBER: ${{ steps.version.outputs.build-number }}
+          BRANCH: ${{ github.event.repository.default_branch }}
+          GIT_AUTHOR_NAME: ${{ vars.RELEASE_COMMIT_NAME || '3m1n3nc3' }}
+          GIT_AUTHOR_EMAIL: ${{ vars.RELEASE_COMMIT_EMAIL || '52163001+3m1n3nc3@users.noreply.github.com' }}
+          GIT_COMMITTER_NAME: ${{ vars.RELEASE_COMMIT_NAME || '3m1n3nc3' }}
+          GIT_COMMITTER_EMAIL: ${{ vars.RELEASE_COMMIT_EMAIL || '52163001+3m1n3nc3@users.noreply.github.com' }}
+        run: |
+          git reset --hard --quiet
+          git fetch origin "$BRANCH"
+          git checkout -B "$BRANCH" "origin/$BRANCH"
+
+          node apps/mobile/scripts/save-version.mjs "$VERSION" "$BUILD_NUMBER"
+
+          if git diff --quiet -- apps/mobile/app.json; then
+            echo "app.json already has $VERSION ($BUILD_NUMBER)."
+            exit 0
+          fi
+
+          git commit -m "chore(mobile): release $VERSION ($BUILD_NUMBER) [skip ci]" -- apps/mobile/app.json
+
+          for attempt in 1 2 3; do
+            git push origin "HEAD:$BRANCH" && exit 0
+            git pull --rebase origin "$BRANCH"
+          done
+
+          exit 1
