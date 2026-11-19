@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { Form, Link, NavLink, useNavigation } from "react-router";
 import { LocateFixed, Save } from "lucide-react";
-import type { PrintOffer } from "@greyboards/types";
+import { type PrintOffer, currencySymbol } from "@greyboards/types";
 import { heldRole } from "~/components/AccountRoles";
 import { formatDay, formatMoney } from "~/components/bookings/BookingBits";
 import { Pager } from "~/components/Pager";
 import { Alert, Button, Field, Input, Spinner } from "~/components/ui";
 import { formError } from "~/lib/api.server";
+import { useCurrency } from "~/lib/currency";
 import { requireUser } from "~/lib/session.server";
 import { useToastMessage } from "~/lib/toast";
 import type { Route } from "./+types/prices";
@@ -28,12 +29,12 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 export async function action({ request, context }: Route.ActionArgs) {
 	const { api } = await requireUser(request, context);
 	const form = await request.formData();
-	const naira = (name: string) => Math.round(Number(String(form.get(name) ?? "").replace(/[^\d.]/g, "")) * 100);
+	const minor = (name: string) => Math.round(Number(String(form.get(name) ?? "").replace(/[^\d.]/g, "")) * 100);
 
 	try {
 		await api.printJobs.saveRate({
-			pricePerSqmMinor: naira("perSqm"),
-			minFeeMinor: naira("minFee") || 0,
+			pricePerSqmMinor: minor("perSqm"),
+			minFeeMinor: minor("minFee") || 0,
 			latitude: Number(form.get("latitude")),
 			longitude: Number(form.get("longitude")),
 			radiusKm: Number(form.get("radiusKm")),
@@ -63,6 +64,7 @@ export default function Prices({ loaderData, actionData }: Route.ComponentProps)
 	const busy = useNavigation().state === "submitting";
 	const [spot, setSpot] = useState({ latitude: rate.latitude === null ? "" : String(rate.latitude), longitude: rate.longitude === null ? "" : String(rate.longitude) });
 	const errors = actionData?.fieldErrors ?? {};
+	const symbol = currencySymbol(useCurrency().currency);
 
 	const locate = () =>
 		navigator.geolocation?.getCurrentPosition((position) => setSpot({ latitude: position.coords.latitude.toFixed(5), longitude: position.coords.longitude.toFixed(5) }));
@@ -91,11 +93,11 @@ export default function Prices({ loaderData, actionData }: Route.ComponentProps)
 					{!rate.saved && <p className="text-sm text-ink-500">Set your rate and location so advertisers can find you.</p>}
 					{actionData?.error && !Object.keys(errors).length && <Alert>{actionData.error}</Alert>}
 					<div className="grid gap-4 sm:grid-cols-2">
-						<Field label="Per square metre, in naira" error={errors.pricePerSqmMinor}>
-							<Input name="perSqm" inputMode="numeric" required defaultValue={String(rate.pricePerSqmMinor / 100)} />
+						<Field label="Per square metre" error={errors.pricePerSqmMinor} hint="In the currency of the boards near your base.">
+							<Input name="perSqm" inputMode="numeric" required defaultValue={String(rate.pricePerSqmMinor / 100)} addon={symbol} />
 						</Field>
-						<Field label="Minimum charge, in naira" error={errors.minFeeMinor} hint="Optional. The least you’ll charge for a small board.">
-							<Input name="minFee" inputMode="numeric" defaultValue={rate.minFeeMinor ? String(rate.minFeeMinor / 100) : ""} />
+						<Field label="Minimum charge" error={errors.minFeeMinor} hint="Optional. The least you’ll charge for a small board.">
+							<Input name="minFee" inputMode="numeric" defaultValue={rate.minFeeMinor ? String(rate.minFeeMinor / 100) : ""} addon={symbol} />
 						</Field>
 						<Field label="Base latitude" error={errors.latitude}>
 							<Input name="latitude" inputMode="decimal" required value={spot.latitude} onChange={(event) => setSpot({ ...spot, latitude: event.target.value })} />

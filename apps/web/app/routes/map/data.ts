@@ -17,6 +17,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 		kind: filters.kind ?? undefined,
 		lit: filters.lit ?? undefined,
 		maxRateMinor: filters.maxRateMinor ?? undefined,
+		currency: filters.maxRateMinor ? (filters.currency ?? undefined) : undefined,
 	};
 	const [pins, boards] = await Promise.all([api.boardPins(search), api.boards({ ...search, per_page: 20 })]);
 

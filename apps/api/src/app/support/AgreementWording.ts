@@ -1,4 +1,5 @@
 import { Settings } from './Settings'
+import { Money } from './Money'
 
 /** What an owner reads on the agreement page, as it was when the agreement was sent. */
 export interface AgreementTerms {
@@ -57,8 +58,6 @@ export class AgreementWording {
   }
 
   private static rate(rate: NonNullable<AgreementValues['rate']>): string {
-    const amount = (rate.amountMinor / 100).toLocaleString('en', { maximumFractionDigits: 2 })
-
-    return `${rate.currency.toUpperCase() === 'NGN' ? '₦' : `${rate.currency.toUpperCase()} `}${amount} a ${rate.period}`
+    return `${Money.format(rate.amountMinor, rate.currency)} a ${rate.period}`
   }
 }

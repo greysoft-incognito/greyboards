@@ -20,3 +20,10 @@ export const deviceAgent = JSON.stringify({
   osVersion: Device.osVersion,
   deviceType: (Device.deviceType && DEVICE_TYPES[Device.deviceType]) ?? 'unknown',
 }).replace(/[\u007f-￿]/g, (char) => `\\u${char.charCodeAt(0).toString(16).padStart(4, '0')}`)
+
+/** The device's country, from its locale such as "en-NG", for the `X-Country` header. */
+export function deviceCountry(): string | null {
+  const region = Intl.DateTimeFormat().resolvedOptions().locale.split(/[-_]/).find((part, index) => index > 0 && /^[A-Z]{2}$/.test(part))
+
+  return region ?? null
+}

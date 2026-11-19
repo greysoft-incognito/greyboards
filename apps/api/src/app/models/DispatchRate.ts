@@ -30,7 +30,7 @@ export class DispatchRate extends Model {
     longitude: 'number',
   } as never
 
-  /** Their price for one face of `board`: the rate by area, and never less than their minimum, in whole naira. */
+  /** Their price for one face of `board`: the rate by area, and never less than their minimum, in whole units of the board's currency. */
   quote(board: Board): number {
     const byArea = Math.round((Number(board.widthM) * Number(board.heightM) * Number(this.pricePerSqmMinor)) / 100) * 100
 

@@ -2,10 +2,11 @@ import { useCallback, useState } from 'react'
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native'
 import { router, useFocusEffect } from 'expo-router'
 import { ChevronRight, MapPin } from 'lucide-react-native'
-import type { DispatchRate, PrintOffer } from '@greyboards/types'
+import { type DispatchRate, type PrintOffer, currencySymbol } from '@greyboards/types'
 import { Section, SettingsPage } from '@/components/settings/SettingsPage'
 import { Button, Callout, Field, Input, Text } from '@/components/ui'
 import { api } from '@/lib/api'
+import { useCurrency } from '@/lib/currency'
 import { FormProblem } from '@/lib/forms'
 import { formatDay, formatMoney, toMinor } from '@/lib/format'
 import { currentSpot } from '@/lib/location'
@@ -100,6 +101,7 @@ function RateForm({ rate, onSaved }: { rate: DispatchRate; onSaved: (rate: Dispa
   const [note, setNote] = useState(rate.note ?? '')
   const [base, setBase] = useState(rate.latitude !== null && rate.longitude !== null ? { latitude: rate.latitude, longitude: rate.longitude } : null)
   const errors = action.problem.fields
+  const symbol = currencySymbol(useCurrency().currency)
 
   const findMe = () =>
     locate.run(async () => {
@@ -123,10 +125,10 @@ function RateForm({ rate, onSaved }: { rate: DispatchRate; onSaved: (rate: Dispa
 
   return (
     <Section title="Your rate" description={rate.saved ? undefined : 'Set your rate and location so advertisers can find you.'}>
-      <Field label="Per square metre, in naira" error={errors.pricePerSqmMinor}>
+      <Field label={`Per square metre, in ${symbol}`} error={errors.pricePerSqmMinor} hint="In the currency of the boards near your base.">
         <Input value={perSqm} onChangeText={setPerSqm} keyboardType="number-pad" />
       </Field>
-      <Field label="Minimum charge, in naira" error={errors.minFeeMinor} hint="Optional. The least you’ll charge for a small board.">
+      <Field label={`Minimum charge, in ${symbol}`} error={errors.minFeeMinor} hint="Optional. The least you’ll charge for a small board.">
         <Input value={minFee} onChangeText={setMinFee} keyboardType="number-pad" />
       </Field>
       <Field label="Your base" error={errors.latitude ?? errors.longitude}>

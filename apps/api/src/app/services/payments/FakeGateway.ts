@@ -22,7 +22,7 @@ export class FakeGateway implements PaymentGateway, PayoutGateway, RefundGateway
 
     if (!payment) return { paid: false, final: false, amount: 0, currency: null, raw: {} }
 
-    return { paid: true, final: true, amount: payment.amountMinor / 100, currency: payment.currency, raw: { fake: true } }
+    return { paid: true, final: true, amount: payment.chargeAmountMinor / 100, currency: payment.chargeCurrency, raw: { fake: true } }
   }
 
   async banks(): Promise<Bank[]> {

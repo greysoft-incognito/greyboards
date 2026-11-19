@@ -495,6 +495,9 @@ export interface Payment {
   status: PaymentStatus
   amountMinor: number
   currency: string
+  /** What the payer is charged, in their payment region's currency. */
+  chargeAmountMinor: number
+  chargeCurrency: string
   bookingId: ID
   /** The provider's page to pay on, when the payment was just started. */
   checkoutUrl: string | null

@@ -70,7 +70,7 @@ export default function ImportBoards({ loaderData, actionData }: Route.Component
 						1. Fill in the template
 					</h2>
 					<p className="text-sm text-ink-700">
-						One board per row. Name, kind, width, height, latitude and longitude are needed; the rest can be blank. Rates are in naira, per week or month. Save the sheet as CSV.
+						One board per row. Name, kind, width, height, latitude and longitude are needed; the rest can be blank. Rates are per week or month, in the currency of the board’s country unless you add a currency column. Save the sheet as CSV.
 					</p>
 					<a href={`data:text/csv;charset=utf-8,${encodeURIComponent(TEMPLATE)}`} download="greyboards-boards.csv" className="inline-flex items-center gap-2 text-sm font-semibold text-brand-700 hover:underline">
 						<Download className="h-4 w-4" aria-hidden />

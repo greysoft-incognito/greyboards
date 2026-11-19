@@ -74,6 +74,9 @@ importers:
       '@kanun-hq/plugin-file':
         specifier: ^0.1.12
         version: 0.1.13(kanun@1.2.1)
+      '@toneflix/money':
+        specifier: ^1.0.2
+        version: 1.0.2
       arkormx:
         specifier: ^2.12.8
         version: 2.12.13(@types/node@25.9.9)(h3@2.0.8)(tsdown@0.22.14(tsx@4.23.15)(typescript@6.0.3)(unrun@0.3.1))
@@ -359,6 +362,10 @@ importers:
         version: 6.0.3
 
   packages/types:
+    dependencies:
+      '@toneflix/money':
+        specifier: ^1.0.2
+        version: 1.0.2
     devDependencies:
       typescript:
         specifier: ^6.0.0
@@ -2836,6 +2843,9 @@ packages:
     resolution: {integrity: sha512-wGukGWb8SVuN7+FJvSS7M5eSJWDIWwVSvUvj1q41eTIhGPsS2DAgFWjA7YURJNwjHSgty59Hz8iMUiyO+YMHBQ==}
     peerDependencies:
       vite: ^5.2.0 || ^6 || ^7 || ^8
+
+  '@toneflix/money@1.0.2':
+    resolution: {integrity: sha512-/cuULpFuvt6OFeClLmaJOzvJwK1Kr2z3vzr6fr+d0cJgLi6cgYFnF+Pg49zFuSfa+icC4wUhRbub9LhLw/D/eA==}
 
   '@tootallnate/once@2.0.1':
     resolution: {integrity: sha512-HqmEUIGRJ5fSXchkVgR5F7qn48bDBzv0kWj/Kfu5e6uci4UlEeng4331LnBkWffb++Ei3FOVLxo8JJWMFBDMeQ==}
@@ -9790,6 +9800,8 @@ snapshots:
       '@tailwindcss/oxide': 4.3.4
       tailwindcss: 4.3.4
       vite: 8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)
+
+  '@toneflix/money@1.0.2': {}
 
   '@tootallnate/once@2.0.1': {}
 

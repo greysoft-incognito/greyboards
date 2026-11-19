@@ -4,6 +4,7 @@ import type { PrintOffer } from '@app/models/PrintOffer'
 import { User } from '@app/models/User'
 import { Day } from '@app/support/Day'
 import { Reputation } from '@app/services/Reputation'
+import { PaymentRegions } from '@app/services/payments/PaymentRegions'
 import { Resource } from 'resora'
 
 /**
@@ -31,7 +32,7 @@ export class PrintOfferResource extends Resource {
       kind: offer.kind,
       status: open || !offer.isLive() ? offer.displayStatus() : 'closed',
       amountMinor: Number(offer.amountMinor),
-      currency: job?.currency ?? 'NGN',
+      currency: job?.currency ?? (await PaymentRegions.defaultCurrency()),
       note: offer.note,
       expiresAt: offer.expiresAt,
       dispatcher: dispatcher ? { id: dispatcher.id, name: dispatcher.name, avatarUrl: await dispatcher.avatarUrl(), standing: await Reputation.standing(dispatcher.id, 'dispatch') } : null,

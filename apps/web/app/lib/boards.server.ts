@@ -12,7 +12,7 @@ const number = (form: FormData, key: string) => {
 	return value === null ? null : Number(value);
 };
 
-/** The board details a BoardForm posted. The rate is typed in naira and sent in kobo. */
+/** The board details a BoardForm posted. Amounts are typed in whole units of the board's currency and sent in minor units. */
 export function boardInput(form: FormData): BoardInput {
 	const rate = number(form, "rate");
 	const printFee = number(form, "printFee");
@@ -29,6 +29,7 @@ export function boardInput(form: FormData): BoardInput {
 		address: text(form, "address"),
 		city: text(form, "city"),
 		country: text(form, "country"),
+		currency: text(form, "currency"),
 		latitude: number(form, "latitude") ?? Number.NaN,
 		longitude: number(form, "longitude") ?? Number.NaN,
 		accuracyM: number(form, "accuracyM"),

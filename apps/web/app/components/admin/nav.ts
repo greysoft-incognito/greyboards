@@ -1,5 +1,5 @@
 import type { Permission } from "@greyboards/types";
-import { Award, BadgeCheck, CalendarCheck, FileText, Gauge, KeyRound, type LucideIcon, MapPinned, Presentation, ShieldAlert, SlidersHorizontal, Users, Wallet } from "lucide-react";
+import { Award, BadgeCheck, CalendarCheck, FileText, Gauge, Globe2, KeyRound, type LucideIcon, MapPinned, Presentation, ShieldAlert, SlidersHorizontal, Users, Wallet } from "lucide-react";
 
 /** The admin sidebar, in order. Each page shows to roles holding any of its permissions. */
 export const ADMIN_PAGES: { to: string; label: string; icon: LucideIcon; permissions: Permission[]; end?: boolean }[] = [
@@ -14,5 +14,6 @@ export const ADMIN_PAGES: { to: string; label: string; icon: LucideIcon; permiss
 	{ to: "/admin/disputes", label: "Disputes", icon: ShieldAlert, permissions: ["disputes.resolve"] },
 	{ to: "/admin/pages", label: "Pages", icon: FileText, permissions: ["pages.manage"] },
 	{ to: "/admin/roles", label: "Roles", icon: KeyRound, permissions: ["roles.manage"] },
+	{ to: "/admin/payment-regions", label: "Payment regions", icon: Globe2, permissions: ["settings.manage"] },
 	{ to: "/admin/configuration", label: "Configuration", icon: SlidersHorizontal, permissions: ["settings.manage"] },
 ];

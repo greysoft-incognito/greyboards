@@ -1,4 +1,5 @@
 import { Form, useNavigation } from "react-router";
+import { Fragment } from "react";
 import { BadgeCheck, Landmark, Wallet } from "lucide-react";
 import type { Bank, Payout, PayoutAccount } from "@greyboards/types";
 import { formatDay, formatMoney } from "~/components/bookings/BookingBits";
@@ -45,8 +46,12 @@ export default function Payouts({ loaderData, actionData }: Route.ComponentProps
 			<PageHeader title="Payouts" description="Where we send your earnings." />
 			<div className="space-y-6">
 				<div className="grid gap-3 sm:grid-cols-2">
-					<Total label="Coming to you" amount={summary.owedMinor} hint="Ready to send to your bank" />
-					<Total label="Paid out" amount={summary.paidMinor} hint="Paid to you" />
+					{(summary.totals.length ? summary.totals : [summary]).map((total) => (
+						<Fragment key={total.currency}>
+							<Total label="Coming to you" amount={total.owedMinor} currency={total.currency} hint="Ready to send to your bank" />
+							<Total label="Paid out" amount={total.paidMinor} currency={total.currency} hint="Paid to you" />
+						</Fragment>
+					))}
 				</div>
 				{!summary.enabled && <Notice>Add your bank details so we can pay you.</Notice>}
 
@@ -76,11 +81,11 @@ export default function Payouts({ loaderData, actionData }: Route.ComponentProps
 	);
 }
 
-function Total({ label, amount, hint }: { label: string; amount: number; hint: string }) {
+function Total({ label, amount, currency, hint }: { label: string; amount: number; currency: string; hint: string }) {
 	return (
 		<div className="panel p-5">
 			<p className="text-sm text-ink-500">{label}</p>
-			<p className="mt-1 font-display text-2xl font-extrabold text-ink-900 tabular-nums">{formatMoney(amount, "NGN")}</p>
+			<p className="mt-1 font-display text-2xl font-extrabold text-ink-900 tabular-nums">{formatMoney(amount, currency)}</p>
 			<p className="mt-1 text-xs text-ink-500">{hint}</p>
 		</div>
 	);

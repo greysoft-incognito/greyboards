@@ -4,6 +4,15 @@
  * (and so its env variable) is used. Secrets never belong here: they stay in .env.
  * Each group's `icon` is a Lucide icon name.
  */
+/** Every ISO currency, by name, for picking the default. */
+const currencyOptions = () => {
+  const names = new Intl.DisplayNames(['en'], { type: 'currency' })
+
+  return Intl.supportedValuesOf('currency')
+    .map((code) => ({ value: code, label: `${names.of(code) ?? code} (${code})` }))
+    .sort((first, second) => first.label.localeCompare(second.label))
+}
+
 export default () => {
   return {
     /**
@@ -473,8 +482,7 @@ export default () => {
             env: 'TRAFFIC_CPM_MINOR',
             type: 'number',
             label: 'Value of 1,000 views',
-            help: 'In kobo. Guides a price from traffic when there aren’t enough boards nearby to compare with.',
-            unit: 'kobo',
+            help: 'In the minor unit of the default currency, such as kobo or cents. Guides a price from traffic when there aren’t enough boards nearby to compare with.',
             min: 0,
             max: 100000000,
           },
@@ -1020,8 +1028,8 @@ export default () => {
             env: 'PRINT_PRICE_PER_SQM',
             type: 'number',
             label: 'Starting rate for dispatchers',
-            help: 'Per square metre of board face. A new dispatcher’s rate starts here; each sets their own, and advertisers pay the price they pick.',
-            unit: '₦ per m²',
+            help: 'Per square metre of board face, in the board’s currency. A new dispatcher’s rate starts here; each sets their own, and advertisers pay the price they pick.',
+            unit: 'per m²',
             min: 0,
             max: 1000000,
           },
@@ -1133,6 +1141,32 @@ export default () => {
             unit: 'days',
             min: 7,
             max: 365,
+          },
+        ],
+      },
+      {
+        id: 'payments',
+        title: 'Currency and payments',
+        description: 'The currency boards are priced and paid in, and who takes the payments. Countries that pay in their own currency are set under Payment regions.',
+        icon: 'banknote',
+        fields: [
+          {
+            name: 'default_currency',
+            key: 'payments.default_currency',
+            env: 'DEFAULT_CURRENCY',
+            type: 'select',
+            label: 'Default currency',
+            help: 'For boards and payers outside every payment region. Boards already listed keep their currency.',
+            options: currencyOptions(),
+          },
+          {
+            name: 'provider',
+            key: 'payments.provider',
+            env: 'PAYMENT_PROVIDER',
+            type: 'select',
+            label: 'Payment provider',
+            help: 'Takes payments outside every payment region, and sends payouts.',
+            options: [{ value: 'flutterwave', label: 'Flutterwave' }],
           },
         ],
       },

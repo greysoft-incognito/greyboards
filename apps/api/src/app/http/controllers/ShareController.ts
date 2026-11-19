@@ -102,7 +102,7 @@ export default class ShareController extends BaseController {
   /** The winning bidder pays for the whole board; the sharers get their money back. */
   async payTakeover() {
     const booking = await this.listed()
-    const { payment, url } = await new Checkout().startTakeover(booking, this.user)
+    const { payment, url } = await new Checkout(this.country()).startTakeover(booking, this.user)
 
     return new PaymentResource(payment).withCheckout(url).additional({ status: 'success', message: 'Payment started', code: 201 }).response().setStatusCode(201)
   }

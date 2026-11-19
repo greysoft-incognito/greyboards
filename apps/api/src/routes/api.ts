@@ -32,6 +32,8 @@ import UserController from 'src/app/http/controllers/admin/UserController'
 import AdminPayoutController from 'src/app/http/controllers/admin/PayoutController'
 import AdminDisputeController from 'src/app/http/controllers/admin/DisputeController'
 import TerritoryController from 'src/app/http/controllers/admin/TerritoryController'
+import PaymentRegionController from 'src/app/http/controllers/admin/PaymentRegionController'
+import CurrencyController from 'src/app/http/controllers/CurrencyController'
 import PayoutController from 'src/app/http/controllers/PayoutController'
 import PrintOfferController from 'src/app/http/controllers/PrintOfferController'
 import PlayerController from 'src/app/http/controllers/PlayerController'
@@ -48,6 +50,7 @@ Router.get('/', () => {
 
 // Upload sizes and other limits apps check up front
 Router.get('/limits', [LimitsController, 'show'], [limiter(120, 60)])
+Router.get('/currency', [CurrencyController, 'show'], [limiter(120, 60)])
 
 // Privacy policy, terms, about and other pages admins publish
 Router.get('/documents', [DocumentController, 'index'], [limiter(120, 60)])
@@ -267,6 +270,10 @@ Router.get('/admin/boards', [AdminBoardController, 'index'], [auth, Authorize.to
 Router.get('/admin/boards/:board', [AdminBoardController, 'show'], [auth, Authorize.to('boards.review')])
 Router.put('/admin/boards/:board', [AdminBoardController, 'update'], [auth, Authorize.to('boards.review')])
 Router.get('/admin/settings', [SettingsController, 'index'], [auth, Authorize.to('settings.manage')])
+Router.get('/admin/payment-regions', [PaymentRegionController, 'index'], [auth, Authorize.to('settings.manage')])
+Router.post('/admin/payment-regions', [PaymentRegionController, 'create'], [auth, Authorize.to('settings.manage')])
+Router.put('/admin/payment-regions/:region', [PaymentRegionController, 'update'], [auth, Authorize.to('settings.manage')])
+Router.delete('/admin/payment-regions/:region', [PaymentRegionController, 'destroy'], [auth, Authorize.to('settings.manage')])
 Router.put('/admin/settings/:group', [SettingsController, 'update'], [auth, Authorize.to('settings.manage')])
 Router.get('/admin/roles', [RoleController, 'index'], [auth, Authorize.to('roles.manage', 'users.view', 'users.manage')])
 Router.post('/admin/roles', [RoleController, 'create'], [auth, Authorize.to('roles.manage')])

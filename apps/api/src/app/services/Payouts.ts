@@ -98,10 +98,9 @@ export class Payouts {
 
   /** Ask the provider about transfers still on their way. */
   static async track(): Promise<number> {
-    const gateway = Gateways.payouts()
     const pending = await Payout.query().where({ status: 'processing' }).whereRaw('"updatedAt" < now() - interval \'1 minute\'').oldest('updatedAt').limit(BATCH).get()
 
-    for (const payout of pending.all()) await Payouts.apply(payout, await gateway.transferStatus(payout.reference))
+    for (const payout of pending.all()) await Payouts.apply(payout, await Gateways.make(payout.provider).transferStatus(payout.reference))
 
     return pending.all().length
   }
@@ -141,7 +140,7 @@ export class Payouts {
       currency: entry.currency,
       ...Payouts.bankDetails(account),
       reference: Payouts.reference(),
-      provider: Gateways.payouts().key,
+      provider: (await Gateways.payouts()).key,
       status: 'processing',
     })
 
@@ -149,7 +148,7 @@ export class Payouts {
   }
 
   private static async transfer(payout: Payout): Promise<void> {
-    const result = await Gateways.payouts().transfer({
+    const result = await Gateways.make(payout.provider).transfer({
       reference: payout.reference,
       amount: Number(payout.amountMinor) / 100,
       currency: payout.currency,

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Pressable, StyleSheet, View } from 'react-native'
 import { router } from 'expo-router'
 import { CalendarOff, Gavel, Layers, X } from 'lucide-react-native'
-import type { Auction, BoardDetail, BoardFace } from '@greyboards/types'
+import { type Auction, type BoardDetail, type BoardFace, currencySymbol } from '@greyboards/types'
 import { AUCTION_LOOKS } from '@/components/bids/BidBits'
 import { formatHeading } from '@/components/boards/BoardBits'
 import { Section } from '@/components/settings/SettingsPage'
@@ -69,7 +69,7 @@ export function RateCard({ board, onChange }: { board: BoardDetail; onChange: On
     <Section>
       <Heading icon={Layers} title="Sides and rates" text="Each side is booked separately. Leave a rate empty to use the board’s main rate." />
       {board.rateCard.map((face) => (
-        <FaceForm key={face.id} boardId={board.id} face={face} unit={unit} currency={board.rate?.currency ?? 'NGN'} onChange={onChange} />
+        <FaceForm key={face.id} boardId={board.id} face={face} unit={unit} currency={board.currency} onChange={onChange} />
       ))}
     </Section>
   )
@@ -266,7 +266,7 @@ export function AuctionsManager({ board, auctions, onChange }: { board: BoardDet
           </Field>
         </View>
       </View>
-      <Field label="Reserve" error={errors.reserveMinor} hint="Minimum price for the whole period, in naira.">
+      <Field label="Reserve" error={errors.reserveMinor} hint={`Minimum price for the whole period, in ${currencySymbol(board.currency)}.`}>
         <Input value={reserve} onChangeText={setReserve} keyboardType="number-pad" placeholder="500000" />
       </Field>
       <View style={styles.pair}>

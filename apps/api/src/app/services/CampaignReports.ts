@@ -10,6 +10,7 @@ import { User } from '@app/models/User'
 import { PostingProofResource } from '@app/http/resources/PostingProofResource'
 import { Day } from '@app/support/Day'
 import { Settings } from '@app/support/Settings'
+import { PaymentRegions } from '@app/services/payments/PaymentRegions'
 
 /**
  * Campaign reports. An advertiser groups bookings whose ads went up into one report: each
@@ -116,7 +117,7 @@ export class CampaignReports {
       id: report.id,
       title: report.title,
       advertiser: author?.name ?? null,
-      currency: bookings.values().next().value?.currency ?? 'NGN',
+      currency: bookings.values().next().value?.currency ?? (await PaymentRegions.defaultCurrency()),
       summary: {
         boards: new Set(runs.map((run) => run.board?.id).filter(Boolean)).size,
         days: runs.reduce((sum, run) => sum + run.days, 0),

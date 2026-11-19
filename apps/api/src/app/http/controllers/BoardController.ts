@@ -74,6 +74,7 @@ export default class BoardController extends BaseController {
     kind: `nullable|in:${Board.kinds().join(',')}`,
     lit: 'nullable|in:true,false,1,0',
     maxRateMinor: 'nullable|integer|min:0',
+    currency: 'nullable|alpha|min:3|max:3',
   }
 
   /** The advertiser's filters from a validated query. */
@@ -82,6 +83,7 @@ export default class BoardController extends BaseController {
       kind: (query.kind as BoardKind) || null,
       lit: BoardController.given(query.lit) ? ['true', '1', true, 1].includes(query.lit as string) : null,
       maxRateMinor: BoardController.given(query.maxRateMinor) ? Number(query.maxRateMinor) : null,
+      currency: BoardController.given(query.currency) ? String(query.currency) : null,
     }
   }
 

@@ -1,16 +1,21 @@
 import { type ReactNode, useEffect, useState } from 'react'
 import { Pressable, StyleSheet, Switch, View } from 'react-native'
 import { HandCoins, Sparkles } from 'lucide-react-native'
-import type { BoardDetail, BoardInput, BoardKind, BoardKindDefinition, BoardRatePeriod, PriceGuide, RoadClass } from '@greyboards/types'
+import { type BoardDetail, type BoardInput, type BoardKind, type BoardKindDefinition, type BoardRatePeriod, type PriceGuide, type RoadClass, countryOptions, currencyOptions, currencySymbol } from '@greyboards/types'
 import { HeadingPicker } from '@/components/boards/HeadingPicker'
 import { Section } from '@/components/settings/SettingsPage'
 import { Field, Input, Select, Text } from '@/components/ui'
 import { api } from '@/lib/api'
+import { currencyFor, useCurrency } from '@/lib/currency'
+import { deviceCountry } from '@/lib/device'
 import { formatMoney } from '@/lib/format'
 import type { Spot } from '@/lib/location'
 import { colors, fonts, radius } from '@/theme'
 
 type Errors = Record<string, string | undefined>
+
+const COUNTRIES = countryOptions()
+const CURRENCIES = currencyOptions()
 
 /** "12" or "12.5" as a number, or null while it isn't one. */
 export const decimal = (value: string) => (value.trim() && Number.isFinite(Number(value)) ? Number(value) : null)
@@ -37,6 +42,9 @@ export function blankFields(board?: BoardDetail) {
     description: board?.description ?? '',
     address: board?.address ?? '',
     city: board?.city ?? '',
+    country: board?.country ?? deviceCountry() ?? '',
+    /** Empty until picked, so it follows the country. */
+    currency: board?.currency ?? '',
     rate: ownerMinor ? String(ownerMinor / 100) : '',
     ratePeriod: board?.rate?.period ?? ('month' as BoardRatePeriod),
     ownerNet: board?.ownerNet ?? false,
@@ -48,7 +56,7 @@ export function blankFields(board?: BoardDetail) {
 export type BoardFieldValues = ReturnType<typeof blankFields>
 
 /** The fields as the API takes them, placed at `spot`. */
-export function boardInput(fields: BoardFieldValues, spot: Spot, country = 'NG'): BoardInput {
+export function boardInput(fields: BoardFieldValues, spot: Spot): BoardInput {
   const rate = decimal(fields.rate)
   const printFee = decimal(fields.printFee)
 
@@ -66,7 +74,8 @@ export function boardInput(fields: BoardFieldValues, spot: Spot, country = 'NG')
     headingDeg: fields.heading,
     address: fields.address.trim() || null,
     city: fields.city.trim() || null,
-    country,
+    country: fields.country || null,
+    ...(fields.currency ? { currency: fields.currency } : {}),
     latitude: spot.latitude,
     longitude: spot.longitude,
     accuracyM: spot.accuracyM,
@@ -91,6 +100,15 @@ export function useBoardFields(board?: BoardDetail) {
 }
 
 type FieldsProps = { fields: BoardFieldValues; set: ReturnType<typeof useBoardFields>['set']; errors: Errors }
+
+/** The board's country, which sets the currency it's priced in until one is picked. */
+export function CountryField({ fields, set, errors }: FieldsProps) {
+  return (
+    <Field label="Country" error={errors.country}>
+      <Select label="Country" value={fields.country} onChange={set('country')} options={COUNTRIES} />
+    </Field>
+  )
+}
 
 /** What the board is: its name, kind, size, faces, lighting, road and, on a screen, its loop. */
 export function BoardDetailsSection({ fields, set, errors, kinds, board }: FieldsProps & { kinds: BoardKindDefinition[]; board?: BoardDetail }) {
@@ -185,6 +203,8 @@ export function RateSection({
   children,
 }: FieldsProps & { spot: Spot | null; percent: number | null; scouting?: boolean; exceptId?: string; children?: ReactNode }) {
   const digital = fields.kind === 'digital'
+  const currency = fields.currency || currencyFor(useCurrency(), fields.country)
+  const symbol = currencySymbol(currency)
 
   // The guide is for the listed price; with the owner's amount fixed, the field takes the owner's part of it.
   const useGuide = (listedMinor: number) => set('rate')(String(Math.round((fields.ownerNet && percent ? Math.floor((listedMinor * percent) / 100) : listedMinor) / 100)))
@@ -194,7 +214,7 @@ export function RateSection({
       <View style={styles.pair}>
         <View style={styles.flex}>
           <Field
-            label={fields.ownerNet ? 'Owner gets, in naira' : digital ? 'Rate per slot, in naira' : 'Rate in naira'}
+            label={fields.ownerNet ? `Owner gets, in ${symbol}` : digital ? `Rate per slot, in ${symbol}` : `Rate in ${symbol}`}
             error={errors.rateMinor}
             hint={fields.ownerNet ? 'Each period, after every other share.' : scouting ? 'What the owner charges, if you know.' : undefined}
           >
@@ -207,8 +227,11 @@ export function RateSection({
           </Field>
         </View>
       </View>
-      <PriceGuideBox fields={fields} spot={spot} exceptId={exceptId} onUse={useGuide} />
-      <OwnerNetToggle on={fields.ownerNet} onChange={set('ownerNet')} rate={fields.rate} percent={percent} />
+      <Field label="Currency" error={errors.currency}>
+        <Select label="Currency" value={currency} onChange={set('currency')} options={CURRENCIES} />
+      </Field>
+      <PriceGuideBox fields={fields} spot={spot} currency={currency} exceptId={exceptId} onUse={useGuide} />
+      <OwnerNetToggle on={fields.ownerNet} onChange={set('ownerNet')} rate={fields.rate} percent={percent} currency={currency} />
       <Field label="Who prints and puts up the ads?" error={errors.printsOwn}>
         <Select
           label="Who prints and puts up the ads?"
@@ -221,7 +244,7 @@ export function RateSection({
         />
       </Field>
       {fields.printsOwn ? (
-        <Field label="Your print price in naira" error={errors.printFeeMinor} hint="Leave empty for the standard price.">
+        <Field label={`Your print price in ${symbol}`} error={errors.printFeeMinor} hint="Leave empty for the standard price.">
           <Input value={fields.printFee} onChangeText={set('printFee')} keyboardType="number-pad" placeholder="150000" />
         </Field>
       ) : null}
@@ -234,7 +257,7 @@ export function RateSection({
  * A suggested rate under the rate field: the range listed boards of the same kind nearby ask,
  * scaled to this board's size, or what its traffic is worth when too few are near.
  */
-function PriceGuideBox({ fields, spot, exceptId, onUse }: { fields: BoardFieldValues; spot: Spot | null; exceptId?: string; onUse: (listedMinor: number) => void }) {
+function PriceGuideBox({ fields, spot, currency, exceptId, onUse }: { fields: BoardFieldValues; spot: Spot | null; currency: string; exceptId?: string; onUse: (listedMinor: number) => void }) {
   const [guide, setGuide] = useState<PriceGuide | null>(null)
   const widthM = decimal(fields.widthM)
   const heightM = decimal(fields.heightM)
@@ -255,6 +278,7 @@ function PriceGuideBox({ fields, spot, exceptId, onUse }: { fields: BoardFieldVa
           period: fields.ratePeriod,
           ...(fields.roadClass ? { roadClass: fields.roadClass as RoadClass } : {}),
           ...(dailyTraffic !== null ? { dailyTraffic } : {}),
+          currency,
           ...(exceptId ? { except: exceptId } : {}),
         })
         .send()
@@ -266,14 +290,14 @@ function PriceGuideBox({ fields, spot, exceptId, onUse }: { fields: BoardFieldVa
       current = false
       clearTimeout(timer)
     }
-  }, [spot, widthM, heightM, dailyTraffic, fields.kind, fields.ratePeriod, fields.roadClass, exceptId])
+  }, [spot, widthM, heightM, dailyTraffic, fields.kind, fields.ratePeriod, fields.roadClass, currency, exceptId])
 
   if (!guide || guide.suggestedMinor === null) return null
 
   const comparables = guide.comparables
   const basis =
     guide.basis === 'comparables' && comparables
-      ? `${comparables.count} boards like this within ${comparables.radiusKm} km charge ${formatMoney(comparables.lowMinor ?? 0)} to ${formatMoney(comparables.highMinor ?? 0)}.${guide.fromTrafficMinor !== null ? ` Based on traffic alone, try ${formatMoney(guide.fromTrafficMinor)}.` : ''}`
+      ? `${comparables.count} boards like this within ${comparables.radiusKm} km charge ${formatMoney(comparables.lowMinor ?? 0, guide.currency)} to ${formatMoney(comparables.highMinor ?? 0, guide.currency)}.${guide.fromTrafficMinor !== null ? ` Based on traffic alone, try ${formatMoney(guide.fromTrafficMinor, guide.currency)}.` : ''}`
       : `From about ${guide.traffic?.daily.toLocaleString('en-NG')} people pass by each day.`
 
   return (
@@ -281,7 +305,7 @@ function PriceGuideBox({ fields, spot, exceptId, onUse }: { fields: BoardFieldVa
       <Sparkles size={18} color={colors.brand600} />
       <View style={styles.flex}>
         <Text variant="label">
-          Suggested: {formatMoney(guide.suggestedMinor)} a {guide.period}
+          Suggested: {formatMoney(guide.suggestedMinor, guide.currency)} a {guide.period}
         </Text>
         <Text variant="small">{basis}</Text>
         <Pressable accessibilityRole="button" onPress={() => onUse(guide.suggestedMinor!)} hitSlop={6}>
@@ -292,13 +316,12 @@ function PriceGuideBox({ fields, spot, exceptId, onUse }: { fields: BoardFieldVa
   )
 }
 
-const naira = (amount: number) => `₦${Math.round(amount).toLocaleString('en-NG')}`
-
 /**
  * Lets the tagger fix what the owner receives. The rate typed is then the owner's amount, and
- * the listed rate adds the other shares on top: the same rounding the API uses, up to a naira.
+ * the listed rate adds the other shares on top: the same rounding the API uses, up to a whole unit.
  */
-function OwnerNetToggle({ on, onChange, rate, percent }: { on: boolean; onChange: (on: boolean) => void; rate: string; percent: number | null }) {
+function OwnerNetToggle({ on, onChange, rate, percent, currency }: { on: boolean; onChange: (on: boolean) => void; rate: string; percent: number | null; currency: string }) {
+  const money = (amount: number) => formatMoney(Math.round(amount) * 100, currency)
   const amount = Number(rate.replace(/[^\d.]/g, ''))
   const typed = rate.trim() !== '' && Number.isFinite(amount) && amount > 0
   const listed = typed && percent !== null && percent > 0 && percent < 100 ? Math.ceil((amount * 100) / percent) : null
@@ -316,8 +339,8 @@ function OwnerNetToggle({ on, onChange, rate, percent }: { on: boolean; onChange
       {typed && percent !== null ? (
         <Text variant="small" style={styles.ownerNetPreview}>
           {on && listed !== null
-            ? `Listed at ${naira(listed)}. The owner gets ${naira(amount)}, which is ${percent}% of the rent.`
-            : `Listed at ${naira(amount)}. The owner gets ${naira(Math.floor((amount * percent) / 100))}, which is ${percent}% of the rent.`}
+            ? `Listed at ${money(listed)}. The owner gets ${money(amount)}, which is ${percent}% of the rent.`
+            : `Listed at ${money(amount)}. The owner gets ${money(Math.floor((amount * percent) / 100))}, which is ${percent}% of the rent.`}
         </Text>
       ) : null}
     </View>

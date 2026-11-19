@@ -1,13 +1,14 @@
-import { LedgerEntry } from '@app/models/LedgerEntry'
 import { OwnerProfile } from '@app/models/OwnerProfile'
 import { Payout } from '@app/models/Payout'
 import { PayoutAccount, type PayoutHolder } from '@app/models/PayoutAccount'
 import { PayoutAccountResource } from '@app/http/resources/PayoutAccountResource'
 import { PayoutCollection } from '@app/http/resources/PayoutCollection'
 import { Gateways } from '@app/services/payments/Gateways'
+import { PaymentRegions } from '@app/services/payments/PaymentRegions'
 import { Settings } from '@app/support/Settings'
 import { BaseController } from './BaseController'
 import { GenericResource } from 'resora'
+import { DB } from 'arkormx'
 import { RequestException, perPage } from '@arkstack/common'
 
 const ACCOUNT_RULES = {
@@ -18,7 +19,7 @@ const ACCOUNT_RULES = {
 /** Where money owed is paid, what's owed, and what was sent. */
 export default class PayoutController extends BaseController {
   async banks() {
-    const banks = await Gateways.payouts().banks(String(await Settings.get('payouts.country')))
+    const banks = await (await Gateways.payouts()).banks(String(await Settings.get('payouts.country')))
 
     return new GenericResource(banks).additional({ status: 'success', message: 'OK', code: 200 })
   }
@@ -91,17 +92,23 @@ export default class PayoutController extends BaseController {
     return [`(user_id = ? or owner_profile_id in (${profileIds.map(() => '?').join(', ')}))`, [this.user.id, ...profileIds]]
   }
 
-  /** What's owed and not yet sent, and what was paid, across the account and its owners. */
+  /**
+   * What's owed and not yet sent, and what was paid, across the account and its owners, in each
+   * currency they earned in. The top-level amounts are for the first of them, the default currency when there are none.
+   */
   private async totals(profileIds: string[]) {
-    const sum = async (kind: string) => {
-      const query = LedgerEntry.query().where({ kind }).whereRaw(...this.payee(profileIds))
+    const [clause, bindings] = this.payee(profileIds)
+    const rows = await DB.raw<{ currency: string; due: string | number | null; paid: string | number | null }>(
+      `select currency,
+          abs(sum(case when kind = 'payout_due' then amount_minor else 0 end)) as due,
+          abs(sum(case when kind = 'paid_out' then amount_minor else 0 end)) as paid
+        from ledger_entries where kind in ('payout_due', 'paid_out') and ${clause}
+        group by currency order by currency limit 50`,
+      bindings,
+    )
+    const totals = rows.all().map((row) => ({ currency: row.currency, owedMinor: Number(row.due ?? 0) - Number(row.paid ?? 0), paidMinor: Number(row.paid ?? 0) }))
+    const main = totals[0] ?? { currency: await PaymentRegions.defaultCurrency(), owedMinor: 0, paidMinor: 0 }
 
-      return Math.abs(Number(await query.sum('amountMinor')) || 0)
-    }
-
-    const due = await sum('payout_due')
-    const paid = await sum('paid_out')
-
-    return { owedMinor: due - paid, paidMinor: paid }
+    return { ...main, totals }
   }
 }

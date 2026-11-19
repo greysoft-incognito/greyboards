@@ -1,4 +1,8 @@
 import type {
+  CurrencyInfo,
+  PaymentProviderOption,
+  PaymentRegion,
+  PaymentRegionInput,
   ReputationAdjustment,
   ReputationDisclosure,
   ReputationEvent,
@@ -140,6 +144,8 @@ export function createEndpoints(alova: GreyboardsAlova) {
   return {
     /** Upload sizes and other limits to check before sending anything. Works signed out. */
     limits: () => alova.Get<ApiResponse<AppLimits>>('/limits', { cacheFor: null }),
+    /** The currency prices are typed and shown in for `country`, or for the visitor's country. Works signed out. */
+    currency: (country?: string | null) => alova.Get<ApiResponse<CurrencyInfo>>('/currency', { params: country ? { country } : {}, cacheFor: null }),
 
     /** The kinds of board, for filters and forms. Works signed out. */
     boardKinds: () => alova.Get<ApiResponse<BoardKindDefinition[]>>('/board-kinds'),
@@ -465,6 +471,10 @@ export function createEndpoints(alova: GreyboardsAlova) {
       createTerritory: (data: TerritoryInput) => alova.Post<ApiResponse<Territory>>('/admin/territories', data),
       updateTerritory: (id: ID, data: Partial<TerritoryInput>) => alova.Put<ApiResponse<Territory>>(`/admin/territories/${id}`, data),
       removeTerritory: (id: ID) => alova.Delete<ApiResponse<unknown>>(`/admin/territories/${id}`),
+      paymentRegions: (params: PageQuery = {}) => alova.Get<PaginatedResponse<PaymentRegion> & { providers: PaymentProviderOption[] }>('/admin/payment-regions', { params, cacheFor: null }),
+      createPaymentRegion: (data: PaymentRegionInput) => alova.Post<ApiResponse<PaymentRegion>>('/admin/payment-regions', data),
+      updatePaymentRegion: (id: ID, data: PaymentRegionInput) => alova.Put<ApiResponse<PaymentRegion>>(`/admin/payment-regions/${id}`, data),
+      removePaymentRegion: (id: ID) => alova.Delete<ApiResponse<PaymentRegion>>(`/admin/payment-regions/${id}`),
       /** Open disputes oldest first, or decided ones newest first. */
       disputes: (params: PageQuery & { status?: 'open' | 'resolved' } = {}) => alova.Get<PaginatedResponse<AdminDispute>>('/admin/disputes', { params, cacheFor: null }),
       resolveDispute: (id: ID, data: DisputeResolution) => alova.Post<ApiResponse<Dispute>>(`/admin/disputes/${id}/resolve`, data),
