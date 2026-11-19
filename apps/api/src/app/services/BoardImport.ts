@@ -54,7 +54,7 @@ export class BoardImport {
     const rows = Csv.parse(csv)
     const most = await Settings.number('imports.max_rows')
 
-    abortIf(rows.length < 2, 'The file needs a heading row and at least one board.', 422)
+    abortIf(rows.length < 2, 'Your file needs a header row and at least one board.', 422)
     abortIf(rows.length - 1 > most, `Import up to ${most} boards at a time. Split the file and import each part.`, 422)
 
     const columns = BoardImport.columns(rows[0]!)

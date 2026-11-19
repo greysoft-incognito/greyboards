@@ -40,7 +40,7 @@ export class FakeGateway implements PaymentGateway, PayoutGateway, RefundGateway
   async transfer(request: TransferRequest): Promise<TransferResult> {
     const failed = request.accountNumber === '0000000001'
 
-    return { paid: !failed, final: true, reason: failed ? 'The bank turned the transfer down.' : null, raw: { fake: true } }
+    return { paid: !failed, final: true, reason: failed ? 'The bank declined the transfer.' : null, raw: { fake: true } }
   }
 
   async transferStatus(): Promise<TransferResult> {

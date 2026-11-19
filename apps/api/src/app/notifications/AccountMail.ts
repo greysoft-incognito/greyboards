@@ -78,8 +78,8 @@ export class AccountMail {
     const verified = !!accountRole.verifiedAt && (!accountRole.provenAt || accountRole.verifiedAt >= accountRole.provenAt)
     const subject = verified ? `Greyboards verified you as ${accountRole.named()}` : `You're now a proven ${label}`
     const text = verified
-      ? `Our team checked you and verified your ${label} role. People who work with you see the Verified by Greyboards badge.`
-      : `Your checked work as ${accountRole.named()} reached our milestones, so your ${label} role now shows the Proven badge.`
+      ? `Our team has verified you as a ${label}. People you work with will now see the Verified badge on your profile.`
+      : `Your great work as ${accountRole.named()} has earned you the Proven badge.`
 
     return AccountMail.send(
       user,
@@ -96,8 +96,8 @@ export class AccountMail {
       user,
       'You lost a print job',
       `<p>Hi ${AccountMail.escape(user.name)},</p>
-      <p>The job for "${AccountMail.escape(boardName)}" went back to other dispatchers because ${AccountMail.escape(reason)}.</p>
-      <p>Missing several dates suspends your dispatcher role, so only take jobs you can deliver on time.</p>
+      <p>The job for "${AccountMail.escape(boardName)}" was opened to other dispatchers because ${AccountMail.escape(reason)}.</p>
+      <p>Missing several deadlines can get your account suspended, so only take jobs you can do on time.</p>
       ${AccountMail.button('Find other jobs', `${config('app.frontend_url')}/jobs`)}`,
     )
   }
@@ -108,8 +108,8 @@ export class AccountMail {
       user,
       'Nobody has taken a print job yet',
       `<p>Hi ${AccountMail.escape(user.name)},</p>
-      <p>The ad booked on "${AccountMail.escape(boardName)}" goes live on ${dueOn}, and no dispatcher has taken the job to print and put it up.</p>
-      <p>If you can arrange it yourself, open the booking to download the artwork, then add the proof photos once it's up.</p>
+      <p>The ad on "${AccountMail.escape(boardName)}" goes live on ${dueOn}, and no dispatcher has taken the job yet.</p>
+      <p>If you can arrange it yourself, open the booking to download the design, then add photos once it’s up.</p>
       ${AccountMail.button('Open the booking', link)}`,
     )
   }

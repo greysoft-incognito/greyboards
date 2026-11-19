@@ -107,13 +107,13 @@ export class Payouts {
 
   /** Send a failed payout again, to the account on file now. */
   static async retry(payout: Payout): Promise<Payout> {
-    abortIf(payout.status !== 'failed', 'Only a failed payout can be sent again.', 422)
+    abortIf(payout.status !== 'failed', 'Only failed payouts can be retried.', 422)
 
     const entry = await LedgerEntry.query().findOrFail(payout.ledgerEntryId)
     const holder = Payouts.holderOf(entry)
     const account = holder ? await PayoutAccount.find(holder) : null
 
-    abortIf(!account, 'There is no bank account to pay this into yet.', 422)
+    abortIf(!account, 'There’s no bank account to pay this into yet.', 422)
 
     await payout.update({ ...Payouts.bankDetails(account!), reference: Payouts.reference(), status: 'processing', failureReason: null })
     await Payouts.transfer(payout)

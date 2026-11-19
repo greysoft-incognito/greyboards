@@ -96,7 +96,7 @@ describe('Payouts', () => {
 
     const failed = (await api('get', '/admin/payouts?status=failed', undefined, 'admin')).body.data.find((payout: { bookingId: string }) => payout.bookingId === bookingId)
 
-    expect(failed).toMatchObject({ account: 'owner', amountMinor: 16_000_000, status: 'failed', failureReason: 'The bank turned the transfer down.' })
+    expect(failed).toMatchObject({ account: 'owner', amountMinor: 16_000_000, status: 'failed', failureReason: 'The bank declined the transfer.' })
     expect((await api('post', `/admin/payouts/${failed.id}/retry`)).status).toBe(403)
 
     await api('put', `/account/owner-profiles/${profileId}/payout-account`, { bankCode: '044', accountNumber: '0123456789' })

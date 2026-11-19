@@ -92,7 +92,7 @@ export class AccountRole extends Model {
 
     if (!held) return AccountRole.query().create({ userId: user.id, kind, status })
 
-    abortIf(held.status === AccountRole.SUSPENDED, `Your ${held.label()} role is suspended. Contact support to restore it.`, 422)
+    abortIf(held.status === AccountRole.SUSPENDED, `Your ${held.label()} account is suspended. Contact support to restore it.`, 422)
 
     if (held.status === AccountRole.REJECTED) await held.update({ status, note: null, reviewedById: null, reviewedAt: null })
 

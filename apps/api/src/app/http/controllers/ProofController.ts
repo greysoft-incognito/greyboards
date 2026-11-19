@@ -61,7 +61,7 @@ export default class ProofController extends BaseController {
   async accept() {
     const booking = await this.advertisers()
 
-    if (booking.proofStatus !== 'submitted' || !(await booking.acceptProof())) throw new RequestException('There is no proof waiting for you to check.', 422)
+    if (booking.proofStatus !== 'submitted' || !(await booking.acceptProof())) throw new RequestException('There are no photos to review.', 422)
 
     return new BookingResource(booking).withDetails(this.user).additional({ status: 'success', message: 'Accepted. Your ad is live and everyone is paid.', code: 200 })
   }

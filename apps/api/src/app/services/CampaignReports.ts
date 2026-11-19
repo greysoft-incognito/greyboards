@@ -27,10 +27,10 @@ export class CampaignReports {
     const ids = [...new Set(bookingIds)]
     const max = await Settings.number('reports.max_bookings')
 
-    abortIf(!(await Settings.get('reports.enabled')), 'Campaign reports are turned off.', 422)
-    abortIf(!ids.length, 'Pick at least one booking.', 422)
-    abortIf(ids.length > max, `A report holds up to ${max} bookings.`, 422)
-    abortIf((await CampaignReports.eligible(user).whereIn('id', ids).count()) !== ids.length, 'A report holds your bookings whose ads went up.', 422)
+    abortIf(!(await Settings.get('reports.enabled')), 'Campaign reports aren’t available right now.', 422)
+    abortIf(!ids.length, 'Choose at least one booking.', 422)
+    abortIf(ids.length > max, `A report can have up to ${max} bookings.`, 422)
+    abortIf((await CampaignReports.eligible(user).whereIn('id', ids).count()) !== ids.length, 'Only bookings with live ads can be added.', 422)
 
     const report = await CampaignReport.query().create({ userId: user.id, title: title.trim(), token: CampaignReport.newToken() })
 
@@ -49,7 +49,7 @@ export class CampaignReports {
   static async byToken(token: string): Promise<CampaignReport> {
     const report = token ? await CampaignReport.query().where({ token }).first() : null
 
-    abortIf(!report, 'This report link isn’t valid. Ask whoever sent it for a new one.', 404)
+    abortIf(!report, 'This report link doesn’t work. Ask the person who shared it for a new one.', 404)
 
     return report!
   }

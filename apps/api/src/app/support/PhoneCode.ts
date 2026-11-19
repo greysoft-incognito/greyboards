@@ -32,7 +32,7 @@ export class PhoneCode {
   async send(message: (code: string) => string): Promise<void> {
     const allowed = await Cache.add(this.key('wait'), true, PhoneCode.RESEND_SECONDS)
 
-    abortIf(!allowed, 'Wait a minute before asking for another code.', 429)
+    abortIf(!allowed, 'Please wait a minute before requesting another code.', 429)
 
     const code = String(randomInt(0, 1_000_000)).padStart(6, '0')
 
@@ -46,15 +46,15 @@ export class PhoneCode {
     const stored = (await Cache.get(this.key('code'))) as string | null
     const attempts = Number((await Cache.get(this.key('attempts'))) ?? 0)
 
-    abortIf(!stored, 'Ask for a new code. The last one ran out.', 422)
-    abortIf(attempts >= PhoneCode.MAX_ATTEMPTS, 'Too many wrong codes. Ask for a new one.', 429)
+    abortIf(!stored, 'That code expired. Request a new one.', 422)
+    abortIf(attempts >= PhoneCode.MAX_ATTEMPTS, 'Too many wrong codes. Request a new one.', 429)
 
     const right = timingSafeEqual(Buffer.from(stored!, 'hex'), Buffer.from(PhoneCode.hash(String(code).trim()), 'hex'))
 
     if (!right) {
       await Cache.put(this.key('attempts'), attempts + 1, PhoneCode.MINUTES * 60)
 
-      abortIf(true, 'That code isn’t right. Check the text and try again.', 422)
+      abortIf(true, 'That code isn’t right. Check your messages and try again.', 422)
     }
 
     await Cache.forget(this.key('code'))

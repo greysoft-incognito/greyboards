@@ -70,7 +70,7 @@ export default () => {
       {
         id: 'revenue',
         title: 'Revenue split',
-        description: 'How each booking’s rent is shared. The dispatcher’s price for printing and posting is paid separately, on top. The three parts must add up to 100%.',
+        description: 'How each booking is split. Printing is paid separately, on top. The three parts must add up to 100%.',
         icon: 'percent',
         total: { fields: ['owner_percent', 'platform_percent', 'scout_percent'], equals: 100 },
         fields: [
@@ -290,7 +290,7 @@ export default () => {
             help: 'Open shows everyone the highest bid as it climbs. Sealed hides bids until bidding closes. Auctions keep the format they opened with.',
             options: [
               { value: 'open', label: 'Open, highest bid shown' },
-              { value: 'sealed', label: 'Sealed, bids hidden until the close' },
+              { value: 'sealed', label: 'Sealed, bids hidden until bidding ends' },
             ],
           },
           {
@@ -672,7 +672,7 @@ export default () => {
       {
         id: 'messages',
         title: 'Messages',
-        description: 'Messages about a booking between the advertiser, the board’s side and the dispatcher.',
+        description: 'Messages between the advertiser, board owner and dispatcher on a booking.',
         icon: 'messages-square',
         fields: [
           {
@@ -698,7 +698,7 @@ export default () => {
       {
         id: 'reviews',
         title: 'Reviews',
-        description: 'Advertisers and the board’s side rating each other after a campaign.',
+        description: 'Advertisers and board owners rating each other after a campaign.',
         icon: 'star',
         fields: [
           {
@@ -736,7 +736,7 @@ export default () => {
       {
         id: 'reputation',
         title: 'Reputation',
-        description: 'Points each role earns for physical work Greyboards could check, and when a role is proven. Staff verification is separate and given by hand.',
+        description: 'Points people earn for real work, and when they earn the Proven badge. Staff verification is separate.',
         icon: 'award',
         fields: [
           {
@@ -848,7 +848,7 @@ export default () => {
       {
         id: 'disputes',
         title: 'Disputes',
-        description: 'Problems with a booking that staff look into and decide.',
+        description: 'Problems reported on bookings.',
         icon: 'shield-alert',
         fields: [
           {
@@ -894,7 +894,7 @@ export default () => {
       {
         id: 'reports',
         title: 'Campaign reports',
-        description: 'Reports advertisers share of the boards they ran on, with the proof photos.',
+        description: 'Shareable reports advertisers make from their campaigns.',
         icon: 'file-chart',
         fields: [
           {
@@ -978,7 +978,7 @@ export default () => {
       {
         id: 'proofs',
         title: 'Proof of posting',
-        description: 'The photos that show an ad is up, and how long advertisers have to check them.',
+        description: 'The photos that show an ad is up, and how long advertisers have to review them.',
         icon: 'camera',
         fields: [
           {
@@ -1173,7 +1173,7 @@ export default () => {
       {
         id: 'payouts',
         title: 'Payouts',
-        description: 'Sending owners, scouts and dispatchers what they are owed.',
+        description: 'Paying owners, scouts and dispatchers.',
         icon: 'wallet',
         fields: [
           {
@@ -1200,7 +1200,7 @@ export default () => {
       {
         id: 'partners',
         title: 'Partner checks',
-        description: 'What scouts and dispatchers show before they are let in, and spotting boards tagged twice.',
+        description: 'What scouts and dispatchers need before approval, and catching duplicate boards.',
         icon: 'id-card',
         fields: [
           {

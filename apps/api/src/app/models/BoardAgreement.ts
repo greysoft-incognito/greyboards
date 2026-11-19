@@ -101,8 +101,8 @@ export class BoardAgreement extends Model {
     const profile = await board.ownerProfile().first()
 
     abortIf(!profile, 'Pick the board’s owner first.', 422)
-    abortIf(!!profile!.userId && profile!.userId === board.taggedById, 'The owner tagged this board themselves, so there is nothing to sign.', 422)
-    abortIf(!profile!.phone, 'The owner has no phone number to text.', 422)
+    abortIf(!!profile!.userId && profile!.userId === board.taggedById, 'You own this board, so there’s nothing to sign.', 422)
+    abortIf(!profile!.phone, 'Add the owner’s phone number first.', 422)
     abortIf(await board.agreements().where({ status: BoardAgreement.SIGNED }).exists(), 'The owner has already signed for this board.', 422)
 
     const open = await board.agreements().where({ status: BoardAgreement.SENT }).latest('createdAt').first()
@@ -110,7 +110,7 @@ export class BoardAgreement extends Model {
     const expiresAt = new Date(Date.now() + (await Settings.number('agreements.link_days')) * 86_400_000)
 
     if (open && open.ownerPhone === profile!.phone) {
-      abortIf(open.sendCount >= BoardAgreement.MAX_SENDS, 'The link has been sent too many times. Call the owner instead.', 429)
+      abortIf(open.sendCount >= BoardAgreement.MAX_SENDS, 'The link has been sent too many times. Try calling the owner instead.', 429)
       abortIf(open.secondsUntilResend() > 0, `Wait ${open.secondsUntilResend()} seconds before sending it again.`, 429)
 
       await open.update({ tokenHash: BoardAgreement.hash(token), expiresAt, sendCount: open.sendCount + 1, lastSentAt: new Date() })
@@ -157,7 +157,7 @@ export class BoardAgreement extends Model {
   static async fromToken(token: string): Promise<BoardAgreement> {
     const agreement = await BoardAgreement.query().where({ tokenHash: BoardAgreement.hash(token) }).first()
 
-    abortIf(!agreement, 'This link doesn’t work. Ask the scout to send a new one.', 404)
+    abortIf(!agreement, 'This link doesn’t work. Ask your scout to send a new one.', 404)
 
     return agreement!
   }
@@ -232,7 +232,7 @@ export class BoardAgreement extends Model {
 
   private assertOpen(): void {
     abortIf(this.status === BoardAgreement.SIGNED, 'This agreement is already signed.', 422)
-    abortIf(!this.isOpen(), 'This link no longer works. Ask the scout to send a new one.', 410)
+    abortIf(!this.isOpen(), 'This link has expired. Ask your scout to send a new one.', 410)
   }
 
   /** What the placeholders in the wording are filled with for this agreement. */

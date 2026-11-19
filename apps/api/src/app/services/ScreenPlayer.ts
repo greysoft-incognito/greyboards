@@ -25,7 +25,7 @@ export class ScreenPlayer {
 
   /** Make a new token for the screen's player. It shows once; any older token stops working. */
   static async issue(board: Board): Promise<string> {
-    abortIf(!board.isDigital(), 'Only digital screens have a player.', 422)
+    abortIf(!board.isDigital(), 'Only digital screens can connect a player.', 422)
 
     const token = `gbp_${randomBytes(24).toString('base64url')}`
 
@@ -43,7 +43,7 @@ export class ScreenPlayer {
     const token = header?.startsWith('Bearer ') ? header.slice(7).trim() : ''
     const board = token.startsWith('gbp_') ? await Board.query().where({ playerTokenHash: ScreenPlayer.hash(token) }).first() : null
 
-    abortIf(!board, 'Unknown player token. Make a new one on the board’s page.', 401)
+    abortIf(!board, 'This player token doesn’t work. Create a new one on the board’s page.', 401)
 
     await board!.update({ playerSeenAt: new Date() })
 

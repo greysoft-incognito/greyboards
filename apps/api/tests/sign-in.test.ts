@@ -27,7 +27,7 @@ describe('Sign-in edge cases', () => {
 
     expect(unknown.status).toBe(422)
     expect(unknown.body).toEqual(wrong.body)
-    expect(wrong.body.errors).toEqual({ password: ['Email or password is not right'] })
+    expect(wrong.body.errors).toEqual({ password: ['Wrong email or password'] })
   })
 
   it('accepts each authenticator code only once', async () => {

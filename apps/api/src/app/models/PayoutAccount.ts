@@ -57,11 +57,11 @@ export class PayoutAccount extends Model {
     const banks = await gateway.banks(country)
     const bank = banks.find((candidate) => candidate.code === bankCode)
 
-    abortIf(!bank, 'Pick your bank from the list.', 422)
+    abortIf(!bank, 'Select your bank.', 422)
 
     const accountName = await gateway.accountName(bankCode, accountNumber)
 
-    abortIf(!accountName, 'The bank doesn’t recognise that account number. Check it and try again.', 422)
+    abortIf(!accountName, 'We couldn’t find that account. Check the number and try again.', 422)
 
     const details = { bankCode, bankName: bank!.name, accountNumber, accountName: accountName!, currency: await PaymentRegions.currencyFor(country), updatedById: editor.id }
     const existing = await PayoutAccount.find(holder)

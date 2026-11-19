@@ -76,7 +76,7 @@ describe('Disputes', { timeout: 60_000 }, () => {
 
     const messages = (await api('get', `/bookings/${first}/messages`, undefined, 'owner')).body.data
 
-    expect(messages[0].body).toMatch(/^Raised a dispute: The ad isn’t up\./)
+    expect(messages[0].body).toMatch(/^Reported a problem: The ad isn’t up\./)
   })
 
   it('keeps the money in escrow while the dispute is open', async () => {
@@ -108,7 +108,7 @@ describe('Disputes', { timeout: 60_000 }, () => {
     const booking = (await api('get', `/bookings/${first}`)).body.data
 
     expect(booking).toMatchObject({ status: 'cancelled', dispute: { latest: { decision: 'refund_part' }, canOpen: false } })
-    expect((await api('get', `/bookings/${first}/messages`)).body.data[0].body).toMatch(/^Dispute decided: Cancelled with part of the money back/)
+    expect((await api('get', `/bookings/${first}/messages`)).body.data[0].body).toMatch(/^Dispute decided: Cancelled with a partial refund/)
   })
 
   it('can pay the board’s side, and closes disputes on released money without a change', async () => {

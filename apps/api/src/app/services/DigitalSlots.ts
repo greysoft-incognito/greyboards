@@ -81,12 +81,12 @@ export class DigitalSlots {
     const loop = await DigitalSlots.loop(board)
     const [hourFrom, hourTo] = DigitalSlots.HOURS[daypart]
 
-    abortIf(!DigitalSlots.DAYPARTS.includes(daypart), 'Pick all day, morning, afternoon or evening.', 422)
+    abortIf(!DigitalSlots.DAYPARTS.includes(daypart), 'Choose all day, morning, afternoon or evening.', 422)
     abortIf(slots < 1 || slots > loop.slots, `This screen has ${loop.slots} slot${loop.slots === 1 ? '' : 's'} in its loop.`, 422)
 
     const start = DigitalSlots.firstFree(await DigitalSlots.used(face, startsOn, endsOn, hourFrom, hourTo), loop.slots, slots)
 
-    abortIf(start === null, 'Not enough slots are free then. Pick fewer slots, another part of the day or other dates.', 409)
+    abortIf(start === null, 'Not enough slots are free. Try fewer slots, a different time of day or other dates.', 409)
 
     return { slotStart: start!, slots, daypart, hourFrom, hourTo }
   }

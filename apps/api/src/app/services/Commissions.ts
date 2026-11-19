@@ -55,13 +55,13 @@ export class Commissions {
 
   /** Why `board` can't take bookings yet, or null when it can. */
   static async blocker(board: Board): Promise<string | null> {
-    if (!board.isListed()) return 'This board isn’t on the map.'
+    if (!board.isListed()) return 'This board isn’t live yet.'
     if (board.rate() === null) return 'This board has no price yet.'
     if (!(await Commissions.scoutOf(board))) return null
 
     const signed = await board.agreements().where({ status: BoardAgreement.SIGNED }).exists()
 
-    return signed ? null : 'The owner hasn’t signed for this board yet, so it can’t be booked.'
+    return signed ? null : 'This board can’t be booked until the owner signs up.'
   }
 
   /**

@@ -12,12 +12,12 @@ import { Throttle } from '@app/support/Throttle'
  */
 export class ApiKeys {
   static async create(user: User, name: string, abilities: ApiAbility[]): Promise<{ key: ApiKey; token: string }> {
-    abortIf(!(await Settings.get('public_api.enabled')), 'The public API is switched off right now.', 422)
+    abortIf(!(await Settings.get('public_api.enabled')), 'The API is turned off right now.', 422)
 
     const most = await Settings.number('public_api.max_keys')
     const live = await ApiKey.query().where({ userId: user.id }).whereNull('revokedAt').count()
 
-    abortIf(live >= most, `An account can have up to ${most} keys. Remove one first.`, 422)
+    abortIf(live >= most, `You can have up to ${most} keys. Delete one first.`, 422)
 
     const token = `gbk_${randomBytes(24).toString('base64url')}`
     const key = await ApiKey.query().create({
@@ -46,12 +46,12 @@ export class ApiKeys {
    * its limit for the minute. Refuses otherwise.
    */
   static async authenticate(header: string | undefined, ability: ApiAbility): Promise<{ user: User; key: ApiKey }> {
-    abortIf(!(await Settings.get('public_api.enabled')), 'The public API is switched off right now.', 503)
+    abortIf(!(await Settings.get('public_api.enabled')), 'The API is turned off right now.', 503)
 
     const token = header?.startsWith('Bearer ') ? header.slice(7).trim() : ''
     const key = token.startsWith('gbk_') ? await ApiKey.query().where({ tokenHash: ApiKeys.hash(token) }).whereNull('revokedAt').first() : null
 
-    abortIf(!key, 'Unknown or removed API key.', 401)
+    abortIf(!key, 'This API key doesn’t exist or was deleted.', 401)
     abortIf(!key!.can(ability), `This key can’t ${ability === 'book' ? 'book' : 'read'}. Make a key that can.`, 403)
 
     const user = await User.query().find(key!.userId)

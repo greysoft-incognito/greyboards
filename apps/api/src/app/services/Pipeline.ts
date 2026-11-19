@@ -69,8 +69,8 @@ export class Pipeline {
     const phone = input.ownerPhone === undefined ? prospect.ownerPhone : input.ownerPhone ? Sms.normalize(input.ownerPhone) : null
     const stage = input.stage ?? prospect.stage
 
-    abortIf(!Prospect.MANUAL.includes(stage), 'Captured, verified and earning follow the board. Tag it to move it on.', 422)
-    abortIf(!!prospect.boardId && stage !== prospect.stage && stage !== 'lost' && prospect.stage !== 'lost', 'This board is tagged, so its stage follows the board.', 422)
+    abortIf(!Prospect.MANUAL.includes(stage), 'Tag the board to move it to the next stage.', 422)
+    abortIf(!!prospect.boardId && stage !== prospect.stage && stage !== 'lost' && prospect.stage !== 'lost', 'This board is tagged, so its stage updates on its own.', 422)
 
     if (moved || phone !== prospect.ownerPhone || (prospect.stage === 'lost' && stage !== 'lost')) {
       await Pipeline.checkClaims(scout, input.latitude ?? prospect.latitude, input.longitude ?? prospect.longitude, phone, prospect.id)
@@ -96,7 +96,7 @@ export class Pipeline {
     const board = await Board.query().find(boardId)
 
     abortIf(!board || board.taggedById !== scout.id, 'Link a board you tagged.', 422)
-    abortIf(await Prospect.query().where({ boardId }).whereRaw('id <> ?', [prospect.id]).exists(), 'Another prospect already has this board.', 422)
+    abortIf(await Prospect.query().where({ boardId }).whereRaw('id <> ?', [prospect.id]).exists(), 'This board is already in your pipeline.', 422)
 
     await prospect.update({ boardId, stage: prospect.stage === 'lost' ? 'signed' : prospect.stage, stageChangedAt: new Date() })
 
@@ -137,7 +137,7 @@ export class Pipeline {
         .whereRaw('"updatedAt" > now() - make_interval(days => ?)', [days])
         .when(!!exceptId, (query) => query.whereRaw('id <> ?', [exceptId]))
 
-    abortIf(await others().whereRaw(`${POINT_WITHIN}, ?)`, [longitude, latitude, radius]).exists(), 'Another scout is already working a board here.', 409)
+    abortIf(await others().whereRaw(`${POINT_WITHIN}, ?)`, [longitude, latitude, radius]).exists(), 'Another scout is already working on a board here.', 409)
     abortIf(!!phone && (await others().where({ ownerPhone: phone }).exists()), 'Another scout is already talking to this owner.', 409)
     abortIf(await Board.query().whereRaw(`${POINT_WITHIN}, ?)`, [longitude, latitude, radius]).whereRaw('(tagged_by_id is null or tagged_by_id <> ?)', [scout.id]).exists(), 'There’s already a board on Greyboards here.', 409)
 

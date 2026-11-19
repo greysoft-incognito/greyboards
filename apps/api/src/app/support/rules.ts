@@ -11,7 +11,7 @@ export const USERNAME_PATTERN = /^[a-z0-9_]{3,30}$/
 
 export class Username extends ValidationRule {
   validate(attribute: string, value: any, fail: (message: string) => any): void {
-    if (!USERNAME_PATTERN.test(String(value))) fail(`The ${attribute} must be 3 to 30 lower case letters, numbers or underscores.`)
+    if (!USERNAME_PATTERN.test(String(value))) fail(`The ${attribute} must be 3 to 30 lowercase letters, numbers or underscores.`)
   }
 }
 
