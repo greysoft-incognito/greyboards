@@ -63,6 +63,14 @@ runs:
         distribution: temurin
         java-version: 17
 
+    # Cache keys can't hold commas, so the architecture list is joined with dashes.
+    - if: inputs.builder != 'eas'
+      id: architectures
+      shell: bash
+      env:
+        ANDROID_ARCHITECTURES: ${{ inputs.android-architectures }}
+      run: echo "key=${ANDROID_ARCHITECTURES//,/-}" >> "$GITHUB_OUTPUT"
+
     - if: inputs.builder != 'eas'
       uses: actions/cache@v5
       with:
@@ -70,9 +78,9 @@ runs:
           ~/.gradle/caches
           ~/.gradle/wrapper
           ~/.cache/ccache
-        key: android-build-${{ runner.os }}-${{ inputs.android-architectures }}-${{ hashFiles('pnpm-lock.yaml', 'apps/mobile/app.json') }}
+        key: android-build-${{ runner.os }}-${{ steps.architectures.outputs.key }}-${{ hashFiles('pnpm-lock.yaml', 'apps/mobile/app.json') }}
         restore-keys: |
-          android-build-${{ runner.os }}-${{ inputs.android-architectures }}-
+          android-build-${{ runner.os }}-${{ steps.architectures.outputs.key }}-
           android-build-${{ runner.os }}-
 
     - if: inputs.builder != 'eas'
