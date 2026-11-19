@@ -64,6 +64,7 @@ export default function Boards() {
             <Text variant="muted">Boards you’ve added.</Text>
           </View>
           <Button title="Tag a board" onPress={() => router.push('/boards/new')} />
+          {boards.length > 1 ? <Button title="Change rates" variant="secondary" onPress={() => router.push('/boards/prices')} /> : null}
           {scouts ? <Button title="Pipeline" variant="secondary" onPress={() => router.push('/boards/pipeline')} /> : null}
           {problem ? <Callout>{problem}</Callout> : null}
         </View>
