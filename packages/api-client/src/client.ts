@@ -40,6 +40,17 @@ export class GreyboardsApiError extends Error {
   }
 }
 
+/**
+ * Gives a FormData body the `[object FormData]` tag the fetch adapter looks for. React Native's
+ * FormData has no tag, so without it the adapter sends the form as JSON and the files are lost.
+ */
+function tagFormData(data: unknown) {
+  if (typeof FormData === 'undefined' || !(data instanceof FormData)) return
+  if (Object.prototype.toString.call(data) === '[object FormData]') return
+
+  Object.defineProperty(data, Symbol.toStringTag, { value: 'FormData' })
+}
+
 export function createGreyboardsAlova(options: GreyboardsClientOptions) {
   return createAlova({
     baseURL: options.baseURL,
@@ -54,6 +65,8 @@ export function createGreyboardsAlova(options: GreyboardsClientOptions) {
         ...options.headers,
         ...method.config.headers,
       }
+
+      tagFormData(method.data)
 
       const token = await options.getToken?.()
       if (token) {
