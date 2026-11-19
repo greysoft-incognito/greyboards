@@ -69,7 +69,8 @@
             "xxxhdpi": "./assets/splash/splash-icon-xxxhdpi.png"
           }
         }
-      ]
+      ],
+      "./plugins/with-optional-features"
     ],
     "experiments": {
       "typedRoutes": true
