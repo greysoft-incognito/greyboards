@@ -150,18 +150,11 @@ export class Refunds {
         .limit(50)
         .get()
     ).all()
-    const total = payments.reduce((sum, payment) => sum + payment.amountMinor, 0)
-    let left = refundMinor
+    const parts = Money.allocate(refundMinor, payments.map((payment) => payment.amountMinor))
 
     if (booking.shared) await BookingShare.query().where({ bookingId: booking.id, status: 'paid' }).updateFrom({ status: 'refunded' })
 
-    return payments.map((payment, index) => {
-      const amountMinor = index === payments.length - 1 ? left : Math.round((refundMinor * payment.amountMinor) / total)
-
-      left -= amountMinor
-
-      return { payment, amountMinor }
-    })
+    return payments.map((payment, index) => ({ payment, amountMinor: parts[index] })).filter((part) => part.amountMinor > 0)
   }
 
   /** Who keeps what the advertiser doesn't get back: the print fee if it was printed, the rest in the booking's split. */
