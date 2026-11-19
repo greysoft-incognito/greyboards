@@ -39,7 +39,8 @@ describe('Partner checks and duplicate boards', { timeout: 30_000 }, () => {
 
     const checks = await api('get', '/account/partner-checks')
 
-    expect(checks.body.data).toMatchObject({ identity: null, bank: null, namesMatch: null, missing: ['a photo of their ID', 'a bank account'] })
+    expect(checks.body.data).toMatchObject({ identity: null, bank: null, namesMatch: null, required: ['identity', 'bank'], missing: ['identity', 'bank'] })
+    expect((await api('get', '/account/roles')).body.data.find((role: { id: string }) => role.id === roleId).missing).toEqual(['identity', 'bank'])
     expect(checks.body.documents.map((document: { type: string }) => document.type)).toContain('nin')
   })
 
@@ -54,12 +55,13 @@ describe('Partner checks and duplicate boards', { timeout: 30_000 }, () => {
     const listed = (await api('get', '/admin/account-roles?kind=scout&status=pending&perPage=100', undefined, 'admin')).body.data.find((role: { id: string }) => role.id === roleId)
 
     expect(listed.checks).toMatchObject({ identity: { documentNumber: '12345678901' }, bank: { accountName: 'Test Account Holder' }, namesMatch: false, missing: [] })
+    expect(listed.missing).toEqual([])
     expect(listed.checks.identity.photoUrl).toBeTruthy()
 
     await api('put', `/admin/account-roles/${roleId}/identity`, { status: 'rejected', note: 'Too blurry to read' }, 'admin')
 
     expect((await api('put', `/admin/account-roles/${roleId}`, { status: 'active' }, 'admin')).status).toBe(422)
-    expect((await api('get', '/account/partner-checks')).body.data.identity).toMatchObject({ status: 'rejected', note: 'Too blurry to read' })
+    expect((await api('get', '/account/partner-checks')).body.data).toMatchObject({ identity: { status: 'rejected', note: 'Too blurry to read' }, missing: ['identity'] })
   })
 
   it('approves once a clear ID is in, and marks the ID checked', async () => {

@@ -2,6 +2,7 @@
  * Core domain models, as the API returns them (camelCase keys, ISO dates).
  */
 
+import type { PartnerRequirement } from './partners'
 import type { RoleReputation } from './reputation'
 
 /** Records use UUID primary keys. */
@@ -28,6 +29,8 @@ export interface AccountRole {
   /** The reviewer's note, such as why an application was rejected. */
   note: string | null
   reviewedAt: string | null
+  /** What the account still has to send before a waiting application can be approved. */
+  missing: PartnerRequirement[]
   reputation: RoleReputation
   createdAt: string
 }

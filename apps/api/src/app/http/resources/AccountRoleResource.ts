@@ -1,4 +1,5 @@
 import { AccountRole } from '@app/models/AccountRole'
+import { PartnerChecks } from '@app/services/PartnerChecks'
 import { Reputation } from '@app/services/Reputation'
 import { Resource } from 'resora'
 
@@ -14,6 +15,7 @@ export class AccountRoleResource extends Resource {
       status: role.status,
       note: role.note,
       reviewedAt: role.reviewedAt,
+      missing: await AccountRoleResource.missing(role),
       reputation: {
         ...Reputation.standingOf(role),
         actions: Number(role.reputationActions ?? 0),
@@ -23,5 +25,14 @@ export class AccountRoleResource extends Resource {
       },
       createdAt: role.createdAt,
     }
+  }
+
+  /** What the account still has to send before a waiting application can be approved. */
+  private static async missing(role: AccountRole) {
+    if (role.status !== AccountRole.PENDING || !AccountRole.definition(role.kind).needsReview) return []
+
+    const user = await role.user().first()
+
+    return user ? PartnerChecks.missingFor(user) : []
   }
 }
