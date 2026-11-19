@@ -3,6 +3,7 @@ import { FlatList, RefreshControl, StyleSheet, View } from 'react-native'
 import { router, useFocusEffect } from 'expo-router'
 import { Printer } from 'lucide-react-native'
 import type { PrintJob } from '@greyboards/types'
+import { missingWords } from '@/components/AccountRoles'
 import { EmptyState } from '@/components/EmptyState'
 import { useTabBarInset } from '@/components/GlassTabBar'
 import { JobRow } from '@/components/jobs/JobBits'
@@ -84,10 +85,17 @@ export default function Jobs() {
   const empty = !active ? (
     <EmptyState
       icon={Printer}
-      title={role?.status === 'pending' ? 'Being checked' : 'For dispatchers'}
-      text={role?.status === 'pending' ? 'We’re reviewing your dispatcher application. Jobs will show up here once you’re approved.' : 'Become a dispatcher to print and put up ads near you.'}
+      title={role?.status === 'pending' ? (role.missing.length ? 'Almost there' : 'Being checked') : 'For dispatchers'}
+      text={
+        role?.status === 'pending'
+          ? role.missing.length
+            ? `Add ${missingWords(role.missing)} so we can approve you as a dispatcher. Jobs will show up here once you’re in.`
+            : 'We’re reviewing your dispatcher application. Jobs will show up here once you’re approved.'
+          : 'Become a dispatcher to print and put up ads near you.'
+      }
     >
       {role?.status !== 'pending' ? <Button title="Become a dispatcher" variant="secondary" onPress={() => router.push('/settings/roles')} /> : null}
+      {role?.status === 'pending' && role.missing.length ? <Button title="Finish your application" variant="secondary" onPress={() => router.push('/settings/roles')} /> : null}
     </EmptyState>
   ) : view === 'near' && !spot ? (
     <EmptyState icon={Printer} title="Jobs near you" text="Print jobs near you, closest first. We only use your location for this search.">

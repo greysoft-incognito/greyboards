@@ -4,8 +4,9 @@ import { requireSignIn, requireUser } from "~/lib/session.server";
 import { settingsAction } from "~/lib/settings.server";
 import { useToastMessage } from "~/lib/toast";
 import { Alert, Button } from "~/components/ui";
-import { ROLE_ICONS, RoleStatus, heldRole } from "~/components/AccountRoles";
+import { ROLE_ICONS, RoleStatus, heldRole, missingWords } from "~/components/AccountRoles";
 import { PageHeader, resultFor } from "~/components/settings/Section";
+import { ApplicationChecklist } from "~/components/settings/ApplicationChecklist";
 import { PartnerChecksPanel } from "~/components/settings/PartnerChecksPanel";
 import { Standing } from "~/components/reputation/Badges";
 import { RoleReputationPanel } from "~/components/reputation/RoleReputationPanel";
@@ -69,6 +70,7 @@ export default function Roles({ loaderData, actionData }: Route.ComponentProps) 
 	const { roles, definitions, checks, documents, histories } = loaderData;
 	const idResult = resultFor(actionData, "send-id");
 	const navigation = useNavigation();
+	const waiting = roles.some((role) => role.status === "pending" && definitions.some((definition) => definition.kind === role.kind && definition.needsReview));
 
 	return (
 		<>
@@ -89,11 +91,19 @@ export default function Roles({ loaderData, actionData }: Route.ComponentProps) 
 								<div className="min-w-0 flex-1 basis-60">
 									<div className="flex flex-wrap items-center gap-2">
 										<h2 className="font-display text-xl font-bold text-ink-900">{definition.label}</h2>
-										{held && <RoleStatus status={held.status} />}
+										{held && <RoleStatus status={held.status} missing={held.missing} />}
 										{held && <Standing standing={held.reputation} showScore={false} />}
 									</div>
 									<p className="mt-1 text-sm text-ink-500">{definition.description}</p>
 									{held?.note && <p className="mt-2 text-sm text-ink-700">Reviewer's note: {held.note}</p>}
+									{held?.status === "pending" && held.missing.length > 0 && (
+										<p className="mt-2 text-sm text-held">
+											Add {missingWords(held.missing)} so we can approve this.{" "}
+											<a href="#finish" className="font-semibold text-brand-700 hover:underline">
+												See what's left
+											</a>
+										</p>
+									)}
 								</div>
 								<Form method="post">
 									<input type="hidden" name="kind" value={definition.kind} />
@@ -118,6 +128,11 @@ export default function Roles({ loaderData, actionData }: Route.ComponentProps) 
 					);
 				})}
 			</ul>
+			{checks && waiting && (
+				<div className="mt-4">
+					<ApplicationChecklist checks={checks} />
+				</div>
+			)}
 			{checks && (
 				<div className="mt-4">
 					<PartnerChecksPanel checks={checks} documents={documents} error={idResult?.error} fieldErrors={idResult?.fieldErrors} />

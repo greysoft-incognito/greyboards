@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react'
 import { ActivityIndicator, StyleSheet, View } from 'react-native'
 import { useRequest } from 'alova/client'
 import type { AccountRole, AccountRoleDefinition, AccountRoleKind, IdentityDocumentDefinition, PartnerChecks } from '@greyboards/types'
-import { RoleIcon, RoleStatus, heldRole } from '@/components/AccountRoles'
+import { RoleIcon, RoleStatus, heldRole, missingWords } from '@/components/AccountRoles'
 import { Standing } from '@/components/reputation/Badges'
 import { RoleReputationPanel } from '@/components/reputation/RoleReputation'
+import { ApplicationChecklist } from '@/components/settings/ApplicationChecklist'
 import { PartnerChecksSection } from '@/components/settings/PartnerChecks'
 import { SettingsPage, Section } from '@/components/settings/SettingsPage'
 import { Button, Callout, Text } from '@/components/ui'
@@ -22,7 +23,9 @@ export default function Roles() {
   const held: AccountRole[] = roles.data?.data ?? []
   const definitions: AccountRoleDefinition[] = roles.data?.definitions ?? []
   const [checks, setChecks] = useState<{ data: PartnerChecks; documents: IdentityDocumentDefinition[] } | null>(null)
-  const applying = held.some((role) => definitions.some((definition) => definition.kind === role.kind && definition.needsReview))
+  const reviewed = (role: AccountRole) => definitions.some((definition) => definition.kind === role.kind && definition.needsReview)
+  const applying = held.some(reviewed)
+  const waiting = held.some((role) => role.status === 'pending' && reviewed(role))
 
   useEffect(() => {
     if (!applying) return setChecks(null)
@@ -66,12 +69,13 @@ export default function Roles() {
               <RoleIcon kind={definition.kind} size={48} />
               <View style={styles.flex}>
                 <Text variant="title">{definition.label}</Text>
-                {role ? <RoleStatus status={role.status} /> : null}
+                {role ? <RoleStatus status={role.status} missing={role.missing} /> : null}
                 {role ? <Standing standing={role.reputation} showScore={false} /> : null}
               </View>
             </View>
             <Text variant="muted">{definition.description}</Text>
             {role?.note ? <Text style={styles.note}>Reviewer's note: {role.note}</Text> : null}
+            {role?.status === 'pending' && role.missing.length ? <Text style={styles.waiting}>Add {missingWords(role.missing)} below so we can approve this.</Text> : null}
             {role && (role.status === 'active' || role.status === 'suspended') ? <RoleReputationPanel kind={role.kind} reputation={role.reputation} /> : null}
             {!role || role.status === 'rejected' ? (
               <Button
@@ -94,6 +98,7 @@ export default function Roles() {
         )
       })}
 
+      {checks && waiting ? <ApplicationChecklist checks={checks.data} /> : null}
       {checks ? <PartnerChecksSection checks={checks.data} documents={checks.documents} onChange={(data) => setChecks((current) => current && { ...current, data })} /> : null}
     </SettingsPage>
   )
@@ -103,4 +108,5 @@ const styles = StyleSheet.create({
   top: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   flex: { flex: 1, gap: 6 },
   note: { fontSize: 14, lineHeight: 20, color: colors.ink700 },
+  waiting: { fontSize: 14, lineHeight: 20, color: colors.held },
 })

@@ -1,6 +1,6 @@
 import { Form, Link, useNavigation, useSearchParams } from "react-router";
 import { BadgeCheck, Check, CircleAlert, IdCard, Landmark, Pause, X } from "lucide-react";
-import type { AccountRoleKind, AccountRoleReview, AccountRoleStatus, AdminAccountRole, IdentityReview, PartnerChecks } from "@greyboards/types";
+import type { AccountRoleKind, AccountRoleReview, AccountRoleStatus, AdminAccountRole, IdentityReview, PartnerChecks, PartnerRequirement } from "@greyboards/types";
 import { AdminHeader } from "~/components/admin/AdminHeader";
 import { Pager } from "~/components/Pager";
 import { ROLE_ICONS, RoleStatus } from "~/components/AccountRoles";
@@ -117,8 +117,15 @@ export default function AdminApplications({ loaderData, actionData }: Route.Comp
 	);
 }
 
+/** Each requirement as a reviewer reads it. */
+const STILL_NEEDED: Record<PartnerRequirement, string> = {
+	identity: "a photo of their ID",
+	bank: "a bank account",
+};
+
 function ApplicationRow({ application }: { application: AdminAccountRole }) {
 	const navigation = useNavigation();
+	const blocked = (application.checks?.missing.length ?? 0) > 0;
 	const busy = navigation.state !== "idle" && navigation.formData?.get("id") === application.id;
 	const Icon = ROLE_ICONS[application.kind];
 	const decisions: { status: AccountRoleReview["status"]; label: string; icon: typeof Check; variant: "primary" | "secondary" | "danger" }[] = [
@@ -157,7 +164,16 @@ function ApplicationRow({ application }: { application: AdminAccountRole }) {
 				{decisions
 					.filter((decision) => decision.status !== application.status)
 					.map((decision) => (
-						<Button key={decision.status} type="submit" name="status" value={decision.status} variant={decision.variant} disabled={busy} className="!py-2">
+						<Button
+							key={decision.status}
+							type="submit"
+							name="status"
+							value={decision.status}
+							variant={decision.variant}
+							disabled={busy || (decision.status === "active" && blocked)}
+							title={decision.status === "active" && blocked ? "They need to send what's missing first" : undefined}
+							className="!py-2"
+						>
 							<decision.icon className="h-4 w-4" aria-hidden />
 							{decision.label}
 						</Button>
@@ -247,7 +263,12 @@ function Checks({ id, checks }: { id: string; checks: PartnerChecks }) {
 					</p>
 				)}
 			</div>
-			{checks.missing.length > 0 && <p className="text-held sm:col-span-3">Can't be approved until they add {checks.missing.join(" and ")}.</p>}
+			{checks.missing.length > 0 && (
+				<p className="flex items-center gap-1.5 font-medium text-held sm:col-span-3">
+					<CircleAlert className="h-4 w-4 shrink-0" aria-hidden />
+					Can't be approved until they add {checks.missing.map((item) => STILL_NEEDED[item]).join(" and ")}. We've shown them what's left.
+				</p>
+			)}
 		</div>
 	);
 }

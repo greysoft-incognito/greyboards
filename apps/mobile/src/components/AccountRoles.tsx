@@ -1,6 +1,6 @@
 import { StyleSheet, View } from 'react-native'
 import { Binoculars, type LucideIcon, Megaphone, PaintRoller, Presentation } from 'lucide-react-native'
-import type { AccountRole, AccountRoleKind, AccountRoleStatus } from '@greyboards/types'
+import type { AccountRole, AccountRoleKind, AccountRoleStatus, PartnerRequirement } from '@greyboards/types'
 import { Text } from '@/components/ui'
 import { colors, fonts, radius } from '@/theme'
 
@@ -19,16 +19,23 @@ const STATUS: Record<AccountRoleStatus, { label: string; background: string; col
   suspended: { label: 'Suspended', background: colors.surface100, color: colors.ink700 },
 }
 
-/** Where a role's review stands, as a small badge. */
-export function RoleStatus({ status }: { status: AccountRoleStatus }) {
+/** Where a role's review stands, as a small badge. A waiting application with something still to send waits on the account, not on us. */
+export function RoleStatus({ status, missing = [] }: { status: AccountRoleStatus; missing?: PartnerRequirement[] }) {
   const look = STATUS[status]
 
   return (
     <View style={[styles.badge, { backgroundColor: look.background }]}>
       <View style={[styles.dot, { backgroundColor: look.color }]} />
-      <Text style={[styles.badgeText, { color: look.color }]}>{look.label}</Text>
+      <Text style={[styles.badgeText, { color: look.color }]}>{status === 'pending' && missing.length ? 'Waiting for your details' : look.label}</Text>
     </View>
   )
+}
+
+/** What the account still has to send, as part of a sentence, such as "your ID and bank account". */
+export function missingWords(missing: PartnerRequirement[]) {
+  if (missing.length > 1) return 'your ID and bank account'
+
+  return missing[0] === 'identity' ? 'your ID' : 'your bank account'
 }
 
 /** A role's icon in a wine tile. */

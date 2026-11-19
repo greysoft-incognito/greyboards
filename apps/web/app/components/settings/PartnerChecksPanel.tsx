@@ -38,7 +38,7 @@ export function PartnerChecksPanel({
 				<p className="mt-1 text-sm text-ink-500">Scouts and dispatchers work with other people's boards, so we need to know who you are and where to pay you.</p>
 			</div>
 
-			<div className="flex items-start gap-3">
+			<div id="your-id" className="flex scroll-mt-24 items-start gap-3">
 				<IdCard className="mt-0.5 h-5 w-5 shrink-0 text-brand-600" aria-hidden />
 				<div className="min-w-0 flex-1 text-sm">
 					<p className="font-semibold text-ink-900">Your ID</p>
