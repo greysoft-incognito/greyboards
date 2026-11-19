@@ -12,8 +12,13 @@
     // Built with CLOUDFLARE_ENV=production by Cloudflare's Git builds.
     "production": {
       "name": "greyboards-web",
-      // Lets Cloudflare build previews of non-production branches.
-      "previews": {}
+      // Previews of non-production branches use the staging API and OpenFreeMap's free tiles.
+      "previews": {
+        "vars": {
+          "API_URL": "https://api.staging.greyboards.greysoft.com.ng/api",
+          "MAP_STYLE_URL": "https://tiles.openfreemap.org/styles/positron"
+        }
+      }
     }
   }
 }
