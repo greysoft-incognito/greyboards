@@ -2,7 +2,7 @@ import { Model } from '@arkstack/database'
 import { abortIf } from '@arkstack/common'
 import { Gateways } from '@app/services/payments/Gateways'
 import { Settings } from '@app/support/Settings'
-import type { OwnerProfile } from './OwnerProfile'
+import { OwnerProfile } from './OwnerProfile'
 import type { User } from './User'
 
 /** Who a payout account belongs to: an account (scouts, dispatchers) or an owner profile (owners' shares). */
@@ -47,6 +47,20 @@ export class PayoutAccount extends Model {
 
   static find(holder: PayoutHolder): Promise<PayoutAccount | null> {
     return PayoutAccount.query().where(holder).first()
+  }
+
+  /**
+   * Where `holder` is paid: its own account, or for an owner profile someone has claimed and
+   * that has none, the account of the person who claimed it.
+   */
+  static async payee(holder: PayoutHolder): Promise<PayoutAccount | null> {
+    const own = await PayoutAccount.find(holder)
+
+    if (own || !('ownerProfileId' in holder)) return own
+
+    const profile = await OwnerProfile.query().find(holder.ownerProfileId)
+
+    return profile?.userId ? PayoutAccount.find({ userId: profile.userId }) : null
   }
 
   /** Check the account with the bank and save it as where `holder` is paid. */

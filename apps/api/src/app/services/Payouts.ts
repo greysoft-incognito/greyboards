@@ -80,7 +80,9 @@ export class Payouts {
       .whereRaw('"createdAt" < now() - make_interval(days => ?)', [holdDays])
       .whereRaw('id not in (select ledger_entry_id from payouts)')
       .whereRaw(
-        '(owner_profile_id in (select owner_profile_id from payout_accounts) or (owner_profile_id is null and user_id in (select user_id from payout_accounts)))',
+        `(owner_profile_id in (select owner_profile_id from payout_accounts)
+          or owner_profile_id in (select owner_profiles.id from owner_profiles join payout_accounts on payout_accounts.user_id = owner_profiles.user_id)
+          or (owner_profile_id is null and user_id in (select user_id from payout_accounts)))`,
       )
       .oldest('createdAt')
       .limit(BATCH)
@@ -88,7 +90,7 @@ export class Payouts {
 
     for (const entry of due.all()) {
       const holder = Payouts.holderOf(entry)
-      const account = holder ? await PayoutAccount.find(holder) : null
+      const account = holder ? await PayoutAccount.payee(holder) : null
 
       if (account) await Payouts.pay(entry, account)
     }
@@ -112,7 +114,7 @@ export class Payouts {
 
     const entry = await LedgerEntry.query().findOrFail(payout.ledgerEntryId)
     const holder = Payouts.holderOf(entry)
-    const account = holder ? await PayoutAccount.find(holder) : null
+    const account = holder ? await PayoutAccount.payee(holder) : null
 
     abortIf(!account, 'There is no bank account to pay this into yet.', 422)
 

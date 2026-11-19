@@ -29,7 +29,7 @@ export default class PayoutController extends BaseController {
     const own = await PayoutAccount.find({ userId: this.user.id })
     const owners = await Promise.all(
       profiles.map(async (profile) => {
-        const account = await PayoutAccount.find({ ownerProfileId: profile.id })
+        const account = await PayoutAccount.payee({ ownerProfileId: profile.id })
 
         return { profileId: profile.id, name: profile.name, account: account ? await new PayoutAccountResource(account).data() : null }
       }),
