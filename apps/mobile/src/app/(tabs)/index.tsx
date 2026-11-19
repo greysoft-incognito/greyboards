@@ -1,12 +1,13 @@
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native'
 import { router, useFocusEffect } from 'expo-router'
 import { LinearGradient } from 'expo-linear-gradient'
 import { ArrowRight } from 'lucide-react-native'
-import type { AccountRoleKind } from '@greyboards/types'
+import type { AccountRoleKind, Task } from '@greyboards/types'
 import { ROLE_ICONS, RoleStatus } from '@/components/AccountRoles'
 import { BoardScene, type SceneArt, type SceneTime } from '@/components/BoardScene'
 import { useTabBarInset } from '@/components/GlassTabBar'
+import { TaskList } from '@/components/scouting/ScoutingBits'
 import { Text } from '@/components/ui'
 import { api } from '@/lib/api'
 import { session, useUser } from '@/lib/session'
@@ -34,6 +35,8 @@ export default function Dashboard() {
   const inset = useTabBarInset()
   const firstName = user.name.split(/\s+/)[0]
   const pending = user.accountRoles.filter((role) => role.status === 'pending').length
+  const looksAfterBoards = user.accountRoles.some((role) => (role.kind === 'owner' || role.kind === 'scout') && role.status === 'active')
+  const [tasks, setTasks] = useState<Task[]>([])
 
   const refresh = useCallback(() => {
     api.auth
@@ -41,7 +44,15 @@ export default function Dashboard() {
       .send()
       .then(({ data }) => session.setUser(data))
       .catch(() => undefined)
-  }, [])
+
+    if (!looksAfterBoards) return setTasks([])
+
+    api
+      .tasks()
+      .send()
+      .then(({ data }) => setTasks(data))
+      .catch(() => undefined)
+  }, [looksAfterBoards])
 
   useFocusEffect(refresh)
 
@@ -58,6 +69,13 @@ export default function Dashboard() {
           {pending ? 'We’re reviewing your application and will email you soon.' : 'Good to see you again.'}
         </Text>
       </LinearGradient>
+
+      {tasks.length ? (
+        <View style={styles.todo}>
+          <Text style={styles.todoTitle}>To do</Text>
+          <TaskList tasks={tasks} limit={6} />
+        </View>
+      ) : null}
 
       {user.accountRoles.map((role) => {
         const Icon = ROLE_ICONS[role.kind]
@@ -106,6 +124,8 @@ const styles = StyleSheet.create({
   heroKicker: { fontSize: 13, lineHeight: 18, color: colors.brand100 },
   heroTitle: { fontFamily: fonts.displayHeavy, fontSize: 32, lineHeight: 38, letterSpacing: -1, color: colors.white },
   heroText: { marginTop: 6, fontSize: 14, lineHeight: 20, color: colors.brand100 },
+  todo: { ...surfaces.panel, gap: 6, padding: 18 },
+  todoTitle: { fontFamily: fonts.displayHeavy, fontSize: 18, lineHeight: 24, letterSpacing: -0.4, color: colors.ink900 },
   card: { ...surfaces.panel, flexDirection: 'row', gap: 14, padding: 12 },
   thumb: { width: 108, height: 96, borderRadius: radius.lg, overflow: 'hidden' },
   cardBody: { flex: 1, gap: 6, paddingVertical: 2 },
