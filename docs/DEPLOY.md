@@ -164,8 +164,7 @@ Edit the file on the server, or keep the whole file in the `API_DOTENV` secret, 
 
 ## When it runs
 
-- **Publishing a GitHub release**: checks, then deploys the release's tag with migrations.
-- **Push to `deploy`**: same as a release.
+- **Push to `deploy`**: checks, then deploys with migrations.
 - **Manually**: Actions → Deploy API → Run workflow, picking the branch or tag. Options:
 
 | Option | Default | What it does |
