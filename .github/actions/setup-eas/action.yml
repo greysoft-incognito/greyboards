@@ -1,12 +1,12 @@
 name: Set up EAS
-description: Installs the mobile app's dependencies and EAS CLI, and passes the build settings to the EAS build profiles.
+description: Installs the mobile app's dependencies and, for EAS builds, the EAS CLI, and passes the build settings to the build.
 
 inputs:
   expo-token:
-    description: Expo access token
-    required: true
+    description: Expo access token, needed by the eas and runner builders
+    default: ''
   builder:
-    description: eas (EAS servers) or runner (build on this GitHub runner)
+    description: eas (EAS servers), runner (EAS local build on this runner) or gradle (expo prebuild and Gradle on this runner, no EAS)
     default: eas
   eas-project-id:
     description: EAS project ID. Left empty, the project is created, or found by the app's slug, with the token
@@ -38,9 +38,10 @@ runs:
       env:
         EXPO_TOKEN: ${{ inputs.expo-token }}
         API_URL: ${{ inputs.api-url }}
+        BUILDER: ${{ inputs.builder }}
       run: |
         missing=""
-        [ -n "$EXPO_TOKEN" ] || missing="$missing EXPO_TOKEN(secret)"
+        [ -n "$EXPO_TOKEN" ] || [ "$BUILDER" = "gradle" ] || missing="$missing EXPO_TOKEN(secret)"
         [ -n "$API_URL" ] || missing="$missing API_URL(variable)"
 
         if [ -n "$missing" ]; then
@@ -56,13 +57,13 @@ runs:
     - shell: bash
       run: pnpm install --frozen-lockfile --filter '@greyboards/mobile...'
 
-    - if: inputs.builder == 'runner'
+    - if: inputs.builder != 'eas'
       uses: actions/setup-java@v6
       with:
         distribution: temurin
         java-version: 17
 
-    - if: inputs.builder == 'runner'
+    - if: inputs.builder != 'eas'
       uses: actions/cache@v5
       with:
         path: |
@@ -74,15 +75,17 @@ runs:
           android-build-${{ runner.os }}-${{ inputs.android-architectures }}-
           android-build-${{ runner.os }}-
 
-    - if: inputs.builder == 'runner'
+    - if: inputs.builder != 'eas'
       name: Tune runner builds
       shell: bash
       env:
         ANDROID_ARCHITECTURES: ${{ inputs.android-architectures }}
+        BUILDER: ${{ inputs.builder }}
       run: |
         sudo apt-get install -y --no-install-recommends ccache > /dev/null
 
         workdir="$RUNNER_TEMP/eas-build"
+        [ "$BUILDER" != "gradle" ] || workdir="$GITHUB_WORKSPACE"
 
         {
           echo "GRADLE_OPTS=-Dorg.gradle.parallel=true -Dorg.gradle.caching=true -Dorg.gradle.project.reactNativeArchitectures=$ANDROID_ARCHITECTURES"
@@ -95,7 +98,8 @@ runs:
           echo "CCACHE_MAXSIZE=2G"
         } >> "$GITHUB_ENV"
 
-    - uses: expo/expo-github-action@v9
+    - if: inputs.builder != 'gradle'
+      uses: expo/expo-github-action@v9
       with:
         eas-version: latest
         token: ${{ inputs.expo-token }}
@@ -103,6 +107,7 @@ runs:
     # Without EAS_PROJECT_ID, create the EAS project (or find the one this account already
     # has for the app's slug) with the token, so nobody has to run `eas init` on their machine.
     - name: Find or create the EAS project
+      if: inputs.builder != 'gradle'
       id: project
       shell: bash
       working-directory: apps/mobile
@@ -139,7 +144,7 @@ runs:
       shell: bash
       working-directory: apps/mobile
       env:
-        EAS_PROJECT_ID: ${{ steps.project.outputs.id }}
+        EAS_PROJECT_ID: ${{ steps.project.outputs.id || inputs.eas-project-id }}
         EAS_OWNER: ${{ inputs.eas-owner }}
         API_URL: ${{ inputs.api-url }}
         WEB_URL: ${{ inputs.web-url }}

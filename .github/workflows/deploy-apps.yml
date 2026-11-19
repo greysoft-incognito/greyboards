@@ -114,8 +114,7 @@ jobs:
 
       - uses: ./.github/actions/setup-eas
         with:
-          expo-token: ${{ secrets.EXPO_TOKEN }}
-          builder: ${{ env.ANDROID_BUILDER }}
+          builder: gradle
           eas-project-id: ${{ vars.EAS_PROJECT_ID }}
           eas-owner: ${{ vars.EAS_OWNER }}
           api-url: ${{ vars.API_URL }}
@@ -123,15 +122,33 @@ jobs:
           app-version: ${{ steps.version.outputs.version }}
           build-number: ${{ steps.version.outputs.build-number }}
 
-      - name: Build the App Bundle
+      - name: Build the signed App Bundle
         working-directory: apps/mobile
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
-          if [ "$ANDROID_BUILDER" = "runner" ]; then
-            eas build --platform android --profile production --local --non-interactive --output "$RUNNER_TEMP/app.aab"
-          else
-            eas build --platform android --profile production --non-interactive --wait --json > "$RUNNER_TEMP/build.json"
-            curl -fsSL -o "$RUNNER_TEMP/app.aab" "$(jq -r '.[0].artifacts.buildUrl' "$RUNNER_TEMP/build.json")"
+          if [ -z "$KEYSTORE_BASE64" ] || [ -z "$KEYSTORE_PASSWORD" ] || [ -z "$KEY_ALIAS" ]; then
+            echo "Add ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD and ANDROID_KEY_ALIAS to the play-store environment." >&2
+            exit 1
           fi
+
+          keystore="$RUNNER_TEMP/upload-keystore.jks"
+          printf '%s' "$KEYSTORE_BASE64" | base64 -d > "$keystore"
+
+          pnpm exec expo prebuild --platform android --clean --no-install
+
+          cd android
+          ./gradlew bundleRelease --no-daemon \
+            -Pandroid.injected.signing.store.file="$keystore" \
+            -Pandroid.injected.signing.store.password="$KEYSTORE_PASSWORD" \
+            -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
+            -Pandroid.injected.signing.key.password="${KEY_PASSWORD:-$KEYSTORE_PASSWORD}"
+
+          cp app/build/outputs/bundle/release/app-release.aab "$RUNNER_TEMP/app.aab"
+          rm -f "$keystore"
 
       - uses: actions/upload-artifact@v7
         with:
@@ -149,3 +166,4 @@ jobs:
           tracks: ${{ steps.version.outputs.tracks }}
           status: ${{ vars.PLAY_STORE_RELEASE_STATUS || 'completed' }}
           whatsNewDirectory: ${{ env.WHATS_NEW_DIR }}
+

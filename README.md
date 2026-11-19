@@ -66,7 +66,7 @@ Then, under the `greyboards-web` Worker's Settings → Variables and secrets, ad
 
 ## Mobile builds (EAS)
 
-The Android app builds on [EAS](https://expo.dev/eas) from the **Deploy apps** workflow. A push to the `deploy` branch, or a manual run from the Actions tab, builds an installable APK. Only a published GitHub release builds an App Bundle and puts it on Google Play. The bundle id is `com.greysoft.greyboards.app` on both iOS and Android.
+The Android app builds on [EAS](https://expo.dev/eas) from the **Deploy apps** workflow. A push to the `deploy` branch, or a manual run from the Actions tab, builds an installable APK. Only a published GitHub release builds an App Bundle and puts it on Google Play. That build skips EAS: it runs `expo prebuild` and Gradle on the GitHub runner and signs the bundle with our own upload key. The bundle id is `com.greysoft.greyboards.app` on both iOS and Android.
 
 One-time setup, in GitHub → Settings → Secrets and variables → Actions:
 
@@ -77,7 +77,13 @@ One-time setup, in GitHub → Settings → Secrets and variables → Actions:
 
 The first run creates the EAS project for the app (or finds it, if the account already has one called `greyboards`) and prints its id. Save that id as the variable `EAS_PROJECT_ID` to skip the lookup on later runs.
 
-For Google Play, upload the first App Bundle by hand in the Play Console, then add the secret `GOOGLE_SERVICE_ACCOUNT_JSON` (a service account with release access) to the `play-store` environment. Optional variables:
+### Google Play
+
+1. Make the upload keystore once, on your machine (it needs a JDK for `keytool`): `pnpm --filter @greyboards/mobile keystore`. It writes `apps/mobile/credentials/upload-keystore.jks` and `apps/mobile/credentials/github-secrets.env`, which git ignores. Keep both somewhere safe, such as a password manager: Play only accepts bundles signed with this key.
+2. In GitHub → Settings → Environments → `play-store`, add each line of `github-secrets.env` as a secret: `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` and `ANDROID_KEY_PASSWORD`. Add `GOOGLE_SERVICE_ACCOUNT_JSON` too (a service account with release access).
+3. Upload the first App Bundle by hand in the Play Console (the release run keeps it as an artifact), with Play App Signing turned on. Play then knows the upload key, and later releases upload on their own.
+
+Optional variables:
 
 - `PLAY_CLOSED_TRACK`: the closed testing track, `alpha` unless set (use your custom track's name, such as `qa`)
 - `PLAY_STORE_RELEASE_STATUS`: `completed` unless set; use `draft` until the app's first release is live
