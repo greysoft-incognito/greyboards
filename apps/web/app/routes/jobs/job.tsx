@@ -33,7 +33,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 		if (intent === "send-price") {
 			const amount = Number(String(form.get("amount") ?? "").replace(/[^\d.]/g, ""));
 
-			if (!amount) return { error: null, message: null, fieldErrors: { amount: "Enter your price in naira." } };
+			if (!amount) return { error: null, message: null, fieldErrors: { amount: "Enter your price." } };
 
 			await api.printJobs.sendPrice(params.id, Math.round(amount * 100), String(form.get("note") ?? "").trim() || null);
 

@@ -9,6 +9,7 @@ import { BoardPhoto, type BoardPhotoInput } from './BoardPhoto'
 import { OwnerProfile } from './OwnerProfile'
 import { User, type UploadedFile } from './User'
 import { Settings } from '@app/support/Settings'
+import { PaymentRegions } from '@app/services/payments/PaymentRegions'
 
 export type BoardKind = 'billboard' | 'unipole' | 'gantry' | 'wall' | 'digital' | 'street_pole' | 'bus_shelter'
 
@@ -72,6 +73,8 @@ export interface BoardFilters {
   kind?: BoardKind | null
   lit?: boolean | null
   maxRateMinor?: number | null
+  /** The currency `maxRateMinor` is in. Boards priced in another currency don't pass a price limit. */
+  currency?: string | null
 }
 
 /** A board as a point on the map, with just enough to draw and label it. */
@@ -226,7 +229,7 @@ export class Board extends Model {
   }
 
   /**
-   * Record a board `user` found, and wait for review. An owner tags it under one of the
+   * Record a board `user` found, and wait for review. It is priced in the currency of its country's payment region unless one is given. An owner tags it under one of the
    * profiles they manage (their own by default). A scout picks the owner from the
    * suggestions or gives a new owner's name and phone, which makes a profile for them.
    */
@@ -234,8 +237,10 @@ export class Board extends Model {
     const profile = await Board.ownerFor(user, owner, asOwner)
 
     const duplicate = (await Board.possibleDuplicates(details.latitude, details.longitude, details.headingDeg ?? null))[0]
+    const cleaned = Board.clean(details)
     const board = await Board.query().create({
-      ...Board.clean(details),
+      ...cleaned,
+      currency: cleaned.currency ?? (await PaymentRegions.currencyFor(cleaned.country)),
       status: Board.PENDING,
       taggedById: user.id,
       ownerProfileId: profile.id,
@@ -354,6 +359,7 @@ export class Board extends Model {
     if (filters.kind) query.where({ kind: filters.kind })
     if (typeof filters.lit === 'boolean') query.where({ lit: filters.lit })
     if (filters.maxRateMinor !== null && filters.maxRateMinor !== undefined) query.whereRaw('rate_minor <= ?', [filters.maxRateMinor])
+    if (filters.maxRateMinor !== null && filters.maxRateMinor !== undefined && filters.currency) query.where({ currency: filters.currency.toUpperCase() })
 
     return query
   }

@@ -1,5 +1,7 @@
 import { Board, type BoardKind, type BoardRatePeriod, type RoadClass } from '@app/models/Board'
 import { Settings } from '@app/support/Settings'
+import { ExchangeRates } from './payments/ExchangeRates'
+import { PaymentRegions } from './payments/PaymentRegions'
 
 /** Where a traffic estimate came from: a count someone measured, or the kind of road. */
 export type TrafficSource = 'measured' | 'road'
@@ -20,6 +22,8 @@ export interface GuideInput {
   period: BoardRatePeriod
   roadClass?: RoadClass | null
   dailyTraffic?: number | null
+  /** The currency to guide in. Only boards priced in it are compared. */
+  currency: string
   /** Leave this board out of the comparison, when guiding one already tagged. */
   exceptId?: string
 }
@@ -53,11 +57,12 @@ export class PriceGuide {
     const area = Math.max(0.01, Number(input.widthM) * Number(input.heightM))
     const traffic = await PriceGuide.traffic(input.roadClass, input.dailyTraffic)
     const comparables = await PriceGuide.comparables(input, area)
-    const cpm = await Settings.number('traffic.cpm_minor')
+    const cpm = await PriceGuide.cpm(input.currency)
     const fromTraffic = traffic && cpm > 0 ? PriceGuide.round((traffic.daily * DAYS[input.period] * cpm) / 1000) : null
     const enough = comparables.count >= (await Settings.number('traffic.comparables_min'))
 
     return {
+      currency: input.currency,
       period: input.period,
       traffic,
       comparables: comparables.count ? comparables : null,
@@ -74,7 +79,7 @@ export class PriceGuide {
   private static async comparables(input: GuideInput, area: number) {
     const radiusKm = await Settings.number('traffic.comparables_radius_km')
     const query = Board.query()
-      .where({ status: Board.LISTED, kind: input.kind })
+      .where({ status: Board.LISTED, kind: input.kind, currency: input.currency })
       .whereNotNull('rateMinor')
       .scope('near', Number(input.latitude), Number(input.longitude), radiusKm)
 
@@ -105,7 +110,17 @@ export class PriceGuide {
     }
   }
 
-  /** To the nearest ₦1,000, which is how rates are usually quoted. */
+  /** The admin's value of 1,000 views, set in the default currency, in `currency`. Zero when there's no rate to convert it at. */
+  private static async cpm(currency: string): Promise<number> {
+    const cpm = await Settings.number('traffic.cpm_minor')
+    const base = await PaymentRegions.defaultCurrency()
+
+    if (cpm <= 0 || base === currency) return cpm
+
+    return cpm * (await ExchangeRates.rate(base, currency).catch(() => 0))
+  }
+
+  /** To the nearest 1,000 of the currency, which is how rates are usually quoted. */
   private static round(minor: number): number {
     return Math.max(100_000, Math.round(minor / 100_000) * 100_000)
   }

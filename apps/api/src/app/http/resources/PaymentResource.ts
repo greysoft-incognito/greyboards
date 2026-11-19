@@ -20,6 +20,8 @@ export class PaymentResource extends Resource {
       status: payment.status,
       amountMinor: payment.amountMinor,
       currency: payment.currency,
+      chargeAmountMinor: Number(payment.chargeAmountMinor ?? payment.amountMinor),
+      chargeCurrency: payment.chargeCurrency ?? payment.currency,
       bookingId: payment.bookingId,
       checkoutUrl: this.checkoutUrl,
       paidAt: payment.paidAt,

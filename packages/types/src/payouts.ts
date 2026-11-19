@@ -23,9 +23,12 @@ export interface PayoutSummary {
   enabled: boolean
   account: PayoutAccount | null
   owners: { profileId: ID; name: string; account: PayoutAccount | null }[]
-  /** Released to them and not yet sent. */
+  /** Released to them and not yet sent, in `currency`, the first currency they earned in. */
   owedMinor: number
   paidMinor: number
+  currency: string
+  /** The same for each currency they earned in. */
+  totals: { currency: string; owedMinor: number; paidMinor: number }[]
 }
 
 /** `processing` while the bank sends it, then `paid`, or `failed`. */

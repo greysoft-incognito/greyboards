@@ -193,7 +193,7 @@ export class Refunds {
       requestedById: user?.id ?? null,
     })
 
-    await Refunds.apply(refund, await Gateways.refunds(payment.provider).refund(payment, amountMinor / 100))
+    await Refunds.apply(refund, await Gateways.refunds(payment.provider).refund(payment, payment.charged(amountMinor) / 100))
 
     return Refund.query().findOrFail(refund.id)
   }

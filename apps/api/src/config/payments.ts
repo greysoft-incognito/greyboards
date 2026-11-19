@@ -1,5 +1,6 @@
 /**
- * Taking payments for bookings. Keys stay in .env.
+ * Taking payments for bookings. Keys stay in .env; the default currency, provider and
+ * payment regions are set in the dashboard.
  */
 export default () => {
   return {
@@ -8,6 +9,16 @@ export default () => {
      * The fake driver never runs in production.
      */
     driver: String(env('PAYMENT_DRIVER', 'flutterwave')),
+
+    /**
+     * The currency boards are priced in and payers are charged in, outside any payment region.
+     */
+    default_currency: String(env('DEFAULT_CURRENCY', 'NGN')),
+
+    /**
+     * The provider that charges payers outside any payment region, and sends payouts.
+     */
+    provider: String(env('PAYMENT_PROVIDER', 'flutterwave')),
 
     /**
      * Where payments start each reference. The payment relay routes webhooks to Greyboards by this prefix.
@@ -32,6 +43,16 @@ export default () => {
        */
       webhook_hash: String(env('FLUTTERWAVE_WEBHOOK_HASH', '')),
       api_url: String(env('FLUTTERWAVE_API_URL', 'https://api.flutterwave.com/v3')),
+    },
+
+    /**
+     * Live exchange rates through @toneflix/money, for regions without a fixed rate.
+     * `provider` is frankfurter or exchangerate-api (needs `key`). Rates are kept for `hours`.
+     */
+    exchange_rates: {
+      provider: String(env('EXCHANGE_RATES_PROVIDER', 'frankfurter')),
+      key: String(env('EXCHANGERATE_API_KEY', '')),
+      hours: Number(env('EXCHANGE_RATE_HOURS', 6)),
     },
   }
 }

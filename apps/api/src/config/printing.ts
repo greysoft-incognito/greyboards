@@ -4,7 +4,7 @@
 export default () => {
   return {
     /**
-     * The price per square metre of board face, in naira, that a new dispatcher's rate starts
+     * The price per square metre of board face, in whole units of the board's currency, that a new dispatcher's rate starts
      * at. Each dispatcher sets their own; advertisers pay the price they pick.
      */
     price_per_sqm: Number(env('PRINT_PRICE_PER_SQM', 3500)),

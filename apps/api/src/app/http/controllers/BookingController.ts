@@ -148,7 +148,7 @@ export default class BookingController extends BaseController {
 
     if (!(await BookingPolicy.pays(this.user, booking))) throw new RequestException('Only the person who booked can pay for it.', 403)
 
-    const { payment, url } = await new Checkout().start(booking, this.user)
+    const { payment, url } = await new Checkout(this.country()).start(booking, this.user)
 
     return new PaymentResource(payment).withCheckout(url).additional({ status: 'success', message: 'Payment started', code: 201 }).response().setStatusCode(201)
   }

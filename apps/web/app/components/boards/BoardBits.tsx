@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 import { Lightbulb, MapPin, Ruler } from "lucide-react";
-import type { Board, BoardRate, BoardStatus } from "@greyboards/types";
+import { type Board, type BoardRate, type BoardStatus, formatMoney } from "@greyboards/types";
 import { BoardScene } from "~/components/BoardScene";
 
 const STATUS_LABELS: Record<BoardStatus, string> = {
@@ -31,9 +31,7 @@ export function BoardStatusBadge({ status }: { status: BoardStatus }) {
 export function formatRate(rate: BoardRate | null) {
 	if (!rate) return null;
 
-	const amount = new Intl.NumberFormat("en-NG", { style: "currency", currency: rate.currency, maximumFractionDigits: 0 }).format(rate.amountMinor / 100);
-
-	return `${amount} / ${rate.period}`;
+	return `${formatMoney(rate.amountMinor, rate.currency)} / ${rate.period}`;
 }
 
 /** Width by height, such as "12 × 4 m". */

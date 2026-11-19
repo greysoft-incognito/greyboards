@@ -1,7 +1,8 @@
-import { CalendarCheck, Camera, CarFront, CircleHelp, FileChartColumn, FileText, Gauge, Gavel, Handshake, IdCard, KeyRound, type LucideIcon, MapPinned, MessagesSquare, MonitorPlay, Percent, Printer, Shield, ShieldAlert, SlidersHorizontal, Star, Upload, Users, UsersRound, Wallet } from "lucide-react";
+import { Banknote, CalendarCheck, Camera, CarFront, CircleHelp, FileChartColumn, FileText, Gauge, Gavel, Handshake, IdCard, KeyRound, type LucideIcon, MapPinned, MessagesSquare, MonitorPlay, Percent, Printer, Shield, ShieldAlert, SlidersHorizontal, Star, Upload, Users, UsersRound, Wallet } from "lucide-react";
 
 /** Lucide icons the API can name, such as a settings group's icon. */
 const ICONS: Record<string, LucideIcon> = {
+	banknote: Banknote,
 	"calendar-check": CalendarCheck,
 	camera: Camera,
 	"file-text": FileText,

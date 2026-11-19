@@ -64,7 +64,7 @@ export default function DevelopersHome() {
 					first.
 				</p>
 				<CodeBlock label="Request" code={example} />
-				<p className="text-sm text-ink-500">Amounts are whole numbers in kobo, so ₦500,000 is 50000000. Dates are YYYY-MM-DD.</p>
+				<p className="text-sm text-ink-500">Amounts are whole numbers in the minor unit of their currency, such as kobo or cents, so ₦500,000 is 50000000. Each amount comes with its currency. Dates are YYYY-MM-DD.</p>
 			</DocSection>
 
 			<DocSection title="What you can call">

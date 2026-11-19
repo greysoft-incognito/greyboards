@@ -21,7 +21,7 @@ export function RateCard({ board }: { board: BoardDetail }) {
 			<ul className="space-y-3">
 				{board.rateCard.map((face) => (
 					<li key={face.id}>
-						<FaceForm face={face} unit={unit} currency={board.rate?.currency ?? "NGN"} />
+						<FaceForm face={face} unit={unit} currency={board.currency} />
 					</li>
 				))}
 			</ul>

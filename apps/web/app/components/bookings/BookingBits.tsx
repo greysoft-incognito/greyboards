@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 import { CalendarDays } from "lucide-react";
-import type { Booking, BookingStatus } from "@greyboards/types";
+import { type Booking, type BookingStatus, formatMoney } from "@greyboards/types";
 import { BoardCover } from "~/components/boards/BoardBits";
 
 const STATUS_LABELS: Record<BookingStatus, string> = {
@@ -30,10 +30,7 @@ export function BookingStatusBadge({ status }: { status: BookingStatus }) {
 	);
 }
 
-/** An amount in minor units, such as "₦1,200,000". */
-export function formatMoney(amountMinor: number, currency: string) {
-	return new Intl.NumberFormat("en-NG", { style: "currency", currency, maximumFractionDigits: 0 }).format(amountMinor / 100);
-}
+export { formatMoney };
 
 /** A day such as "31 Jan 2027". Days are calendar days, so they're read in UTC. */
 export function formatDay(day: string) {

@@ -1,6 +1,6 @@
 import { createGreyboardsClient } from '@greyboards/api-client'
 import ReactHook from 'alova/react'
-import { deviceAgent } from './device'
+import { deviceAgent, deviceCountry } from './device'
 import { session } from './session'
 
 /** Shared API client. Set EXPO_PUBLIC_API_URL in .env to point at the API (apps/api). */
@@ -9,5 +9,5 @@ export const { api } = createGreyboardsClient({
   statesHook: ReactHook,
   getToken: session.getToken,
   onUnauthorized: () => void session.clear(),
-  headers: { 'X-Device-Agent': deviceAgent },
+  headers: { 'X-Device-Agent': deviceAgent, ...(deviceCountry() ? { 'X-Country': deviceCountry()! } : {}) },
 })

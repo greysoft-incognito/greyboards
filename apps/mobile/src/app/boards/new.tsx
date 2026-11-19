@@ -5,7 +5,7 @@ import * as ImagePicker from 'expo-image-picker'
 import { router } from 'expo-router'
 import { Binoculars, Camera, LocateFixed, MapPin, Presentation, X } from 'lucide-react-native'
 import type { BoardKindDefinition, BoardOwnerChoice, NearbyBoard } from '@greyboards/types'
-import { BoardDetailsSection, RateSection, boardInput, useBoardFields } from '@/components/boards/BoardFields'
+import { BoardDetailsSection, CountryField, RateSection, boardInput, useBoardFields } from '@/components/boards/BoardFields'
 import { OwnerPicker } from '@/components/boards/OwnerPicker'
 import { taggingRoles } from '@/components/boards/BoardBits'
 import { Section, SettingsPage } from '@/components/settings/SettingsPage'
@@ -177,6 +177,7 @@ export default function TagBoard() {
         <Field label="City" error={errors.city}>
           <Input value={form.city} onChangeText={set('city')} maxLength={80} placeholder="Kaduna" autoCapitalize="words" />
         </Field>
+        <CountryField fields={form} set={set} errors={errors} />
       </Section>
 
       <Section title="Photos" description={`Add up to ${MAX_SHOTS}, taken from where traffic sees it. The first one is the cover.`}>

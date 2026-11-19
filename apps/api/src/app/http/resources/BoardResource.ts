@@ -40,6 +40,7 @@ export class BoardResource extends Resource {
       country: board.country,
       latitude: board.latitude,
       longitude: board.longitude,
+      currency: board.currency,
       rate: rate === null ? null : { amountMinor: rate, currency: board.currency, period: board.ratePeriod },
       printsOwn: !!board.printsOwn,
       roadClass: board.roadClass ?? null,

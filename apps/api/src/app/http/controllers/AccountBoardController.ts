@@ -2,6 +2,7 @@ import { Pipeline } from '@app/services/Pipeline'
 import { OwnerPricing } from '@app/services/OwnerPricing'
 import { BoardImport } from '@app/services/BoardImport'
 import { PriceRules, type PriceChange } from '@app/services/PriceRules'
+import { PaymentRegions } from '@app/services/payments/PaymentRegions'
 import { PriceGuide } from '@app/services/PriceGuide'
 import { DigitalSlots } from '@app/services/DigitalSlots'
 import { ScreenPlayer } from '@app/services/ScreenPlayer'
@@ -185,6 +186,8 @@ export default class AccountBoardController extends BaseController {
       period: `nullable|in:${Board.PERIODS.join(',')}`,
       roadClass: `nullable|in:${Board.ROAD_CLASSES.join(',')}`,
       dailyTraffic: 'nullable|integer|min:0|max:5000000',
+      currency: 'nullable|alpha|min:3|max:3',
+      country: 'nullable|alpha|min:2|max:2',
       except: ['nullable', UUID],
     })
     const traffic = query.dailyTraffic === undefined || query.dailyTraffic === null || query.dailyTraffic === '' ? null : Number(query.dailyTraffic)
@@ -198,6 +201,7 @@ export default class AccountBoardController extends BaseController {
         heightM: Number(query.heightM),
         period: (query.period ?? 'month') as BoardRatePeriod,
         roadClass: (query.roadClass || null) as RoadClass | null,
+        currency: query.currency ? String(query.currency).toUpperCase() : await PaymentRegions.currencyFor(query.country ? String(query.country).toUpperCase() : null),
         dailyTraffic: traffic,
         exceptId: query.except ? String(query.except) : undefined,
       }),

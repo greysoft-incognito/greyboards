@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { Fragment, useCallback, useState } from 'react'
 import { ActivityIndicator, RefreshControl, StyleSheet, View } from 'react-native'
 import { useFocusEffect } from 'expo-router'
 import { BadgeCheck, Landmark } from 'lucide-react-native'
@@ -69,8 +69,12 @@ export default function Payouts() {
       ) : (
         <>
           <View style={styles.totals}>
-            <Total label="Coming to you" amount={summary.owedMinor} hint="Ready to send to your bank" />
-            <Total label="Paid out" amount={summary.paidMinor} hint="Paid to you" />
+            {(summary.totals.length ? summary.totals : [summary]).map((total) => (
+              <Fragment key={total.currency}>
+                <Total label="Coming to you" amount={total.owedMinor} currency={total.currency} hint="Ready to send to your bank" />
+                <Total label="Paid out" amount={total.paidMinor} currency={total.currency} hint="Paid to you" />
+              </Fragment>
+            ))}
           </View>
           {!summary.enabled ? <Callout tone="warning">Add your bank details so we can pay you.</Callout> : null}
 
@@ -98,11 +102,11 @@ export default function Payouts() {
   )
 }
 
-function Total({ label, amount, hint }: { label: string; amount: number; hint: string }) {
+function Total({ label, amount, currency, hint }: { label: string; amount: number; currency: string; hint: string }) {
   return (
     <View style={styles.total}>
       <Text variant="small">{label}</Text>
-      <Text style={styles.amount}>{formatMoney(amount)}</Text>
+      <Text style={styles.amount}>{formatMoney(amount, currency)}</Text>
       <Text variant="small">{hint}</Text>
     </View>
   )

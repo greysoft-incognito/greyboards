@@ -20,6 +20,12 @@ export class Payment extends Model {
   /** A payment for a whole shared board, taking it over from the people sharing it. */
   declare takeover: boolean
   declare currency: string
+  /** What the payer was charged, in their payment region's currency. */
+  declare chargeAmountMinor: number
+  declare chargeCurrency: string
+  /** One unit of `currency` in `chargeCurrency` when the payer was charged. */
+  declare exchangeRate: number
+  declare paymentRegionId: string | null
   declare response: Record<string, unknown> | null
   declare paidAt: Date | null
   declare createdAt: Date
@@ -34,10 +40,16 @@ export class Payment extends Model {
     paidAt: 'paid_at',
     shareIds: 'share_ids',
     printOfferId: 'print_offer_id',
+    chargeAmountMinor: 'charge_amount_minor',
+    chargeCurrency: 'charge_currency',
+    exchangeRate: 'exchange_rate',
+    paymentRegionId: 'payment_region_id',
   }
 
   protected override casts = {
     amountMinor: 'number',
+    chargeAmountMinor: 'number',
+    exchangeRate: 'number',
     response: 'json',
     shareIds: 'json',
     paidAt: 'datetime',
@@ -53,5 +65,12 @@ export class Payment extends Model {
 
   isPending(): boolean {
     return this.status === 'pending'
+  }
+
+  /** Part of this payment, given in the booking's currency, in what the payer was charged. */
+  charged(amountMinor: number): number {
+    if (!this.amountMinor) return amountMinor
+
+    return Math.min(this.chargeAmountMinor, Math.floor((amountMinor * this.chargeAmountMinor) / this.amountMinor))
   }
 }

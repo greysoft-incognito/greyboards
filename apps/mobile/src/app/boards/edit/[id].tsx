@@ -3,7 +3,7 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native'
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router'
 import { MapPin } from 'lucide-react-native'
 import type { BoardDetail, BoardKindDefinition } from '@greyboards/types'
-import { BoardDetailsSection, RateSection, boardInput, useBoardFields } from '@/components/boards/BoardFields'
+import { BoardDetailsSection, CountryField, RateSection, boardInput, useBoardFields } from '@/components/boards/BoardFields'
 import { Section, SettingsPage } from '@/components/settings/SettingsPage'
 import { Button, Callout, Field, Input, Text } from '@/components/ui'
 import { api } from '@/lib/api'
@@ -60,7 +60,7 @@ function EditBoardForm({ board }: { board: BoardDetail }) {
 
   const submit = () =>
     save.run(async () => {
-      await api.account.updateBoard(board.id, boardInput(fields, spot, board.country ?? 'NG')).send()
+      await api.account.updateBoard(board.id, boardInput(fields, spot)).send()
       if (router.canGoBack()) router.back()
       else router.replace({ pathname: '/boards/[id]', params: { id: board.id } })
 
@@ -87,6 +87,7 @@ function EditBoardForm({ board }: { board: BoardDetail }) {
         <Field label="City" error={errors.city}>
           <Input value={fields.city} onChangeText={set('city')} maxLength={80} placeholder="Kaduna" autoCapitalize="words" />
         </Field>
+        <CountryField fields={fields} set={set} errors={errors} />
       </Section>
 
       <BoardDetailsSection fields={fields} set={set} errors={errors} kinds={kinds} board={board} />

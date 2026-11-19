@@ -1,12 +1,4 @@
-/** An amount in minor units, such as "₦1,200,000". */
-export function formatMoney(amountMinor: number, currency = 'NGN') {
-  return new Intl.NumberFormat('en-NG', { style: 'currency', currency, maximumFractionDigits: 0 }).format(amountMinor / 100)
-}
-
-/** A short amount for map pins, such as "₦850K". */
-export function formatCompactMoney(amountMinor: number, currency = 'NGN') {
-  return new Intl.NumberFormat('en-NG', { style: 'currency', currency, notation: 'compact', maximumFractionDigits: 1 }).format(amountMinor / 100)
-}
+export { formatCompactMoney, formatMoney } from '@greyboards/types'
 
 /** A day such as "31 Jan 2027". Days are calendar days, so they're read in UTC. */
 export function formatDay(day: string) {
