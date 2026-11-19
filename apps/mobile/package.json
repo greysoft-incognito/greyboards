@@ -47,6 +47,7 @@
     "android": "expo start --android",
     "android:studio": "expo prebuild -p android && node scripts/open-android-studio.mjs",
     "ios": "expo start --ios",
+    "ios:xcode": "expo prebuild -p ios && xed ios",
     "keystore": "node scripts/upload-keystore.mjs",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit"

@@ -105,4 +105,8 @@ The "What's new" text comes from the `feat:` commits that touched `apps/mobile` 
 
 After the upload, the workflow commits the released version and build number to `app.json` on the default branch, so local builds match the store. The commit carries `[skip ci]`. If the default branch is protected, let GitHub Actions push to it, or set `RELEASE_COMMIT_NAME` and `RELEASE_COMMIT_EMAIL` to change who the commit is from.
 
+### Local builds
+
+From `apps/mobile`, `pnpm android:studio` generates the native Android project and opens it in Android Studio, and `pnpm ios:xcode` does the same for iOS in Xcode (macOS only). Both build without EAS, using the version in `app.json`.
+
 iOS builds run with `npx eas-cli build --platform ios` once an Apple Developer account is linked to the Expo project.
