@@ -19,11 +19,15 @@ export default (): NotificationConfig => {
      */
     drivers: {
       mail: {
-        transport: ['staging', 'production'].includes(env('APP_ENV'))
-          ? new SendPulseTransport({
-              apiKey: env('MAIL_API_KEY'),
-            })
-          : env('MAIL_TRANSPORT', 'smtp'),
+        /**
+         * smtp | file | sendpulse
+         */
+        transport:
+          env('MAIL_TRANSPORT', 'smtp') === 'sendpulse'
+            ? new SendPulseTransport({
+                apiKey: env('MAIL_API_KEY'),
+              })
+            : env('MAIL_TRANSPORT', 'smtp'),
         from: {
           name: env('MAIL_FROM_NAME', 'Greyboards'),
           address: env('MAIL_FROM_ADDRESS', 'no-reply@example.com'),
