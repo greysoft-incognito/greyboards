@@ -64,51 +64,9 @@ Cloudflare builds and deploys `apps/web` from GitHub. In the Cloudflare dashboar
 
 Then, under the `greyboards-web` Worker's Settings → Variables and secrets, add `API_URL` (the public API address, such as `https://api.example.com/api`) and, optionally, `MAP_STYLE_URL`. `wrangler.jsonc` holds no variables, so deploys keep the dashboard values. Local values live in `apps/web/.dev.vars`.
 
-## Mobile builds (EAS)
+## Mobile builds and releases
 
-The Android app builds on [EAS](https://expo.dev/eas) from the **Deploy apps** workflow. A push to the `deploy` branch, or a manual run from the Actions tab, builds an installable APK. Only a published GitHub release builds an App Bundle and puts it on Google Play. That build skips EAS: it runs `expo prebuild` and Gradle on the GitHub runner and signs the bundle with our own upload key. The bundle id is `com.greysoft.greyboards.app` on both iOS and Android.
+The **Deploy apps** workflow builds the app. A push to the `deploy` branch, or a manual run from the Actions tab, builds a test APK on EAS. Publishing a GitHub release builds a signed App Bundle with Gradle and sends it to Google Play, with the tag deciding the tracks. For a local build, run `pnpm android:studio` or `pnpm ios:xcode` from `apps/mobile`.
 
-One-time setup, in GitHub → Settings → Secrets and variables → Actions:
+[docs/mobile-release.md](docs/mobile-release.md) covers the one-time setup, cutting a release, versions, release notes and troubleshooting.
 
-- secret `EXPO_TOKEN`: an access token from expo.dev → Account settings → Access tokens, made by the Expo account that will own the app
-- variable `EAS_OWNER`: that Expo account or organisation name
-- variable `API_URL`: the public API address, such as `https://api.example.com/api`
-- variable `WEB_URL` (optional): the web app's https address, so email links open the app
-
-The first run creates the EAS project for the app (or finds it, if the account already has one called `greyboards`) and prints its id. Save that id as the variable `EAS_PROJECT_ID` to skip the lookup on later runs.
-
-### Google Play
-
-1. Make the upload keystore once, on your machine (it needs a JDK for `keytool`): `pnpm --filter @greyboards/mobile keystore`. It writes `apps/mobile/credentials/upload-keystore.jks` and `apps/mobile/credentials/github-secrets.env`, which git ignores. Keep both somewhere safe, such as a password manager: Play only accepts bundles signed with this key.
-2. In GitHub → Settings → Environments → `play-store`, add each line of `github-secrets.env` as a secret: `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` and `ANDROID_KEY_PASSWORD`. Add `GOOGLE_SERVICE_ACCOUNT_JSON` too (a service account with release access).
-3. Upload the first App Bundle by hand in the Play Console (the release run keeps it as an artifact), with Play App Signing turned on. Play then knows the upload key, and later releases upload on their own.
-
-Optional variables:
-
-- `PLAY_CLOSED_TRACK`: the closed testing track, `alpha` unless set (use your custom track's name, such as `qa`)
-- `PLAY_STORE_RELEASE_STATUS`: `completed` unless set; use `draft` until the app's first release is live
-
-### Versions and releases
-
-The version name is the release tag without its `v`, so `v1.4.0` and `1.4.0` both ship as `1.4.0`. The build number (Android `versionCode`) is `baseBuildNumber` in `apps/mobile/package.json` plus the workflow's run number, so every build gets a higher one. Raise `baseBuildNumber` if the run count ever starts over, for example after the workflow file is renamed. Builds that aren't releases keep the version in `app.json`.
-
-The tag decides which Play tracks a release goes to. Each one also goes to every testing track below it:
-
-| Release | Tag example | Tracks |
-| --- | --- | --- |
-| Production | `v1.4.0` | production, open, closed, internal |
-| Open testing | `v1.4.0-beta.1` or `v1.4.0-rc.1`, or any release marked as a pre-release | open, closed, internal |
-| Closed testing | `v1.4.0-alpha.1` | closed, internal |
-| Internal testing | `v1.4.0-internal.1` | internal |
-
-The "What's new" text comes from the `feat:` commits that touched `apps/mobile` since the previous tag, leaving out admin work, plus a line for fixes. The run's summary shows it and the tracks.
-
-Each release also builds an APK signed with the same key. It is kept as a run artifact and, when the `EXPO_TOKEN` secret and `EAS_PROJECT_ID` variable are set, uploaded to EAS with `eas upload`, so the run summary links to an expo.dev page with an install link and QR code. A failed EAS upload doesn't stop the release.
-
-After the upload, the workflow commits the released version and build number to `app.json` on the default branch, so local builds match the store. The commit carries `[skip ci]`. If the default branch is protected, let GitHub Actions push to it, or set `RELEASE_COMMIT_NAME` and `RELEASE_COMMIT_EMAIL` to change who the commit is from.
-
-### Local builds
-
-From `apps/mobile`, `pnpm android:studio` generates the native Android project and opens it in Android Studio, and `pnpm ios:xcode` does the same for iOS in Xcode (macOS only). Both build without EAS, using the version in `app.json`.
-
-iOS builds run with `npx eas-cli build --platform ios` once an Apple Developer account is linked to the Expo project.
