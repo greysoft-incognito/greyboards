@@ -103,7 +103,6 @@ Start from this template. It runs the API with fallbacks for services that aren'
 ```sh
 APP_NAME="Greyboards"
 NODE_ENV=production
-# Mail is saved to storage/framework/mails until this is production and MAIL_API_KEY is set.
 APP_ENV=preview
 APP_URL=https://api.greyboards.com
 FRONTEND_URL=https://greyboards.com
@@ -127,7 +126,13 @@ QUEUE_CONNECTION=sync
 FILESYSTEM_DISK=local
 UPLOADS_DISK=
 
+# smtp | file | sendpulse. file saves mail to storage/framework/mails.
 MAIL_TRANSPORT=file
+MAIL_HOST=
+MAIL_PORT=465
+MAIL_SECURE=true
+MAIL_USERNAME=
+MAIL_PASSWORD=
 MAIL_API_KEY=
 MAIL_FROM_ADDRESS=no-reply@greyboards.com
 MAIL_FROM_NAME="Greyboards"
@@ -154,7 +159,7 @@ The business defaults (commission, shares, fees and limits) are listed in `apps/
 
 | Service | Fallback | To turn it on |
 | --- | --- | --- |
-| Mail | Saved to `storage/framework/mails` | Set `MAIL_API_KEY` (SendPulse) and `APP_ENV=production` |
+| Mail | Saved to `storage/framework/mails` | `MAIL_TRANSPORT=smtp` with the `MAIL_HOST`, `MAIL_PORT`, `MAIL_SECURE`, `MAIL_USERNAME`, `MAIL_PASSWORD` settings, or `MAIL_TRANSPORT=sendpulse` with `MAIL_API_KEY` |
 | SMS | Logged (`SMS_DRIVER=log`) | Set `SMS_DRIVER` and the provider's keys |
 | Uploads | Local disk in `shared/storage` | `UPLOADS_DISK=s3` and the `AWS_*` bucket settings (S3 or R2) |
 | Payments | Checkout says payments are unavailable | `FLUTTERWAVE_PUBLIC_KEY`, `FLUTTERWAVE_SECRET_KEY`, `FLUTTERWAVE_WEBHOOK_HASH`; webhook URL `<API>/api/payments/flutterwave/webhook` |
