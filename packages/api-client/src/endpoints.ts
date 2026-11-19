@@ -368,14 +368,14 @@ export function createEndpoints(alova: GreyboardsAlova) {
       /** Take on a role. Scouts and dispatchers wait for a reviewer. */
       /** What the account has shown for the scout and dispatcher checks. */
       partnerChecks: () => alova.Get<ApiResponse<PartnerChecks> & { documents: IdentityDocumentDefinition[] }>('/account/partner-checks', { cacheFor: null }),
-      /** Send a photo of a government ID for review. */
-      sendIdentity: (data: IdentityInput, photo: Blob, filename = 'id.jpg') => {
+      /** Send a photo of a government ID for review. `photo` is a File/Blob on web, or an RN `{ uri, name, type }` object. */
+      sendIdentity: (data: IdentityInput, photo: Blob | { uri: string; name: string; type: string }, filename = 'id.jpg') => {
         const form = new FormData()
 
         form.append('documentType', data.documentType)
         form.append('documentNumber', data.documentNumber)
         form.append('fullName', data.fullName)
-        form.append('photo', photo, filename)
+        form.append('photo', photo as Blob, 'uri' in photo ? photo.name : filename)
 
         return alova.Post<ApiResponse<PartnerChecks>>('/account/identity', form)
       },

@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ActivityIndicator, StyleSheet, View } from 'react-native'
 import { useRequest } from 'alova/client'
-import type { AccountRole, AccountRoleDefinition, AccountRoleKind } from '@greyboards/types'
+import type { AccountRole, AccountRoleDefinition, AccountRoleKind, IdentityDocumentDefinition, PartnerChecks } from '@greyboards/types'
 import { RoleIcon, RoleStatus, heldRole } from '@/components/AccountRoles'
 import { Standing } from '@/components/reputation/Badges'
 import { RoleReputationPanel } from '@/components/reputation/RoleReputation'
+import { PartnerChecksSection } from '@/components/settings/PartnerChecks'
 import { SettingsPage, Section } from '@/components/settings/SettingsPage'
 import { Button, Callout, Text } from '@/components/ui'
 import { api } from '@/lib/api'
@@ -20,6 +21,18 @@ export default function Roles() {
   const [acting, setActing] = useState<AccountRoleKind | null>(null)
   const held: AccountRole[] = roles.data?.data ?? []
   const definitions: AccountRoleDefinition[] = roles.data?.definitions ?? []
+  const [checks, setChecks] = useState<{ data: PartnerChecks; documents: IdentityDocumentDefinition[] } | null>(null)
+  const applying = held.some((role) => definitions.some((definition) => definition.kind === role.kind && definition.needsReview))
+
+  useEffect(() => {
+    if (!applying) return setChecks(null)
+
+    api.account
+      .partnerChecks()
+      .send()
+      .then(({ data, documents }) => setChecks({ data, documents }))
+      .catch(() => setChecks(null))
+  }, [applying])
 
   const change = (kind: AccountRoleKind, intent: 'take' | 'drop') => {
     setActing(kind)
@@ -80,6 +93,8 @@ export default function Roles() {
           </Section>
         )
       })}
+
+      {checks ? <PartnerChecksSection checks={checks.data} documents={checks.documents} onChange={(data) => setChecks((current) => current && { ...current, data })} /> : null}
     </SettingsPage>
   )
 }
