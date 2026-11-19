@@ -227,6 +227,12 @@ Settings → Secrets and variables → Actions. Secrets can also live on the `ap
 cd /var/www/greyboards-api/current/apps/api && pnpm exec ark users:role you@example.com admin
 ```
 
+**Demo data on staging**: on a staging or preview server, never production, this wipes the database and fills it with the demo accounts listed in [apps/api/README.md](../apps/api/README.md#mock-data):
+
+```sh
+cd /var/www/greyboards-api/current/apps/api && pnpm exec ark migrate:fresh && pnpm exec ark db:mock
+```
+
 ## Troubleshooting
 
 - **`Missing .../shared/.env`**: create it (setup step 3), or set `API_DOTENV`.
