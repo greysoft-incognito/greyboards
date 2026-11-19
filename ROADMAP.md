@@ -41,12 +41,24 @@ What's built and what's left, following the phases in [docs/proposal.md](docs/pr
 
 ## Open decisions
 
-- The EAS project for mobile builds
-- The owner agreement wording
-- The bid format (proposal question 3)
+- **Scout pay on managed boards** (proposal question 1): scouts earn the same share on every board they run, for as long as they're its scout. Still open: whether boards they manage for an owner earn more, or a fee per proof visit.
 
-Decided: Kaduna goes live first; the rent splits owner 70, Greyboards 20, scout 10, with the dispatcher's price paid separately on top; sharing merges every advertiser's design into one print; Billposter is now Dispatch.
+## Decided
+
+- **Audience:** billboards anywhere in the world. Kaduna is the first launch city.
+- **Revenue split:** owner 70, Greyboards 20, scout 10 of the rent, set by admins and always adding up to 100. The dispatcher's price is paid on top of the rent (#32, #37).
+- **Owner net amount:** the tagger can fix what the owner receives, and the listed rent is grossed up to cover it (#39).
+- **Dispatch:** "Billposter" is now Dispatch. Dispatchers set their own prices, and advertisers pick a bid or send a direct request (#33, #35).
+- **Sharing:** several advertisers pay for one board for the same period, and the print merges every design. After an admin-set lock, an unfilled board goes to auction (#26, #35).
+- **Bids:** whoever looks after a board opens its dates to bids, and advertisers can make offers below the price. Open or sealed bidding is an admin setting (#25).
+- **Owner agreement wording:** the headline, share line, terms and SMS are admin settings (#38).
+- **Map provider:** MapLibre.
+- **Currency:** @toneflix/money, with an admin default currency and payment regions (#65).
+- **Logo:** the G Monogram (#59).
+- **Reputation:** admins give the Verified badge, and the Proven badge is earned at milestones (#45).
+- **Deploys:** the API through GitHub Actions, and the web app through Cloudflare's Git builds from the wrangler config.
+- **Mobile releases:** only a published GitHub release ships. It's built on the runner with our own keystore, sent to Google Play, and the APK goes to EAS. The release workflow creates or finds the EAS project itself.
 
 ## Needed before launch
 
-Flutterwave live keys, an SMS provider (Africa's Talking or Twilio), a map tile style URL, S3 or R2 storage, mail, Postgres with PostGIS, and the Cloudflare and Railway deploy setup.
+Flutterwave live keys, an SMS provider (Africa's Talking or Twilio), a map tile style URL, S3 or R2 storage, mail, Postgres with PostGIS, the Cloudflare and Railway deploy setup, and an `EXPO_TOKEN` secret for EAS uploads.
