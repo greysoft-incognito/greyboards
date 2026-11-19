@@ -30,4 +30,8 @@ describe('starter template', () => {
   it('hides a document that does not exist', async () => {
     await request(app).get('/api/documents/no-such-page').contains('"code":404')
   })
+
+  it('answers not found for an id that cannot exist', async () => {
+    await request(app).get('/api/boards/not-an-id').contains('"code":404')
+  })
 })
