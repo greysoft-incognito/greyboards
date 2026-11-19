@@ -3,6 +3,7 @@ import path from 'path'
 import { ExpressDriver } from '@arkstack/driver-express'
 import { Arkstack, ArkstackRouterContract, ArkstackRouteListOptions } from '@arkstack/contract'
 import { type Express, type Handler } from 'express'
+import { DatabaseErrors } from '../app/http/middlewares/DatabaseErrors'
 
 export default class Application extends Arkstack<Express, unknown, Handler> {
   /**
@@ -59,6 +60,7 @@ export default class Application extends Arkstack<Express, unknown, Handler> {
     await this.driver.bindRouter(this.app)
 
     // Error Handler
+    this.app.use(new DatabaseErrors().handler())
     await this.driver.registerErrorHandler?.(this.app)
 
     // Start the server
