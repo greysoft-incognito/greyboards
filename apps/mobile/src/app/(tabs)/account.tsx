@@ -130,10 +130,11 @@ export default function Account() {
   )
 }
 
-/** How many roles are active, or that one is waiting for review. */
+/** How many roles are active, or that one is waiting for the account's details or for review. */
 function roleStatus(roles: AccountRole[]): Status {
   const active = roles.filter((role) => role.status === 'active').length
 
+  if (roles.some((role) => role.status === 'pending' && role.missing.length)) return { text: 'Waiting for your details', tone: 'warn' }
   if (roles.some((role) => role.status === 'pending')) return { text: 'Waiting for review', tone: 'warn' }
   if (!active) return { text: 'None yet', tone: 'warn' }
 

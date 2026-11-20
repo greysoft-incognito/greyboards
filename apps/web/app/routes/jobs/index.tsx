@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Link, NavLink, useNavigate, useSearchParams } from "react-router";
 import { LocateFixed, Printer } from "lucide-react";
-import type { PrintJob } from "@greyboards/types";
-import { heldRole } from "~/components/AccountRoles";
+import type { PartnerRequirement, PrintJob } from "@greyboards/types";
+import { heldRole, missingWords } from "~/components/AccountRoles";
 import { BoardScene } from "~/components/BoardScene";
 import { JobRow } from "~/components/jobs/JobBits";
 import { Pager } from "~/components/Pager";
+import { FinishApplicationLink } from "~/components/settings/ApplicationChecklist";
 import { Alert, Button, buttonClass, Spinner } from "~/components/ui";
 import { requireUser } from "~/lib/session.server";
 import type { Route } from "./+types/index";
@@ -21,17 +22,17 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 	const lng = Number(params.get("lng"));
 	const located = params.has("lat") && params.has("lng") && Number.isFinite(lat) && Number.isFinite(lng);
 
-	if (role?.status !== "active") return { roleStatus: role?.status ?? null, mine, located, jobs: [] as PrintJob[], meta: null };
+	if (role?.status !== "active") return { roleStatus: role?.status ?? null, missing: role?.missing ?? [], mine, located, jobs: [] as PrintJob[], meta: null };
 
 	if (mine) {
 		const result = await api.printJobs.mine({ page: Number(params.get("page")) || 1 });
 
-		return { roleStatus: role.status, mine, located, jobs: result.data, meta: result.meta };
+		return { roleStatus: role.status, missing: [] as PartnerRequirement[], mine, located, jobs: result.data, meta: result.meta };
 	}
 
 	const jobs = located ? (await api.printJobs.near({ lat, lng })).data : [];
 
-	return { roleStatus: role.status, mine, located, jobs, meta: null };
+	return { roleStatus: role.status, missing: [] as PartnerRequirement[], mine, located, jobs, meta: null };
 }
 
 const tab = ({ isActive }: { isActive: boolean }) =>
@@ -39,7 +40,7 @@ const tab = ({ isActive }: { isActive: boolean }) =>
 
 /** Dispatchers find open print jobs near them, and follow the ones they took. */
 export default function Jobs({ loaderData }: Route.ComponentProps) {
-	const { roleStatus, mine, located, jobs, meta } = loaderData;
+	const { roleStatus, missing, mine, located, jobs, meta } = loaderData;
 
 	return (
 		<main className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
@@ -64,7 +65,7 @@ export default function Jobs({ loaderData }: Route.ComponentProps) {
 			</div>
 
 			{roleStatus !== "active" ? (
-				<RoleNeeded status={roleStatus} />
+				<RoleNeeded status={roleStatus} missing={missing} />
 			) : !mine && !located ? (
 				<FindMe />
 			) : jobs.length ? (
@@ -135,14 +136,17 @@ function FindMe({ compact = false }: { compact?: boolean }) {
 	);
 }
 
-function RoleNeeded({ status }: { status: string | null }) {
+function RoleNeeded({ status, missing }: { status: string | null; missing: PartnerRequirement[] }) {
 	return (
 		<div className="panel mt-6 flex flex-col items-center gap-4 px-6 py-10 text-center">
 			<p className="max-w-md text-ink-700">
 				{status === "pending"
-					? "We're reviewing your dispatcher application. Jobs will show up here once you're approved."
+					? missing.length
+						? `Add ${missingWords(missing)} so we can approve you as a dispatcher. Jobs will show up here once you're in.`
+						: "We're reviewing your dispatcher application. Jobs will show up here once you're approved."
 					: "Become a dispatcher to print and put up ads near you."}
 			</p>
+			{status === "pending" && missing.length > 0 && <FinishApplicationLink />}
 			{status !== "pending" && (
 				<Link prefetch="intent" to="/settings/roles" className={buttonClass("primary")}>
 					Become a dispatcher

@@ -4,10 +4,11 @@ import { router, useFocusEffect } from 'expo-router'
 import { LinearGradient } from 'expo-linear-gradient'
 import { ArrowRight } from 'lucide-react-native'
 import type { AccountRoleKind, Task } from '@greyboards/types'
-import { ROLE_ICONS, RoleStatus } from '@/components/AccountRoles'
+import { ROLE_ICONS, RoleStatus, missingWords } from '@/components/AccountRoles'
 import { BoardScene, type SceneArt, type SceneTime } from '@/components/BoardScene'
 import { useTabBarInset } from '@/components/GlassTabBar'
 import { TaskList } from '@/components/scouting/ScoutingBits'
+import { FinishLink } from '@/components/settings/ApplicationChecklist'
 import { Text } from '@/components/ui'
 import { api } from '@/lib/api'
 import { session, useUser } from '@/lib/session'
@@ -34,7 +35,8 @@ export default function Dashboard() {
   const user = useUser()
   const inset = useTabBarInset()
   const firstName = user.name.split(/\s+/)[0]
-  const pending = user.accountRoles.filter((role) => role.status === 'pending').length
+  const pending = user.accountRoles.filter((role) => role.status === 'pending')
+  const missing = [...new Set(pending.flatMap((role) => role.missing))]
   const looksAfterBoards = user.accountRoles.some((role) => (role.kind === 'owner' || role.kind === 'scout') && role.status === 'active')
   const [tasks, setTasks] = useState<Task[]>([])
 
@@ -66,7 +68,11 @@ export default function Dashboard() {
         <Text style={styles.heroKicker}>Your Greyboards</Text>
         <Text style={styles.heroTitle}>Hello, {firstName}</Text>
         <Text style={styles.heroText}>
-          {pending ? 'We’re reviewing your application and will email you soon.' : 'Good to see you again.'}
+          {missing.length
+            ? `Add ${missingWords(missing)} so we can approve your application.`
+            : pending.length
+              ? 'We’re reviewing your application and will email you soon.'
+              : 'Good to see you again.'}
         </Text>
       </LinearGradient>
 
@@ -86,7 +92,7 @@ export default function Dashboard() {
               <BoardScene {...SCENES[role.kind]} />
             </View>
             <View style={styles.cardBody}>
-              <RoleStatus status={role.status} />
+              <RoleStatus status={role.status} missing={role.missing} />
               <View style={styles.cardTitle}>
                 <Icon size={18} color={colors.brand600} />
                 <Text style={styles.roleName}>{role.label}</Text>
@@ -95,9 +101,12 @@ export default function Dashboard() {
                 {role.status === 'active'
                   ? EMPTY[role.kind]
                   : role.status === 'pending'
-                    ? "We’re reviewing your application and will email you soon."
+                    ? role.missing.length
+                      ? `Add ${missingWords(role.missing)} so we can approve you.`
+                      : "We’re reviewing your application and will email you soon."
                     : (role.note ?? "This role isn't active. Contact support if you think that's a mistake.")}
               </Text>
+              {role.status === 'pending' && role.missing.length ? <FinishLink /> : null}
             </View>
           </View>
         )

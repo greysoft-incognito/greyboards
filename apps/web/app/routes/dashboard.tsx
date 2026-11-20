@@ -2,7 +2,8 @@ import { Link } from "react-router";
 import { ArrowRight, PartyPopper } from "lucide-react";
 import type { AccountRoleKind } from "@greyboards/types";
 import { requireUser } from "~/lib/session.server";
-import { ROLE_ICONS, RoleStatus } from "~/components/AccountRoles";
+import { ROLE_ICONS, RoleStatus, missingWords } from "~/components/AccountRoles";
+import { FinishApplicationLink } from "~/components/settings/ApplicationChecklist";
 import { BoardScene, type SceneArt, type SceneTime } from "~/components/BoardScene";
 import { TaskList } from "~/components/scouting/ScoutingBits";
 import type { Route } from "./+types/dashboard";
@@ -37,7 +38,8 @@ const SCENES: Record<AccountRoleKind, { time: SceneTime; art: SceneArt; headline
 export default function Dashboard({ loaderData }: Route.ComponentProps) {
 	const { user, tasks, welcome } = loaderData;
 	const firstName = user.name.split(/\s+/)[0];
-	const pending = user.accountRoles.filter((role) => role.status === "pending").length;
+	const pending = user.accountRoles.filter((role) => role.status === "pending");
+	const missing = [...new Set(pending.flatMap((role) => role.missing))];
 
 	return (
 		<main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
@@ -52,7 +54,11 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
 				<p className="text-sm text-brand-100">Your Greyboards</p>
 				<h1 className="mt-1 font-display text-4xl font-extrabold tracking-[-0.03em] sm:text-5xl">Hello, {firstName}</h1>
 				<p className="mt-3 max-w-lg text-brand-100">
-					{pending ? "We're reviewing your application and will email you soon." : "Good to see you again."}
+					{missing.length
+						? `Add ${missingWords(missing)} so we can approve your application.`
+						: pending.length
+							? "We're reviewing your application and will email you soon."
+							: "Good to see you again."}
 				</p>
 				<div className="absolute top-1/2 right-8 hidden aspect-[400/260] w-64 -translate-y-1/2 rotate-2 overflow-hidden rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.35)] ring-4 ring-white/10 md:block">
 					<BoardScene time="night" art="brand" headline={`Hi, ${firstName}`} />
@@ -76,7 +82,7 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
 								<BoardScene {...SCENES[role.kind]} />
 							</div>
 							<div className="flex min-w-0 flex-1 flex-col gap-2 py-1">
-								<RoleStatus status={role.status} />
+								<RoleStatus status={role.status} missing={role.missing} />
 								<div className="flex items-center gap-2">
 									<Icon className="h-5 w-5 shrink-0 text-brand-600" aria-hidden />
 									<h2 className="font-display text-xl font-extrabold tracking-tight text-ink-900">{role.label}</h2>
@@ -85,9 +91,12 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
 									{role.status === "active"
 										? EMPTY[role.kind]
 										: role.status === "pending"
-											? "We're reviewing your application and will email you soon."
+											? role.missing.length
+												? `Add ${missingWords(role.missing)} so we can approve you.`
+												: "We're reviewing your application and will email you soon."
 											: (role.note ?? "This role isn't active. Contact support if you think that's a mistake.")}
 								</p>
+								{role.status === "pending" && role.missing.length > 0 && <FinishApplicationLink className="text-sm" />}
 							</div>
 						</section>
 					);

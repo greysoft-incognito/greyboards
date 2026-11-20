@@ -2,6 +2,9 @@ import type { ID } from './models'
 
 export type IdentityDocument = 'nin' | 'passport' | 'drivers_licence' | 'voters_card'
 
+/** Something a scout or dispatcher sends before approval. */
+export type PartnerRequirement = 'identity' | 'bank'
+
 /** `submitted` until a reviewer looks, then `verified` or `rejected`. */
 export type IdentityStatus = 'submitted' | 'verified' | 'rejected'
 
@@ -28,8 +31,10 @@ export interface PartnerChecks {
   bank: { bankName: string; accountName: string; maskedNumber: string } | null
   /** Whether the bank's name for the account matches the ID. Null until both are in. */
   namesMatch: boolean | null
-  /** What is still needed before approval, such as "a bank account". */
-  missing: string[]
+  /** What the settings ask for before approval. */
+  required: PartnerRequirement[]
+  /** What of that is still to come. A turned-down ID counts as missing. */
+  missing: PartnerRequirement[]
 }
 
 export interface IdentityInput {
