@@ -13,7 +13,7 @@ import { isSharedBookingIntent, sharedBookingAction } from "~/lib/shares.server"
 import { BoardReviews, RatingLine } from "~/components/reviews/ReviewBits";
 import { BlockedDays, RateCard } from "~/components/boards/RateCard";
 import { SpotMap } from "~/components/map/SpotMap";
-import { Alert, Button, buttonClass, Spinner } from "~/components/ui";
+import { Alert, Button, buttonClass, PlainButton, Spinner } from "~/components/ui";
 import { formError } from "~/lib/api.server";
 import { photoLocation, postedPhoto } from "~/lib/boards.server";
 import { mapStyleUrl } from "~/lib/map.server";
@@ -336,9 +336,14 @@ function PhotoThumb({ photo, active, onShow, removable }: { photo: BoardPhoto; a
 				<Form method="post" preventScrollReset className="absolute top-1 right-1">
 					<input type="hidden" name="intent" value="remove-photo" />
 					<input type="hidden" name="photo" value={photo.id} />
-					<button type="submit" className="flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-ink-700 opacity-0 shadow transition group-hover:opacity-100 focus:opacity-100 max-sm:opacity-100" aria-label="Remove this photo">
+					<PlainButton
+						type="submit"
+						className="flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-ink-700 opacity-0 shadow transition group-hover:opacity-100 focus:opacity-100 max-sm:opacity-100"
+						aria-label="Remove this photo"
+						confirm={{ title: "Remove this photo?", action: "Remove", danger: true }}
+					>
 						<X className="h-4 w-4" aria-hidden />
-					</button>
+					</PlainButton>
 				</Form>
 			)}
 		</div>
@@ -409,7 +414,7 @@ function RemoveBoard() {
 	return (
 		<Form method="post" className="flex flex-wrap items-center gap-2">
 			<input type="hidden" name="intent" value="remove" />
-			<Button type="submit" variant="danger" disabled={busy}>
+			<Button type="submit" variant="danger" disabled={busy} confirm={{ title: "Remove this board?", message: "Its photos go with it. This can't be undone.", action: "Remove board", danger: true }}>
 				{busy ? <Spinner /> : <Trash2 className="h-4 w-4" aria-hidden />}
 				Remove this board and its photos
 			</Button>
@@ -474,7 +479,7 @@ function AgreementPanel({ board }: { board: BoardDetail }) {
 			{canSend && board.owner?.phone && (
 				<Form method="post" preventScrollReset>
 					<input type="hidden" name="intent" value="send-agreement" />
-					<Button type="submit" variant={agreement?.status === "sent" ? "secondary" : "primary"} disabled={busy}>
+					<Button confirm={{ title: "Send the agreement to the owner?", action: "Send" }} type="submit" variant={agreement?.status === "sent" ? "secondary" : "primary"} disabled={busy}>
 						{busy ? <Spinner /> : <Send className="h-4 w-4" aria-hidden />}
 						{agreement?.status === "sent" ? "Resend" : "Send to the owner"}
 					</Button>

@@ -37,8 +37,8 @@ function SendPrice({ job, onChange }: { job: PrintJob; onChange: () => void }) {
     return (
       <Section title="Requested at your rate">
         <Text>The advertiser asked you to do this job for {formatMoney(offer.amountMinor, offer.currency)}. The job is yours once they pay.</Text>
-        <Button title="Accept" loading={action.busy} onPress={() => act(() => api.printJobs.acceptRequest(offer.id).send(), 'Accepted! The job is yours once the advertiser pays.')} />
-        <Button title="Decline" variant="ghost" disabled={action.busy} onPress={() => act(() => api.printJobs.declineRequest(offer.id).send(), 'Request declined.')} />
+        <Button confirm={{ title: "Take this job?", message: "You'll be expected to print and put it up by the date.", action: "Take it" }} title="Accept" loading={action.busy} onPress={() => act(() => api.printJobs.acceptRequest(offer.id).send(), 'Accepted! The job is yours once the advertiser pays.')} />
+        <Button confirm={{ title: "Turn this job down?", action: "Turn it down", danger: true }} title="Decline" variant="ghost" disabled={action.busy} onPress={() => act(() => api.printJobs.declineRequest(offer.id).send(), 'Request declined.')} />
       </Section>
     )
   }
@@ -60,8 +60,8 @@ function SendPrice({ job, onChange }: { job: PrintJob; onChange: () => void }) {
       <Field label="Note for the advertiser" hint="Optional. For example, the material.">
         <Input value={note} onChangeText={setNote} maxLength={200} />
       </Field>
-      <Button title={offer ? 'Change price' : 'Send price'} loading={action.busy} onPress={send} />
-      {offer?.status === 'pending' ? <Button title="Withdraw" variant="ghost" disabled={action.busy} onPress={() => act(() => api.printJobs.withdrawPrice(offer.id).send(), 'Price taken back.')} /> : null}
+      <Button confirm={{ title: offer ? 'Change your price?' : 'Send your price?', action: offer ? 'Change price' : 'Send price' }} title={offer ? 'Change price' : 'Send price'} loading={action.busy} onPress={send} />
+      {offer?.status === 'pending' ? <Button confirm={{ title: "Withdraw your price?", message: "The advertiser won't be able to accept it any more.", action: "Withdraw", danger: true }} title="Withdraw" variant="ghost" disabled={action.busy} onPress={() => act(() => api.printJobs.withdrawPrice(offer.id).send(), 'Price taken back.')} /> : null}
       <Text variant="small">Include printing, transport and putting it up by {formatDay(job.dueOn)}. Set your rate on the web under Print jobs › Prices so advertisers can ask you.</Text>
     </Section>
   )
@@ -183,7 +183,7 @@ function NextStep({ job, onChange }: { job: PrintJob; onChange: () => void }) {
       return 'Print photo added.'
     })
 
-  const giveBack = <Button title="Release job" variant="ghost" disabled={action.busy} onPress={() => act(() => api.printJobs.release(job.id).send(), 'Job given back.')} />
+  const giveBack = <Button confirm={{ title: "Give this job back?", message: "It goes back to other dispatchers nearby.", action: "Give it back", danger: true }} title="Release job" variant="ghost" disabled={action.busy} onPress={() => act(() => api.printJobs.release(job.id).send(), 'Job given back.')} />
 
   let body: ReactNode = null
 
@@ -192,7 +192,7 @@ function NextStep({ job, onChange }: { job: PrintJob; onChange: () => void }) {
   if (job.status === 'open') {
     body = (
       <>
-        <Button title={action.busy ? 'Reserving…' : 'Reserve this job'} loading={action.busy} onPress={() => act(() => api.printJobs.reserve(job.id).send(), 'We’re holding it for you. Confirm once you’re sure you can make the date.')} />
+        <Button confirm={{ title: "Reserve this job?", message: "It's held for you for a short while so you can check you can make the date.", action: "Reserve" }} title={action.busy ? 'Reserving…' : 'Reserve this job'} loading={action.busy} onPress={() => act(() => api.printJobs.reserve(job.id).send(), 'We’re holding it for you. Confirm once you’re sure you can make the date.')} />
         <Text variant="small">This job is available again. Reserve it and we’ll hold it for a few hours while you check the date.</Text>
       </>
     )
@@ -200,7 +200,7 @@ function NextStep({ job, onChange }: { job: PrintJob; onChange: () => void }) {
     body = (
       <>
         {job.reservedUntil ? <HoldLeft until={job.reservedUntil} /> : null}
-        <Button title={action.busy ? 'Confirming…' : 'I can do it'} loading={action.busy} onPress={() => act(() => api.printJobs.confirm(job.id).send(), 'The job is yours!')} />
+        <Button confirm={{ title: "Commit to this job?", message: "You'll be expected to print and put it up by the date.", action: "I can do it" }} title={action.busy ? 'Confirming…' : 'I can do it'} loading={action.busy} onPress={() => act(() => api.printJobs.confirm(job.id).send(), 'The job is yours!')} />
         {giveBack}
       </>
     )

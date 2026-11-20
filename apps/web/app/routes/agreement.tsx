@@ -4,7 +4,7 @@ import { BadgeCheck, Banknote, CircleX, Layers, Lightbulb, MapPin, MessageSquare
 import type { AgreementOffer } from "@greyboards/types";
 import { BoardCover, formatRate, formatSize } from "~/components/boards/BoardBits";
 import { Avatar } from "~/components/Avatar";
-import { Alert, Button, Field, Input, OtpInput, Spinner } from "~/components/ui";
+import { Alert, Button, Field, Input, OtpInput, PlainButton, Spinner } from "~/components/ui";
 import { formError, getServerApi } from "~/lib/api.server";
 import { cloudflareContext } from "~/lib/cloudflare";
 import type { Route } from "./+types/agreement";
@@ -185,7 +185,7 @@ function Signing({ offer, result }: { offer: AgreementOffer; result: SigningResu
 						<span className="mb-1.5 block text-sm font-semibold text-ink-900">Code we texted to {offer.ownerPhone}</span>
 						<OtpInput name="code" invalid={!!result?.error && result.intent === "sign"} disabled={busy("sign") || name.trim().length < 2} />
 					</div>
-					<Button type="submit" disabled={busy("sign")} className="w-full">
+					<Button confirm={{ title: "Sign this agreement?", message: "You're agreeing to everything above.", action: "Sign" }} type="submit" disabled={busy("sign")} className="w-full">
 						{busy("sign") ? <Spinner /> : <PenLine className="h-4 w-4" aria-hidden />}
 						Sign the agreement
 					</Button>
@@ -193,9 +193,14 @@ function Signing({ offer, result }: { offer: AgreementOffer; result: SigningResu
 			)}
 			<Form method="post" className="border-t border-surface-200 pt-3">
 				<input type="hidden" name="intent" value="decline" />
-				<button type="submit" className="text-sm font-medium text-ink-500 hover:text-red-700" disabled={busy("decline")}>
+				<PlainButton
+					type="submit"
+					className="text-sm font-medium text-ink-500 hover:text-red-700"
+					disabled={busy("decline")}
+					confirm={{ title: "Decline this agreement?", message: "Your boards won't be listed on Greyboards.", action: "Decline", danger: true }}
+				>
 					Not interested? Decline
-				</button>
+				</PlainButton>
 			</Form>
 		</div>
 	);

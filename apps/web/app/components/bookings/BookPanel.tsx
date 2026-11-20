@@ -214,7 +214,18 @@ export function BookPanel({
 						</div>
 					)}
 					{error && <Alert>{error}</Alert>}
-					<Button type="submit" className="w-full" disabled={busy}>
+					<Button
+						type="submit"
+						className="w-full"
+						disabled={busy}
+						confirm={
+							offering
+								? { title: "Send this offer to the owner?", action: "Send offer" }
+								: splitting
+									? { title: "Hold these dates and invite others?", message: "Everyone pays their share before the dates are booked.", action: "Hold dates" }
+									: { title: "Hold these dates?", message: "Next, you'll pay to book them.", action: "Hold dates" }
+						}
+					>
 						{busy ? <Spinner /> : offering ? <HandCoins className="h-4 w-4" aria-hidden /> : <CalendarCheck className="h-4 w-4" aria-hidden />}
 						{offering ? (busy ? "Sending your offer" : "Send offer") : busy ? "Holding your dates" : splitting ? "Hold dates and invite others" : "Hold dates and pay"}
 					</Button>

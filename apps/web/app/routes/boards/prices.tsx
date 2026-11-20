@@ -163,7 +163,7 @@ export default function Prices({ loaderData, actionData }: Route.ComponentProps)
 						{busy("preview") ? <Spinner /> : <Eye className="h-4 w-4" aria-hidden />}
 						Preview
 					</Button>
-					<Button type="submit" name="intent" value="apply" disabled={!picked.size || !result || !result.dryRun || busy("apply")}>
+					<Button confirm={{ title: "Save the new rates?", action: "Save rates" }} type="submit" name="intent" value="apply" disabled={!picked.size || !result || !result.dryRun || busy("apply")}>
 						{busy("apply") && <Spinner />}
 						Save new rates
 					</Button>

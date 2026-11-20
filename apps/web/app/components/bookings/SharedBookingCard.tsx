@@ -77,7 +77,7 @@ export function SharedBookingCard({ shared, showBoard = false, canJoin, error }:
 							<Form method="post">
 								<input type="hidden" name="intent" value="join-share" />
 								<input type="hidden" name="bookingId" value={shared.id} />
-								<Button type="submit" disabled={!!busy}>
+								<Button confirm={{ title: `Join for ${formatMoney(shared.shareAmountMinor, shared.currency)}?`, message: "Your design goes on the board with everyone else's.", action: "Join" }} type="submit" disabled={!!busy}>
 									{busy === "join-share" ? <Spinner /> : <UsersRound className="h-4 w-4" aria-hidden />}
 									Join for {formatMoney(shared.shareAmountMinor, shared.currency)}
 								</Button>
@@ -87,7 +87,7 @@ export function SharedBookingCard({ shared, showBoard = false, canJoin, error }:
 							<Form method="post">
 								<input type="hidden" name="intent" value="pay-takeover" />
 								<input type="hidden" name="bookingId" value={shared.id} />
-								<Button type="submit" disabled={!!busy}>
+								<Button confirm={{ title: "Pay for the whole board?", action: "Pay" }} type="submit" disabled={!!busy}>
 									{busy === "pay-takeover" ? <Spinner /> : <CreditCard className="h-4 w-4" aria-hidden />}
 									Pay {formatMoney(auction.myBid.amountMinor, auction.currency)} for the whole board
 								</Button>
@@ -103,7 +103,7 @@ export function SharedBookingCard({ shared, showBoard = false, canJoin, error }:
 					<Field label="Bid for the whole board" hint={`At least ${formatMoney(minimum, shared.currency)}`}>
 						<Input name="amount" type="number" min={minimum / 100} step="1000" defaultValue={minimum / 100} required />
 					</Field>
-					<Button type="submit" variant="secondary" disabled={!!busy}>
+					<Button confirm={{ title: "Bid for the whole board?", message: "If you win, the board is yours alone for these dates.", action: "Bid" }} type="submit" variant="secondary" disabled={!!busy}>
 						{busy === "takeover-bid" ? <Spinner /> : <Gavel className="h-4 w-4" aria-hidden />}
 						{auction?.myBid ? "Raise my bid" : "Place bid"}
 					</Button>

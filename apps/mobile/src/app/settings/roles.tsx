@@ -83,14 +83,24 @@ export default function Roles() {
                 variant={role ? 'secondary' : 'primary'}
                 loading={busy}
                 disabled={action.busy}
+                confirm={
+                  definition.needsReview
+                    ? { title: `Apply to be ${definition.label.toLowerCase()}?`, message: "We'll review your application before you can start.", action: 'Apply' }
+                    : { title: `Start as ${definition.label.toLowerCase()}?`, message: definition.description, action: 'Start' }
+                }
                 onPress={() => change(definition.kind, 'take')}
               />
             ) : role.status !== 'suspended' ? (
               <Button
-                title={role.status === 'pending' ? 'Withdraw' : 'Stop'}
+                title={role.status === 'pending' ? 'Withdraw application' : 'Stop'}
                 variant="ghost"
                 loading={busy}
                 disabled={action.busy}
+                confirm={
+                  role.status === 'pending'
+                    ? { title: `Withdraw your ${definition.label.toLowerCase()} application?`, message: "We'll stop reviewing it. You can apply again later.", action: 'Withdraw', danger: true }
+                    : { title: `Stop working as ${definition.label.toLowerCase()}?`, message: "You'll lose access to this part of Greyboards. You can start again later.", action: 'Stop', danger: true }
+                }
                 onPress={() => change(definition.kind, 'drop')}
               />
             ) : null}

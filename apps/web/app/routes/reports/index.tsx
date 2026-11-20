@@ -142,14 +142,23 @@ function ReportLine({ report }: { report: CampaignReportSummary }) {
 				</Button>
 				<Form method="post" preventScrollReset>
 					<input type="hidden" name="id" value={report.id} />
-					<Button type="submit" name="intent" value="relink" variant="ghost" disabled={busy} className="!py-2" title="Create a new link. The old one will stop working.">
+					<Button confirm={{ title: "Make a new link?", message: "The old link will stop working.", action: "New link", danger: true }} type="submit" name="intent" value="relink" variant="ghost" disabled={busy} className="!py-2" title="Create a new link. The old one will stop working.">
 						<Link2 className="h-4 w-4" aria-hidden />
 						New link
 					</Button>
 				</Form>
 				<Form method="post" preventScrollReset>
 					<input type="hidden" name="id" value={report.id} />
-					<Button type="submit" name="intent" value="delete" variant="ghost" disabled={busy} className="!py-2 text-red-700" aria-label={`Delete ${report.title}`}>
+					<Button
+						type="submit"
+						name="intent"
+						value="delete"
+						variant="ghost"
+						disabled={busy}
+						className="!py-2 text-red-700"
+						aria-label={`Delete ${report.title}`}
+						confirm={{ title: `Delete ${report.title}?`, message: "The link you shared will stop working.", action: "Delete", danger: true }}
+					>
 						<Trash2 className="h-4 w-4" aria-hidden />
 					</Button>
 				</Form>

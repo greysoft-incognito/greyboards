@@ -132,7 +132,7 @@ export default function ImportBoards({ loaderData, actionData }: Route.Component
 								<input type="hidden" name="intent" value="import" />
 								<input type="hidden" name="csv" value={actionData?.csv ?? ""} />
 								{actionData?.ownerProfileId && <input type="hidden" name="ownerProfileId" value={actionData.ownerProfileId} />}
-								<Button type="submit" disabled={busy("import")}>
+								<Button confirm={{ title: "Add these boards?", action: "Add boards" }} type="submit" disabled={busy("import")}>
 									{busy("import") ? <Spinner /> : <Upload className="h-4 w-4" aria-hidden />}
 									Import {result.ok} {result.ok === 1 ? "board" : "boards"}
 								</Button>

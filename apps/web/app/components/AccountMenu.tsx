@@ -2,6 +2,7 @@ import { Form, Link } from "react-router";
 import { BadgeCheck, LogOut, MonitorSmartphone, Settings, ShieldCheck } from "lucide-react";
 import type { User } from "@greyboards/types";
 import { Avatar } from "~/components/Avatar";
+import { PlainButton } from "~/components/ui";
 
 /** The avatar button and its menu. It closes on every navigation because it is keyed by the path. */
 export function AccountMenu({ user }: { user: User }) {
@@ -39,10 +40,10 @@ export function AccountMenu({ user }: { user: User }) {
 				)}
 				<div className="my-1 border-t border-surface-200" />
 				<Form method="post" action="/signout">
-					<button type="submit" className={`${item} w-full text-left`}>
+					<PlainButton type="submit" className={`${item} w-full text-left`} confirm={{ title: "Sign out?", action: "Sign out" }}>
 						<LogOut className={icon} aria-hidden />
 						Sign out
-					</button>
+					</PlainButton>
 				</Form>
 			</div>
 		</details>

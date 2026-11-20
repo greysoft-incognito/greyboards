@@ -198,7 +198,7 @@ function NextStep({ job, fieldError }: { job: PrintJob; fieldError?: string }) {
 			<div className="space-y-2">
 				<Form method="post">
 					<input type="hidden" name="intent" value="reserve" />
-					<Button type="submit" className="w-full" disabled={!!intent}>
+					<Button confirm={{ title: "Reserve this job?", message: "It's held for you for a short while so you can check you can make the date.", action: "Reserve" }} type="submit" className="w-full" disabled={!!intent}>
 						{intent === "reserve" ? <Spinner /> : <Hand className="h-4 w-4" aria-hidden />}
 						Reserve this job
 					</Button>
@@ -217,7 +217,7 @@ function NextStep({ job, fieldError }: { job: PrintJob; fieldError?: string }) {
 				<div className="flex flex-wrap gap-2">
 					<Form method="post">
 						<input type="hidden" name="intent" value="confirm" />
-						<Button type="submit" disabled={!!intent}>
+						<Button confirm={{ title: "Commit to this job?", message: "You'll be expected to print and put it up by the date.", action: "I can do it" }} type="submit" disabled={!!intent}>
 							{intent === "confirm" ? <Spinner /> : <CheckCircle2 className="h-4 w-4" aria-hidden />}
 							I can do it
 						</Button>
@@ -265,7 +265,7 @@ function GiveBack({ busy, disabled }: { busy: boolean; disabled: boolean }) {
 	return (
 		<Form method="post">
 			<input type="hidden" name="intent" value="release" />
-			<Button type="submit" variant="ghost" disabled={disabled}>
+			<Button type="submit" variant="ghost" disabled={disabled} confirm={{ title: "Give this job back?", message: "It goes back to other dispatchers nearby.", action: "Give it back", danger: true }}>
 				{busy ? <Spinner /> : <Undo2 className="h-4 w-4" aria-hidden />}
 				Release job
 			</Button>

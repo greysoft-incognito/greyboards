@@ -76,7 +76,7 @@ export default function ShareInviteScreen() {
 
         {payable && canBook ? (
           <>
-            <Button title={invite.mine ? 'Pay my share' : 'Join and pay my share'} size="lg" loading={action.busy} onPress={pay} />
+            <Button confirm={{ title: invite.mine ? 'Pay your share?' : 'Join and pay your share?', action: 'Pay' }} title={invite.mine ? 'Pay my share' : 'Join and pay my share'} size="lg" loading={action.busy} onPress={pay} />
             <View style={styles.line}>
               <ShieldCheck size={16} color={colors.available} />
               <Text variant="small" style={styles.flex}>

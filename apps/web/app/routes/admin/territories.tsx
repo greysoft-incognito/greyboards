@@ -73,7 +73,16 @@ export default function AdminTerritories({ loaderData, actionData }: Route.Compo
 									</div>
 									<Form method="post">
 										<input type="hidden" name="id" value={territory.id} />
-										<Button type="submit" name="intent" value="remove" variant="ghost" className="!py-2 text-red-700" disabled={removing === territory.id} aria-label={`Remove ${territory.name}`}>
+										<Button
+											type="submit"
+											name="intent"
+											value="remove"
+											variant="ghost"
+											className="!py-2 text-red-700"
+											disabled={removing === territory.id}
+											aria-label={`Remove ${territory.name}`}
+											confirm={{ title: `Remove ${territory.name}?`, action: "Remove", danger: true }}
+										>
 											{removing === territory.id ? <Spinner /> : <Trash2 className="h-4 w-4" aria-hidden />}
 										</Button>
 									</Form>

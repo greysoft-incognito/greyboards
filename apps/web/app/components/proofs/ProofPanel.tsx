@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { Form, useNavigation, useSubmit } from "react-router";
 import { BadgeCheck, Camera, Check, Flag, MapPin, Send, X } from "lucide-react";
 import type { BookingProof } from "@greyboards/types";
-import { Button, Spinner, Textarea } from "~/components/ui";
+import { Button, PlainButton, Spinner, Textarea } from "~/components/ui";
 
 /** A moment such as "19 Nov, 4:30 PM", in Nigerian time, where the boards are. */
 export function formatMoment(value: string) {
@@ -52,9 +52,15 @@ export function ProofPanel({ proof }: { proof: BookingProof }) {
 								<Form method="post" preventScrollReset className="absolute top-2 right-2">
 									<input type="hidden" name="intent" value="remove-proof" />
 									<input type="hidden" name="photo" value={photo.id} />
-									<button type="submit" aria-label="Remove this photo" disabled={!!intent} className="glass flex h-8 w-8 items-center justify-center rounded-full text-ink-900 transition hover:text-red-700">
+									<PlainButton
+										type="submit"
+										aria-label="Remove this photo"
+										disabled={!!intent}
+										className="glass flex h-8 w-8 items-center justify-center rounded-full text-ink-900 transition hover:text-red-700"
+										confirm={{ title: "Remove this photo?", action: "Remove", danger: true }}
+									>
 										<X className="h-4 w-4" aria-hidden />
-									</button>
+									</PlainButton>
 								</Form>
 							)}
 						</li>
@@ -68,7 +74,7 @@ export function ProofPanel({ proof }: { proof: BookingProof }) {
 					{enough && (
 						<Form method="post" preventScrollReset>
 							<input type="hidden" name="intent" value="submit-proof" />
-							<Button type="submit" disabled={!!intent}>
+							<Button confirm={{ title: "Send these photos to the advertiser?", message: "They'll check the ad is up as booked.", action: "Send" }} type="submit" disabled={!!intent}>
 								{intent === "submit-proof" ? <Spinner /> : <Send className="h-4 w-4" aria-hidden />}
 								Send to advertiser
 							</Button>
@@ -177,7 +183,7 @@ function ReviewProof() {
 		<div className="flex flex-wrap gap-2">
 			<Form method="post" preventScrollReset>
 				<input type="hidden" name="intent" value="accept-proof" />
-				<Button type="submit" disabled={!!intent}>
+				<Button type="submit" disabled={!!intent} confirm={{ title: "Accept this proof?", message: "You can't send it back after this.", action: "Accept" }}>
 					{intent === "accept-proof" ? <Spinner /> : <Check className="h-4 w-4" aria-hidden />}
 					Looks good, accept
 				</Button>

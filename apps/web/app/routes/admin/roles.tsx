@@ -215,9 +215,8 @@ function RoleEditor({ role, permissions }: { role: Role | null; permissions: Per
 					<Button
 						variant="danger"
 						disabled={busy}
-						onClick={() => {
-							if (confirm(`Delete the ${role.name} role?`)) send("delete");
-						}}
+						confirm={{ title: `Delete the ${role.name} role?`, action: "Delete", danger: true }}
+						onClick={() => send("delete")}
 					>
 						Delete
 					</Button>

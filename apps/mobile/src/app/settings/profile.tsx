@@ -62,7 +62,7 @@ export default function Profile() {
           <View style={styles.photoActions}>
             <View style={styles.row}>
               <Button title={photo.busy ? 'Uploading…' : user.avatarUrl ? 'Change photo' : 'Add a photo'} variant="secondary" loading={photo.busy} onPress={pick} />
-              {user.avatarUrl ? <Button title="Remove" variant="ghost" disabled={photo.busy} onPress={removePhoto} /> : null}
+              {user.avatarUrl ? <Button confirm={{ title: "Remove your photo?", action: "Remove" }} title="Remove" variant="ghost" disabled={photo.busy} onPress={removePhoto} /> : null}
             </View>
             <Text variant="small">{`JPG, PNG, WebP or HEIC, up to ${maxAvatarMb} MB.`}</Text>
           </View>

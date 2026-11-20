@@ -178,7 +178,11 @@ export function BookPanel({ board, taken, canBook, slotQuote }: { board: BoardDe
           ) : null}
 
           {action.problem.message ? <Callout>{action.problem.message}</Callout> : null}
-          <Button
+          <Button confirm={offering
+              ? { title: 'Send this offer to the owner?', action: 'Send offer' }
+              : splitting
+                ? { title: 'Hold these dates and invite others?', message: 'Everyone pays their share before the dates are booked.', action: 'Hold dates' }
+                : { title: 'Hold these dates?', message: "Next, you'll pay to book them.", action: 'Hold dates' }}
             title={offering ? (action.busy ? 'Sending your offer…' : 'Send offer') : action.busy ? 'Holding your dates…' : splitting ? 'Hold dates and invite others' : 'Hold dates and pay'}
             size="lg"
             loading={action.busy}

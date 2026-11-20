@@ -108,7 +108,7 @@ function TwoStep({ status, result, busy }: { status: TwoFactorStatus; result?: R
 						<p className="text-sm text-emerald-900">{status.recoveryCodesRemaining} recovery codes left</p>
 					</div>
 					<Form method="post">
-						<Button variant="secondary" type="submit" name="intent" value="recovery-codes" disabled={busy("recovery-codes")}>
+						<Button confirm={{ title: "Get new recovery codes?", message: "Your old codes will stop working.", action: "Get new codes" }} variant="secondary" type="submit" name="intent" value="recovery-codes" disabled={busy("recovery-codes")}>
 							Get new recovery codes
 						</Button>
 					</Form>
@@ -119,7 +119,7 @@ function TwoStep({ status, result, busy }: { status: TwoFactorStatus; result?: R
 								<Input name="password" type="password" autoComplete="current-password" required />
 							</Field>
 						</div>
-						<Button variant="danger" type="submit" disabled={busy("two-factor-disable")}>
+						<Button confirm={{ title: "Turn off two-step sign-in?", message: "Signing in will only need your password.", action: "Turn off", danger: true }} variant="danger" type="submit" disabled={busy("two-factor-disable")}>
 							Turn off
 						</Button>
 					</Form>

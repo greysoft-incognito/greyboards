@@ -1,4 +1,5 @@
 import { ActivityIndicator, Pressable, type PressableProps, StyleSheet, type StyleProp, type ViewStyle } from 'react-native'
+import { type Confirmation, ask } from '@/lib/confirm'
 import { colors, fonts, radius, shadows } from '@/theme'
 import { Text } from './Text'
 
@@ -32,12 +33,20 @@ export type ButtonProps = Omit<PressableProps, 'style' | 'children'> & {
   loading?: boolean
   size?: 'md' | 'lg'
   style?: StyleProp<ViewStyle>
+  /** Asks first, and only runs `onPress` once the person agrees. */
+  confirm?: Confirmation
 }
 
 /** The app's button. Primary is Greyboards wine with white text, as on the web. */
-export function Button({ title, variant = 'primary', loading = false, size = 'md', disabled, style, ...props }: ButtonProps) {
+export function Button({ title, variant = 'primary', loading = false, size = 'md', disabled, style, confirm, onPress, ...props }: ButtonProps) {
   const look = variants[variant]
   const inactive = disabled || loading
+
+  const press: PressableProps['onPress'] = async (event) => {
+    if (confirm && !(await ask(confirm))) return
+
+    onPress?.(event)
+  }
 
   return (
     <Pressable
@@ -45,6 +54,7 @@ export function Button({ title, variant = 'primary', loading = false, size = 'md
       accessibilityState={{ disabled: inactive, busy: loading }}
       disabled={inactive}
       {...props}
+      onPress={press}
       style={({ pressed }) => [styles.base, size === 'lg' && styles.large, look.box, pressed && look.pressed, inactive && styles.inactive, style]}
     >
       {loading && <ActivityIndicator size="small" color={look.text} />}

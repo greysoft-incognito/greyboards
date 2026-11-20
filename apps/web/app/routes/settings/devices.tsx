@@ -84,7 +84,7 @@ function Devices({
 						{!session.current && (
 							<Form method="post">
 								<input type="hidden" name="session" value={session.id} />
-								<Button variant="ghost" type="submit" name="intent" value="revoke" className="text-red-700">
+								<Button variant="ghost" type="submit" name="intent" value="revoke" className="text-red-700" confirm={{ title: "Sign out of this device?", action: "Sign out", danger: true }}>
 									Sign out
 								</Button>
 							</Form>
@@ -94,7 +94,14 @@ function Devices({
 			</ul>
 			{others > 0 && (
 				<Form method="post" className="mt-4 border-t border-surface-200 pt-4">
-					<Button variant="secondary" type="submit" name="intent" value="revoke-others" disabled={busy("revoke-others")}>
+					<Button
+						variant="secondary"
+						type="submit"
+						name="intent"
+						value="revoke-others"
+						disabled={busy("revoke-others")}
+						confirm={{ title: "Sign out everywhere else?", message: "Every other device will need to sign in again.", action: "Sign out", danger: true }}
+					>
 						Sign out of all other devices
 					</Button>
 				</Form>

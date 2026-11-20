@@ -1,6 +1,10 @@
-import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
+import { type ButtonHTMLAttributes, type InputHTMLAttributes, type MouseEvent, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link } from "react-router";
 import { LoaderCircle } from "lucide-react";
+import { type Confirmation, ConfirmDialog } from "./ConfirmDialog";
+
+export type { Confirmation };
 
 type Variant = "primary" | "brand" | "dark" | "secondary" | "ghost" | "danger";
 
@@ -17,12 +21,57 @@ export function buttonClass(variant: Variant = "primary", extra = "") {
 	return `inline-flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-[0.875rem] border-[1.5px] px-4 py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${variants[variant]} ${extra}`;
 }
 
-export function Button({
-	variant = "primary",
-	className = "",
-	...props
-}: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant }) {
-	return <button type="button" {...props} className={buttonClass(variant, className)} />;
+/** A button. With `confirm`, it asks first and only submits or runs `onClick` once the person agrees. */
+export function Button({ variant = "primary", className = "", confirm, onClick, ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; confirm?: Confirmation }) {
+	const { ref, click, dialog } = useConfirmClick(confirm, onClick);
+
+	return (
+		<>
+			<button ref={ref} type="button" {...props} onClick={click} className={buttonClass(variant, className)} />
+			{dialog}
+		</>
+	);
+}
+
+/** An unstyled button, such as an icon on a photo, that can ask first like `Button`. */
+export function PlainButton({ confirm, onClick, ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { confirm?: Confirmation }) {
+	const { ref, click, dialog } = useConfirmClick(confirm, onClick);
+
+	return (
+		<>
+			<button ref={ref} type="button" {...props} onClick={click} />
+			{dialog}
+		</>
+	);
+}
+
+/** Holds a click until the person agrees, then clicks again so forms submit with the same button. */
+function useConfirmClick(confirm: Confirmation | undefined, onClick: ButtonHTMLAttributes<HTMLButtonElement>["onClick"]) {
+	const ref = useRef<HTMLButtonElement>(null);
+	const agreed = useRef(false);
+	const [asking, setAsking] = useState(false);
+
+	const click = (event: MouseEvent<HTMLButtonElement>) => {
+		if (confirm && !agreed.current) {
+			event.preventDefault();
+			setAsking(true);
+
+			return;
+		}
+
+		agreed.current = false;
+		onClick?.(event);
+	};
+
+	const proceed = () => {
+		setAsking(false);
+		agreed.current = true;
+		ref.current?.click();
+	};
+
+	const dialog = asking && confirm ? createPortal(<ConfirmDialog {...confirm} onConfirm={proceed} onCancel={() => setAsking(false)} />, document.body) : null;
+
+	return { ref, click, dialog };
 }
 
 export function Field({

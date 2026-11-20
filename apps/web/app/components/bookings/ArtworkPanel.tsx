@@ -177,7 +177,7 @@ function ReviewArtwork() {
 		<div className="flex flex-wrap gap-2">
 			<Form method="post" preventScrollReset>
 				<input type="hidden" name="intent" value="approve" />
-				<Button type="submit" disabled={!!intent}>
+				<Button type="submit" disabled={!!intent} confirm={{ title: "Approve this artwork for print?", message: "It goes to the printer as it is.", action: "Approve" }}>
 					{intent === "approve" ? <Spinner /> : <Check className="h-4 w-4" aria-hidden />}
 					Approve for print
 				</Button>

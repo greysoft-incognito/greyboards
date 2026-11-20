@@ -58,7 +58,7 @@ export function PrintOffersPanel({ options, currency }: { options: PrintOptions;
 									<Form method="post">
 										<input type="hidden" name="intent" value="pay-print" />
 										<input type="hidden" name="offerId" value={offer.id} />
-										<Button type="submit" disabled={!!busy}>
+										<Button confirm={{ title: `Pay ${formatMoney(offer.amountMinor, currency)} for printing?`, action: "Pay" }} type="submit" disabled={!!busy}>
 											{busy === "pay-print" && busyId === offer.id ? <Spinner /> : <CreditCard className="h-4 w-4" aria-hidden />}
 											Pay {formatMoney(offer.amountMinor, currency)}
 										</Button>
@@ -93,7 +93,7 @@ export function PrintOffersPanel({ options, currency }: { options: PrintOptions;
 								<Form method="post">
 									<input type="hidden" name="intent" value="ask-dispatcher" />
 									<input type="hidden" name="dispatcherId" value={dispatcher.id} />
-									<Button type="submit" variant="secondary" disabled={!!busy || dispatcher.asked || waiting >= options.maxRequests}>
+									<Button confirm={{ title: `Ask ${dispatcher.name}?`, message: "They'll get a request to print and put up your ad.", action: "Ask" }} type="submit" variant="secondary" disabled={!!busy || dispatcher.asked || waiting >= options.maxRequests}>
 										{busy === "ask-dispatcher" && busyId === dispatcher.id ? <Spinner /> : <Send className="h-4 w-4" aria-hidden />}
 										{dispatcher.asked ? "Asked" : "Ask"}
 									</Button>
@@ -128,7 +128,7 @@ export function SendPrice({ job, fieldError }: { job: PrintJob; fieldError?: str
 					<Form method="post">
 						<input type="hidden" name="intent" value="accept-request" />
 						<input type="hidden" name="offerId" value={offer.id} />
-						<Button type="submit" disabled={!!intent}>
+						<Button confirm={{ title: "Take this job?", message: "You'll be expected to print and put it up by the date.", action: "Take it" }} type="submit" disabled={!!intent}>
 							{intent === "accept-request" ? <Spinner /> : <Check className="h-4 w-4" aria-hidden />}
 							Accept
 						</Button>
@@ -136,7 +136,7 @@ export function SendPrice({ job, fieldError }: { job: PrintJob; fieldError?: str
 					<Form method="post">
 						<input type="hidden" name="intent" value="decline-request" />
 						<input type="hidden" name="offerId" value={offer.id} />
-						<Button type="submit" variant="ghost" disabled={!!intent}>
+						<Button type="submit" variant="ghost" disabled={!!intent} confirm={{ title: "Turn this job down?", action: "Turn it down", danger: true }}>
 							<X className="h-4 w-4" aria-hidden />
 							Decline
 						</Button>
@@ -161,12 +161,20 @@ export function SendPrice({ job, fieldError }: { job: PrintJob; fieldError?: str
 					<Input name="note" maxLength={200} defaultValue={offer?.note ?? ""} />
 				</Field>
 				<div className="flex flex-wrap gap-2 sm:col-span-2">
-					<Button type="submit" name="intent" value="send-price" disabled={!!intent}>
+					<Button confirm={{ title: offer ? "Change your price?" : "Send your price?", action: offer ? "Change price" : "Send price" }} type="submit" name="intent" value="send-price" disabled={!!intent}>
 						{intent === "send-price" ? <Spinner /> : <Send className="h-4 w-4" aria-hidden />}
 						{offer ? "Change price" : "Send price"}
 					</Button>
 					{offer?.status === "pending" && (
-						<Button type="submit" variant="ghost" name="intent" value="withdraw-price" disabled={!!intent} formNoValidate>
+						<Button
+							type="submit"
+							variant="ghost"
+							name="intent"
+							value="withdraw-price"
+							disabled={!!intent}
+							formNoValidate
+							confirm={{ title: "Withdraw your price?", message: "The advertiser won't be able to accept it any more.", action: "Withdraw", danger: true }}
+						>
 							<Undo2 className="h-4 w-4" aria-hidden />
 							Withdraw
 						</Button>
