@@ -266,7 +266,7 @@ function Checks({ id, checks }: { id: string; checks: PartnerChecks }) {
 			{checks.missing.length > 0 && (
 				<p className="flex items-center gap-1.5 font-medium text-held sm:col-span-3">
 					<CircleAlert className="h-4 w-4 shrink-0" aria-hidden />
-					Can't be approved until they add {checks.missing.map((item) => STILL_NEEDED[item]).join(" and ")}. We've shown them what's left.
+					Can't be approved until they add {checks.missing.map((item) => STILL_NEEDED[item] ?? item).join(" and ")}. We've shown them what's left.
 				</p>
 			)}
 		</div>

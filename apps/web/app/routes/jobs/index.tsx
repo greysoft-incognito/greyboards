@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, NavLink, useNavigate, useSearchParams } from "react-router";
 import { LocateFixed, Printer } from "lucide-react";
 import type { PartnerRequirement, PrintJob } from "@greyboards/types";
-import { heldRole, missingWords } from "~/components/AccountRoles";
+import { heldRole, missingWords, stillNeeded } from "~/components/AccountRoles";
 import { BoardScene } from "~/components/BoardScene";
 import { JobRow } from "~/components/jobs/JobBits";
 import { Pager } from "~/components/Pager";
@@ -22,7 +22,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 	const lng = Number(params.get("lng"));
 	const located = params.has("lat") && params.has("lng") && Number.isFinite(lat) && Number.isFinite(lng);
 
-	if (role?.status !== "active") return { roleStatus: role?.status ?? null, missing: role?.missing ?? [], mine, located, jobs: [] as PrintJob[], meta: null };
+	if (role?.status !== "active") return { roleStatus: role?.status ?? null, missing: role ? stillNeeded(role) : [], mine, located, jobs: [] as PrintJob[], meta: null };
 
 	if (mine) {
 		const result = await api.printJobs.mine({ page: Number(params.get("page")) || 1 });

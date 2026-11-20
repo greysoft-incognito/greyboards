@@ -31,6 +31,11 @@ export function RoleStatus({ status, missing = [] }: { status: AccountRoleStatus
   )
 }
 
+/** What a role still waits on. Empty when the API doesn't say, such as before it is updated. */
+export function stillNeeded(role: AccountRole): PartnerRequirement[] {
+  return role.missing ?? []
+}
+
 /** What the account still has to send, as part of a sentence, such as "your ID and bank account". */
 export function missingWords(missing: PartnerRequirement[]) {
   if (missing.length > 1) return 'your ID and bank account'

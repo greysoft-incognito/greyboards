@@ -10,7 +10,7 @@ interface Step {
 
 /** Each thing a scout or dispatcher sends, worded for where they are with it. */
 function step(requirement: PartnerRequirement, checks: PartnerChecks): Step {
-	const done = !checks.missing.includes(requirement);
+	const done = !(checks.missing ?? []).includes(requirement);
 
 	if (requirement === "bank") {
 		return done ? { label: "Bank account added", done } : { label: "Add the bank account we'll pay you into", done, link: { to: "/settings/payouts", label: "Add it" } };
@@ -23,10 +23,10 @@ function step(requirement: PartnerRequirement, checks: PartnerChecks): Step {
 
 /** What a waiting application still needs before we can approve it. */
 export function ApplicationChecklist({ checks }: { checks: PartnerChecks }) {
-	if (!checks.required.length) return null;
+	if (!checks.required?.length) return null;
 
 	const steps = checks.required.map((requirement) => step(requirement, checks));
-	const ready = !checks.missing.length;
+	const ready = !checks.missing?.length;
 
 	return (
 		<section id="finish" className="panel scroll-mt-24 p-5 sm:p-6">

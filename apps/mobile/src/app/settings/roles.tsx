@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { ActivityIndicator, StyleSheet, View } from 'react-native'
 import { useRequest } from 'alova/client'
 import type { AccountRole, AccountRoleDefinition, AccountRoleKind, IdentityDocumentDefinition, PartnerChecks } from '@greyboards/types'
-import { RoleIcon, RoleStatus, heldRole, missingWords } from '@/components/AccountRoles'
+import { RoleIcon, RoleStatus, heldRole, missingWords, stillNeeded } from '@/components/AccountRoles'
 import { Standing } from '@/components/reputation/Badges'
 import { RoleReputationPanel } from '@/components/reputation/RoleReputation'
 import { ApplicationChecklist } from '@/components/settings/ApplicationChecklist'
@@ -69,13 +69,13 @@ export default function Roles() {
               <RoleIcon kind={definition.kind} size={48} />
               <View style={styles.flex}>
                 <Text variant="title">{definition.label}</Text>
-                {role ? <RoleStatus status={role.status} missing={role.missing} /> : null}
+                {role ? <RoleStatus status={role.status} missing={stillNeeded(role)} /> : null}
                 {role ? <Standing standing={role.reputation} showScore={false} /> : null}
               </View>
             </View>
             <Text variant="muted">{definition.description}</Text>
             {role?.note ? <Text style={styles.note}>Reviewer's note: {role.note}</Text> : null}
-            {role?.status === 'pending' && role.missing.length ? <Text style={styles.waiting}>Add {missingWords(role.missing)} below so we can approve this.</Text> : null}
+            {role?.status === 'pending' && stillNeeded(role).length ? <Text style={styles.waiting}>Add {missingWords(stillNeeded(role))} below so we can approve this.</Text> : null}
             {role && (role.status === 'active' || role.status === 'suspended') ? <RoleReputationPanel kind={role.kind} reputation={role.reputation} /> : null}
             {!role || role.status === 'rejected' ? (
               <Button

@@ -15,7 +15,7 @@ interface Step {
 
 /** Each thing a scout or dispatcher sends, worded for where they are with it. */
 function step(requirement: PartnerRequirement, checks: PartnerChecks): Step {
-  const done = !checks.missing.includes(requirement)
+  const done = !(checks.missing ?? []).includes(requirement)
 
   if (requirement === 'bank') {
     return done ? { label: 'Bank account added', done } : { label: "Add the bank account we'll pay you into", done, link: { to: '/settings/payouts', label: 'Add it' } }
@@ -28,9 +28,9 @@ function step(requirement: PartnerRequirement, checks: PartnerChecks): Step {
 
 /** What a waiting application still needs before we can approve it. */
 export function ApplicationChecklist({ checks }: { checks: PartnerChecks }) {
-  if (!checks.required.length) return null
+  if (!checks.required?.length) return null
 
-  const ready = !checks.missing.length
+  const ready = !checks.missing?.length
 
   return (
     <Section title={ready ? "You're all set" : 'Finish your application'} description={ready ? "We'll review your application and email you." : 'We can only approve you once these are in.'}>

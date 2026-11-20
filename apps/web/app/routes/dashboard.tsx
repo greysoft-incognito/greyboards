@@ -2,7 +2,7 @@ import { Link } from "react-router";
 import { ArrowRight, PartyPopper } from "lucide-react";
 import type { AccountRoleKind } from "@greyboards/types";
 import { requireUser } from "~/lib/session.server";
-import { ROLE_ICONS, RoleStatus, missingWords } from "~/components/AccountRoles";
+import { ROLE_ICONS, RoleStatus, missingWords, stillNeeded } from "~/components/AccountRoles";
 import { FinishApplicationLink } from "~/components/settings/ApplicationChecklist";
 import { BoardScene, type SceneArt, type SceneTime } from "~/components/BoardScene";
 import { TaskList } from "~/components/scouting/ScoutingBits";
@@ -39,7 +39,7 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
 	const { user, tasks, welcome } = loaderData;
 	const firstName = user.name.split(/\s+/)[0];
 	const pending = user.accountRoles.filter((role) => role.status === "pending");
-	const missing = [...new Set(pending.flatMap((role) => role.missing))];
+	const missing = [...new Set(pending.flatMap((role) => stillNeeded(role)))];
 
 	return (
 		<main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
@@ -82,7 +82,7 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
 								<BoardScene {...SCENES[role.kind]} />
 							</div>
 							<div className="flex min-w-0 flex-1 flex-col gap-2 py-1">
-								<RoleStatus status={role.status} missing={role.missing} />
+								<RoleStatus status={role.status} missing={stillNeeded(role)} />
 								<div className="flex items-center gap-2">
 									<Icon className="h-5 w-5 shrink-0 text-brand-600" aria-hidden />
 									<h2 className="font-display text-xl font-extrabold tracking-tight text-ink-900">{role.label}</h2>
@@ -91,12 +91,12 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
 									{role.status === "active"
 										? EMPTY[role.kind]
 										: role.status === "pending"
-											? role.missing.length
-												? `Add ${missingWords(role.missing)} so we can approve you.`
+											? stillNeeded(role).length
+												? `Add ${missingWords(stillNeeded(role))} so we can approve you.`
 												: "We're reviewing your application and will email you soon."
 											: (role.note ?? "This role isn't active. Contact support if you think that's a mistake.")}
 								</p>
-								{role.status === "pending" && role.missing.length > 0 && <FinishApplicationLink className="text-sm" />}
+								{role.status === "pending" && stillNeeded(role).length > 0 && <FinishApplicationLink className="text-sm" />}
 							</div>
 						</section>
 					);

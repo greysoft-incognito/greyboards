@@ -4,7 +4,7 @@ import { router, useFocusEffect } from 'expo-router'
 import { LinearGradient } from 'expo-linear-gradient'
 import { ArrowRight } from 'lucide-react-native'
 import type { AccountRoleKind, Task } from '@greyboards/types'
-import { ROLE_ICONS, RoleStatus, missingWords } from '@/components/AccountRoles'
+import { ROLE_ICONS, RoleStatus, missingWords, stillNeeded } from '@/components/AccountRoles'
 import { BoardScene, type SceneArt, type SceneTime } from '@/components/BoardScene'
 import { useTabBarInset } from '@/components/GlassTabBar'
 import { TaskList } from '@/components/scouting/ScoutingBits'
@@ -36,7 +36,7 @@ export default function Dashboard() {
   const inset = useTabBarInset()
   const firstName = user.name.split(/\s+/)[0]
   const pending = user.accountRoles.filter((role) => role.status === 'pending')
-  const missing = [...new Set(pending.flatMap((role) => role.missing))]
+  const missing = [...new Set(pending.flatMap((role) => stillNeeded(role)))]
   const looksAfterBoards = user.accountRoles.some((role) => (role.kind === 'owner' || role.kind === 'scout') && role.status === 'active')
   const [tasks, setTasks] = useState<Task[]>([])
 
@@ -92,7 +92,7 @@ export default function Dashboard() {
               <BoardScene {...SCENES[role.kind]} />
             </View>
             <View style={styles.cardBody}>
-              <RoleStatus status={role.status} missing={role.missing} />
+              <RoleStatus status={role.status} missing={stillNeeded(role)} />
               <View style={styles.cardTitle}>
                 <Icon size={18} color={colors.brand600} />
                 <Text style={styles.roleName}>{role.label}</Text>
@@ -101,12 +101,12 @@ export default function Dashboard() {
                 {role.status === 'active'
                   ? EMPTY[role.kind]
                   : role.status === 'pending'
-                    ? role.missing.length
-                      ? `Add ${missingWords(role.missing)} so we can approve you.`
+                    ? stillNeeded(role).length
+                      ? `Add ${missingWords(stillNeeded(role))} so we can approve you.`
                       : "We’re reviewing your application and will email you soon."
                     : (role.note ?? "This role isn't active. Contact support if you think that's a mistake.")}
               </Text>
-              {role.status === 'pending' && role.missing.length ? <FinishLink /> : null}
+              {role.status === 'pending' && stillNeeded(role).length ? <FinishLink /> : null}
             </View>
           </View>
         )

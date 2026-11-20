@@ -4,6 +4,7 @@ import { router, useFocusEffect } from 'expo-router'
 import { ChevronRight } from 'lucide-react-native'
 import { useRequest } from 'alova/client'
 import type { AccountRole, DocumentSummary, Session, TwoFactorStatus } from '@greyboards/types'
+import { stillNeeded } from '@/components/AccountRoles'
 import { Avatar } from '@/components/Avatar'
 import { SETTINGS_GROUPS } from '@/components/settings/groups'
 import { useTabBarInset } from '@/components/GlassTabBar'
@@ -134,7 +135,7 @@ export default function Account() {
 function roleStatus(roles: AccountRole[]): Status {
   const active = roles.filter((role) => role.status === 'active').length
 
-  if (roles.some((role) => role.status === 'pending' && role.missing.length)) return { text: 'Waiting for your details', tone: 'warn' }
+  if (roles.some((role) => role.status === 'pending' && stillNeeded(role).length)) return { text: 'Waiting for your details', tone: 'warn' }
   if (roles.some((role) => role.status === 'pending')) return { text: 'Waiting for review', tone: 'warn' }
   if (!active) return { text: 'None yet', tone: 'warn' }
 
