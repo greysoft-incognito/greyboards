@@ -2,7 +2,12 @@ import { Arkstack } from '@arkstack/contract'
 import { FilesystemConfig } from '@arkstack/filesystem'
 import path from 'node:path'
 
+/** Folders on the public disk that hold uploads: profile photos, board photos, booking files, ID photos and print photos. */
+const UPLOAD_FOLDERS = ['avatars', 'boards', 'bookings', 'identity', 'print-jobs']
+
 export default (): FilesystemConfig => {
+  const publicRoot = path.join(Arkstack.rootDir(), './storage/app/public')
+
   return {
     /**
      * Default filesystem disk to be used by the framework.
@@ -25,7 +30,7 @@ export default (): FilesystemConfig => {
       },
       public: {
         driver: 'local',
-        root: path.join(Arkstack.rootDir(), './storage/app/public'),
+        root: publicRoot,
         visibility: 'public',
       },
       ftp: {
@@ -58,12 +63,11 @@ export default (): FilesystemConfig => {
     },
 
     /**
-     * Optional symbolic links to create when the `storage:link` command is executed.
-     * The key of the object represents the link location, while the value represents the target location.  
+     * Upload folders on the public disk, keyed by their link in `public/`.
+     * Local disks sign file links as APP_URL/<folder>/..., so the API serves each folder at that path.
+     * `storage:link` also creates these links.
      */
-    links: {
-      [path.join(Arkstack.rootDir(), './public/storage')]: path.join(Arkstack.rootDir(), './storage/app/public'),
-    },
+    links: Object.fromEntries(UPLOAD_FOLDERS.map((folder) => [path.join(Arkstack.rootDir(), './public', folder), path.join(publicRoot, folder)])),
 
     /**
      * Optional file name generator function.
