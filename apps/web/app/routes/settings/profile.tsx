@@ -81,7 +81,7 @@ export default function Profile({ loaderData, actionData }: Route.ComponentProps
 								</Form>
 								{user.avatarUrl && (
 									<Form method="post">
-										<Button variant="ghost" type="submit" name="intent" value="remove-avatar">
+										<Button variant="ghost" type="submit" name="intent" value="remove-avatar" confirm={{ title: "Remove your photo?", action: "Remove" }}>
 											Remove
 										</Button>
 									</Form>

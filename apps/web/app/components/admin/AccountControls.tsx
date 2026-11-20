@@ -19,18 +19,21 @@ export function AccountControls({ account, roles, isMe, busy }: { account: Admin
 					))}
 				</Select>
 			</Form>
-			<Form
-				method="post"
-				preventScrollReset
-				onSubmit={(event) => {
-					if (!account.suspended && !confirm(`Suspend ${account.name}? They'll be signed out and won't be able to sign in until you unsuspend them.`))
-						event.preventDefault();
-				}}
-			>
+			<Form method="post" preventScrollReset>
 				<input type="hidden" name="intent" value="suspend" />
 				<input type="hidden" name="id" value={account.id} />
 				<input type="hidden" name="suspended" value={String(!account.suspended)} />
-				<Button type="submit" variant={account.suspended ? "secondary" : "danger"} disabled={isMe || busy} className="!py-2">
+				<Button
+					type="submit"
+					variant={account.suspended ? "secondary" : "danger"}
+					disabled={isMe || busy}
+					className="!py-2"
+					confirm={
+						account.suspended
+							? { title: `Let ${account.name} back in?`, action: "Unsuspend" }
+							: { title: `Suspend ${account.name}?`, message: "They'll be signed out and can't sign in until you unsuspend them.", action: "Suspend", danger: true }
+					}
+				>
 					{account.suspended ? "Unsuspend" : "Suspend"}
 				</Button>
 			</Form>

@@ -108,12 +108,34 @@ export default function Roles({ loaderData, actionData }: Route.ComponentProps) 
 								<Form method="post">
 									<input type="hidden" name="kind" value={definition.kind} />
 									{!held || held.status === "rejected" ? (
-										<Button type="submit" name="intent" value="take" variant={held ? "secondary" : "primary"} disabled={busy}>
+										<Button
+											type="submit"
+											name="intent"
+											value="take"
+											variant={held ? "secondary" : "primary"}
+											disabled={busy}
+											confirm={
+												definition.needsReview
+													? { title: `Apply to be ${definition.label.toLowerCase()}?`, message: "We'll review your application before you can start.", action: "Apply" }
+													: { title: `Start as ${definition.label.toLowerCase()}?`, message: definition.description, action: "Start" }
+											}
+										>
 											{held ? "Apply again" : definition.needsReview ? "Apply" : "Start"}
 										</Button>
 									) : held.status !== "suspended" ? (
-										<Button type="submit" name="intent" value="drop" variant="ghost" disabled={busy}>
-											{held.status === "pending" ? "Withdraw" : "Stop"}
+										<Button
+											type="submit"
+											name="intent"
+											value="drop"
+											variant="ghost"
+											disabled={busy}
+											confirm={
+												held.status === "pending"
+													? { title: `Withdraw your ${definition.label.toLowerCase()} application?`, message: "We'll stop reviewing it. You can apply again later.", action: "Withdraw", danger: true }
+													: { title: `Stop working as ${definition.label.toLowerCase()}?`, message: "You'll lose access to this part of Greyboards. You can start again later.", action: "Stop", danger: true }
+											}
+										>
+											{held.status === "pending" ? "Withdraw application" : "Stop"}
 										</Button>
 									) : null}
 								</Form>

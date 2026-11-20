@@ -31,7 +31,15 @@ export function RoleReputationControls({ role, history, canManage, busy }: { rol
 						<Form method="post" preventScrollReset className="flex gap-2">
 							<input type="hidden" name="roleId" value={role.id} />
 							{reputation.verifiedAt ? (
-								<Button type="submit" name="intent" value="unverify" variant="secondary" disabled={busy} className="!py-2">
+								<Button
+									type="submit"
+									name="intent"
+									value="unverify"
+									variant="secondary"
+									disabled={busy}
+									className="!py-2"
+									confirm={{ title: "Remove their verified badge?", action: "Remove", danger: true }}
+								>
 									<ShieldOff className="h-4 w-4" aria-hidden />
 									Remove verification
 								</Button>

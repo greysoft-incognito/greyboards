@@ -263,9 +263,8 @@ function PageEditor({ document }: { document: SiteDocument | null }) {
 					<Button
 						variant="danger"
 						disabled={busy}
-						onClick={() => {
-							if (confirm(`Delete ${document.title}?`)) send("delete");
-						}}
+						confirm={{ title: `Delete ${document.title}?`, message: "Links to it will stop working.", action: "Delete", danger: true }}
+						onClick={() => send("delete")}
 					>
 						Delete
 					</Button>

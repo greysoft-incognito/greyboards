@@ -5,7 +5,7 @@ import { AdminHeader } from "~/components/admin/AdminHeader";
 import { Avatar } from "~/components/Avatar";
 import { BoardCover, BoardStatusBadge, formatRate, formatSize, mapLink } from "~/components/boards/BoardBits";
 import { Pager } from "~/components/Pager";
-import { Alert, Button, Input, Select } from "~/components/ui";
+import { Alert, Button, type Confirmation, Input, Select } from "~/components/ui";
 import { formError } from "~/lib/api.server";
 import { requireAdmin } from "~/lib/admin.server";
 import { useToastMessage } from "~/lib/toast";
@@ -97,10 +97,10 @@ function BoardRow({ board }: { board: AdminBoard }) {
 	const rate = formatRate(board.rate);
 	const far = board.photos.filter((photo) => photo.distanceM !== null && photo.distanceM > FAR_M).length;
 	const unplaced = board.photos.filter((photo) => photo.distanceM === null).length;
-	const decisions: { status: BoardReview["status"]; label: string; icon: typeof Check; variant: "primary" | "secondary" | "danger" }[] = [
-		{ status: "listed", label: "List", icon: Check, variant: "primary" },
-		{ status: "rejected", label: "Reject", icon: X, variant: "secondary" },
-		{ status: "unlisted", label: "Unlist", icon: EyeOff, variant: "danger" },
+	const decisions: { status: BoardReview["status"]; label: string; icon: typeof Check; variant: "primary" | "secondary" | "danger"; confirm: Confirmation }[] = [
+		{ status: "listed", label: "List", icon: Check, variant: "primary", confirm: { title: `List ${board.name}?`, message: "Advertisers can find and book it straight away.", action: "List" } },
+		{ status: "rejected", label: "Reject", icon: X, variant: "secondary", confirm: { title: `Reject ${board.name}?`, message: "The tagger sees your note.", action: "Reject", danger: true } },
+		{ status: "unlisted", label: "Unlist", icon: EyeOff, variant: "danger", confirm: { title: `Unlist ${board.name}?`, message: "Advertisers won't be able to find or book it.", action: "Unlist", danger: true } },
 	];
 
 	return (
@@ -197,7 +197,7 @@ function BoardRow({ board }: { board: AdminBoard }) {
 					{decisions
 						.filter((decision) => decision.status !== board.status)
 						.map((decision) => (
-							<Button key={decision.status} type="submit" name="status" value={decision.status} variant={decision.variant} disabled={busy} className="!py-2">
+							<Button key={decision.status} type="submit" name="status" value={decision.status} variant={decision.variant} disabled={busy} className="!py-2" confirm={decision.confirm}>
 								<decision.icon className="h-4 w-4" aria-hidden />
 								{decision.label}
 							</Button>

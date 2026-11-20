@@ -7,6 +7,7 @@ import { AUCTION_LOOKS } from '@/components/bids/BidBits'
 import { formatHeading } from '@/components/boards/BoardBits'
 import { Section } from '@/components/settings/SettingsPage'
 import { Button, Callout, DateField, Field, Input, Pill, Select, Text } from '@/components/ui'
+import { ask } from '@/lib/confirm'
 import { api } from '@/lib/api'
 import { formatDays, formatMoment, formatMoney, plural, toMinor } from '@/lib/format'
 import { useAction } from '@/lib/use-action'
@@ -187,7 +188,7 @@ export function BlockedDays({ board, onChange }: { board: BoardDetail; onChange:
         <Input value={note} onChangeText={setNote} maxLength={191} placeholder="Such as: our own client" />
       </Field>
       {action.problem.message ? <Callout>{action.problem.message}</Callout> : null}
-      <Button title="Block these days" variant="secondary" loading={action.busy} onPress={block} />
+      <Button confirm={{ title: "Block these days?", message: "Nobody can book them until you open them again.", action: "Block" }} title="Block these days" variant="secondary" loading={action.busy} onPress={block} />
     </Section>
   )
 }
@@ -245,7 +246,7 @@ export function AuctionsManager({ board, auctions, onChange }: { board: BoardDet
                 </Text>
               </View>
               {auction.status === 'open' && auction.bidCount === 0 ? (
-                <Pressable accessibilityRole="button" accessibilityLabel="Close the bidding" hitSlop={6} disabled={action.busy} onPress={() => cancel(auction.id)} style={styles.close}>
+                <Pressable accessibilityRole="button" accessibilityLabel="Close the bidding" hitSlop={6} disabled={action.busy} onPress={async () => (await ask({ title: 'Close the bidding?', action: 'Close it', danger: true })) && cancel(auction.id)} style={styles.close}>
                   <X size={16} color={colors.ink500} />
                 </Pressable>
               ) : null}
@@ -282,7 +283,7 @@ export function AuctionsManager({ board, auctions, onChange }: { board: BoardDet
         </View>
       </View>
       {action.problem.summary ? <Callout>{action.problem.summary}</Callout> : null}
-      <Button title="Open for bids" variant="secondary" loading={action.busy} disabled={!toMinor(reserve)} onPress={open} />
+      <Button confirm={{ title: "Open these dates for bids?", message: "Advertisers can bid until it closes.", action: "Open for bids" }} title="Open for bids" variant="secondary" loading={action.busy} disabled={!toMinor(reserve)} onPress={open} />
     </Section>
   )
 }

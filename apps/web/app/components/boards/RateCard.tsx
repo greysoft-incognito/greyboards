@@ -127,7 +127,7 @@ export function BlockedDays({ board, today }: { board: BoardDetail; today: strin
 						<Input name="note" maxLength={191} placeholder="Such as: our own client" />
 					</Field>
 				</div>
-				<Button type="submit" variant="secondary" disabled={busy}>
+				<Button confirm={{ title: "Block these days?", message: "Nobody can book them until you open them again.", action: "Block" }} type="submit" variant="secondary" disabled={busy}>
 					{busy ? <Spinner /> : <CalendarOff className="h-4 w-4" aria-hidden />}
 					Block these days
 				</Button>

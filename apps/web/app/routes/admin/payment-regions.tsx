@@ -186,7 +186,16 @@ function RegionRow({ region, provider, removing }: { region: PaymentRegion; prov
 				</Link>
 				<Form method="post">
 					<input type="hidden" name="id" value={region.id} />
-					<Button type="submit" name="intent" value="remove" variant="ghost" className="!py-2 text-red-700" disabled={removing} aria-label={`Remove ${region.name}`}>
+					<Button
+						type="submit"
+						name="intent"
+						value="remove"
+						variant="ghost"
+						className="!py-2 text-red-700"
+						disabled={removing}
+						aria-label={`Remove ${region.name}`}
+						confirm={{ title: `Remove ${region.name}?`, message: "Its countries go back to the default currency and provider.", action: "Remove", danger: true }}
+					>
 						{removing ? <Spinner /> : <Trash2 className="h-4 w-4" aria-hidden />}
 					</Button>
 				</Form>

@@ -4,6 +4,7 @@ import { useRequest } from 'alova/client'
 import type { Session } from '@greyboards/types'
 import { SettingsPage, Section } from '@/components/settings/SettingsPage'
 import { Button, Callout, Text } from '@/components/ui'
+import { ask } from '@/lib/confirm'
 import { api } from '@/lib/api'
 import { FormProblem } from '@/lib/forms'
 import { useAction } from '@/lib/use-action'
@@ -60,13 +61,13 @@ export default function Devices() {
               <Text variant="small">{[detail(session), session.ipAddress, lastActive(session)].filter(Boolean).join(' · ')}</Text>
             </View>
             {!session.current ? (
-              <Text accessibilityRole="button" disabled={action.busy} onPress={() => signOut(session)} style={styles.signOut}>
+              <Text accessibilityRole="button" disabled={action.busy} onPress={async () => (await ask({ title: 'Sign out of this device?', action: 'Sign out', danger: true })) && signOut(session)} style={styles.signOut}>
                 Sign out
               </Text>
             ) : null}
           </View>
         ))}
-        {others > 0 ? <Button title="Sign out of all other devices" variant="secondary" loading={action.busy} onPress={signOutOthers} /> : null}
+        {others > 0 ? <Button confirm={{ title: "Sign out everywhere else?", message: "Every other device will need to sign in again.", action: "Sign out", danger: true }} title="Sign out of all other devices" variant="secondary" loading={action.busy} onPress={signOutOthers} /> : null}
       </Section>
     </SettingsPage>
   )

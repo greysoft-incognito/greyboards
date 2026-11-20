@@ -94,9 +94,9 @@ export function SharedBookingCard({ shared, showBoard = false, canJoin, onChange
         <Button title="You’re sharing this. See the booking" variant="ghost" onPress={() => router.push({ pathname: '/bookings/[id]', params: { id: shared.id } })} />
       ) : canJoin ? (
         <>
-          {shared.shareAmountMinor !== null ? <Button title={`Join for ${formatMoney(shared.shareAmountMinor, shared.currency)}`} loading={action.busy} onPress={join} /> : null}
+          {shared.shareAmountMinor !== null ? <Button confirm={{ title: `Join for ${formatMoney(shared.shareAmountMinor!, shared.currency)}?`, message: "Your design goes on the board with everyone else's.", action: "Join" }} title={`Join for ${formatMoney(shared.shareAmountMinor, shared.currency)}`} loading={action.busy} onPress={join} /> : null}
           {won && auction?.myBid ? (
-            <Button
+            <Button confirm={{ title: "Pay for the whole board?", action: "Pay" }}
               title={`Pay ${formatMoney(auction.myBid.amountMinor, auction.currency)} for the whole board`}
               loading={action.busy}
               onPress={() => action.run(() => payAndReport(() => api.payTakeover(shared.id).send(), onChange))}
@@ -107,7 +107,7 @@ export function SharedBookingCard({ shared, showBoard = false, canJoin, onChange
               <Field label="Bid for the whole board" hint={`At least ${formatMoney(minimum, shared.currency)}`}>
                 <Input value={amount} onChangeText={setAmount} keyboardType="number-pad" />
               </Field>
-              <Button title={auction?.myBid ? 'Raise my bid' : 'Place bid'} variant="secondary" loading={action.busy} disabled={toMinor(amount) < minimum} onPress={bid} />
+              <Button confirm={{ title: "Bid for the whole board?", message: "If you win, the board is yours alone for these dates.", action: "Bid" }} title={auction?.myBid ? 'Raise my bid' : 'Place bid'} variant="secondary" loading={action.busy} disabled={toMinor(amount) < minimum} onPress={bid} />
             </View>
           ) : null}
         </>

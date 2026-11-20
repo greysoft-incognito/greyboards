@@ -6,6 +6,7 @@ import { BadgeCheck, Camera, X } from 'lucide-react-native'
 import type { BookingProof } from '@greyboards/types'
 import { Section } from '@/components/settings/SettingsPage'
 import { Button, Callout, Field, Input, Text } from '@/components/ui'
+import { ask } from '@/lib/confirm'
 import { api } from '@/lib/api'
 import { PlainProblem } from '@/lib/forms'
 import { megabytes, useLimits } from '@/lib/limits'
@@ -117,7 +118,7 @@ export function ProofSection({ bookingId, proof, onChange }: { bookingId: string
               <Image source={{ uri: photo.url }} style={StyleSheet.absoluteFill} contentFit="cover" transition={150} />
               <Text style={styles.distance}>{photo.distanceM} m from the board</Text>
               {proof.canAdd ? (
-                <Pressable accessibilityRole="button" accessibilityLabel="Remove this photo" onPress={() => drop(photo.id)} disabled={remove.busy} style={styles.remove}>
+                <Pressable accessibilityRole="button" accessibilityLabel="Remove this photo" onPress={async () => (await ask({ title: 'Remove this photo?', action: 'Remove', danger: true })) && drop(photo.id)} disabled={remove.busy} style={styles.remove}>
                   <X size={16} color={colors.ink700} />
                 </Pressable>
               ) : null}
@@ -131,7 +132,7 @@ export function ProofSection({ bookingId, proof, onChange }: { bookingId: string
           {proof.photos.length < proof.maxPhotos ? (
             <Button title={add.busy ? 'Uploading…' : 'Take a proof photo'} variant={enough ? 'secondary' : 'primary'} loading={add.busy} onPress={takePhoto} />
           ) : null}
-          {enough ? <Button title={submit.busy ? 'Sending…' : 'Send to advertiser'} loading={submit.busy} onPress={send} /> : null}
+          {enough ? <Button confirm={{ title: "Send these photos to the advertiser?", message: "They'll check the ad is up as booked.", action: "Send" }} title={submit.busy ? 'Sending…' : 'Send to advertiser'} loading={submit.busy} onPress={send} /> : null}
           <Text variant="small">
             {proof.photos.length} of {proof.minPhotos}+ photos
           </Text>
@@ -139,7 +140,7 @@ export function ProofSection({ bookingId, proof, onChange }: { bookingId: string
       ) : null}
       {proof.canReview && !disputing ? (
         <>
-          <Button title="Looks good, accept" loading={review.busy} onPress={accept} />
+          <Button confirm={{ title: "Accept this proof?", message: "You can't send it back after this.", action: "Accept" }} title="Looks good, accept" loading={review.busy} onPress={accept} />
           <Button title="Report a problem" variant="ghost" disabled={review.busy} onPress={() => setDisputing(true)} />
         </>
       ) : null}

@@ -15,6 +15,7 @@ import { BoardStewards } from '@/components/reputation/RoleReputation'
 import { BoardReviews, RatingLine } from '@/components/reviews/ReviewBits'
 import { Section } from '@/components/settings/SettingsPage'
 import { Button, Callout, Text } from '@/components/ui'
+import { ask } from '@/lib/confirm'
 import { api } from '@/lib/api'
 import { FormProblem, PlainProblem } from '@/lib/forms'
 import { formatMoney } from '@/lib/format'
@@ -182,7 +183,7 @@ function Gallery({ board, manages, onChange }: { board: BoardDetail; manages: bo
             <Image source={{ uri: photo.url }} style={StyleSheet.absoluteFill} contentFit="cover" transition={150} />
             {manages && photo.distanceM !== null ? <Text style={styles.distance}>Taken {photo.distanceM} m from the board</Text> : null}
             {manages ? (
-              <Pressable accessibilityRole="button" accessibilityLabel="Remove this photo" hitSlop={6} disabled={removing.busy} onPress={() => remove(photo.id)} style={styles.removePhoto}>
+              <Pressable accessibilityRole="button" accessibilityLabel="Remove this photo" hitSlop={6} disabled={removing.busy} onPress={async () => (await ask({ title: 'Remove this photo?', action: 'Remove', danger: true })) && remove(photo.id)} style={styles.removePhoto}>
                 <Trash2 size={18} color={colors.red700} />
               </Pressable>
             ) : null}
@@ -318,7 +319,7 @@ function Manage({ board, onChange }: { board: BoardDetail; onChange: () => void 
                 </Text>
               </View>
               {board.agreement?.status !== 'signed' ? (
-                <Button
+                <Button confirm={{ title: "Send the agreement to the owner?", action: "Send" }}
                   title={agreement.busy ? 'Sending…' : board.agreement ? 'Resend' : 'Send to the owner'}
                   loading={agreement.busy}
                   disabled={!!board.agreement?.resendInSeconds}

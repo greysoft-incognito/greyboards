@@ -142,7 +142,14 @@ function Keys({ keys, result }: { keys: ApiKey[]; result?: SettingsResult }) {
 						</div>
 						<Form method="post">
 							<input type="hidden" name="key" value={key.id} />
-							<Button variant="ghost" type="submit" name="intent" value="remove" className="text-red-700">
+							<Button
+								variant="ghost"
+								type="submit"
+								name="intent"
+								value="remove"
+								className="text-red-700"
+								confirm={{ title: `Remove ${key.name}?`, message: "Anything using this key will stop working straight away.", action: "Remove", danger: true }}
+							>
 								Remove
 							</Button>
 						</Form>

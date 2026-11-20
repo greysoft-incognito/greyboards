@@ -178,7 +178,7 @@ function ProspectCard({ prospect }: { prospect: Prospect }) {
 							<Button type="submit" name="intent" value="edit" disabled={busy}>
 								Save
 							</Button>
-							<Button type="submit" name="intent" value="remove" variant="ghost" className="text-red-700" disabled={busy}>
+							<Button type="submit" name="intent" value="remove" variant="ghost" className="text-red-700" disabled={busy} confirm={{ title: `Remove ${prospect.name}?`, action: "Remove", danger: true }}>
 								<Trash2 className="h-4 w-4" aria-hidden />
 								Remove
 							</Button>

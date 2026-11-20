@@ -125,7 +125,7 @@ export default function Account() {
         </View>
       ))}
 
-      <Button title={logout.loading ? 'Signing out…' : 'Sign out'} variant="secondary" size="lg" loading={logout.loading} onPress={signOut} />
+      <Button confirm={{ title: "Sign out?", action: "Sign out" }} title={logout.loading ? 'Signing out…' : 'Sign out'} variant="secondary" size="lg" loading={logout.loading} onPress={signOut} />
     </ScrollView>
   )
 }

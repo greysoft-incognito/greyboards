@@ -47,8 +47,8 @@ export function PayOrCancel({ booking, onChange }: { booking: Booking; onChange:
   return (
     <View style={styles.stack}>
       <Text variant="muted">{left > 0 ? `We're holding these dates for you for ${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}.` : 'Your hold expired. Book the dates again.'}</Text>
-      <Button title={`Pay ${formatMoney(booking.amountMinor, booking.currency)}`} size="lg" loading={action.busy} disabled={left <= 0} onPress={() => action.run(() => pay(() => api.checkout(booking.id).send(), onChange))} />
-      <Button title="Cancel" variant="ghost" disabled={action.busy} onPress={() => action.run(async () => { const { message } = await api.cancelBooking(booking.id).send(); onChange(); return message ?? 'Booking cancelled. The dates are free again.' })} />
+      <Button confirm={{ title: `Pay ${formatMoney(booking.amountMinor, booking.currency)}?`, action: "Pay" }} title={`Pay ${formatMoney(booking.amountMinor, booking.currency)}`} size="lg" loading={action.busy} disabled={left <= 0} onPress={() => action.run(() => pay(() => api.checkout(booking.id).send(), onChange))} />
+      <Button confirm={{ title: "Cancel this booking?", message: "The dates go back to the board owner.", action: "Cancel booking", danger: true }} title="Cancel" variant="ghost" disabled={action.busy} onPress={() => action.run(async () => { const { message } = await api.cancelBooking(booking.id).send(); onChange(); return message ?? 'Booking cancelled. The dates are free again.' })} />
       {action.problem.message ? <Callout>{action.problem.message}</Callout> : null}
     </View>
   )
@@ -89,16 +89,16 @@ export function SharesSection({ booking, isOrganiser, onChange }: { booking: Boo
             : 'Anyone can now bid on the whole board. Pay the remaining shares to keep it.'}
         </Callout>
       ) : null}
-      {held && due > 0 ? <Button title={`Pay ${mineDue.length > 1 ? 'my shares' : 'my share'}, ${formatMoney(due, booking.currency)}`} loading={action.busy} onPress={() => action.run(() => pay(() => api.checkout(booking.id).send(), onChange))} /> : null}
+      {held && due > 0 ? <Button confirm={{ title: `Pay ${formatMoney(due, booking.currency)}?`, action: "Pay" }} title={`Pay ${mineDue.length > 1 ? 'my shares' : 'my share'}, ${formatMoney(due, booking.currency)}`} loading={action.busy} onPress={() => action.run(() => pay(() => api.checkout(booking.id).send(), onChange))} /> : null}
       {held && isOrganiser && unpaid > 0 ? (
-        <Button
+        <Button confirm={{ title: unpaid === 1 ? "Cover the unpaid share?" : `Cover ${unpaid} unpaid shares?`, message: "You'll pay for them yourself.", action: "Cover them" }}
           title={`Cover the ${unpaid === 1 ? 'unpaid share' : `${unpaid} unpaid shares`}`}
           variant="secondary"
           disabled={action.busy}
           onPress={() => action.run(async () => { const { message } = await api.coverShares(booking.id).send(); onChange(); return message ?? 'You’re now covering the unpaid shares.' })}
         />
       ) : null}
-      {held && isOrganiser ? <Button title="Let it go" variant="ghost" disabled={action.busy} onPress={() => action.run(async () => { const { message } = await api.cancelBooking(booking.id).send(); onChange(); return message ?? 'Booking cancelled.' })} /> : null}
+      {held && isOrganiser ? <Button confirm={{ title: "Let this shared board go?", message: "The dates go back to the board owner.", action: "Let it go", danger: true }} title="Let it go" variant="ghost" disabled={action.busy} onPress={() => action.run(async () => { const { message } = await api.cancelBooking(booking.id).send(); onChange(); return message ?? 'Booking cancelled.' })} /> : null}
       {action.problem.message ? <Callout>{action.problem.message}</Callout> : null}
     </View>
   )
@@ -258,7 +258,7 @@ export function ArtworkSection({ booking, isAdvertiser, onChange }: { booking: B
 
       {artwork.canReview && !rejecting ? (
         <View style={styles.row}>
-          <Button title="Approve for print" loading={action.busy} onPress={() => review('approve')} style={styles.flex} />
+          <Button confirm={{ title: "Approve this artwork for print?", message: "It goes to the printer as it is.", action: "Approve" }} title="Approve for print" loading={action.busy} onPress={() => review('approve')} style={styles.flex} />
           <Button title="Ask for changes" variant="ghost" disabled={action.busy} onPress={() => setRejecting(true)} />
         </View>
       ) : null}
@@ -320,7 +320,7 @@ export function PrintOffersSection({ bookingId, options, currency, onChange }: {
                   {until(offer.expiresAt, offer.status === 'requested')}
                 </Text>
                 {offer.status === 'pending' ? (
-                  <Button title={`Pay ${formatMoney(offer.amountMinor, currency)}`} loading={busyId === offer.id} disabled={action.busy} onPress={() => run(offer.id, () => pay(() => api.payPrintOffer(bookingId, offer.id).send(), onChange))} />
+                  <Button confirm={{ title: `Pay ${formatMoney(offer.amountMinor, currency)} for printing?`, action: "Pay" }} title={`Pay ${formatMoney(offer.amountMinor, currency)}`} loading={busyId === offer.id} disabled={action.busy} onPress={() => run(offer.id, () => pay(() => api.payPrintOffer(bookingId, offer.id).send(), onChange))} />
                 ) : (
                   <Pill label="Waiting for a reply" background={colors.amber50} color={colors.held} />
                 )}
@@ -348,7 +348,7 @@ export function PrintOffersSection({ bookingId, options, currency, onChange }: {
                     Based {formatDistance(dispatcher.distanceM)} away{dispatcher.note ? `. ${dispatcher.note}` : ''}
                   </Text>
                 </View>
-                <Button
+                <Button confirm={{ title: `Ask ${dispatcher.name}?`, message: "They'll get a request to print and put up your ad.", action: "Ask" }}
                   title={dispatcher.asked ? 'Asked' : 'Ask'}
                   variant="secondary"
                   loading={busyId === dispatcher.id}

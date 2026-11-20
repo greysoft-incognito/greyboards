@@ -73,10 +73,10 @@ export function OfferRow({ offer, onBoards, onChange }: { offer: Offer; onBoards
 
       {offer.can.accept || offer.can.decline || offer.can.withdraw || offer.can.counter ? (
         <View style={styles.actions}>
-          {offer.can.accept ? <Button title={offer.status === 'countered' ? 'Accept their price' : 'Accept'} loading={action.busy} onPress={accept} /> : null}
+          {offer.can.accept ? <Button confirm={{ title: "Accept this price?", action: "Accept" }} title={offer.status === 'countered' ? 'Accept their price' : 'Accept'} loading={action.busy} onPress={accept} /> : null}
           {offer.can.counter && !countering ? <Button title="Counter" variant="secondary" onPress={() => setCountering(true)} /> : null}
-          {offer.can.decline ? <Button title="Decline" variant="ghost" disabled={action.busy} onPress={() => answer(async () => (await api.declineOffer(offer.id).send()).message ?? 'Offer declined.')} /> : null}
-          {offer.can.withdraw ? <Button title="Withdraw" variant="ghost" disabled={action.busy} onPress={() => answer(async () => (await api.withdrawOffer(offer.id).send()).message ?? 'Offer withdrawn.')} /> : null}
+          {offer.can.decline ? <Button confirm={{ title: "Decline this offer?", action: "Decline", danger: true }} title="Decline" variant="ghost" disabled={action.busy} onPress={() => answer(async () => (await api.declineOffer(offer.id).send()).message ?? 'Offer declined.')} /> : null}
+          {offer.can.withdraw ? <Button confirm={{ title: "Withdraw your offer?", action: "Withdraw", danger: true }} title="Withdraw" variant="ghost" disabled={action.busy} onPress={() => answer(async () => (await api.withdrawOffer(offer.id).send()).message ?? 'Offer withdrawn.')} /> : null}
         </View>
       ) : null}
       {offer.bookingId && !onBoards && offer.status === 'accepted' ? <Button title="Pay to book" onPress={() => router.push({ pathname: '/bookings/[id]', params: { id: offer.bookingId! } })} /> : null}
@@ -88,7 +88,7 @@ export function OfferRow({ offer, onBoards, onChange }: { offer: Offer; onBoards
             <Input value={counter} onChangeText={setCounter} keyboardType="number-pad" placeholder={String(Math.round((offer.amountMinor + offer.listMinor) / 200))} />
           </Field>
           <View style={styles.actions}>
-            <Button
+            <Button confirm={{ title: "Send this counter offer?", action: "Send" }}
               title="Send counter"
               loading={action.busy}
               disabled={!counter}
@@ -185,7 +185,7 @@ export function AuctionCard({ auction, canBid, onChange }: { auction: Auction; c
               <Input value={amount} onChangeText={setAmount} keyboardType="number-pad" />
             </Field>
             {action.problem.message ? <Callout>{action.problem.message}</Callout> : null}
-            <Button title={mine ? 'Raise my bid' : 'Place bid'} loading={action.busy} disabled={toMinor(amount) < minimum} onPress={bid} />
+            <Button confirm={{ title: mine ? 'Raise your bid?' : 'Place this bid?', message: "If you win, you'll have a day to pay.", action: mine ? 'Raise bid' : 'Place bid' }} title={mine ? 'Raise my bid' : 'Place bid'} loading={action.busy} disabled={toMinor(amount) < minimum} onPress={bid} />
             <View style={styles.note}>
               <Timer size={16} color={colors.ink500} />
               <Text variant="small" style={styles.flex}>

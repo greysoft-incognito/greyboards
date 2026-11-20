@@ -72,7 +72,7 @@ export function ScreenPlayerPanel({ board, token, apiUrl }: { board: BoardDetail
 			<div className="flex flex-wrap gap-2">
 				<Form method="post" preventScrollReset>
 					<input type="hidden" name="intent" value="player-token" />
-					<Button type="submit" variant={player.connected ? "secondary" : "primary"} disabled={busy("player-token")}>
+					<Button confirm={player.connected ? { title: "Create a new token?", message: "The screen using the old one disconnects.", action: "Create token", danger: true } : undefined} type="submit" variant={player.connected ? "secondary" : "primary"} disabled={busy("player-token")}>
 						{busy("player-token") ? <Spinner /> : <KeyRound className="h-4 w-4" aria-hidden />}
 						{player.connected ? "Create a new token" : "Connect a player"}
 					</Button>
@@ -80,7 +80,7 @@ export function ScreenPlayerPanel({ board, token, apiUrl }: { board: BoardDetail
 				{player.connected && (
 					<Form method="post" preventScrollReset>
 						<input type="hidden" name="intent" value="player-revoke" />
-						<Button type="submit" variant="secondary" disabled={busy("player-revoke")}>
+						<Button type="submit" variant="secondary" disabled={busy("player-revoke")} confirm={{ title: "Disconnect the screen?", message: "It stops showing ads until you link it again.", action: "Disconnect", danger: true }}>
 							{busy("player-revoke") ? <Spinner /> : <Unplug className="h-4 w-4" aria-hidden />}
 							Disconnect
 						</Button>

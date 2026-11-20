@@ -63,7 +63,7 @@ export function SharesPanel({ booking, isOrganiser }: { booking: Booking; isOrga
 					{due > 0 && (
 						<Form method="post">
 							<input type="hidden" name="intent" value="pay" />
-							<Button type="submit" disabled={!!intent}>
+							<Button confirm={{ title: `Pay ${formatMoney(due, booking.currency)}?`, action: "Pay" }} type="submit" disabled={!!intent}>
 								{intent === "pay" ? <Spinner /> : <CreditCard className="h-4 w-4" aria-hidden />}
 								Pay {isOrganiser && shares.filter((share) => share.mine && share.status === "claimed").length > 1 ? "my shares" : "my share"}, {formatMoney(due, booking.currency)}
 							</Button>
@@ -72,7 +72,7 @@ export function SharesPanel({ booking, isOrganiser }: { booking: Booking; isOrga
 					{isOrganiser && unpaid > 0 && (
 						<Form method="post">
 							<input type="hidden" name="intent" value="cover-shares" />
-							<Button type="submit" variant="secondary" disabled={!!intent}>
+							<Button confirm={{ title: unpaid === 1 ? "Cover the unpaid share?" : `Cover ${unpaid} unpaid shares?`, message: "You'll pay for them yourself.", action: "Cover them" }} type="submit" variant="secondary" disabled={!!intent}>
 								{intent === "cover-shares" ? <Spinner /> : <HandCoins className="h-4 w-4" aria-hidden />}
 								Cover the {unpaid === 1 ? "unpaid share" : `${unpaid} unpaid shares`}
 							</Button>
@@ -81,7 +81,7 @@ export function SharesPanel({ booking, isOrganiser }: { booking: Booking; isOrga
 					{isOrganiser && (
 						<Form method="post">
 							<input type="hidden" name="intent" value="cancel" />
-							<Button type="submit" variant="ghost" disabled={!!intent}>
+							<Button type="submit" variant="ghost" disabled={!!intent} confirm={{ title: "Let this shared board go?", message: "The dates go back to the board owner.", action: "Let it go", danger: true }}>
 								<X className="h-4 w-4" aria-hidden />
 								Let it go
 							</Button>

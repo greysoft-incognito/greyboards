@@ -128,7 +128,7 @@ function DisputeCard({ dispute }: { dispute: AdminDispute }) {
 						<Textarea name="resolution" rows={2} minLength={5} maxLength={1000} required />
 					</Field>
 					{!booking?.inEscrow && <p className="text-xs text-ink-500">The payment has already gone out, so this can only be closed. Settle anything owed outside the app.</p>}
-					<Button type="submit" disabled={busy}>
+					<Button type="submit" disabled={busy} confirm={{ title: "Settle this dispute?", message: "Everyone on the booking sees your decision.", action: "Settle it" }}>
 						{busy ? <Spinner /> : <Gavel className="h-4 w-4" aria-hidden />}
 						Decide
 					</Button>

@@ -159,13 +159,13 @@ function On({
         <Text style={styles.onText}>{status.recoveryCodesRemaining} recovery codes left</Text>
       </View>
       {regenerate.problem.message ? <Callout>{regenerate.problem.message}</Callout> : null}
-      <Button title="Get new recovery codes" variant="secondary" loading={regenerate.busy} onPress={newCodes} />
+      <Button confirm={{ title: "Get new recovery codes?", message: "Your old codes will stop working.", action: "Get new codes" }} title="Get new recovery codes" variant="secondary" loading={regenerate.busy} onPress={newCodes} />
       <View style={styles.divider} />
       <Field label="Enter your password to turn it off" error={disable.problem.fields.password}>
         <Input value={password} onChangeText={setPassword} secureTextEntry autoComplete="current-password" textContentType="password" />
       </Field>
       {disable.problem.summary ? <Callout>{disable.problem.summary}</Callout> : null}
-      <Button title={disable.busy ? 'Turning off…' : 'Turn off'} variant="danger" loading={disable.busy} disabled={!password} onPress={turnOff} />
+      <Button confirm={{ title: "Turn off two-step sign-in?", message: "Signing in will only need your password.", action: "Turn off", danger: true }} title={disable.busy ? 'Turning off…' : 'Turn off'} variant="danger" loading={disable.busy} disabled={!password} onPress={turnOff} />
     </>
   )
 }

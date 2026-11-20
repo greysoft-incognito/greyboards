@@ -5,7 +5,7 @@ import type { Auction, AuctionStatus, BoardDetail, Offer, OfferStatus } from "@g
 import { BoardCover } from "~/components/boards/BoardBits";
 import { RatingLine } from "~/components/reviews/ReviewBits";
 import { formatDays, formatMoney } from "~/components/bookings/BookingBits";
-import { Alert, Button, buttonClass, Field, Input, Select, Spinner } from "~/components/ui";
+import { Alert, Button, buttonClass, type Confirmation, Field, Input, Select, Spinner } from "~/components/ui";
 import { Standing } from "~/components/reputation/Badges";
 
 const AUCTION_LABELS: Record<AuctionStatus, { label: string; tone: string }> = {
@@ -122,7 +122,7 @@ export function AuctionCard({ auction, canBid, error }: { auction: Auction; canB
 							<Input name="amount" type="number" min={minimum / 100} step="1000" defaultValue={minimum / 100} required />
 						</Field>
 						{error && <Alert>{error}</Alert>}
-						<Button type="submit" className="w-full" disabled={busy}>
+						<Button confirm={{ title: mine ? "Raise your bid?" : "Place this bid?", message: "If you win, you'll have a day to pay.", action: mine ? "Raise bid" : "Place bid" }} type="submit" className="w-full" disabled={busy}>
 							{busy ? <Spinner /> : <Gavel className="h-4 w-4" aria-hidden />}
 							{mine ? "Raise my bid" : "Place bid"}
 						</Button>
@@ -174,7 +174,12 @@ export function AuctionsManager({ board, auctions, today }: { board: BoardDetail
 								<Form method="post" preventScrollReset>
 									<input type="hidden" name="intent" value="cancel-auction" />
 									<input type="hidden" name="id" value={auction.id} />
-									<Button type="submit" variant="ghost" disabled={busyWith(navigation.formData, "cancel-auction", auction.id)}>
+									<Button
+										type="submit"
+										variant="ghost"
+										disabled={busyWith(navigation.formData, "cancel-auction", auction.id)}
+										confirm={{ title: "Cancel this auction?", action: "Cancel auction", danger: true }}
+									>
 										<X className="h-4 w-4" aria-hidden />
 										Close
 									</Button>
@@ -219,7 +224,7 @@ export function AuctionsManager({ board, auctions, today }: { board: BoardDetail
 						<Input type="datetime-local" name="closesAt" min={`${today}T00:00`} required />
 					</Field>
 				</div>
-				<Button type="submit" variant="secondary" disabled={busy}>
+				<Button confirm={{ title: "Open an auction for these dates?", message: "Advertisers can bid until it closes.", action: "Open auction" }} type="submit" variant="secondary" disabled={busy}>
 					{busy ? <Spinner /> : <Gavel className="h-4 w-4" aria-hidden />}
 					Open for bids
 				</Button>
@@ -227,6 +232,13 @@ export function AuctionsManager({ board, auctions, today }: { board: BoardDetail
 		</div>
 	);
 }
+
+/** What to ask before each answer to an offer. */
+const OFFER_CONFIRMATIONS: Record<string, Confirmation> = {
+	"accept-offer": { title: "Accept this price?", action: "Accept" },
+	"decline-offer": { title: "Decline this offer?", action: "Decline", danger: true },
+	"withdraw-offer": { title: "Withdraw your offer?", action: "Withdraw", danger: true },
+};
 
 /** An offer in a list, with the answers the viewer can give. */
 export function OfferRow({ offer, onBoards }: { offer: Offer; onBoards: boolean }) {
@@ -238,7 +250,7 @@ export function OfferRow({ offer, onBoards }: { offer: Offer; onBoards: boolean 
 			<input type="hidden" name="intent" value={intent} />
 			<input type="hidden" name="id" value={offer.id} />
 			{!onBoards && <input type="hidden" name="mine" value="1" />}
-			<Button type="submit" variant={variant} disabled={busy(intent)}>
+			<Button type="submit" variant={variant} disabled={busy(intent)} confirm={OFFER_CONFIRMATIONS[intent]}>
 				{busy(intent) ? <Spinner /> : <Icon className="h-4 w-4" aria-hidden />}
 				{label}
 			</Button>
@@ -301,7 +313,7 @@ export function OfferRow({ offer, onBoards }: { offer: Offer; onBoards: boolean 
 					<Field label="Your price">
 						<Input name="amount" type="number" min={offer.amountMinor / 100 + 1} max={offer.listMinor / 100 - 1} step="1000" required />
 					</Field>
-					<Button type="submit">Send counter</Button>
+					<Button type="submit" confirm={{ title: "Send this counter offer?", action: "Send" }}>Send counter</Button>
 					<Button variant="ghost" onClick={() => setCountering(false)}>
 						Cancel
 					</Button>

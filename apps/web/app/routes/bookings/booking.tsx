@@ -262,14 +262,14 @@ function PayOrCancel({ booking }: { booking: Booking }) {
 			<div className="flex flex-wrap gap-2">
 				<Form method="post">
 					<input type="hidden" name="intent" value="pay" />
-					<Button type="submit" disabled={!!intent || left <= 0}>
+					<Button confirm={{ title: `Pay ${formatMoney(booking.amountMinor, booking.currency)}?`, action: "Pay" }} type="submit" disabled={!!intent || left <= 0}>
 						{intent === "pay" ? <Spinner /> : <CreditCard className="h-4 w-4" aria-hidden />}
 						Pay {formatMoney(booking.amountMinor, booking.currency)}
 					</Button>
 				</Form>
 				<Form method="post">
 					<input type="hidden" name="intent" value="cancel" />
-					<Button type="submit" variant="ghost" disabled={!!intent}>
+					<Button type="submit" variant="ghost" disabled={!!intent} confirm={{ title: "Cancel this booking?", message: "The dates go back to the board owner.", action: "Cancel booking", danger: true }}>
 						<X className="h-4 w-4" aria-hidden />
 						Cancel
 					</Button>
@@ -298,7 +298,17 @@ function CancelPaid({ booking }: { booking: Booking }) {
 			{open ? (
 				<Form method="post" className="flex flex-wrap gap-2">
 					<input type="hidden" name="intent" value="cancel" />
-					<Button type="submit" variant="danger" disabled={busy}>
+					<Button
+						type="submit"
+						variant="danger"
+						disabled={busy}
+						confirm={{
+							title: "Cancel this booking?",
+							message: `We'll refund ${formatMoney(quote.refundMinor, booking.currency)} and the dates go back to the board owner. This can't be undone.`,
+							action: "Cancel and refund",
+							danger: true,
+						}}
+					>
 						{busy ? <Spinner /> : <X className="h-4 w-4" aria-hidden />}
 						Cancel and refund {formatMoney(quote.refundMinor, booking.currency)}
 					</Button>
@@ -325,7 +335,12 @@ function StaffRefund({ booking }: { booking: Booking }) {
 			<h2 className="font-display text-xl font-extrabold tracking-tight text-ink-900">Refund in full</h2>
 			<p className="text-sm text-ink-500">Staff only. Cancels the booking, frees the dates and sends all {formatMoney(booking.amountMinor, booking.currency)} back to the advertiser.</p>
 			<Input name="reason" required minLength={5} maxLength={191} placeholder="Why, such as: the board was taken down" aria-label="Reason" />
-			<Button type="submit" variant="danger" disabled={busy}>
+			<Button
+				type="submit"
+				variant="danger"
+				disabled={busy}
+				confirm={{ title: "Refund the whole booking?", message: `${formatMoney(booking.amountMinor, booking.currency)} goes back to the advertiser and the dates are freed. This can't be undone.`, action: "Refund", danger: true }}
+			>
 				{busy ? <Spinner /> : <Undo2 className="h-4 w-4" aria-hidden />}
 				Cancel and refund
 			</Button>

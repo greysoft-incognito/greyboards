@@ -117,6 +117,17 @@ export default function AdminApplications({ loaderData, actionData }: Route.Comp
 	);
 }
 
+/** What to ask before a reviewer's decision goes out. Each one emails the applicant. */
+function decisionConfirmation(status: AccountRoleReview["status"], application: AdminAccountRole) {
+	const name = application.user?.name ?? "this person";
+	const role = application.label.toLowerCase();
+
+	if (status === "active") return { title: `Approve ${name} as ${role}?`, message: "They can start straight away, and we'll email them.", action: "Approve" };
+	if (status === "rejected") return { title: `Reject ${name}'s ${role} application?`, message: "We'll email them, with your note if you wrote one.", action: "Reject", danger: true };
+
+	return { title: `Suspend ${name} as ${role}?`, message: "They lose access to this role until you change it, and we'll email them.", action: "Suspend", danger: true };
+}
+
 /** Each requirement as a reviewer reads it. */
 const STILL_NEEDED: Record<PartnerRequirement, string> = {
 	identity: "a photo of their ID",
@@ -171,6 +182,7 @@ function ApplicationRow({ application }: { application: AdminAccountRole }) {
 							value={decision.status}
 							variant={decision.variant}
 							disabled={busy || (decision.status === "active" && blocked)}
+							confirm={decisionConfirmation(decision.status, application)}
 							title={decision.status === "active" && blocked ? "They need to send what's missing first" : undefined}
 							className="!py-2"
 						>
@@ -230,7 +242,14 @@ function Checks({ id, checks }: { id: string; checks: PartnerChecks }) {
 										Approve ID
 									</Button>
 								)}
-								<Button type="submit" name="status" value="rejected" variant="ghost" className="!min-h-9 !py-1.5">
+								<Button
+									type="submit"
+									name="status"
+									value="rejected"
+									variant="ghost"
+									className="!min-h-9 !py-1.5"
+									confirm={{ title: "Ask for a clearer photo?", message: "We'll let them know the ID couldn't be read.", action: "Ask them" }}
+								>
 									<X className="h-4 w-4" aria-hidden />
 									Ask for a clearer photo
 								</Button>
