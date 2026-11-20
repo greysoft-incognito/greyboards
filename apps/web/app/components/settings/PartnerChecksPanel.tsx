@@ -1,5 +1,6 @@
+import { useEffect, useState } from "react";
 import { Form, Link, useNavigation } from "react-router";
-import { BadgeCheck, CircleAlert, IdCard, Landmark, Upload } from "lucide-react";
+import { BadgeCheck, CircleAlert, IdCard, Landmark, RefreshCw, Upload } from "lucide-react";
 import type { IdentityDocumentDefinition, PartnerChecks } from "@greyboards/types";
 import { Alert, Button, Field, Input, Select, Spinner } from "~/components/ui";
 import { useLimits } from "~/lib/limits";
@@ -30,6 +31,9 @@ export function PartnerChecksPanel({
 	const busy = navigation.formData?.get("intent") === "send-id";
 	const identity = checks.identity;
 	const needsId = !identity || identity.status === "rejected";
+	const [replacing, setReplacing] = useState(false);
+
+	useEffect(() => setReplacing(false), [identity?.createdAt]);
 
 	return (
 		<section className="panel space-y-5 p-5 sm:p-6">
@@ -52,9 +56,15 @@ export function PartnerChecksPanel({
 					{identity?.status === "rejected" && identity.note && <p className="mt-1 text-red-700">Reviewer's note: {identity.note}</p>}
 				</div>
 				{identity?.status === "verified" && <BadgeCheck className="h-5 w-5 text-available" aria-label="Checked" />}
+				{identity?.status === "submitted" && !replacing && (
+					<Button variant="ghost" className="!min-h-9 shrink-0 !py-1.5" onClick={() => setReplacing(true)}>
+						<RefreshCw className="h-4 w-4" aria-hidden />
+						Send a different photo
+					</Button>
+				)}
 			</div>
 
-			{(needsId || identity?.status === "submitted") && (
+			{(needsId || replacing) && (
 				<Form method="post" encType="multipart/form-data" className="space-y-4 rounded-2xl bg-surface-100 p-4">
 					<input type="hidden" name="intent" value="send-id" />
 					<div className="grid gap-4 sm:grid-cols-2">
@@ -78,10 +88,17 @@ export function PartnerChecksPanel({
 						<Input name="photo" type="file" accept="image/jpeg,image/png,image/webp" required />
 					</Field>
 					{error && <Alert>{error}</Alert>}
-					<Button type="submit" variant={identity ? "secondary" : "primary"} disabled={busy}>
-						{busy ? <Spinner /> : <Upload className="h-4 w-4" aria-hidden />}
-						{identity ? "Upload a new photo" : "Submit"}
-					</Button>
+					<div className="flex flex-wrap gap-2">
+						<Button type="submit" variant={identity ? "secondary" : "primary"} disabled={busy}>
+							{busy ? <Spinner /> : <Upload className="h-4 w-4" aria-hidden />}
+							{identity ? "Send the new photo" : "Send"}
+						</Button>
+						{replacing && (
+							<Button variant="ghost" onClick={() => setReplacing(false)} disabled={busy}>
+								Cancel
+							</Button>
+						)}
+					</div>
 				</Form>
 			)}
 

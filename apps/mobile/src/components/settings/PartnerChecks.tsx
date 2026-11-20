@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { StyleSheet, View } from 'react-native'
 import { Image } from 'expo-image'
 import { router } from 'expo-router'
@@ -34,7 +34,10 @@ export function PartnerChecksSection({ checks, documents, onChange }: { checks: 
   const [documentNumber, setDocumentNumber] = useState('')
   const [fullName, setFullName] = useState(identity?.fullName ?? '')
   const [photo, setPhoto] = useState<ImagePickerAsset | null>(null)
-  const canSend = !identity || identity.status !== 'verified'
+  const [replacing, setReplacing] = useState(false)
+  const canSend = !identity || identity.status === 'rejected' || replacing
+
+  useEffect(() => setReplacing(false), [identity?.createdAt])
 
   const choose = (source: 'camera' | 'library') =>
     pick.run(async () => {
@@ -73,6 +76,7 @@ export function PartnerChecksSection({ checks, documents, onChange }: { checks: 
         </View>
         {identity?.status === 'verified' ? <BadgeCheck size={20} color={colors.available} accessibilityLabel="Checked" /> : null}
       </View>
+      {identity?.status === 'submitted' && !replacing ? <Button title="Send a different photo" variant="ghost" onPress={() => setReplacing(true)} /> : null}
 
       {canSend ? (
         <View style={styles.form}>
@@ -93,7 +97,8 @@ export function PartnerChecksSection({ checks, documents, onChange }: { checks: 
             </View>
           </Field>
           {send.problem.summary ? <Callout>{send.problem.summary}</Callout> : null}
-          <Button title={identity ? 'Send the new photo' : 'Submit'} variant={identity ? 'secondary' : 'primary'} loading={send.busy} onPress={submit} />
+          <Button title={identity ? 'Send the new photo' : 'Send'} variant={identity ? 'secondary' : 'primary'} loading={send.busy} onPress={submit} />
+          {replacing ? <Button title="Cancel" variant="ghost" disabled={send.busy} onPress={() => setReplacing(false)} /> : null}
         </View>
       ) : null}
 
